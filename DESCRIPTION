@@ -1,0 +1,48 @@
+Package: tidybrreg
+Title: Tidy Interface to Norway's Central Business Registry ('Enhetsregisteret')
+Version: 0.1.0
+Authors@R: 
+    person("Sondre", "Skarsten", role = c("aut", "cre"),
+           email = "sondre.skarsten@example.com")
+Description: A tidy interface to download, search, and analyze data from the Norwegian Central
+    Coordinating Register for Legal Entities (Enhetsregisteret), maintained
+    by the Brønnøysund Register Centre. Provides access to registration
+    data for approximately 1 million legal entities including companies,
+    partnerships, sole proprietorships, associations, and government
+    bodies. Returns tibbles with English column names translated to English via a data-driven
+    dictionary; unknown API fields pass through with auto-generated names.
+    Coded values (legal forms, industry codes, roles) can be translated to
+    English on demand using bundled reference data or live lookups from the
+    SSB Klass API. Data is freely available under the Norwegian Licence for
+    Open Government Data (NLOD 2.0).
+License: MIT + file LICENSE
+URL: https://github.com/sondreskarsten/tidybrreg
+BugReports: https://github.com/sondreskarsten/tidybrreg/issues
+Depends: 
+    R (>= 4.1.0)
+Imports: 
+    cli,
+    dplyr,
+    httr2 (>= 1.0.0),
+    rlang,
+    tibble
+Suggests: 
+    curl,
+    klassR,
+    tsibble,
+    tidygraph,
+    igraph,
+    plm,
+    fixest,
+    collapse,
+    sf,
+    arrow,
+    ggraph,
+    httptest2,
+    testthat (>= 3.0.0),
+    withr
+Config/testthat/edition: 3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
