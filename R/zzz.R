@@ -1,3 +1,7 @@
+#' Session-level dictionary cache (eurostat pattern)
+#' @keywords internal
+.brregEnv <- new.env(parent = emptyenv())
+
 #' @keywords internal
 .onLoad <- function(libname, pkgname) {
   cache_dir <- tools::R_user_dir("tidybrreg", "data")

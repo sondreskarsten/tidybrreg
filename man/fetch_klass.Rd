@@ -4,11 +4,13 @@
 \alias{fetch_klass}
 \title{Fetch English classification labels from SSB Klass API}
 \usage{
-fetch_klass(classification_id, date = Sys.Date())
+fetch_klass(classification_id, lang = "en", date = Sys.Date())
 }
 \arguments{
 \item{classification_id}{Integer. SSB Klass classification ID
 (6 = SN2007/NACE, 39 = institutional sector).}
+
+\item{lang}{Language code: \code{"en"} or \code{"no"}.}
 
 \item{date}{Date for which codes are valid.}
 }

@@ -1,104 +1,180 @@
 #' Translate codes to human-readable English labels
 #'
-#' Replace coded values in a brreg tibble with English descriptions.
-#' Translations use bundled reference data by default. For NACE industry
-#' codes and institutional sector codes, fresh labels can be fetched from
-#' the SSB Klass API via `refresh = TRUE`.
+#' Replace coded values in a brreg tibble with English descriptions,
+#' following the eurostat package's `label_eurostat()` pattern. Works on
+#' both data frames and character vectors.
 #'
-#' This implements the label-on-demand pattern: functions like
-#' [brreg_entity()] and [brreg_search()] return codes by default, and
-#' `brreg_label()` translates them post-hoc. Original codes are preserved
-#' in `attr(result, "original_codes")`.
+#' @param x A tibble from [brreg_entity()], [brreg_search()], or
+#'   [brreg_roles()], or a character vector of codes.
+#' @param dic A character string naming the dictionary to use when `x`
+#'   is a character vector. One of `"legal_form"`, `"nace"`,
+#'   `"sector"`, `"role"`, `"role_group"`. Ignored when `x` is a
+#'   data frame (dictionaries are inferred from column names).
+#' @param code For data frames: character vector of column names for
+#'   which to retain the original code alongside the label. A column
+#'   with suffix `_code` is added. For example,
+#'   `brreg_label(x, code = "legal_form")` adds `legal_form_code`.
+#' @param lang Language for NACE and sector labels. `"en"` (default)
+#'   or `"no"` (Norwegian original from brreg API).
 #'
-#' @param data A tibble returned by [brreg_entity()], [brreg_search()],
-#'   or [brreg_roles()].
-#' @param cols Character vector of columns to label. Default `NULL`
-#'   labels all recognized code columns: `legal_form`, `nace_1`, `nace_2`,
-#'   `nace_3`, `sector_code`, `role_group_code`, `role_code`.
-#' @param refresh Logical. If `TRUE`, fetch current NACE and sector
-#'   labels from the SSB Klass API instead of using bundled data.
-#'   Requires internet access. Defaults to `FALSE`.
-#'
-#' @returns The input tibble with code columns replaced by English labels.
-#'   Original codes are stored in `attr(result, "original_codes")` as a
-#'   named list.
+#' @returns When `x` is a data frame: the same tibble with code columns
+#'   replaced by English labels. When `x` is a character vector: a
+#'   character vector of labels.
 #'
 #' @family tidybrreg utilities
 #' @seealso [legal_forms], [role_types], [role_groups] for bundled
-#'   reference data.
+#'   reference data, [get_brreg_dic()] for fetching fresh dictionaries.
 #'
 #' @export
 #' @examplesIf interactive() && curl::has_internet()
 #' eq <- brreg_entity("923609016")
-#' eq$legal_form          # "ASA"
-#' brreg_label(eq)$legal_form  # "Public limited company"
 #'
-#' # Label only specific columns
-#' brreg_label(eq, cols = "nace_1")
+#' # Label all code columns
+#' brreg_label(eq)
 #'
-#' # Refresh NACE labels from SSB Klass API
-#' brreg_label(eq, refresh = TRUE)
-brreg_label <- function(data, cols = NULL, refresh = FALSE) {
-  if (nrow(data) == 0) return(data)
+#' # Keep original codes alongside labels
+#' brreg_label(eq, code = "legal_form")
+#'
+#' # Label a character vector directly
+#' brreg_label(c("AS", "ASA", "ENK"), dic = "legal_form")
+brreg_label <- function(x, dic = NULL, code = NULL, lang = "en") {
+  if (is.data.frame(x)) {
+    label_df(x, code = code, lang = lang)
+  } else {
+    if (is.null(dic)) {
+      cli::cli_abort("When {.arg x} is a vector, {.arg dic} must be provided.")
+    }
+    label_vec(x, dic = dic, lang = lang)
+  }
+}
 
-  nace_lkp <- nace_codes
-  sector_lkp <- sector_codes
-  if (refresh) {
-    nace_lkp <- tryCatch(fetch_klass(6), error = \(e) {
-      cli::cli_warn("Could not refresh NACE codes from SSB Klass; using bundled data.")
-      nace_codes
-    })
-    sector_lkp <- tryCatch(fetch_klass(39), error = \(e) {
-      cli::cli_warn("Could not refresh sector codes from SSB Klass; using bundled data.")
-      sector_codes
-    })
+#' Label a data frame — iterates over columns
+#' @keywords internal
+label_df <- function(x, code = NULL, lang = "en") {
+  if (nrow(x) == 0) return(x)
+
+  lkp <- build_label_map(lang)
+  labelable <- intersect(names(lkp), names(x))
+  skip <- c("org_nr", "name", "employees", "founding_date", "registration_date",
+            "website", "business_address", "business_postcode", "business_city",
+            "municipality_code", "municipality", "country_code", "country",
+            "postal_address", "postal_postcode", "postal_city",
+            "bankrupt", "bankruptcy_date", "in_liquidation", "liquidation_date",
+            "forced_dissolution", "vat_registered", "in_business_register",
+            "in_nonprofit_register", "parent_org_nr", "in_corporate_group",
+            "purpose", "timestamp", "update_id", "change_type",
+            "first_name", "middle_name", "last_name", "birth_date",
+            "deceased", "entity_org_nr", "entity_name", "resigned", "person_id")
+  labelable <- setdiff(labelable, skip)
+
+  if (!is.null(code)) {
+    code <- intersect(code, labelable)
+    for (col in code) {
+      code_col <- paste0(col, "_code")
+      x[[code_col]] <- x[[col]]
+      col_pos <- which(names(x) == col)
+      nc <- ncol(x)
+      x <- x[, c(seq_len(col_pos - 1), nc, col_pos:(nc - 1)), drop = FALSE]
+    }
   }
 
-  label_map <- list(
+  for (col in labelable) {
+    if (!col %in% names(lkp)) next
+    matched <- lkp[[col]][x[[col]]]
+    x[[col]] <- ifelse(is.na(matched), x[[col]], unname(matched))
+  }
+  x
+}
+
+#' Label a character vector using a named dictionary
+#' @keywords internal
+label_vec <- function(x, dic, lang = "en") {
+  lkp <- build_label_map(lang)
+  dic_map <- switch(dic,
+    legal_form = lkp[["legal_form"]],
+    nace       = lkp[["nace_1"]],
+    sector     = lkp[["sector_code"]],
+    role       = lkp[["role_code"]],
+    role_group = lkp[["role_group_code"]],
+    cli::cli_abort("Unknown dictionary: {.val {dic}}. Options: legal_form, nace, sector, role, role_group.")
+  )
+  matched <- dic_map[x]
+  ifelse(is.na(matched), x, unname(matched))
+}
+
+#' Build the complete label lookup map
+#' @keywords internal
+build_label_map <- function(lang = "en") {
+  nace_lkp <- get_brreg_dic("nace", lang = lang)
+  sector_lkp <- get_brreg_dic("sector", lang = lang)
+
+  list(
     legal_form      = stats::setNames(legal_forms$name_en, legal_forms$code),
     nace_1          = stats::setNames(nace_lkp$name_en, nace_lkp$code),
     nace_2          = stats::setNames(nace_lkp$name_en, nace_lkp$code),
     nace_3          = stats::setNames(nace_lkp$name_en, nace_lkp$code),
+    nace_1_desc     = stats::setNames(nace_lkp$name_en, nace_lkp$code),
     sector_code     = stats::setNames(sector_lkp$name_en, sector_lkp$code),
     role_group_code = stats::setNames(role_groups$name_en, role_groups$code),
     role_code       = stats::setNames(role_types$name_en, role_types$code)
   )
+}
 
-  if (is.null(cols)) {
-    cols <- intersect(names(label_map), names(data))
-  } else {
-    cols <- intersect(cols, names(data))
-  }
-  if (length(cols) == 0) return(data)
 
-  originals <- list()
-  for (col in cols) {
-    if (!col %in% names(label_map)) next
-    lkp <- label_map[[col]]
-    originals[[col]] <- data[[col]]
-    matched <- lkp[data[[col]]]
-    data[[col]] <- ifelse(is.na(matched), data[[col]], unname(matched))
+#' Fetch a brreg dictionary
+#'
+#' Retrieve English or Norwegian label dictionaries for NACE industry
+#' codes or institutional sector codes. Dictionaries are cached in a
+#' session-level environment (following the eurostat package pattern).
+#' Bundled data is used as fallback when the SSB Klass API is
+#' unreachable.
+#'
+#' @param dictname One of `"nace"` or `"sector"`.
+#' @param lang `"en"` (default) for English labels or `"no"` for
+#'   Norwegian.
+#'
+#' @returns A tibble with columns `code`, `name_en`, `level`.
+#'
+#' @family tidybrreg utilities
+#' @export
+#' @examplesIf interactive() && curl::has_internet()
+#' get_brreg_dic("nace")
+#' get_brreg_dic("sector")
+get_brreg_dic <- function(dictname = c("nace", "sector"), lang = "en") {
+  dictname <- match.arg(dictname)
+  cache_key <- paste0(dictname, "_", lang)
+
+  if (exists(cache_key, envir = .brregEnv)) {
+    return(get(cache_key, envir = .brregEnv))
   }
-  attr(data, "original_codes") <- originals
-  data
+
+  classification_id <- switch(dictname, nace = 6L, sector = 39L)
+  result <- tryCatch(
+    fetch_klass(classification_id, lang = lang),
+    error = \(e) {
+      fallback <- switch(dictname, nace = nace_codes, sector = sector_codes)
+      fallback
+    }
+  )
+
+  assign(cache_key, result, envir = .brregEnv)
+  result
 }
 
 
 #' Fetch English classification labels from SSB Klass API
-#'
 #' @param classification_id Integer. SSB Klass classification ID
 #'   (6 = SN2007/NACE, 39 = institutional sector).
+#' @param lang Language code: `"en"` or `"no"`.
 #' @param date Date for which codes are valid.
-#'
 #' @returns A tibble with columns `code`, `name_en`, `level`.
-#'
 #' @keywords internal
-fetch_klass <- function(classification_id, date = Sys.Date()) {
+fetch_klass <- function(classification_id, lang = "en", date = Sys.Date()) {
   resp <- httr2::request("https://data.ssb.no/api/klass/v1") |>
     httr2::req_url_path_append("classifications", classification_id, "codesAt") |>
-    httr2::req_url_query(date = format(date, "%Y-%m-%d"), language = "en") |>
+    httr2::req_url_query(date = format(date, "%Y-%m-%d"), language = lang) |>
     httr2::req_headers(Accept = "application/json") |>
-    httr2::req_user_agent("brreg (R package)") |>
+    httr2::req_user_agent("tidybrreg (R package)") |>
     httr2::req_perform()
   body <- httr2::resp_body_json(resp)
   dplyr::bind_rows(lapply(body$codes, \(c) tibble::tibble(

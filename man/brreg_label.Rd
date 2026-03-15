@@ -4,55 +4,55 @@
 \alias{brreg_label}
 \title{Translate codes to human-readable English labels}
 \usage{
-brreg_label(data, cols = NULL, refresh = FALSE)
+brreg_label(x, dic = NULL, code = NULL, lang = "en")
 }
 \arguments{
-\item{data}{A tibble returned by \code{\link[=brreg_entity]{brreg_entity()}}, \code{\link[=brreg_search]{brreg_search()}},
-or \code{\link[=brreg_roles]{brreg_roles()}}.}
+\item{x}{A tibble from \code{\link[=brreg_entity]{brreg_entity()}}, \code{\link[=brreg_search]{brreg_search()}}, or
+\code{\link[=brreg_roles]{brreg_roles()}}, or a character vector of codes.}
 
-\item{cols}{Character vector of columns to label. Default \code{NULL}
-labels all recognized code columns: \code{legal_form}, \code{nace_1}, \code{nace_2},
-\code{nace_3}, \code{sector_code}, \code{role_group_code}, \code{role_code}.}
+\item{dic}{A character string naming the dictionary to use when \code{x}
+is a character vector. One of \code{"legal_form"}, \code{"nace"},
+\code{"sector"}, \code{"role"}, \code{"role_group"}. Ignored when \code{x} is a
+data frame (dictionaries are inferred from column names).}
 
-\item{refresh}{Logical. If \code{TRUE}, fetch current NACE and sector
-labels from the SSB Klass API instead of using bundled data.
-Requires internet access. Defaults to \code{FALSE}.}
+\item{code}{For data frames: character vector of column names for
+which to retain the original code alongside the label. A column
+with suffix \verb{_code} is added. For example,
+\code{brreg_label(x, code = "legal_form")} adds \code{legal_form_code}.}
+
+\item{lang}{Language for NACE and sector labels. \code{"en"} (default)
+or \code{"no"} (Norwegian original from brreg API).}
 }
 \value{
-The input tibble with code columns replaced by English labels.
-Original codes are stored in \code{attr(result, "original_codes")} as a
-named list.
+When \code{x} is a data frame: the same tibble with code columns
+replaced by English labels. When \code{x} is a character vector: a
+character vector of labels.
 }
 \description{
-Replace coded values in a brreg tibble with English descriptions.
-Translations use bundled reference data by default. For NACE industry
-codes and institutional sector codes, fresh labels can be fetched from
-the SSB Klass API via \code{refresh = TRUE}.
-}
-\details{
-This implements the label-on-demand pattern: functions like
-\code{\link[=brreg_entity]{brreg_entity()}} and \code{\link[=brreg_search]{brreg_search()}} return codes by default, and
-\code{brreg_label()} translates them post-hoc. Original codes are preserved
-in \code{attr(result, "original_codes")}.
+Replace coded values in a brreg tibble with English descriptions,
+following the eurostat package's \code{label_eurostat()} pattern. Works on
+both data frames and character vectors.
 }
 \examples{
 \dontshow{if (interactive() && curl::has_internet()) withAutoprint(\{ # examplesIf}
 eq <- brreg_entity("923609016")
-eq$legal_form          # "ASA"
-brreg_label(eq)$legal_form  # "Public limited company"
 
-# Label only specific columns
-brreg_label(eq, cols = "nace_1")
+# Label all code columns
+brreg_label(eq)
 
-# Refresh NACE labels from SSB Klass API
-brreg_label(eq, refresh = TRUE)
+# Keep original codes alongside labels
+brreg_label(eq, code = "legal_form")
+
+# Label a character vector directly
+brreg_label(c("AS", "ASA", "ENK"), dic = "legal_form")
 \dontshow{\}) # examplesIf}
 }
 \seealso{
 \link{legal_forms}, \link{role_types}, \link{role_groups} for bundled
-reference data.
+reference data, \code{\link[=get_brreg_dic]{get_brreg_dic()}} for fetching fresh dictionaries.
 
 Other tidybrreg utilities: 
-\code{\link{brreg_validate}()}
+\code{\link{brreg_validate}()},
+\code{\link{get_brreg_dic}()}
 }
 \concept{tidybrreg utilities}

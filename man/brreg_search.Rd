@@ -13,7 +13,8 @@ brreg_search(
   max_employees = NULL,
   bankrupt = NULL,
   parent_org_nr = NULL,
-  max_results = 200
+  max_results = 200,
+  type = c("code", "label")
 )
 }
 \arguments{
@@ -35,6 +36,9 @@ etc. See \link{legal_forms} for valid codes.}
 \item{max_results}{Integer. Maximum entities to return (default 200).
 The API caps search results at 10,000; use \code{brreg_download()} for
 larger extractions.}
+
+\item{type}{A type of variables: \code{"code"} (default) returns raw
+codes, \code{"label"} returns English labels for coded columns.}
 }
 \value{
 A tibble with one row per entity. Column names follow the

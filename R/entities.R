@@ -14,6 +14,10 @@
 #'
 #' @param org_nr Character. A 9-digit Norwegian organization number.
 #'   Validated using [brreg_validate()] before the API call.
+#' @param type A type of variables: `"code"` (default) returns raw
+#'   codes, `"label"` returns English labels for coded columns
+#'   (legal form, NACE, sector, etc.), following the eurostat
+#'   package's pattern.
 #'
 #' @returns A tibble with one row and one column per API field. Column
 #'   names follow the package field dictionary. Key columns include
@@ -32,9 +36,13 @@
 #' # Equinor ASA — Norway's largest company
 #' brreg_entity("923609016")
 #'
-#' # With English labels
-#' brreg_entity("923609016") |> brreg_label()
-brreg_entity <- function(org_nr) {
+#' # With English labels (eurostat pattern)
+#' brreg_entity("923609016", type = "label")
+#'
+#' # Or pipe to brreg_label() for more control
+#' brreg_entity("923609016") |> brreg_label(code = "legal_form")
+brreg_entity <- function(org_nr, type = c("code", "label")) {
+  type <- match.arg(type)
   org_nr <- as.character(org_nr)
   if (!brreg_validate(org_nr)) {
     cli::cli_abort(c(
@@ -62,7 +70,9 @@ brreg_entity <- function(org_nr) {
   if (status >= 400L) {
     cli::cli_abort("Norwegian Business Registry API error: HTTP {status}")
   }
-  parse_entity(httr2::resp_body_json(resp))
+  result <- parse_entity(httr2::resp_body_json(resp))
+  if (identical(type, "label")) result <- brreg_label(result)
+  result
 }
 
 
@@ -92,6 +102,8 @@ brreg_entity <- function(org_nr) {
 #' @param max_results Integer. Maximum entities to return (default 200).
 #'   The API caps search results at 10,000; use `brreg_download()` for
 #'   larger extractions.
+#' @param type A type of variables: `"code"` (default) returns raw
+#'   codes, `"label"` returns English labels for coded columns.
 #'
 #' @returns A tibble with one row per entity. Column names follow the
 #'   package field dictionary ([field_dict]). An attribute `total_matches`
@@ -113,7 +125,8 @@ brreg_search <- function(name = NULL, legal_form = NULL,
                           municipality_code = NULL, nace_code = NULL,
                           min_employees = NULL, max_employees = NULL,
                           bankrupt = NULL, parent_org_nr = NULL,
-                          max_results = 200) {
+                          max_results = 200, type = c("code", "label")) {
+  type <- match.arg(type)
   query <- list(
     navn = name,
     organisasjonsform = legal_form,
@@ -153,5 +166,6 @@ brreg_search <- function(name = NULL, legal_form = NULL,
   n <- min(length(all_items), max_results)
   result <- parse_entities(all_items[seq_len(n)])
   attr(result, "total_matches") <- total
+  if (identical(type, "label")) result <- brreg_label(result)
   result
 }

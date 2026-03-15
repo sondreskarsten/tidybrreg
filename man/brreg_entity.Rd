@@ -4,11 +4,16 @@
 \alias{brreg_entity}
 \title{Look up a Norwegian legal entity}
 \usage{
-brreg_entity(org_nr)
+brreg_entity(org_nr, type = c("code", "label"))
 }
 \arguments{
 \item{org_nr}{Character. A 9-digit Norwegian organization number.
 Validated using \code{\link[=brreg_validate]{brreg_validate()}} before the API call.}
+
+\item{type}{A type of variables: \code{"code"} (default) returns raw
+codes, \code{"label"} returns English labels for coded columns
+(legal form, NACE, sector, etc.), following the eurostat
+package's pattern.}
 }
 \value{
 A tibble with one row and one column per API field. Column
@@ -37,8 +42,11 @@ coded values (legal forms, NACE codes) to English descriptions.
 # Equinor ASA — Norway's largest company
 brreg_entity("923609016")
 
-# With English labels
-brreg_entity("923609016") |> brreg_label()
+# With English labels (eurostat pattern)
+brreg_entity("923609016", type = "label")
+
+# Or pipe to brreg_label() for more control
+brreg_entity("923609016") |> brreg_label(code = "legal_form")
 \dontshow{\}) # examplesIf}
 }
 \seealso{
