@@ -1,104 +1,137 @@
-# tidybrreg <img src="man/figures/logo.png" align="right" height="139" alt="" />
+
+# tidybrreg
 
 <!-- badges: start -->
+
 [![R-CMD-check](https://github.com/sondreskarsten/tidybrreg/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/sondreskarsten/tidybrreg/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-Tidy R interface to Norway's [Central Coordinating Register for Legal Entities](https://www.brreg.no/en/) (Enhetsregisteret), maintained by the Brønnøysund Register Centre.
-
-Every legal entity operating in Norway — companies, partnerships, sole proprietorships, associations, foundations, and government bodies — is assigned a unique 9-digit organization number and registered in this central register. The register contains approximately 1 million active entities. Data is freely available under the [Norwegian Licence for Open Government Data (NLOD 2.0)](https://data.norge.no/nlod/en/2.0).
+Tidy R interface to Norway’s [Central Coordinating Register for Legal
+Entities](https://www.brreg.no/en/) (Enhetsregisteret), maintained by
+the Brønnøysund Register Centre. The register contains approximately 1
+million active entities. Data is freely available under the [Norwegian
+Licence for Open Government Data (NLOD
+2.0)](https://data.norge.no/nlod/en/2.0).
 
 ## Installation
 
 ``` r
-# Install from GitHub
 # install.packages("pak")
 pak::pak("sondreskarsten/tidybrreg")
 ```
 
-## Usage
+## Entity lookup
 
 ``` r
 library(tidybrreg)
 
-# Look up a single entity
 brreg_entity("923609016")
-#> # A tibble: 1 × 61
-#>   org_nr    name        legal_form founding_date employees nace_1 municipality
-#>   <chr>     <chr>       <chr>      <date>            <int> <chr>  <chr>
-#> 1 923609016 EQUINOR ASA ASA        1972-09-18        21408 06.100 STAVANGER
+#> # A tibble: 1 × 65
+#>   org_nr    name        legal_form founding_date employees nace_1
+#>   <chr>     <chr>       <chr>      <date>            <int> <chr>
+#> 1 923609016 EQUINOR ASA ASA        1972-09-18        21408 06.100
+```
 
-# Translate codes to English
-brreg_entity("923609016") |> brreg_label()
+Codes by default. Translate to English with `type = "label"` or
+`brreg_label()`:
+
+``` r
+brreg_entity("923609016", type = "label")
 #> legal_form: "Public limited company"
 #> nace_1:     "Extraction of crude petroleum"
 
-# Search
+# Keep both codes and labels (eurostat pattern)
+brreg_entity("923609016") |>
+  brreg_label(code = c("legal_form", "nace_1"))
+#> legal_form_code: "ASA"
+#> legal_form:      "Public limited company"
+#> nace_1_code:     "06.100"
+#> nace_1:          "Extraction of crude petroleum"
+```
+
+## Search
+
+``` r
 brreg_search(legal_form = "AS", municipality_code = "0301",
              min_employees = 500, max_results = 10)
+```
 
-# Board members and officers
+## Board members and officers
+
+``` r
 brreg_roles("923609016")
 #> # A tibble: 16 × 14
 #>   org_nr    role_group         role                first_name last_name
 #>   <chr>     <chr>              <chr>               <chr>      <chr>
 #> 1 923609016 Management         CEO / Managing Dir… Anders     Opedal
 #> 2 923609016 Board of Directors Chair of the Board  Jon Erik   Reinhardsen
-#> 3 923609016 Board of Directors Board Member        Anne       Drinkwater
 #> …
 
-# Validate organization numbers
-brreg_validate(c("923609016", "123456789"))
-#> [1]  TRUE FALSE
+brreg_roles("923609016") |> brreg_board_summary()
+#> board_size: 14 | n_chair: 1 | has_ceo: TRUE | has_auditor: TRUE
+```
+
+## Bulk download
+
+``` r
+# Full register (~1M rows, 145 MB gzipped)
+entities <- brreg_download()
+
+# Lazy Arrow Table (not loaded into memory)
+entities_arrow <- brreg_download(type_output = "arrow")
+
+# Incremental updates (CDC)
+brreg_updates(since = Sys.Date() - 7)
+```
+
+## Validate organization numbers
+
+``` r
+library(tidybrreg)
+brreg_validate(c("923609016", "984851006", "123456789"))
+#> [1]  TRUE  TRUE FALSE
 ```
 
 ## Design
 
-tidybrreg follows a **codes by default, labels on demand** architecture:
+**Codes by default, labels on demand.** Functions return Norwegian
+codes. `brreg_label()` translates to English via bundled reference data
+or live [SSB Klass API](https://data.ssb.no/api/klass/v1/) lookups
+(`brreg_label(x, refresh = TRUE)`).
 
-- **Column names** are translated from Norwegian to English via a data-driven dictionary (`field_dict`). API fields not in the dictionary pass through with auto-generated snake_case names — new fields added by brreg are never silently dropped.
+**Data-driven column dictionary.** `field_dict` maps Norwegian API names
+to English. Unknown API fields pass through with auto-generated
+snake_case names—new fields added by brreg are never silently dropped.
 
-- **Coded values** (legal forms, NACE industry codes, roles) are returned as codes by default. Call `brreg_label()` to translate to English descriptions. NACE labels can be refreshed from the [SSB Klass API](https://data.ssb.no/api/klass/v1/) at runtime via `brreg_label(refresh = TRUE)`.
+**Separate functions for separate backends.** `brreg_search()` uses the
+JSON API (filtered, max 10,000). `brreg_download()` uses the bulk CSV
+(always full register). Both return the same column schema via
+`field_dict`.
 
-- **Reference data** is bundled from live API sources and regenerated via `data-raw/build_dictionaries.R`: 44 legal forms, 18 role types, 1783 NACE codes (English), 33 institutional sector codes.
+## Functions
 
-## Available functions
-
-| Function | Description |
-|---|---|
-| `brreg_entity()` | Look up a single entity by organization number |
-| `brreg_search()` | Search entities by name, legal form, industry, geography |
-| `brreg_roles()` | Board members, officers, and auditors |
-| `brreg_board_summary()` | Derived board-level covariates |
-| `brreg_updates()` | Incremental change stream (CDC) |
-| `brreg_label()` | Translate codes to English descriptions |
-| `brreg_validate()` | Validate organization numbers (modulus-11) |
+| Function                | Description                                             |
+|-------------------------|---------------------------------------------------------|
+| `brreg_entity()`        | Single entity by organization number                    |
+| `brreg_search()`        | Filtered search (name, legal form, industry, geography) |
+| `brreg_roles()`         | Board members, officers, auditors                       |
+| `brreg_board_summary()` | Board-level covariates from role data                   |
+| `brreg_download()`      | Full register bulk download (~1M rows)                  |
+| `brreg_updates()`       | Incremental change stream (CDC)                         |
+| `brreg_label()`         | Translate codes to English descriptions                 |
+| `brreg_validate()`      | Organization number validation (modulus-11)             |
+| `get_brreg_dic()`       | Fetch/cache NACE or sector dictionaries                 |
 
 ## Reference datasets
 
-| Dataset | Description |
-|---|---|
-| `field_dict` | Column name mapping (49 Norwegian → English mappings) |
+| Dataset       | Description                                   |
+|---------------|-----------------------------------------------|
+| `field_dict`  | Column name mapping (49 Norwegian → English)  |
 | `legal_forms` | 44 legal form codes with English translations |
-| `role_types` | 18 role codes with English translations |
+| `role_types`  | 18 role codes with English translations       |
 | `role_groups` | 15 role group codes with English translations |
-
-## Norwegian legal forms
-
-Common codes for the `legal_form` parameter in `brreg_search()`:
-
-| Code | English | Norwegian |
-|---|---|---|
-| AS | Private limited company | Aksjeselskap |
-| ASA | Public limited company | Allmennaksjeselskap |
-| ENK | Sole proprietorship | Enkeltpersonforetak |
-| NUF | Norwegian-registered foreign entity | Norskregistrert utenlandsk foretak |
-| ANS | General partnership (joint liability) | Ansvarlig selskap |
-| STI | Foundation | Stiftelse |
-| SA | Cooperative | Samvirkeforetak |
-
-See `legal_forms` for the complete list.
 
 ## License
 
-MIT. Data from Enhetsregisteret is available under [NLOD 2.0](https://data.norge.no/nlod/en/2.0).
+MIT. Data from Enhetsregisteret is available under [NLOD
+2.0](https://data.norge.no/nlod/en/2.0).

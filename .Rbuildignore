@@ -1,7 +1,6 @@
 ^\.Rproj\.user$
 ^.*\.Rproj$
 ^README\.Rmd$
-^README\.md$
 ^LICENSE\.md$
 ^data-raw$
 ^\.github$
