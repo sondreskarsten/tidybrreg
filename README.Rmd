@@ -24,6 +24,11 @@ Tidy R interface to Norway's [Central Coordinating Register for Legal Entities](
 ```{r install, eval = FALSE}
 # install.packages("pak")
 pak::pak("sondreskarsten/tidybrreg")
+
+# For snapshot/panel features, also install a parquet backend:
+install.packages("nanoparquet")  # lightweight
+# OR
+install.packages("arrow")       # full-featured (lazy queries)
 ```
 
 ## Entity lookup
@@ -32,18 +37,17 @@ pak::pak("sondreskarsten/tidybrreg")
 library(tidybrreg)
 
 brreg_entity("923609016")
-#> # A tibble: 1 × 65
+#> # A tibble: 1 x 65
 #>   org_nr    name        legal_form founding_date employees nace_1
 #>   <chr>     <chr>       <chr>      <date>            <int> <chr>
 #> 1 923609016 EQUINOR ASA ASA        1972-09-18        21408 06.100
 ```
 
-Codes by default. Translate to English with `type = "label"` or `brreg_label()`:
+Codes by default. Translate with `type = "label"` or `brreg_label()`:
 
 ```{r label, eval = FALSE}
+# Inline labelling
 brreg_entity("923609016", type = "label")
-#> legal_form: "Public limited company"
-#> nace_1:     "Extraction of crude petroleum"
 
 # Keep both codes and labels (eurostat pattern)
 brreg_entity("923609016") |>
@@ -65,28 +69,74 @@ brreg_search(legal_form = "AS", municipality_code = "0301",
 
 ```{r roles, eval = FALSE}
 brreg_roles("923609016")
-#> # A tibble: 16 × 14
-#>   org_nr    role_group         role                first_name last_name
-#>   <chr>     <chr>              <chr>               <chr>      <chr>
-#> 1 923609016 Management         CEO / Managing Dir… Anders     Opedal
-#> 2 923609016 Board of Directors Chair of the Board  Jon Erik   Reinhardsen
-#> …
-
 brreg_roles("923609016") |> brreg_board_summary()
-#> board_size: 14 | n_chair: 1 | has_ceo: TRUE | has_auditor: TRUE
 ```
 
-## Bulk download
+## Snapshot engine
 
-```{r download, eval = FALSE}
-# Full register (~1M rows, 145 MB gzipped)
-entities <- brreg_download()
+Save dated bulk downloads as Hive-partitioned Parquet for panel construction:
 
-# Lazy Arrow Table (not loaded into memory)
-entities_arrow <- brreg_download(type_output = "arrow")
+```{r snapshot, eval = FALSE}
+# Save today's full register (~145 MB download, ~90 MB parquet)
+brreg_snapshot()
 
-# Incremental updates (CDC)
-brreg_updates(since = Sys.Date() - 7)
+# Import historical CSVs
+brreg_import("enheter_2024-12-31.csv.gz", snapshot_date = "2024-12-31")
+
+# List available snapshots
+brreg_snapshots()
+#> # A tibble: 3 x 3
+#>   snapshot_date file_size path
+#>   <date>            <dbl> <chr>
+#> 1 2024-01-01     87654321 ~/.local/share/R/tidybrreg/enheter/...
+#> 2 2024-07-01     88123456 ...
+#> 3 2025-01-01     89012345 ...
+```
+
+## Panel construction
+
+Build firm x period panels from accumulated snapshots:
+
+```{r panel, eval = FALSE}
+# Annual panel with selected variables
+panel <- brreg_panel(
+  frequency = "year",
+  cols = c("employees", "nace_1", "legal_form", "municipality_code")
+)
+
+# Monthly panel
+panel_m <- brreg_panel("month", cols = c("employees"))
+
+# Detect entries, exits, and field changes between two dates
+events <- brreg_events("2024-01-01", "2025-01-01")
+events |> dplyr::count(event_type)
+#>   event_type     n
+#> 1 change     52314
+#> 2 entry       8721
+#> 3 exit        3102
+
+# Aggregate time series
+brreg_series("count", by = "legal_form", frequency = "year")
+```
+
+## Harmonization
+
+Handle municipality boundary reforms and NACE reclassifications:
+
+```{r harmonize, eval = FALSE}
+panel |> brreg_harmonize_kommune(target_date = "2024-01-01")
+panel |> brreg_harmonize_nace(from = "SN2007", to = "SN2025")
+```
+
+## Governance research
+
+```{r governance, eval = FALSE}
+# Director interlock network (requires tidygraph)
+net <- brreg_board_network(c("923609016", "984851006"))
+
+# Firm survival data (for survival::Surv())
+surv <- brreg_search(legal_form = "AS", max_results = 1000) |>
+  brreg_survival_data()
 ```
 
 ## Validate organization numbers
@@ -98,11 +148,13 @@ brreg_validate(c("923609016", "984851006", "123456789"))
 
 ## Design
 
-**Codes by default, labels on demand.** Functions return Norwegian codes. `brreg_label()` translates to English via bundled reference data or live [SSB Klass API](https://data.ssb.no/api/klass/v1/) lookups (`brreg_label(x, refresh = TRUE)`).
+**Codes by default, labels on demand.** Functions return Norwegian codes. `brreg_label()` translates to English via bundled reference data or live [SSB Klass API](https://data.ssb.no/api/klass/v1/) lookups.
 
-**Data-driven column dictionary.** `field_dict` maps Norwegian API names to English. Unknown API fields pass through with auto-generated snake_case names—new fields added by brreg are never silently dropped.
+**Data-driven column dictionary.** `field_dict` maps Norwegian API names to English. Unknown API fields pass through with auto-generated snake_case names.
 
-**Separate functions for separate backends.** `brreg_search()` uses the JSON API (filtered, max 10,000). `brreg_download()` uses the bulk CSV (always full register). Both return the same column schema via `field_dict`.
+**Separate backends for separate scales.** `brreg_search()` uses the JSON API (filtered, max 10,000). `brreg_download()` / `brreg_snapshot()` use the bulk CSV (always full register). Both produce the same column schema via `field_dict`.
+
+**Snapshot-based temporal database.** `brreg_snapshot()` accumulates Hive-partitioned Parquet files. `brreg_panel()` queries them lazily via Arrow with partition pruning and projection pushdown.
 
 ## Functions
 
@@ -117,15 +169,19 @@ brreg_validate(c("923609016", "984851006", "123456789"))
 | `brreg_label()` | Translate codes to English descriptions |
 | `brreg_validate()` | Organization number validation (modulus-11) |
 | `get_brreg_dic()` | Fetch/cache NACE or sector dictionaries |
-
-## Reference datasets
-
-| Dataset | Description |
-|---|---|
-| `field_dict` | Column name mapping (49 Norwegian → English) |
-| `legal_forms` | 44 legal form codes with English translations |
-| `role_types` | 18 role codes with English translations |
-| `role_groups` | 15 role group codes with English translations |
+| `brreg_snapshot()` | Save dated bulk download as Parquet partition |
+| `brreg_import()` | Import historical CSV as snapshot partition |
+| `brreg_snapshots()` | List available snapshots |
+| `brreg_open()` | Open snapshot store as lazy Arrow Dataset |
+| `brreg_cleanup()` | Remove old snapshot partitions |
+| `brreg_panel()` | Firm x period panel from snapshots |
+| `brreg_events()` | Snapshot diff: entries, exits, field changes |
+| `brreg_series()` | Aggregate time series from snapshots |
+| `brreg_harmonize_kommune()` | Municipality code harmonization |
+| `brreg_harmonize_nace()` | NACE code harmonization (SN2007/SN2025) |
+| `brreg_board_network()` | Director interlock network (tidygraph) |
+| `brreg_survival_data()` | Firm survival data preparation |
+| `brreg_data_dir()` | Snapshot store location |
 
 ## License
 
