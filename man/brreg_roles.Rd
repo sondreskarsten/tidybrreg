@@ -48,6 +48,7 @@ brreg_roles("923609016")  # Equinor ASA
 
 Other tidybrreg entity functions: 
 \code{\link{brreg_board_summary}()},
+\code{\link{brreg_download}()},
 \code{\link{brreg_entity}()},
 \code{\link{brreg_search}()},
 \code{\link{brreg_updates}()}

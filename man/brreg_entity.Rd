@@ -56,6 +56,7 @@ brreg_entity("923609016") |> brreg_label(code = "legal_form")
 
 Other tidybrreg entity functions: 
 \code{\link{brreg_board_summary}()},
+\code{\link{brreg_download}()},
 \code{\link{brreg_roles}()},
 \code{\link{brreg_search}()},
 \code{\link{brreg_updates}()}

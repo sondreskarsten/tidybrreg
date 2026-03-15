@@ -79,6 +79,7 @@ brreg_search(legal_form = "AS", municipality_code = "0301",
 
 Other tidybrreg entity functions: 
 \code{\link{brreg_board_summary}()},
+\code{\link{brreg_download}()},
 \code{\link{brreg_entity}()},
 \code{\link{brreg_roles}()},
 \code{\link{brreg_updates}()}
