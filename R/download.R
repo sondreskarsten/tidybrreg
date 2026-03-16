@@ -151,8 +151,10 @@ brreg_download <- function(type = c("enheter", "underenheter", "roller"),
 #' Parse a brreg bulk CSV into a tibble using the field dictionary
 #'
 #' The bulk CSV uses `;` delimiter with `.` notation for nested fields
-#' (e.g. `forretningsadresse.kommune`). This function maps those names
-#' to the same English column names as the JSON API via [field_dict].
+#' (e.g. `forretningsadresse.kommune`). This function reads all columns
+#' as character, then applies [rename_and_coerce()] for field_dict
+#' mapping and type coercion — the same rename/coerce pipeline used
+#' by [parse_bulk_json()].
 #'
 #' @param path Path to the gzipped CSV file.
 #' @param type Entity type for column selection.
@@ -168,66 +170,101 @@ parse_bulk_csv <- function(path, type = "enheter", n_max = Inf) {
     col_types = readr::cols(.default = readr::col_character())
   )
 
-  csv_to_english <- stats::setNames(field_dict$col_name, tolower(field_dict$api_path))
-  csv_names <- names(dat)
-
-  new_names <- vapply(csv_names, function(cn) {
-    lcn <- tolower(cn)
-    if (lcn %in% names(csv_to_english)) return(csv_to_english[[lcn]])
-    to_snake(cn)
-  }, character(1), USE.NAMES = FALSE)
-
-  names(dat) <- new_names
-
-  for (i in seq_len(nrow(field_dict))) {
-    col <- field_dict$col_name[i]
-    if (!col %in% names(dat)) next
-    target <- field_dict$type[i]
-    dat[[col]] <- switch(target,
-      Date      = as.Date(dat[[col]]),
-      integer   = suppressWarnings(as.integer(dat[[col]])),
-      logical   = as.logical(dat[[col]]),
-      character = dat[[col]],
-      dat[[col]]
-    )
-  }
-
-  dat
+  rename_and_coerce(dat)
 }
 
 
-#' Parse a brreg bulk JSON download into a tibble
+#' Parse a brreg bulk JSON download into a flat tibble
 #'
 #' The `/enheter/lastned` and `/underenheter/lastned` endpoints return
-#' gzipped JSON arrays where each element has the same nested structure
-#' as a single-entity API response. Uses `jsonlite::fromJSON(flatten = TRUE)`
-#' to produce a flat data.frame with dot-notation columns, then renames
-#' via [field_dict] — same pipeline as [parse_bulk_csv()].
+#' gzipped JSON arrays with nested objects. `jsonlite::fromJSON(flatten = TRUE)`
+#' expands nested objects to dot-notation columns but leaves arrays as list
+#' columns. This function algorithmically flattens all list columns to
+#' atomic types:
+#'
+#' - Character vectors (addresses, activities): collapsed with separator
+#' - Data frames (paategninger): serialized to JSON strings
+#' - Empty lists (HAL links): dropped
+#' - NULL elements: `NA_character_`
+#'
+#' Known columns are renamed via [field_dict]. Unknown columns pass through
+#' with auto-generated `snake_case` names (zero-drop policy). The raw `.gz`
+#' file is the provenance fallback for anyone needing the original nesting.
 #'
 #' @param path Path to the gzipped JSON file.
 #' @param type Entity type (for column context).
-#' @returns A tibble with columns mapped via [field_dict].
+#' @returns A tibble with atomic columns only, mapped via [field_dict].
 #' @keywords internal
 parse_bulk_json <- function(path, type = "enheter") {
   dat <- jsonlite::fromJSON(path, flatten = TRUE)
   dat <- tibble::as_tibble(dat)
 
+  dat <- flatten_list_columns(dat)
+  dat <- drop_hal_links(dat)
+  dat <- rename_and_coerce(dat)
+  dat
+}
+
+
+#' Algorithmically flatten all list columns to atomic types
+#'
+#' Dispatches on the runtime type of each list column's elements:
+#' character/numeric vectors are collapsed, data.frames are serialized
+#' to JSON, NULLs become `NA_character_`.
+#'
+#' @param dat A tibble potentially containing list columns.
+#' @returns The same tibble with all list columns converted to character.
+#' @keywords internal
+flatten_list_columns <- function(dat) {
   list_cols <- names(dat)[vapply(dat, is.list, logical(1))]
   for (col in list_cols) {
-    dat[[col]] <- vapply(dat[[col]], function(x) {
-      if (is.null(x) || length(x) == 0) return(NA_character_)
-      if (is.data.frame(x)) return(NA_character_)
-      if (is.list(x) && is.null(names(x))) return(NA_character_)
-      paste(as.character(unlist(x)), collapse = ", ")
-    }, character(1))
+    dat[[col]] <- vapply(dat[[col]], flatten_cell, character(1))
   }
+  dat
+}
 
-  json_to_english <- stats::setNames(field_dict$col_name, tolower(field_dict$api_path))
-  json_names <- names(dat)
+#' Flatten a single list-column cell to an atomic character value
+#' @keywords internal
+flatten_cell <- function(x) {
+  if (is.null(x) || length(x) == 0) return(NA_character_)
+  if (is.data.frame(x)) {
+    if (nrow(x) == 0) return(NA_character_)
+    return(jsonlite::toJSON(x, auto_unbox = TRUE))
+  }
+  if (is.list(x) && is.null(names(x)) && all(vapply(x, is.null, logical(1)))) {
+    return(NA_character_)
+  }
+  if (is.list(x) && !is.null(names(x))) {
+    return(jsonlite::toJSON(x, auto_unbox = TRUE))
+  }
+  if (is.atomic(x)) {
+    return(paste(as.character(x), collapse = "; "))
+  }
+  paste(as.character(unlist(x)), collapse = "; ")
+}
 
-  new_names <- vapply(json_names, function(cn) {
+#' Drop HAL _links columns (metadata, not data)
+#' @keywords internal
+drop_hal_links <- function(dat) {
+  link_cols <- grep("\\.?links$", names(dat), value = TRUE)
+  if (length(link_cols) > 0) dat <- dat[, !names(dat) %in% link_cols, drop = FALSE]
+  dat
+}
+
+#' Rename columns via field_dict and coerce types
+#'
+#' Shared between CSV and JSON parsing. Known dot-notation paths
+#' map to English names; unknown paths get auto snake_case.
+#' Type coercion follows `field_dict$type`.
+#'
+#' @keywords internal
+rename_and_coerce <- function(dat) {
+  dict_map <- stats::setNames(field_dict$col_name, tolower(field_dict$api_path))
+  old_names <- names(dat)
+
+  new_names <- vapply(old_names, function(cn) {
     lcn <- tolower(cn)
-    if (lcn %in% names(json_to_english)) return(json_to_english[[lcn]])
+    if (lcn %in% names(dict_map)) return(dict_map[[lcn]])
     to_snake(cn)
   }, character(1), USE.NAMES = FALSE)
 
@@ -245,7 +282,6 @@ parse_bulk_json <- function(path, type = "enheter") {
       dat[[col]]
     )
   }
-
   dat
 }
 

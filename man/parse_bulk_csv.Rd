@@ -18,7 +18,9 @@ A tibble with columns mapped via \link{field_dict}.
 }
 \description{
 The bulk CSV uses \verb{;} delimiter with \code{.} notation for nested fields
-(e.g. \code{forretningsadresse.kommune}). This function maps those names
-to the same English column names as the JSON API via \link{field_dict}.
+(e.g. \code{forretningsadresse.kommune}). This function reads all columns
+as character, then applies \code{\link[=rename_and_coerce]{rename_and_coerce()}} for field_dict
+mapping and type coercion — the same rename/coerce pipeline used
+by \code{\link[=parse_bulk_json]{parse_bulk_json()}}.
 }
 \keyword{internal}
