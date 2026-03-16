@@ -39,7 +39,7 @@ brreg_panel <- function(frequency = c("year", "quarter", "month", "custom"),
                          from = NULL,
                          to = NULL,
                          dates = NULL,
-                         type = c("enheter", "underenheter"),
+                         type = c("enheter", "underenheter", "roller"),
                          label = FALSE) {
   frequency <- match.arg(frequency)
   type <- match.arg(type)
@@ -112,6 +112,9 @@ brreg_panel <- function(frequency = c("year", "quarter", "month", "custom"),
 
   attr(result, "date_mapping") <- mapping
   attr(result, "frequency") <- frequency
+  attr(result, "brreg_panel_meta") <- list(
+    index = "snapshot_date", key = "org_nr", frequency = frequency
+  )
   result
 }
 

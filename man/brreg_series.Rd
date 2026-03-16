@@ -5,55 +5,67 @@
 \title{Compute aggregate time series from snapshots}
 \usage{
 brreg_series(
-  metric = c("count", "employees", "entries", "exits"),
+  .vars = NULL,
+  .fns = list(total = function(x) sum(x, na.rm = TRUE)),
   by = NULL,
   frequency = c("year", "quarter", "month"),
   from = NULL,
   to = NULL,
-  type = c("enheter", "underenheter"),
+  type = c("enheter", "underenheter", "roller"),
   label = FALSE
 )
 }
 \arguments{
-\item{metric}{One of:
-\itemize{
-\item \code{"count"}: number of entities per period
-\item \code{"employees"}: total employees per period
-\item \code{"entries"}: new registrations per period (requires 2+ snapshots)
-\item \code{"exits"}: disappearances per period (requires 2+ snapshots)
-}}
+\item{.vars}{Character vector of column names to aggregate.
+\code{NULL} (default) counts entities per period.}
 
-\item{by}{Optional grouping column name: \code{"nace_1"}, \code{"legal_form"},
-\code{"municipality_code"}, or \code{NULL} for national totals.}
+\item{.fns}{Named list of summary functions applied to each
+column in \code{.vars}. Default: \verb{list(total = \\(x) sum(x, na.rm = TRUE))}.
+Use \code{list(avg = mean, sd = sd)} for multiple summaries.
+Output columns are named \verb{\{variable\}_\{function\}}.}
+
+\item{by}{Character vector of grouping column names
+(e.g. \code{"nace_1"}, \code{c("legal_form", "municipality_code")}).
+\code{NULL} for national totals.}
 
 \item{frequency}{One of \code{"year"}, \code{"quarter"}, \code{"month"}.}
 
-\item{from, to}{Date range.}
+\item{from, to}{Date range. Defaults to range of available snapshots.}
 
-\item{type}{One of \code{"enheter"} or \code{"underenheter"}.}
+\item{type}{One of \code{"enheter"}, \code{"underenheter"}, \code{"roller"}.}
 
 \item{label}{Logical. Translate group codes to English labels.}
 }
 \value{
-A tibble with columns: \code{period}, optional grouping column,
-\code{value}.
+A tibble with \code{period} (character), optional grouping
+columns, and one column per variable-function combination.
+Attribute \code{brreg_panel_meta} records metadata for
+\code{\link[=as_brreg_tsibble]{as_brreg_tsibble()}} conversion.
 }
 \description{
-Produce period-level summary statistics from the snapshot store.
-Returns a tibble suitable for ggplot2 or tsibble conversion.
+Produce period-level summary statistics from the snapshot store
+for any combination of variables and summary functions. Returns
+a tibble suitable for ggplot2 or \code{\link[=as_brreg_tsibble]{as_brreg_tsibble()}} conversion.
 }
 \examples{
 \dontshow{if (interactive() && requireNamespace("arrow", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 \donttest{
-brreg_series("count", by = "legal_form")
+brreg_series(.vars = "employees", by = "legal_form")
+
+brreg_series(.vars = "employees",
+             .fns = list(avg = mean, total = sum),
+             by = "nace_1")
 }
 \dontshow{\}) # examplesIf}
 }
 \seealso{
-\code{\link[=brreg_panel]{brreg_panel()}} for entity-level panels.
+\code{\link[=brreg_panel]{brreg_panel()}} for entity-level panels,
+\code{\link[=as_brreg_tsibble]{as_brreg_tsibble()}} for tsibble conversion.
 
 Other tidybrreg panel functions: 
+\code{\link{as_brreg_tsibble}()},
 \code{\link{brreg_events}()},
-\code{\link{brreg_panel}()}
+\code{\link{brreg_panel}()},
+\code{\link{brreg_replay}()}
 }
 \concept{tidybrreg panel functions}

@@ -58,14 +58,30 @@ brreg_snapshot <- function(type = c("enheter", "underenheter", "roller"),
     }
   }
 
+  fmt <- if (type == "roller") "json" else "csv"
+  raw_cache <- brreg_download(type = type, format = fmt, type_output = "path", refresh = TRUE)
+
+  raw_dir <- file.path(partition_dir, "raw")
+  dir.create(raw_dir, recursive = TRUE, showWarnings = FALSE)
+  raw_dest <- file.path(raw_dir, basename(raw_cache))
+  file.copy(raw_cache, raw_dest, overwrite = TRUE)
+
   if (type == "roller") {
-    gz_path <- brreg_download(type = "roller", type_output = "path", refresh = TRUE)
-    dat <- parse_roles_bulk(gz_path)
+    dat <- parse_roles_bulk(raw_cache)
   } else {
-    csv_path <- brreg_download(type = type, type_output = "path", refresh = TRUE)
-    dat <- parse_bulk_csv(csv_path, type = type)
+    dat <- parse_bulk_csv(raw_cache, type = type)
   }
   write_parquet_safe(dat, parquet_path)
+
+  resp <- tryCatch(get("last_download_resp", envir = .brregEnv), error = \(e) NULL)
+  url <- tryCatch(get("last_download_url", envir = .brregEnv), error = \(e) NA_character_)
+  entry <- build_manifest_entry(
+    type = type, snapshot_date = date,
+    endpoint = url, format = fmt,
+    resp = resp, raw_path = raw_dest,
+    parquet_path = parquet_path, record_count = nrow(dat)
+  )
+  write_manifest_entry(entry)
 
   fsize <- file.size(parquet_path)
   n_label <- if (type == "roller") "role records" else "entities"

@@ -119,6 +119,8 @@ brreg_download <- function(type = c("enheter", "underenheter", "roller"),
     }
     fsize <- file.size(cache_file)
     cli::cli_alert_success("Downloaded {round(fsize / 1024^2, 1)} MB to cache.")
+    assign("last_download_resp", resp, envir = .brregEnv)
+    assign("last_download_url", url, envir = .brregEnv)
   } else if (file.exists(cache_file)) {
     fsize <- file.size(cache_file)
     mtime <- format(file.mtime(cache_file), "%Y-%m-%d %H:%M")

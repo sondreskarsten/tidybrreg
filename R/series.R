@@ -1,124 +1,104 @@
 #' Compute aggregate time series from snapshots
 #'
-#' Produce period-level summary statistics from the snapshot store.
-#' Returns a tibble suitable for ggplot2 or tsibble conversion.
+#' Produce period-level summary statistics from the snapshot store
+#' for any combination of variables and summary functions. Returns
+#' a tibble suitable for ggplot2 or [as_brreg_tsibble()] conversion.
 #'
-#' @param metric One of:
-#'   - `"count"`: number of entities per period
-#'   - `"employees"`: total employees per period
-#'   - `"entries"`: new registrations per period (requires 2+ snapshots)
-#'   - `"exits"`: disappearances per period (requires 2+ snapshots)
-#' @param by Optional grouping column name: `"nace_1"`, `"legal_form"`,
-#'   `"municipality_code"`, or `NULL` for national totals.
+#' @param .vars Character vector of column names to aggregate.
+#'   `NULL` (default) counts entities per period.
+#' @param .fns Named list of summary functions applied to each
+#'   column in `.vars`. Default: `list(total = \(x) sum(x, na.rm = TRUE))`.
+#'   Use `list(avg = mean, sd = sd)` for multiple summaries.
+#'   Output columns are named `{variable}_{function}`.
+#' @param by Character vector of grouping column names
+#'   (e.g. `"nace_1"`, `c("legal_form", "municipality_code")`).
+#'   `NULL` for national totals.
 #' @param frequency One of `"year"`, `"quarter"`, `"month"`.
-#' @param from,to Date range.
-#' @param type One of `"enheter"` or `"underenheter"`.
+#' @param from,to Date range. Defaults to range of available snapshots.
+#' @param type One of `"enheter"`, `"underenheter"`, `"roller"`.
 #' @param label Logical. Translate group codes to English labels.
 #'
-#' @returns A tibble with columns: `period`, optional grouping column,
-#'   `value`.
+#' @returns A tibble with `period` (character), optional grouping
+#'   columns, and one column per variable-function combination.
+#'   Attribute `brreg_panel_meta` records metadata for
+#'   [as_brreg_tsibble()] conversion.
 #'
 #' @family tidybrreg panel functions
-#' @seealso [brreg_panel()] for entity-level panels.
+#' @seealso [brreg_panel()] for entity-level panels,
+#'   [as_brreg_tsibble()] for tsibble conversion.
 #'
 #' @export
 #' @examplesIf interactive() && requireNamespace("arrow", quietly = TRUE)
 #' \donttest{
-#' brreg_series("count", by = "legal_form")
+#' brreg_series(.vars = "employees", by = "legal_form")
+#'
+#' brreg_series(.vars = "employees",
+#'              .fns = list(avg = mean, total = sum),
+#'              by = "nace_1")
 #' }
-brreg_series <- function(metric = c("count", "employees", "entries", "exits"),
+brreg_series <- function(.vars = NULL,
+                          .fns = list(total = \(x) sum(x, na.rm = TRUE)),
                           by = NULL,
                           frequency = c("year", "quarter", "month"),
                           from = NULL, to = NULL,
-                          type = c("enheter", "underenheter"),
+                          type = c("enheter", "underenheter", "roller"),
                           label = FALSE) {
-  metric <- match.arg(metric)
   frequency <- match.arg(frequency)
   type <- match.arg(type)
 
-  if (metric %in% c("entries", "exits")) {
-    return(series_flow(metric, by, frequency, from, to, type, label))
-  }
-
-  panel_cols <- c(if (!is.null(by)) by, if (metric == "employees") "employees")
-  panel <- brreg_panel(
-    frequency = frequency, cols = panel_cols,
-    from = from, to = to, type = type, label = FALSE
-  )
-
-  grp <- if (!is.null(by)) c("period", by) else "period"
-
-  result <- switch(metric,
-    count = panel |>
-      dplyr::group_by(dplyr::across(dplyr::all_of(grp))) |>
-      dplyr::summarise(value = dplyr::n(), .groups = "drop"),
-    employees = panel |>
-      dplyr::group_by(dplyr::across(dplyr::all_of(grp))) |>
-      dplyr::summarise(value = sum(.data$employees, na.rm = TRUE), .groups = "drop")
-  )
-
-  if (label && !is.null(by)) result <- brreg_label(result)
-  result
-}
-
-
-#' Compute entry/exit flow series from consecutive snapshot diffs
-#' @keywords internal
-series_flow <- function(metric, by, frequency, from, to, type, label) {
   snaps <- brreg_snapshots(type)
-  if (nrow(snaps) < 2) {
-    cli::cli_abort("Entry/exit series requires at least 2 snapshots.")
+  if (nrow(snaps) < 1) {
+    cli::cli_abort("No snapshots found for {.val {type}}.")
   }
 
   available <- sort(snaps$snapshot_date)
-  from <- from %||% min(available)
-  to <- to %||% max(available)
-  from <- as.Date(from)
-  to <- as.Date(to)
+  from <- as.Date(from %||% min(available))
+  to <- as.Date(to %||% max(available))
 
-  available <- available[available >= from & available <= to]
-  if (length(available) < 2) {
-    cli::cli_abort("Need at least 2 snapshots in the [{from}, {to}] range.")
-  }
-
-  pairs <- tibble::tibble(
-    date_from = available[-length(available)],
-    date_to = available[-1]
+  targets <- switch(frequency,
+    year    = generate_year_targets(from, to),
+    quarter = generate_quarter_targets(from, to),
+    month   = generate_month_targets(from, to)
   )
 
-  target_col <- if (metric == "entries") "entry" else "exit"
-  all_events <- vector("list", nrow(pairs))
-
-  for (i in seq_len(nrow(pairs))) {
-    ev <- brreg_events(pairs$date_from[i], pairs$date_to[i],
-                        cols = by, type = type)
-    ev <- ev[ev$event_type == target_col, , drop = FALSE]
-
-    if (!is.null(by) && nrow(ev) > 0) {
-      snap <- read_parquet_safe(snaps$path[snaps$snapshot_date == pairs$date_to[i]])
-      ev <- dplyr::left_join(ev, snap[, c("org_nr", by), drop = FALSE],
-                              by = "org_nr")
-    }
-    ev$period_date <- pairs$date_to[i]
-    all_events[[i]] <- ev
+  mapping <- resolve_snapshot_dates(available, targets)
+  if (nrow(mapping) == 0) {
+    cli::cli_abort("No snapshots available for the requested period range.")
   }
 
-  events <- dplyr::bind_rows(all_events)
-  if (nrow(events) == 0) {
-    cols <- c("period", if (!is.null(by)) by, "value")
-    return(tibble::tibble(!!!stats::setNames(
-      replicate(length(cols), character(0), simplify = FALSE), cols
-    )))
+  read_cols <- unique(c("org_nr", .vars, by))
+
+  chunks <- lapply(seq_len(nrow(mapping)), function(i) {
+    snap_date <- mapping$snapshot_date[i]
+    path <- snaps$path[snaps$snapshot_date == snap_date]
+    dat <- read_parquet_safe(path)
+    keep <- intersect(read_cols, names(dat))
+    dat <- dat[, keep, drop = FALSE]
+    dat$period <- mapping$period[i]
+    dat
+  })
+  panel <- dplyr::bind_rows(chunks)
+
+  grp <- c("period", by)
+
+  if (is.null(.vars)) {
+    result <- panel |>
+      dplyr::group_by(dplyr::across(dplyr::all_of(grp))) |>
+      dplyr::summarise(n = dplyr::n(), .groups = "drop")
+  } else {
+    result <- panel |>
+      dplyr::group_by(dplyr::across(dplyr::all_of(grp))) |>
+      dplyr::summarise(
+        dplyr::across(dplyr::all_of(.vars), .fns, .names = "{.col}_{.fn}"),
+        .groups = "drop"
+      )
   }
-
-  events$period <- format_period(events$period_date, frequency)
-  grp <- if (!is.null(by)) c("period", by) else "period"
-
-  result <- events |>
-    dplyr::group_by(dplyr::across(dplyr::all_of(grp))) |>
-    dplyr::summarise(value = dplyr::n(), .groups = "drop")
 
   if (label && !is.null(by)) result <- brreg_label(result)
+
+  attr(result, "brreg_panel_meta") <- list(
+    index = "period", key = by %||% character(), frequency = frequency
+  )
   result
 }
 

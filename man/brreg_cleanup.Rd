@@ -36,6 +36,7 @@ brreg_cleanup(max_age_days = 365)
 Other tidybrreg snapshot functions: 
 \code{\link{brreg_data_dir}()},
 \code{\link{brreg_import}()},
+\code{\link{brreg_manifest}()},
 \code{\link{brreg_open}()},
 \code{\link{brreg_snapshot}()},
 \code{\link{brreg_snapshots}()}

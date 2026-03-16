@@ -50,7 +50,9 @@ if (nrow(snaps) >= 2) {
 \code{\link[=brreg_panel]{brreg_panel()}} for full panel construction.
 
 Other tidybrreg panel functions: 
+\code{\link{as_brreg_tsibble}()},
 \code{\link{brreg_panel}()},
+\code{\link{brreg_replay}()},
 \code{\link{brreg_series}()}
 }
 \concept{tidybrreg panel functions}

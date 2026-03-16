@@ -36,6 +36,7 @@ Suggests:
     klassR,
     tidygraph,
     tidyr,
+    tsibble,
     httptest2,
     testthat (>= 3.0.0),
     withr

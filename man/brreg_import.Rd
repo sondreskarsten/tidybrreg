@@ -41,6 +41,7 @@ brreg_import("enheter_2024-12-31.csv.gz", snapshot_date = "2024-12-31")
 Other tidybrreg snapshot functions: 
 \code{\link{brreg_cleanup}()},
 \code{\link{brreg_data_dir}()},
+\code{\link{brreg_manifest}()},
 \code{\link{brreg_open}()},
 \code{\link{brreg_snapshot}()},
 \code{\link{brreg_snapshots}()}
