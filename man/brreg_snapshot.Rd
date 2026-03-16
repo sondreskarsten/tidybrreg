@@ -5,15 +5,18 @@
 \title{Save a dated snapshot of the full register}
 \usage{
 brreg_snapshot(
-  type = c("enheter", "underenheter"),
+  type = c("enheter", "underenheter", "roller"),
   date = Sys.Date(),
   force = FALSE,
   ask = interactive()
 )
 }
 \arguments{
-\item{type}{One of \code{"enheter"} (main entities, default) or
-\code{"underenheter"} (sub-entities / establishments).}
+\item{type}{One of \code{"enheter"} (main entities, default),
+\code{"underenheter"} (sub-entities / establishments), or
+\code{"roller"} (all roles for all entities, via
+\verb{/roller/totalbestand}). Roller snapshots parse the nested
+JSON into a flat tibble matching \code{\link[=brreg_roles]{brreg_roles()}} output.}
 
 \item{date}{Date for this snapshot (default: today). Used as the
 partition key, not as an API parameter — the brreg bulk endpoint

@@ -4,7 +4,7 @@
 \alias{brreg_open}
 \title{Open the snapshot store as a lazy Arrow Dataset}
 \usage{
-brreg_open(type = c("enheter", "underenheter"))
+brreg_open(type = c("enheter", "underenheter", "roller"))
 }
 \arguments{
 \item{type}{One of \code{"enheter"} or \code{"underenheter"}.}

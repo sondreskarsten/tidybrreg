@@ -30,6 +30,7 @@ Other tidybrreg entity functions:
 \code{\link{brreg_download}()},
 \code{\link{brreg_entity}()},
 \code{\link{brreg_roles}()},
+\code{\link{brreg_roles_legal}()},
 \code{\link{brreg_search}()},
 \code{\link{brreg_updates}()}
 }

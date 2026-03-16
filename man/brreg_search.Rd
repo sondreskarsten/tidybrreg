@@ -14,6 +14,7 @@ brreg_search(
   bankrupt = NULL,
   parent_org_nr = NULL,
   max_results = 200,
+  registry = c("enheter", "underenheter"),
   type = c("code", "label")
 )
 }
@@ -36,6 +37,12 @@ etc. See \link{legal_forms} for valid codes.}
 \item{max_results}{Integer. Maximum entities to return (default 200).
 The API caps search results at 10,000; use \code{brreg_download()} for
 larger extractions.}
+
+\item{registry}{One of \code{"enheter"} (main entities, default) or
+\code{"underenheter"} (sub-entities / establishments). Sub-entities
+use \code{beliggenhetsadresse.kommunenummer} instead of \code{kommunenummer}
+for geographic filtering, and the \code{bankrupt} parameter is not
+available.}
 
 \item{type}{A type of variables: \code{"code"} (default) returns raw
 codes, \code{"label"} returns English labels for coded columns.}
@@ -82,6 +89,7 @@ Other tidybrreg entity functions:
 \code{\link{brreg_download}()},
 \code{\link{brreg_entity}()},
 \code{\link{brreg_roles}()},
+\code{\link{brreg_roles_legal}()},
 \code{\link{brreg_updates}()}
 }
 \concept{tidybrreg entity functions}

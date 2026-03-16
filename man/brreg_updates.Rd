@@ -8,7 +8,7 @@ brreg_updates(
   since = Sys.Date() - 1,
   size = 100,
   include_changes = FALSE,
-  type = c("enheter", "underenheter")
+  type = c("enheter", "underenheter", "roller")
 )
 }
 \arguments{
@@ -21,8 +21,11 @@ Defaults to yesterday.}
 details per update as a list-column of tibbles. The brreg API
 returns changes in a flat RFC 6902-style JSON Patch format.}
 
-\item{type}{One of \code{"enheter"} (main entities) or \code{"underenheter"}
-(sub-entities / establishments).}
+\item{type}{One of \code{"enheter"} (main entities), \code{"underenheter"}
+(sub-entities), or \code{"roller"} (role assignments). Roller updates
+use CloudEvents format (\code{afterTime}/\code{afterId} pagination) rather
+than the HAL-based format used by enheter/underenheter.
+\code{include_changes} is ignored for roller.}
 }
 \value{
 A tibble with columns: \code{update_id} (integer), \code{org_nr}
@@ -53,6 +56,7 @@ Other tidybrreg entity functions:
 \code{\link{brreg_download}()},
 \code{\link{brreg_entity}()},
 \code{\link{brreg_roles}()},
+\code{\link{brreg_roles_legal}()},
 \code{\link{brreg_search}()}
 }
 \concept{tidybrreg entity functions}

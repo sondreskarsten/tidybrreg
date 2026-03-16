@@ -14,6 +14,10 @@
 #'
 #' @param org_nr Character. A 9-digit Norwegian organization number.
 #'   Validated using [brreg_validate()] before the API call.
+#' @param registry One of `"enheter"` (main entities, default) or
+#'   `"underenheter"` (sub-entities / establishments). Sub-entities
+#'   have different fields (e.g. `overordnetEnhet` for the parent
+#'   entity, `beliggenhetsadresse` instead of `forretningsadresse`).
 #' @param type A type of variables: `"code"` (default) returns raw
 #'   codes, `"label"` returns English labels for coded columns
 #'   (legal form, NACE, sector, etc.), following the eurostat
@@ -41,7 +45,9 @@
 #'
 #' # Or pipe to brreg_label() for more control
 #' brreg_entity("923609016") |> brreg_label(code = "legal_form")
-brreg_entity <- function(org_nr, type = c("code", "label")) {
+brreg_entity <- function(org_nr, registry = c("enheter", "underenheter"),
+                          type = c("code", "label")) {
+  registry <- match.arg(registry)
   type <- match.arg(type)
   org_nr <- as.character(org_nr)
   if (!brreg_validate(org_nr)) {
@@ -51,7 +57,7 @@ brreg_entity <- function(org_nr, type = c("code", "label")) {
       "i" = "Examples: 923609016 (Equinor), 984851006 (DNB Bank)"
     ))
   }
-  resp <- brreg_req(paste0("enheter/", org_nr)) |>
+  resp <- brreg_req(paste0(registry, "/", org_nr)) |>
     httr2::req_error(is_error = \(resp) FALSE) |>
     httr2::req_perform()
 
@@ -102,6 +108,11 @@ brreg_entity <- function(org_nr, type = c("code", "label")) {
 #' @param max_results Integer. Maximum entities to return (default 200).
 #'   The API caps search results at 10,000; use `brreg_download()` for
 #'   larger extractions.
+#' @param registry One of `"enheter"` (main entities, default) or
+#'   `"underenheter"` (sub-entities / establishments). Sub-entities
+#'   use `beliggenhetsadresse.kommunenummer` instead of `kommunenummer`
+#'   for geographic filtering, and the `bankrupt` parameter is not
+#'   available.
 #' @param type A type of variables: `"code"` (default) returns raw
 #'   codes, `"label"` returns English labels for coded columns.
 #'
@@ -125,33 +136,42 @@ brreg_search <- function(name = NULL, legal_form = NULL,
                           municipality_code = NULL, nace_code = NULL,
                           min_employees = NULL, max_employees = NULL,
                           bankrupt = NULL, parent_org_nr = NULL,
-                          max_results = 200, type = c("code", "label")) {
+                          max_results = 200,
+                          registry = c("enheter", "underenheter"),
+                          type = c("code", "label")) {
+  registry <- match.arg(registry)
   type <- match.arg(type)
   query <- list(
     navn = name,
     organisasjonsform = legal_form,
-    kommunenummer = municipality_code,
     naeringskode = nace_code,
     fraAntallAnsatte = min_employees,
     tilAntallAnsatte = max_employees,
-    konkurs = if (!is.null(bankrupt)) tolower(as.character(bankrupt)),
     overordnetEnhet = parent_org_nr,
     size = min(100L, max_results),
     page = 0
   )
+  if (registry == "enheter") {
+    query$kommunenummer <- municipality_code
+    query$konkurs <- if (!is.null(bankrupt)) tolower(as.character(bankrupt))
+  } else {
+    query$`beliggenhetsadresse.kommunenummer` <- municipality_code
+  }
 
   all_items <- list()
   total <- NULL
 
+  embed_key <- registry
+
   repeat {
-    resp <- brreg_req("enheter") |>
+    resp <- brreg_req(registry) |>
       httr2::req_url_query(!!!compact(query)) |>
       httr2::req_error(is_error = \(resp) FALSE) |>
       httr2::req_perform()
     if (httr2::resp_status(resp) >= 400L) break
     body <- httr2::resp_body_json(resp)
     if (is.null(total)) total <- body$page$totalElements
-    items <- body[["_embedded"]][["enheter"]]
+    items <- body[["_embedded"]][[embed_key]]
     if (is.null(items) || length(items) == 0) break
     all_items <- c(all_items, items)
     if (length(all_items) >= max_results) break

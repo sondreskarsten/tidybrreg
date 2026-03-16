@@ -24,6 +24,7 @@ Imports:
     cli,
     dplyr,
     httr2 (>= 1.0.0),
+    jsonlite,
     readr,
     rlang,
     tibble

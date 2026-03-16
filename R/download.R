@@ -27,10 +27,13 @@
 #' than the latest nightly bulk export (checked via ETag headers, following
 #' the cansim `refresh = "auto"` pattern).
 #'
-#' @param type One of `"enheter"` (main entities, default) or
-#'   `"underenheter"` (sub-entities / establishments).
-#' @param format Download format: `"csv"` (default, semicolon-delimited)
-#'   or `"json"` (JSON array, larger file).
+#' @param type One of `"enheter"` (main entities, default),
+#'   `"underenheter"` (sub-entities / establishments), or
+#'   `"roller"` (all roles for all entities). Roller data is only
+#'   available as JSON via `/roller/totalbestand` (~131 MB).
+#' @param format Download format: `"csv"` (default for enheter/underenheter,
+#'   semicolon-delimited) or `"json"` (JSON array). Roller bulk download
+#'   is always JSON regardless of this parameter.
 #' @param refresh `FALSE` (default): use cached file if available.
 #'   `TRUE`: force re-download. `"auto"`: check ETag and re-download
 #'   only if server has a newer version.
@@ -62,7 +65,7 @@
 #' # Force refresh
 #' entities <- brreg_download(refresh = TRUE)
 #' }
-brreg_download <- function(type = c("enheter", "underenheter"),
+brreg_download <- function(type = c("enheter", "underenheter", "roller"),
                             format = c("csv", "json"),
                             refresh = FALSE,
                             cache = TRUE,
@@ -71,6 +74,11 @@ brreg_download <- function(type = c("enheter", "underenheter"),
   format <- match.arg(format)
   type_output <- match.arg(type_output)
 
+  if (type == "roller" && format == "csv") {
+    format <- "json"
+    cli::cli_alert_info("Roller only available as JSON. Using {.val json} format.")
+  }
+
   cache_dir <- tools::R_user_dir("tidybrreg", "cache")
   dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
   cache_file <- file.path(cache_dir, paste0(type, "_bulk.", format, ".gz"))
@@ -78,11 +86,16 @@ brreg_download <- function(type = c("enheter", "underenheter"),
 
   needs_download <- !file.exists(cache_file) || identical(refresh, TRUE)
 
+  url <- if (type == "roller") {
+    paste0(brreg_base_url(), "/roller/totalbestand")
+  } else {
+    paste0(brreg_base_url(), "/", type, "/lastned/", format)
+  }
+
   if (identical(refresh, "auto") && file.exists(cache_file) && file.exists(etag_file)) {
     cached_etag <- readLines(etag_file, n = 1, warn = FALSE)
     server_etag <- tryCatch({
-      resp <- httr2::request(brreg_base_url()) |>
-        httr2::req_url_path_append(type, "lastned", format) |>
+      resp <- httr2::request(url) |>
         httr2::req_method("HEAD") |>
         httr2::req_user_agent("tidybrreg (R package)") |>
         httr2::req_perform()
@@ -94,8 +107,7 @@ brreg_download <- function(type = c("enheter", "underenheter"),
   }
 
   if (needs_download) {
-    url <- paste0(brreg_base_url(), "/", type, "/lastned/", format)
-    cli::cli_alert_info("Downloading full {type} register ({format} format)...")
+    cli::cli_alert_info("Downloading full {type} register...")
     resp <- httr2::request(url) |>
       httr2::req_user_agent("tidybrreg (R package)") |>
       httr2::req_perform(path = cache_file)
@@ -120,11 +132,17 @@ brreg_download <- function(type = c("enheter", "underenheter"),
         "i" = "Install it with {.code install.packages(\"arrow\")}."
       ))
     }
+    if (type == "roller") {
+      return(arrow::read_json_arrow(cache_file, as_data_frame = FALSE))
+    }
     return(arrow::read_csv_arrow(cache_file,
       as_data_frame = FALSE,
       read_options = arrow::CsvReadOptions$create(encoding = "UTF-8")))
   }
 
+  if (type == "roller") {
+    return(parse_roles_bulk(cache_file))
+  }
   parse_bulk_csv(cache_file, type = type)
 }
 
@@ -174,4 +192,30 @@ parse_bulk_csv <- function(path, type = "enheter", n_max = Inf) {
   }
 
   dat
+}
+
+
+#' Parse the roller totalbestand gzipped JSON into a flat tibble
+#'
+#' The `/roller/totalbestand` endpoint returns a gzipped JSON array where
+#' each element is an entity with nested rollegrupper/roller structure,
+#' identical to `/enheter/{orgnr}/roller`. This function reads the full
+#' file, flattens all entities into one tibble matching [brreg_roles()]
+#' output.
+#'
+#' @param path Path to the gzipped JSON file.
+#' @returns A tibble with one row per role assignment.
+#' @keywords internal
+parse_roles_bulk <- function(path) {
+  con <- gzfile(path, "r")
+  on.exit(close(con))
+  raw <- jsonlite::fromJSON(con, simplifyVector = FALSE)
+
+  all_rows <- vector("list", length(raw))
+  for (i in seq_along(raw)) {
+    entity <- raw[[i]]
+    org_nr <- entity$organisasjonsnummer %||% NA_character_
+    all_rows[[i]] <- flatten_roles(entity, org_nr)
+  }
+  dplyr::bind_rows(all_rows)
 }

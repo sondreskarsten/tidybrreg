@@ -7,8 +7,11 @@
 #' Subsequent calls to [brreg_panel()] and [brreg_events()] query this
 #' partitioned dataset lazily via `arrow::open_dataset()`.
 #'
-#' @param type One of `"enheter"` (main entities, default) or
-#'   `"underenheter"` (sub-entities / establishments).
+#' @param type One of `"enheter"` (main entities, default),
+#'   `"underenheter"` (sub-entities / establishments), or
+#'   `"roller"` (all roles for all entities, via
+#'   `/roller/totalbestand`). Roller snapshots parse the nested
+#'   JSON into a flat tibble matching [brreg_roles()] output.
 #' @param date Date for this snapshot (default: today). Used as the
 #'   partition key, not as an API parameter — the brreg bulk endpoint
 #'   always returns the current-day state.
@@ -30,7 +33,7 @@
 #' brreg_snapshot()
 #' brreg_snapshots()
 #' }
-brreg_snapshot <- function(type = c("enheter", "underenheter"),
+brreg_snapshot <- function(type = c("enheter", "underenheter", "roller"),
                             date = Sys.Date(),
                             force = FALSE,
                             ask = interactive()) {
@@ -47,19 +50,26 @@ brreg_snapshot <- function(type = c("enheter", "underenheter"),
     return(invisible(parquet_path))
   }
 
+  sizes <- c(enheter = "~152 MB", underenheter = "~59 MB", roller = "~131 MB")
   if (ask && !isTRUE(getOption("brreg.allow_download"))) {
-    msg <- paste0("Download full ", type, " register (~145 MB) and save snapshot for ", date, "?")
+    msg <- paste0("Download full ", type, " register (", sizes[type], ") and save snapshot for ", date, "?")
     if (!isTRUE(utils::askYesNo(msg))) {
       cli::cli_abort("Cancelled by user.")
     }
   }
 
-  csv_path <- brreg_download(type = type, type_output = "path", refresh = TRUE)
-  dat <- parse_bulk_csv(csv_path, type = type)
+  if (type == "roller") {
+    gz_path <- brreg_download(type = "roller", type_output = "path", refresh = TRUE)
+    dat <- parse_roles_bulk(gz_path)
+  } else {
+    csv_path <- brreg_download(type = type, type_output = "path", refresh = TRUE)
+    dat <- parse_bulk_csv(csv_path, type = type)
+  }
   write_parquet_safe(dat, parquet_path)
 
   fsize <- file.size(parquet_path)
-  cli::cli_alert_success("Snapshot saved: {date} ({round(fsize / 1024^2, 1)} MB, {nrow(dat)} entities)")
+  n_label <- if (type == "roller") "role records" else "entities"
+  cli::cli_alert_success("Snapshot saved: {date} ({round(fsize / 1024^2, 1)} MB, {nrow(dat)} {n_label})")
   invisible(parquet_path)
 }
 
@@ -86,7 +96,7 @@ brreg_snapshot <- function(type = c("enheter", "underenheter"),
 #' # Import a historical download
 #' brreg_import("enheter_2024-12-31.csv.gz", snapshot_date = "2024-12-31")
 brreg_import <- function(path, snapshot_date,
-                          type = c("enheter", "underenheter"),
+                          type = c("enheter", "underenheter", "roller"),
                           force = FALSE) {
   type <- match.arg(type)
   check_parquet_available()
@@ -123,7 +133,7 @@ brreg_import <- function(path, snapshot_date,
 #' @export
 #' @examples
 #' brreg_snapshots()
-brreg_snapshots <- function(type = c("enheter", "underenheter")) {
+brreg_snapshots <- function(type = c("enheter", "underenheter", "roller")) {
   type <- match.arg(type)
   base <- file.path(brreg_data_dir(), type)
   if (!dir.exists(base)) {
@@ -191,7 +201,7 @@ brreg_data_dir <- function() {
 #' brreg_cleanup(keep_n = 12)
 #' brreg_cleanup(max_age_days = 365)
 brreg_cleanup <- function(keep_n = NULL, max_age_days = NULL,
-                           type = c("enheter", "underenheter")) {
+                           type = c("enheter", "underenheter", "roller")) {
   type <- match.arg(type)
   if (is.null(keep_n) && is.null(max_age_days)) {
     cli::cli_abort("Provide at least one of {.arg keep_n} or {.arg max_age_days}.")
@@ -240,7 +250,7 @@ brreg_cleanup <- function(keep_n = NULL, max_age_days = NULL,
 #' @examplesIf interactive() && requireNamespace("arrow", quietly = TRUE)
 #' ds <- brreg_open()
 #' ds
-brreg_open <- function(type = c("enheter", "underenheter")) {
+brreg_open <- function(type = c("enheter", "underenheter", "roller")) {
   type <- match.arg(type)
   rlang::check_installed("arrow", reason = "for lazy dataset queries over snapshots.")
   base <- file.path(brreg_data_dir(), type)

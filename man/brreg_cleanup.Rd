@@ -7,7 +7,7 @@
 brreg_cleanup(
   keep_n = NULL,
   max_age_days = NULL,
-  type = c("enheter", "underenheter")
+  type = c("enheter", "underenheter", "roller")
 )
 }
 \arguments{

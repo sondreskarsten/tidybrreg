@@ -11,8 +11,11 @@
 #' @param include_changes Logical. If `TRUE`, include field-level change
 #'   details per update as a list-column of tibbles. The brreg API
 #'   returns changes in a flat RFC 6902-style JSON Patch format.
-#' @param type One of `"enheter"` (main entities) or `"underenheter"`
-#'   (sub-entities / establishments).
+#' @param type One of `"enheter"` (main entities), `"underenheter"`
+#'   (sub-entities), or `"roller"` (role assignments). Roller updates
+#'   use CloudEvents format (`afterTime`/`afterId` pagination) rather
+#'   than the HAL-based format used by enheter/underenheter.
+#'   `include_changes` is ignored for roller.
 #'
 #' @returns A tibble with columns: `update_id` (integer), `org_nr`
 #'   (character), `change_type` (character: Ny/Endring/Sletting),
@@ -31,8 +34,11 @@
 #' brreg_updates(since = Sys.Date() - 1, size = 5, include_changes = TRUE)
 brreg_updates <- function(since = Sys.Date() - 1, size = 100,
                            include_changes = FALSE,
-                           type = c("enheter", "underenheter")) {
+                           type = c("enheter", "underenheter", "roller")) {
   type <- match.arg(type)
+
+  if (type == "roller") return(brreg_updates_roller(since, size))
+
   dato <- format(as.POSIXct(since), "%Y-%m-%dT00:00:00.000Z")
   query <- list(dato = dato, size = min(size, 10000L))
   if (include_changes) query$includeChanges <- "true"
@@ -59,6 +65,32 @@ brreg_updates <- function(since = Sys.Date() - 1, size = 100,
       base$changes <- list(parse_patch(u$endringer))
     }
     base
+  }))
+}
+
+
+#' Fetch roller updates (CloudEvents format)
+#' @keywords internal
+brreg_updates_roller <- function(since, size) {
+  after_time <- format(as.POSIXct(since), "%Y-%m-%dT00:00:00.000Z")
+  query <- list(afterTime = after_time, size = min(size, 10000L))
+
+  resp <- brreg_req("oppdateringer/roller") |>
+    httr2::req_url_query(!!!query) |>
+    httr2::req_error(is_error = \(resp) FALSE) |>
+    httr2::req_perform()
+  if (httr2::resp_status(resp) >= 400L) return(tibble::tibble())
+
+  events <- httr2::resp_body_json(resp)
+  if (length(events) == 0) return(tibble::tibble())
+
+  dplyr::bind_rows(lapply(events, \(e) {
+    tibble::tibble(
+      update_id   = as.integer(e$id %||% NA),
+      org_nr      = e$data$organisasjonsnummer %||% NA_character_,
+      change_type = sub(".*\\.", "", e$type %||% ""),
+      timestamp   = as.POSIXct(e$time, format = "%Y-%m-%dT%H:%M:%OS")
+    )
   }))
 }
 

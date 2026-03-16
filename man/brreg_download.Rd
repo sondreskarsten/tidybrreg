@@ -5,7 +5,7 @@
 \title{Download the full Norwegian business register}
 \usage{
 brreg_download(
-  type = c("enheter", "underenheter"),
+  type = c("enheter", "underenheter", "roller"),
   format = c("csv", "json"),
   refresh = FALSE,
   cache = TRUE,
@@ -13,11 +13,14 @@ brreg_download(
 )
 }
 \arguments{
-\item{type}{One of \code{"enheter"} (main entities, default) or
-\code{"underenheter"} (sub-entities / establishments).}
+\item{type}{One of \code{"enheter"} (main entities, default),
+\code{"underenheter"} (sub-entities / establishments), or
+\code{"roller"} (all roles for all entities). Roller data is only
+available as JSON via \verb{/roller/totalbestand} (~131 MB).}
 
-\item{format}{Download format: \code{"csv"} (default, semicolon-delimited)
-or \code{"json"} (JSON array, larger file).}
+\item{format}{Download format: \code{"csv"} (default for enheter/underenheter,
+semicolon-delimited) or \code{"json"} (JSON array). Roller bulk download
+is always JSON regardless of this parameter.}
 
 \item{refresh}{\code{FALSE} (default): use cached file if available.
 \code{TRUE}: force re-download. \code{"auto"}: check ETag and re-download
@@ -94,6 +97,7 @@ Other tidybrreg entity functions:
 \code{\link{brreg_board_summary}()},
 \code{\link{brreg_entity}()},
 \code{\link{brreg_roles}()},
+\code{\link{brreg_roles_legal}()},
 \code{\link{brreg_search}()},
 \code{\link{brreg_updates}()}
 }

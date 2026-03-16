@@ -7,7 +7,7 @@
 brreg_import(
   path,
   snapshot_date,
-  type = c("enheter", "underenheter"),
+  type = c("enheter", "underenheter", "roller"),
   force = FALSE
 )
 }

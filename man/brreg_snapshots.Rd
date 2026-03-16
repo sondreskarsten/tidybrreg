@@ -4,7 +4,7 @@
 \alias{brreg_snapshots}
 \title{List available snapshots}
 \usage{
-brreg_snapshots(type = c("enheter", "underenheter"))
+brreg_snapshots(type = c("enheter", "underenheter", "roller"))
 }
 \arguments{
 \item{type}{One of \code{"enheter"} or \code{"underenheter"}.}

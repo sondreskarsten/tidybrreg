@@ -143,3 +143,55 @@ brreg_board_summary <- function(roles) {
     }
   )
 }
+
+
+#' Retrieve roles an entity holds in other entities
+#'
+#' Reverse role lookup: find all entities where the given entity holds
+#' a role (e.g. parent company, shareholder, general partner). This
+#' is distinct from [brreg_roles()], which returns who holds roles
+#' IN the given entity.
+#'
+#' @param org_nr Character. 9-digit organization number.
+#'
+#' @returns A tibble with one row per role held. Columns: `org_nr`
+#'   (queried entity), `target_org_nr` (entity where role is held),
+#'   `target_name`, `role_code`, `role`, `share` (ownership share
+#'   if applicable), `resigned`, `deregistered`.
+#'
+#' @family tidybrreg entity functions
+#' @seealso [brreg_roles()] for who holds roles in an entity.
+#'
+#' @export
+#' @examplesIf interactive() && curl::has_internet()
+#' brreg_roles_legal("923609016")  # Equinor's roles in other entities
+brreg_roles_legal <- function(org_nr) {
+  org_nr <- as.character(org_nr)
+  resp <- brreg_req(paste0("roller/enheter/", org_nr, "/juridiskeroller")) |>
+    httr2::req_error(is_error = \(resp) FALSE) |>
+    httr2::req_perform()
+  if (httr2::resp_status(resp) >= 400L) return(tibble::tibble())
+  body <- httr2::resp_body_json(resp)
+  enheter <- body$enheter
+  if (is.null(enheter) || length(enheter) == 0) return(tibble::tibble())
+
+  rows <- vector("list", length(enheter) * 3L)
+  k <- 0L
+  for (e in enheter) {
+    for (r in (e$roller %||% list())) {
+      k <- k + 1L
+      rows[[k]] <- tibble::tibble(
+        org_nr          = org_nr,
+        target_org_nr   = e$organisasjonsnummer %||% NA_character_,
+        target_name     = e$navn %||% NA_character_,
+        role_code       = r$type$kode %||% NA_character_,
+        role            = lookup_role(r$type$kode),
+        share           = r$ansvarsandel %||% NA_character_,
+        resigned        = r$fratraadt %||% FALSE,
+        deregistered    = r$avregistrert %||% FALSE
+      )
+    }
+  }
+  if (k == 0L) return(tibble::tibble())
+  dplyr::bind_rows(rows[seq_len(k)])
+}
