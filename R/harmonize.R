@@ -101,7 +101,7 @@ brreg_harmonize_nace <- function(data, from = "SN2007", to = "SN2025",
   cache_key <- paste0("nace_corr_", from, "_", to)
   if (!exists(cache_key, envir = .brregEnv)) {
     corr <- tryCatch({
-      klassR::Correspond(from_id, to_id)
+      klassR::GetKlass(klass = from_id, correspond = to_id)
     }, error = \(e) {
       cli::cli_warn("Could not fetch NACE correspondence from SSB KLASS: {e$message}")
       return(data)
