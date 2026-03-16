@@ -36,7 +36,7 @@ test_that("brreg_entity rejects invalid org_nr", {
 
 test_that("brreg_entity handles 404", {
   skip_if_offline()
-  expect_error(brreg_entity("899999994"), "not found")
+  expect_error(brreg_entity("999999999"), "not found")
 })
 
 test_that("brreg_entity passes through unknown API fields", {

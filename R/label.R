@@ -80,7 +80,7 @@ label_df <- function(x, code = NULL, lang = "en") {
 
   for (col in labelable) {
     if (!col %in% names(lkp)) next
-    matched <- lkp[[col]][x[[col]]]
+    matched <- lkp[[col]][enc2utf8(x[[col]])]
     x[[col]] <- ifelse(is.na(matched), x[[col]], unname(matched))
   }
   x
@@ -98,7 +98,7 @@ label_vec <- function(x, dic, lang = "en") {
     role_group = lkp[["role_group_code"]],
     cli::cli_abort("Unknown dictionary: {.val {dic}}. Options: legal_form, nace, sector, role, role_group.")
   )
-  matched <- dic_map[x]
+  matched <- dic_map[enc2utf8(x)]
   ifelse(is.na(matched), x, unname(matched))
 }
 
@@ -109,14 +109,14 @@ build_label_map <- function(lang = "en") {
   sector_lkp <- get_brreg_dic("sector", lang = lang)
 
   list(
-    legal_form      = stats::setNames(legal_forms$name_en, legal_forms$code),
-    nace_1          = stats::setNames(nace_lkp$name_en, nace_lkp$code),
-    nace_2          = stats::setNames(nace_lkp$name_en, nace_lkp$code),
-    nace_3          = stats::setNames(nace_lkp$name_en, nace_lkp$code),
-    nace_1_desc     = stats::setNames(nace_lkp$name_en, nace_lkp$code),
-    sector_code     = stats::setNames(sector_lkp$name_en, sector_lkp$code),
-    role_group_code = stats::setNames(role_groups$name_en, role_groups$code),
-    role_code       = stats::setNames(role_types$name_en, role_types$code)
+    legal_form      = stats::setNames(legal_forms$name_en, enc2utf8(legal_forms$code)),
+    nace_1          = stats::setNames(nace_lkp$name_en, enc2utf8(nace_lkp$code)),
+    nace_2          = stats::setNames(nace_lkp$name_en, enc2utf8(nace_lkp$code)),
+    nace_3          = stats::setNames(nace_lkp$name_en, enc2utf8(nace_lkp$code)),
+    nace_1_desc     = stats::setNames(nace_lkp$name_en, enc2utf8(nace_lkp$code)),
+    sector_code     = stats::setNames(sector_lkp$name_en, enc2utf8(sector_lkp$code)),
+    role_group_code = stats::setNames(role_groups$name_en, enc2utf8(role_groups$code)),
+    role_code       = stats::setNames(role_types$name_en, enc2utf8(role_types$code))
   )
 }
 

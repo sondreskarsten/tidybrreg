@@ -94,7 +94,7 @@ flatten_roles <- function(raw, org_nr) {
 #' @keywords internal
 lookup_role <- function(code) {
   if (is.null(code) || is.na(code)) return(NA_character_)
-  idx <- match(code, role_types$code)
+  idx <- match(enc2utf8(code), enc2utf8(role_types$code))
   if (is.na(idx)) return(code)
   role_types$name_en[idx]
 }
@@ -102,7 +102,7 @@ lookup_role <- function(code) {
 #' @keywords internal
 lookup_role_group <- function(code) {
   if (is.null(code) || is.na(code)) return(NA_character_)
-  idx <- match(code, role_groups$code)
+  idx <- match(enc2utf8(code), enc2utf8(role_groups$code))
   if (is.na(idx)) return(code)
   role_groups$name_en[idx]
 }

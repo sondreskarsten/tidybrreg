@@ -2,6 +2,9 @@
 #' @keywords internal
 .brregEnv <- new.env(parent = emptyenv())
 
+# Suppress R CMD check NOTE for lazy-loaded datasets used in package functions
+utils::globalVariables(c("legal_forms", "role_types", "role_groups"))
+
 #' @keywords internal
 .onLoad <- function(libname, pkgname) {
   cache_dir <- tools::R_user_dir("tidybrreg", "data")
