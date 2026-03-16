@@ -11,11 +11,17 @@ skip_if_offline <- function() {
   }, error = function(e) skip("brreg API not reachable"))
 }
 
-# Wrap API calls so transient network errors skip instead of fail
+# Wrap API calls so transient network errors skip instead of fail.
+# httr2 wraps curl errors via rlang::abort(parent=), so the actual
+# curl/schannel message lives in e$parent$message, not e$message.
 safely <- function(expr) {
   tryCatch(expr, error = function(e) {
-    if (grepl("curl|connection|timeout|schannel|SSL|receive", e$message, ignore.case = TRUE)) {
-      skip(paste("Network error:", e$message))
+    msgs <- paste(c(conditionMessage(e),
+                     if (!is.null(e$parent)) conditionMessage(e$parent)),
+                   collapse = " ")
+    if (grepl("curl|connection|timeout|schannel|SSL|receive|reset|closed|Failure.*peer",
+              msgs, ignore.case = TRUE)) {
+      skip(paste("Network error:", msgs))
     }
     stop(e)
   })
@@ -46,7 +52,7 @@ test_that("brreg_entity rejects invalid org_nr", {
 
 test_that("brreg_entity handles 404", {
   skip_if_offline()
-  expect_error(safely(brreg_entity("999999999")), "not found")
+  safely(expect_error(brreg_entity("999999999"), "not found"))
 })
 
 test_that("brreg_entity passes through unknown API fields", {
