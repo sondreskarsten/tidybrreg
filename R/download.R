@@ -88,6 +88,8 @@ brreg_download <- function(type = c("enheter", "underenheter", "roller"),
 
   url <- if (type == "roller") {
     paste0(brreg_base_url(), "/roller/totalbestand")
+  } else if (format == "json") {
+    paste0(brreg_base_url(), "/", type, "/lastned")
   } else {
     paste0(brreg_base_url(), "/", type, "/lastned/", format)
   }
@@ -132,7 +134,7 @@ brreg_download <- function(type = c("enheter", "underenheter", "roller"),
         "i" = "Install it with {.code install.packages(\"arrow\")}."
       ))
     }
-    if (type == "roller") {
+    if (format == "json" || type == "roller") {
       return(arrow::read_json_arrow(cache_file, as_data_frame = FALSE))
     }
     return(arrow::read_csv_arrow(cache_file,
@@ -140,9 +142,8 @@ brreg_download <- function(type = c("enheter", "underenheter", "roller"),
       read_options = arrow::CsvReadOptions$create(encoding = "UTF-8")))
   }
 
-  if (type == "roller") {
-    return(parse_roles_bulk(cache_file))
-  }
+  if (type == "roller") return(parse_roles_bulk(cache_file))
+  if (format == "json") return(parse_bulk_json(cache_file, type = type))
   parse_bulk_csv(cache_file, type = type)
 }
 
@@ -195,6 +196,60 @@ parse_bulk_csv <- function(path, type = "enheter", n_max = Inf) {
 }
 
 
+#' Parse a brreg bulk JSON download into a tibble
+#'
+#' The `/enheter/lastned` and `/underenheter/lastned` endpoints return
+#' gzipped JSON arrays where each element has the same nested structure
+#' as a single-entity API response. Uses `jsonlite::fromJSON(flatten = TRUE)`
+#' to produce a flat data.frame with dot-notation columns, then renames
+#' via [field_dict] — same pipeline as [parse_bulk_csv()].
+#'
+#' @param path Path to the gzipped JSON file.
+#' @param type Entity type (for column context).
+#' @returns A tibble with columns mapped via [field_dict].
+#' @keywords internal
+parse_bulk_json <- function(path, type = "enheter") {
+  dat <- jsonlite::fromJSON(path, flatten = TRUE)
+  dat <- tibble::as_tibble(dat)
+
+  list_cols <- names(dat)[vapply(dat, is.list, logical(1))]
+  for (col in list_cols) {
+    dat[[col]] <- vapply(dat[[col]], function(x) {
+      if (is.null(x) || length(x) == 0) return(NA_character_)
+      if (is.data.frame(x)) return(NA_character_)
+      if (is.list(x) && is.null(names(x))) return(NA_character_)
+      paste(as.character(unlist(x)), collapse = ", ")
+    }, character(1))
+  }
+
+  json_to_english <- stats::setNames(field_dict$col_name, tolower(field_dict$api_path))
+  json_names <- names(dat)
+
+  new_names <- vapply(json_names, function(cn) {
+    lcn <- tolower(cn)
+    if (lcn %in% names(json_to_english)) return(json_to_english[[lcn]])
+    to_snake(cn)
+  }, character(1), USE.NAMES = FALSE)
+
+  names(dat) <- new_names
+
+  for (i in seq_len(nrow(field_dict))) {
+    col <- field_dict$col_name[i]
+    if (!col %in% names(dat)) next
+    target <- field_dict$type[i]
+    dat[[col]] <- switch(target,
+      Date      = as.Date(as.character(dat[[col]])),
+      integer   = suppressWarnings(as.integer(dat[[col]])),
+      logical   = as.logical(dat[[col]]),
+      character = as.character(dat[[col]]),
+      dat[[col]]
+    )
+  }
+
+  dat
+}
+
+
 #' Parse the roller totalbestand gzipped JSON into a flat tibble
 #'
 #' The `/roller/totalbestand` endpoint returns a gzipped JSON array where
@@ -207,9 +262,7 @@ parse_bulk_csv <- function(path, type = "enheter", n_max = Inf) {
 #' @returns A tibble with one row per role assignment.
 #' @keywords internal
 parse_roles_bulk <- function(path) {
-  con <- gzfile(path, "r")
-  on.exit(close(con))
-  raw <- jsonlite::fromJSON(con, simplifyVector = FALSE)
+  raw <- jsonlite::fromJSON(path, simplifyVector = FALSE)
 
   all_rows <- vector("list", length(raw))
   for (i in seq_along(raw)) {
