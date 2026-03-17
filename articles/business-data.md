@@ -12,6 +12,8 @@ modulus-11 check digit validation:
 
 ``` r
 library(tidybrreg)
+#> tidybrreg: bulk data not yet downloaded for: enheter, underenheter, roller.
+#> Run brreg_snapshot() for full network/panel support. See ?brreg_status for details.
 brreg_validate(c("923609016", "984851006", "123456789"))
 #> [1]  TRUE  TRUE FALSE
 ```
