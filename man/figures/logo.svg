@@ -1,37 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 232" width="200" height="232">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#1a3a5c"/>
-      <stop offset="100%" style="stop-color:#0d1f33"/>
-    </linearGradient>
-  </defs>
-  <!-- Hex shape -->
+  <!-- Hex shape: navy fill, Norwegian red border -->
   <polygon points="100,2 194,58 194,174 100,230 6,174 6,58"
-           fill="url(#bg)" stroke="#4a90d9" stroke-width="3"/>
-  <!-- Norway flag cross (simplified) -->
-  <rect x="40" y="85" width="120" height="8" fill="#BA0C2F" rx="1"/>
-  <rect x="72" y="60" width="8" height="58" fill="#BA0C2F" rx="1"/>
-  <rect x="43" y="87" width="114" height="4" fill="#FFFFFF" rx="0.5"/>
-  <rect x="74" y="63" width="4" height="52" fill="#FFFFFF" rx="0.5"/>
-  <rect x="44.5" y="88" width="111" height="2" fill="#00205B" rx="0.5"/>
-  <rect x="75" y="64.5" width="2" height="49" fill="#00205B" rx="0.5"/>
+           fill="#00205B" stroke="#BA0C2F" stroke-width="3"/>
+  <!-- Institution icon: pediment/roof -->
+  <polygon points="80,72 100,58 120,72"
+           fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/>
+  <!-- Columns -->
+  <line x1="85" y1="72" x2="85" y2="100" stroke="#ffffff" stroke-width="2"/>
+  <line x1="100" y1="72" x2="100" y2="100" stroke="#ffffff" stroke-width="2"/>
+  <line x1="115" y1="72" x2="115" y2="100" stroke="#ffffff" stroke-width="2"/>
+  <!-- Base -->
+  <rect x="80" y="100" width="40" height="3" rx="0.5" fill="#ffffff"/>
+  <!-- Data rows emerging from institution -->
+  <rect x="78" y="110" width="44" height="2.5" rx="0.5" fill="#ffffff" opacity="0.5"/>
+  <rect x="78" y="116" width="44" height="2.5" rx="0.5" fill="#ffffff" opacity="0.4"/>
+  <rect x="78" y="122" width="44" height="2.5" rx="0.5" fill="#ffffff" opacity="0.3"/>
   <!-- Package name -->
-  <text x="100" y="150" text-anchor="middle" fill="#FFFFFF"
-        font-family="Courier New, monospace" font-size="20" font-weight="bold"
-        letter-spacing="1">tidybrreg</text>
-  <!-- Tagline -->
-  <text x="100" y="172" text-anchor="middle" fill="#8ab4e8"
-        font-family="Arial, sans-serif" font-size="9">
-    Norwegian Business Registry
-  </text>
-  <!-- Data dots representing entities -->
-  <circle cx="45" cy="195" r="2" fill="#4a90d9" opacity="0.6"/>
-  <circle cx="55" cy="200" r="1.5" fill="#4a90d9" opacity="0.5"/>
-  <circle cx="65" cy="193" r="2.5" fill="#4a90d9" opacity="0.7"/>
-  <circle cx="80" cy="198" r="1.8" fill="#4a90d9" opacity="0.4"/>
-  <circle cx="95" cy="195" r="2.2" fill="#4a90d9" opacity="0.6"/>
-  <circle cx="110" cy="200" r="1.5" fill="#4a90d9" opacity="0.5"/>
-  <circle cx="125" cy="192" r="2" fill="#4a90d9" opacity="0.7"/>
-  <circle cx="140" cy="197" r="1.8" fill="#4a90d9" opacity="0.4"/>
-  <circle cx="155" cy="194" r="2.3" fill="#4a90d9" opacity="0.6"/>
+  <text x="100" y="155" text-anchor="middle" fill="#FFFFFF"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="20" font-weight="bold"
+        letter-spacing="0.5">tidybrreg</text>
 </svg>
