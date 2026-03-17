@@ -29,8 +29,9 @@ Other tidybrreg snapshot functions:
 
 ``` r
 brreg_manifest()
-#> # A tibble: 0 × 12
-#> # ℹ 12 variables: id <chr>, type <chr>, snapshot_date <date>, endpoint <chr>,
+#> # A tibble: 0 × 13
+#> # ℹ 13 variables: id <chr>, type <chr>, snapshot_date <date>, endpoint <chr>,
 #> #   format <chr>, download_timestamp <dttm>, last_modified <chr>, etag <chr>,
-#> #   file_hash <chr>, record_count <int>, raw_path <chr>, parquet_path <chr>
+#> #   file_hash <chr>, record_count <int>, raw_path <chr>, parquet_path <chr>,
+#> #   cdc_bridge_first_update_id <int>
 ```
