@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">tidybrreg</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,30 @@
       <small>Source: <a href="https://github.com/sondreskarsten/tidybrreg/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.1" id="tidybrreg-031">tidybrreg 0.3.1<a class="anchor" aria-label="anchor" href="#tidybrreg-031"></a></h2>
+<div class="section level3">
+<h3 id="new-functions-0-3-1">New functions<a class="anchor" aria-label="anchor" href="#new-functions-0-3-1"></a></h3>
+<ul><li>
+<code><a href="../reference/brreg_network.html">brreg_network()</a></code> — build entity ego-network graphs as <code>tbl_graph</code> objects. Depth 0 (seed only), depth 1 (sub-units, children, roles, legal roles via API), depth 2 (board interlocks via local bulk data). Extensible collector pattern for future relationship types.</li>
+<li>
+<code><a href="../reference/brreg_underenheter.html">brreg_underenheter()</a></code> — convenience wrapper to get all sub-units (BEDR/AAFY) belonging to a parent entity.</li>
+<li>
+<code><a href="../reference/brreg_children.html">brreg_children()</a></code> — get child enheter in the organisational hierarchy (e.g. Stortinget → Riksrevisjonen).</li>
+<li>
+<code><a href="../reference/brreg_status.html">brreg_status()</a></code> — check local bulk data availability for all three registry types.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changes-0-3-1">Changes<a class="anchor" aria-label="anchor" href="#changes-0-3-1"></a></h3>
+<ul><li>
+<code><a href="../reference/brreg_entity.html">brreg_entity()</a></code> now defaults to <code>registry = "auto"</code>, trying enheter first then falling back to underenheter on 404. Output gains a <code>registry</code> column. Explicit <code>registry = "enheter"</code> or <code>registry = "underenheter"</code> skips the fallback.</li>
+<li>Bulk data resolution uses Arrow lazy-load for all three types (was roller-only). Session cache in <code>.brregEnv</code> avoids re-reading parquet files across repeated calls. Per-type lazy pipeline in depth-2 expansion early-exits when no new entities are discovered.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="infrastructure-0-3-1">Infrastructure<a class="anchor" aria-label="anchor" href="#infrastructure-0-3-1"></a></h3>
+<ul><li>Docker CI matrix simplified to R 4.4.1 only (R 4.3.3 image was never built; multi-version coverage via standard R-CMD-check).</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.0" id="tidybrreg-030">tidybrreg 0.3.0<a class="anchor" aria-label="anchor" href="#tidybrreg-030"></a></h2>
 <div class="section level3">

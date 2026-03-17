@@ -1,5 +1,40 @@
 # Changelog
 
+## tidybrreg 0.3.1
+
+### New functions
+
+- [`brreg_network()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_network.md)
+  — build entity ego-network graphs as `tbl_graph` objects. Depth 0
+  (seed only), depth 1 (sub-units, children, roles, legal roles via
+  API), depth 2 (board interlocks via local bulk data). Extensible
+  collector pattern for future relationship types.
+- [`brreg_underenheter()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_underenheter.md)
+  — convenience wrapper to get all sub-units (BEDR/AAFY) belonging to a
+  parent entity.
+- [`brreg_children()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_children.md)
+  — get child enheter in the organisational hierarchy (e.g. Stortinget →
+  Riksrevisjonen).
+- [`brreg_status()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_status.md)
+  — check local bulk data availability for all three registry types.
+
+### Changes
+
+- [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md)
+  now defaults to `registry = "auto"`, trying enheter first then falling
+  back to underenheter on 404. Output gains a `registry` column.
+  Explicit `registry = "enheter"` or `registry = "underenheter"` skips
+  the fallback.
+- Bulk data resolution uses Arrow lazy-load for all three types (was
+  roller-only). Session cache in `.brregEnv` avoids re-reading parquet
+  files across repeated calls. Per-type lazy pipeline in depth-2
+  expansion early-exits when no new entities are discovered.
+
+### Infrastructure
+
+- Docker CI matrix simplified to R 4.4.1 only (R 4.3.3 image was never
+  built; multi-version coverage via standard R-CMD-check).
+
 ## tidybrreg 0.3.0
 
 ### Documentation
