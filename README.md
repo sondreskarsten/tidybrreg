@@ -18,8 +18,17 @@ Licence for Open Government Data (NLOD
 ## Installation
 
 ``` r
+# Recommended: pak (handles all dependencies)
 # install.packages("pak")
 pak::pak("sondreskarsten/tidybrreg")
+
+# Alternative: r-universe (pre-built binaries, no compilation)
+install.packages("tidybrreg",
+  repos = c("https://sondreskarsten.r-universe.dev",
+            "https://cloud.r-project.org"))
+
+# Alternative: remotes (requires remotes >= 2.5.0)
+remotes::install_github("sondreskarsten/tidybrreg")
 
 # For snapshot/panel features, also install a parquet backend:
 install.packages("nanoparquet")  # lightweight
