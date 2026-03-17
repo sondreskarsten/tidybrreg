@@ -48,7 +48,8 @@ right-censored). Compatible with
 for full register data.
 
 Other tidybrreg governance functions:
-[`brreg_board_network()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_network.md)
+[`brreg_board_network()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_network.md),
+[`brreg_network()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_network.md)
 
 ## Examples
 

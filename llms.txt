@@ -252,6 +252,10 @@ for a complete walkthrough.
 
 - [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md)
   : Look up a Norwegian legal entity
+- [`brreg_underenheter()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_underenheter.md)
+  : Get all sub-units (underenheter) belonging to an entity
+- [`brreg_children()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_children.md)
+  : Get child entities in the organisational hierarchy
 - [`brreg_validate()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_validate.md)
   : Validate Norwegian organization numbers
 
@@ -278,6 +282,8 @@ for network analysis.
   : Derive board-level summary covariates from role data
 - [`brreg_board_network()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_network.md)
   : Build a director interlock network
+- [`brreg_network()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_network.md)
+  : Build an entity network graph
 - [`brreg_survival_data()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_survival_data.md)
   : Prepare firm survival data
 
@@ -289,6 +295,8 @@ records).
 
 - [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md)
   : Download the full Norwegian business register
+- [`brreg_status()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_status.md)
+  : Check availability of local bulk datasets
 
 ## Snapshot engine
 

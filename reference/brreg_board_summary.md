@@ -28,11 +28,13 @@ A 1-row tibble with columns: `org_nr`, `board_size`, `n_chair`,
 for the underlying role data.
 
 Other tidybrreg entity functions:
+[`brreg_children()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_children.md),
 [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md),
 [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md),
 [`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md),
 [`brreg_roles_legal()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles_legal.md),
 [`brreg_search()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_search.md),
+[`brreg_underenheter()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_underenheter.md),
 [`brreg_updates()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates.md)
 
 ## Examples

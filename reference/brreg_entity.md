@@ -11,7 +11,7 @@ in this central register.
 ``` r
 brreg_entity(
   org_nr,
-  registry = c("enheter", "underenheter"),
+  registry = c("auto", "enheter", "underenheter"),
   type = c("code", "label")
 )
 ```
@@ -26,10 +26,11 @@ brreg_entity(
 
 - registry:
 
-  One of `"enheter"` (main entities, default) or `"underenheter"`
-  (sub-entities / establishments). Sub-entities have different fields
-  (e.g. `overordnetEnhet` for the parent entity, `beliggenhetsadresse`
-  instead of `forretningsadresse`).
+  One of `"auto"` (default, tries enheter then underenheter),
+  `"enheter"` (main entities only), or `"underenheter"` (sub-entities
+  only). Sub-entities have different fields (e.g. `overordnetEnhet` for
+  the parent entity, `beliggenhetsadresse` instead of
+  `forretningsadresse`).
 
 - type:
 
@@ -69,10 +70,12 @@ for the column name mapping.
 
 Other tidybrreg entity functions:
 [`brreg_board_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_summary.md),
+[`brreg_children()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_children.md),
 [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md),
 [`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md),
 [`brreg_roles_legal()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles_legal.md),
 [`brreg_search()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_search.md),
+[`brreg_underenheter()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_underenheter.md),
 [`brreg_updates()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates.md)
 
 ## Examples

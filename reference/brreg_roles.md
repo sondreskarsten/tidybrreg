@@ -54,10 +54,12 @@ for the English lookup tables.
 
 Other tidybrreg entity functions:
 [`brreg_board_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_summary.md),
+[`brreg_children()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_children.md),
 [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md),
 [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md),
 [`brreg_roles_legal()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles_legal.md),
 [`brreg_search()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_search.md),
+[`brreg_underenheter()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_underenheter.md),
 [`brreg_updates()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates.md)
 
 ## Examples

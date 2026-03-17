@@ -18,6 +18,7 @@
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/as_brreg_tsibble.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_network.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_summary.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_children.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_cleanup.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_data_dir.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.html</loc></url>
@@ -29,6 +30,7 @@
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_import.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_manifest.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_network.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_open.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_panel.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_replay.html</loc></url>
@@ -39,7 +41,9 @@
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_series.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_snapshot.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_snapshots.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_status.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_survival_data.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_underenheter.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates_roller.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_validate.html</loc></url>
@@ -50,8 +54,10 @@
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/compact.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/dot-brregEnv.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/drop_hal_links.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/expand_depth_2.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/fetch_klass.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/field_dict.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/filter_bulk.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/flatten_cell.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/flatten_json.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/flatten_list_columns.html</loc></url>
@@ -77,6 +83,8 @@
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/read_parquet_safe.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/rename_and_coerce.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/rename_from_dict.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/resolve_bulk.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/resolve_bulk_data.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/resolve_snapshot_dates.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/role_groups.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/role_types.html</loc></url>
