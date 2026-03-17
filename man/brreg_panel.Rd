@@ -10,6 +10,7 @@ brreg_panel(
   from = NULL,
   to = NULL,
   dates = NULL,
+  max_gap = NULL,
   type = c("enheter", "underenheter", "roller"),
   label = FALSE
 )
@@ -25,6 +26,12 @@ or \code{"custom"}. For \code{"custom"}, supply target dates via \code{dates}.}
 to the range of available snapshots.}
 
 \item{dates}{Date vector for \code{frequency = "custom"}.}
+
+\item{max_gap}{Integer. Maximum number of periods a snapshot may
+carry forward via LOCF. \code{NULL} (default) carries forward
+indefinitely. Set \code{max_gap = 2} to prevent a quarterly snapshot
+from representing a firm as active 3+ quarters after its last
+observation.}
 
 \item{type}{One of \code{"enheter"} or \code{"underenheter"}.}
 

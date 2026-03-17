@@ -1,0 +1,472 @@
+{
+    "_embedded": {
+        "enheter": [
+            {
+                "organisasjonsnummer": "883603362",
+                "navn": "ABG SUNDAL COLLIER ASA",
+                "organisasjonsform": {
+                    "kode": "ASA",
+                    "beskrivelse": "Allmennaksjeselskap",
+                    "_links": {
+                        "self": {
+                            "href": "https://data.brreg.no/enhetsregisteret/api/organisasjonsformer/ASA"
+                        }
+                    }
+                },
+                "postadresse": {
+                    "land": "Norge",
+                    "landkode": "NO",
+                    "postnummer": "0115",
+                    "poststed": "OSLO",
+                    "adresse": [
+                        "Postboks 1444 Vika"
+                    ],
+                    "kommune": "OSLO",
+                    "kommunenummer": "0301"
+                },
+                "registreringsdatoEnhetsregisteret": "2001-08-28",
+                "registrertIMvaregisteret": true,
+                "frivilligMvaRegistrertBeskrivelser": [
+                    "Utleier av bygg eller anlegg"
+                ],
+                "naeringskode1": {
+                    "kode": "66.120",
+                    "beskrivelse": "Verdipapirmegling"
+                },
+                "antallAnsatte": 99,
+                "harRegistrertAntallAnsatte": true,
+                "registreringsdatoFrivilligMerverdiavgiftsregisteret": "2021-12-11",
+                "registreringsdatoMerverdiavgiftsregisteret": "2001-11-01",
+                "registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret": "2002-03-23",
+                "registreringsdatoAntallAnsatteEnhetsregisteret": "2026-03-12",
+                "registreringsdatoAntallAnsatteNAVAaregisteret": "2026-03-10",
+                "telefon": "22 01 60 00",
+                "forretningsadresse": {
+                    "land": "Norge",
+                    "landkode": "NO",
+                    "postnummer": "0251",
+                    "poststed": "OSLO",
+                    "adresse": [
+                        "Rusel<U+00F8>kkveien 26"
+                    ],
+                    "kommune": "OSLO",
+                    "kommunenummer": "0301"
+                },
+                "stiftelsesdato": "2001-07-19",
+                "institusjonellSektorkode": {
+                    "kode": "4900",
+                    "beskrivelse": "<U+00D8>vrige finansielle foretak unntatt forsikring"
+                },
+                "registrertIForetaksregisteret": true,
+                "registrertIStiftelsesregisteret": false,
+                "registrertIFrivillighetsregisteret": false,
+                "sisteInnsendteAarsregnskap": "2024",
+                "konkurs": false,
+                "underAvvikling": false,
+                "underTvangsavviklingEllerTvangsopplosning": false,
+                "maalform": "Bokm<U+00E5>l",
+                "vedtektsdato": "2025-11-20",
+                "vedtektsfestetFormaal": [
+                    "Investeringstjenestevirksomhet og dertil tilknyttede tjenester, samt",
+                    "annen virksomhet som har narurlig sammenheng med ut<U+00F8>velsen av",
+                    "investeringstjenestevirksomheten."
+                ],
+                "aktivitet": [
+                    "Verdipapirhandel."
+                ],
+                "registreringsdatoForetaksregisteret": "2001-08-28",
+                "registrertIPartiregisteret": false,
+                "paategninger": [
+
+                ],
+                "erIKonsern": true,
+                "kapital": {
+                    "belop": 121200000.00,
+                    "antallAksjer": 1200000,
+                    "type": "Aksjekapital",
+                    "valuta": "NOK",
+                    "innfortDato": "2025-11-28"
+                },
+                "_links": {
+                    "self": {
+                        "href": "https://data.brreg.no/enhetsregisteret/api/enheter/883603362"
+                    }
+                },
+                "respons_klasse": "Enhet"
+            },
+            {
+                "organisasjonsnummer": "961095026",
+                "navn": "ABG SUNDAL COLLIER HOLDING ASA",
+                "organisasjonsform": {
+                    "kode": "ASA",
+                    "beskrivelse": "Allmennaksjeselskap",
+                    "_links": {
+                        "self": {
+                            "href": "https://data.brreg.no/enhetsregisteret/api/organisasjonsformer/ASA"
+                        }
+                    }
+                },
+                "postadresse": {
+                    "land": "Norge",
+                    "landkode": "NO",
+                    "postnummer": "0115",
+                    "poststed": "OSLO",
+                    "adresse": [
+                        "Postboks 1444 Vika"
+                    ],
+                    "kommune": "OSLO",
+                    "kommunenummer": "0301"
+                },
+                "registreringsdatoEnhetsregisteret": "1995-02-20",
+                "registrertIMvaregisteret": true,
+                "frivilligMvaRegistrertBeskrivelser": [
+                    "Utleier av bygg eller anlegg"
+                ],
+                "naeringskode1": {
+                    "kode": "66.190",
+                    "beskrivelse": "Andre tjenester tilknyttet finansieringsvirksomhet og kollektive investeringsfond"
+                },
+                "harRegistrertAntallAnsatte": false,
+                "registreringsdatoFrivilligMerverdiavgiftsregisteret": "2021-12-11",
+                "registreringsdatoMerverdiavgiftsregisteret": "2002-07-01",
+                "registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret": "2002-08-07",
+                "telefon": "22 01 60 00",
+                "forretningsadresse": {
+                    "land": "Norge",
+                    "landkode": "NO",
+                    "postnummer": "0251",
+                    "poststed": "OSLO",
+                    "adresse": [
+                        "Rusel<U+00F8>kkveien 26"
+                    ],
+                    "kommune": "OSLO",
+                    "kommunenummer": "0301"
+                },
+                "stiftelsesdato": "1991-06-28",
+                "institusjonellSektorkode": {
+                    "kode": "4900",
+                    "beskrivelse": "<U+00D8>vrige finansielle foretak unntatt forsikring"
+                },
+                "registrertIForetaksregisteret": true,
+                "registrertIStiftelsesregisteret": false,
+                "registrertIFrivillighetsregisteret": false,
+                "sisteInnsendteAarsregnskap": "2024",
+                "konkurs": false,
+                "underAvvikling": false,
+                "underTvangsavviklingEllerTvangsopplosning": false,
+                "maalform": "Bokm<U+00E5>l",
+                "vedtektsdato": "2024-03-21",
+                "vedtektsfestetFormaal": [
+                    "Selskapets form<U+00E5>l er gjennom datterselskaper <U+00E5> drive",
+                    "investeringstjenester, forvaltningstjenester, meglervirksomhet og",
+                    "salg og distribusjon av finansielle produkter, investeringer i andre",
+                    "selskaper med samme virksomhet, og alt hva hermed st<U+00E5>r i forbindelse."
+                ],
+                "aktivitet": [
+                    "Investeringer gjennom deltagelse i selskaper ved aksjeinnskudd eller",
+                    "p<U+00E5> annen m<U+00E5>te, herunder selskaper som driver meglertjenester,",
+                    "produksjon, handel, shipping og annen dermed i forbindelse st<U+00E5>ende",
+                    "virksomhet."
+                ],
+                "registreringsdatoForetaksregisteret": "1991-06-28",
+                "registrertIPartiregisteret": false,
+                "paategninger": [
+
+                ],
+                "erIKonsern": true,
+                "kapital": {
+                    "belop": 121379025.85,
+                    "antallAksjer": 527734895,
+                    "type": "Aksjekapital",
+                    "valuta": "NOK",
+                    "innfortDato": "2024-04-06"
+                },
+                "_links": {
+                    "self": {
+                        "href": "https://data.brreg.no/enhetsregisteret/api/enheter/961095026"
+                    }
+                },
+                "respons_klasse": "Enhet"
+            },
+            {
+                "organisasjonsnummer": "913757424",
+                "navn": "ABL GROUP ASA",
+                "organisasjonsform": {
+                    "kode": "ASA",
+                    "beskrivelse": "Allmennaksjeselskap",
+                    "_links": {
+                        "self": {
+                            "href": "https://data.brreg.no/enhetsregisteret/api/organisasjonsformer/ASA"
+                        }
+                    }
+                },
+                "postadresse": {
+                    "land": "Norge",
+                    "landkode": "NO",
+                    "postnummer": "0213",
+                    "poststed": "OSLO",
+                    "adresse": [
+                        "Postboks 444 Sk<U+00F8>yen"
+                    ],
+                    "kommune": "OSLO",
+                    "kommunenummer": "0301"
+                },
+                "registreringsdatoEnhetsregisteret": "2014-06-13",
+                "registrertIMvaregisteret": true,
+                "naeringskode1": {
+                    "kode": "71.129",
+                    "beskrivelse": "Annen teknisk konsulentvirksomhet"
+                },
+                "harRegistrertAntallAnsatte": false,
+                "registreringsdatoMerverdiavgiftsregisteret": "2014-05-01",
+                "registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret": "2014-07-14",
+                "forretningsadresse": {
+                    "land": "Norge",
+                    "landkode": "NO",
+                    "postnummer": "0278",
+                    "poststed": "OSLO",
+                    "adresse": [
+                        "Karenslyst all<U+00E9> 4"
+                    ],
+                    "kommune": "OSLO",
+                    "kommunenummer": "0301"
+                },
+                "stiftelsesdato": "2014-06-02",
+                "institusjonellSektorkode": {
+                    "kode": "2100",
+                    "beskrivelse": "Private aksjeselskaper mv."
+                },
+                "registrertIForetaksregisteret": true,
+                "registrertIStiftelsesregisteret": false,
+                "registrertIFrivillighetsregisteret": false,
+                "sisteInnsendteAarsregnskap": "2024",
+                "konkurs": false,
+                "underAvvikling": false,
+                "underTvangsavviklingEllerTvangsopplosning": false,
+                "maalform": "Bokm<U+00E5>l",
+                "vedtektsdato": "2025-09-09",
+                "vedtektsfestetFormaal": [
+                    "Tilby tjenester til marine- og energi industrien, og andre tilgrensede",
+                    "industrier, alene eller gjennom eierskap i andre virksomheter."
+                ],
+                "aktivitet": [
+                    "Holdingselskap og konsulenttjenester til marine og offshore",
+                    "industrien."
+                ],
+                "registreringsdatoForetaksregisteret": "2014-06-13",
+                "registrertIPartiregisteret": false,
+                "paategninger": [
+
+                ],
+                "erIKonsern": true,
+                "kapital": {
+                    "belop": 13342536.70,
+                    "antallAksjer": 133425367,
+                    "type": "Aksjekapital",
+                    "valuta": "NOK",
+                    "innfortDato": "2025-09-12"
+                },
+                "_links": {
+                    "self": {
+                        "href": "https://data.brreg.no/enhetsregisteret/api/enheter/913757424"
+                    }
+                },
+                "respons_klasse": "Enhet"
+            },
+            {
+                "organisasjonsnummer": "938702675",
+                "navn": "AF GRUPPEN ASA",
+                "organisasjonsform": {
+                    "kode": "ASA",
+                    "beskrivelse": "Allmennaksjeselskap",
+                    "_links": {
+                        "self": {
+                            "href": "https://data.brreg.no/enhetsregisteret/api/organisasjonsformer/ASA"
+                        }
+                    }
+                },
+                "hjemmeside": "www.afgruppen.no",
+                "postadresse": {
+                    "land": "Norge",
+                    "landkode": "NO",
+                    "postnummer": "0603",
+                    "poststed": "OSLO",
+                    "adresse": [
+                        "Postboks 6272 Etterstad"
+                    ],
+                    "kommune": "OSLO",
+                    "kommunenummer": "0301"
+                },
+                "registreringsdatoEnhetsregisteret": "1995-02-19",
+                "registrertIMvaregisteret": true,
+                "frivilligMvaRegistrertBeskrivelser": [
+                    "Utleier av bygg eller anlegg"
+                ],
+                "naeringskode1": {
+                    "kode": "41.000",
+                    "beskrivelse": "Oppf<U+00F8>ring av bygninger"
+                },
+                "hjelpeenhetskode": {
+                    "kode": "70.100",
+                    "beskrivelse": "Hovedkontortjenester"
+                },
+                "harRegistrertAntallAnsatte": false,
+                "registreringsdatoFrivilligMerverdiavgiftsregisteret": "2014-10-13",
+                "registreringsdatoMerverdiavgiftsregisteret": "1986-01-01",
+                "registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret": "1998-03-31",
+                "telefon": "22 89 11 00",
+                "forretningsadresse": {
+                    "land": "Norge",
+                    "landkode": "NO",
+                    "postnummer": "0581",
+                    "poststed": "OSLO",
+                    "adresse": [
+                        "Standardveien 1"
+                    ],
+                    "kommune": "OSLO",
+                    "kommunenummer": "0301"
+                },
+                "stiftelsesdato": "1985-09-05",
+                "institusjonellSektorkode": {
+                    "kode": "2100",
+                    "beskrivelse": "Private aksjeselskaper mv."
+                },
+                "registrertIForetaksregisteret": true,
+                "registrertIStiftelsesregisteret": false,
+                "registrertIFrivillighetsregisteret": false,
+                "sisteInnsendteAarsregnskap": "2024",
+                "konkurs": false,
+                "underAvvikling": false,
+                "underTvangsavviklingEllerTvangsopplosning": false,
+                "maalform": "Bokm<U+00E5>l",
+                "vedtektsdato": "2025-10-09",
+                "vedtektsfestetFormaal": [
+                    "Entrepren<U+00F8>r- og industrivirksomhet og alt som st<U+00E5>r i forbindelse med",
+                    "dette. Dette omfatter ogs<U+00E5> deltakelse i andre foretak."
+                ],
+                "aktivitet": [
+                    "Alle typer virksomhet ogs<U+00E5> ved deltakelse i andre",
+                    "foretak."
+                ],
+                "registreringsdatoForetaksregisteret": "1990-01-25",
+                "registrertIPartiregisteret": false,
+                "paategninger": [
+
+                ],
+                "erIKonsern": true,
+                "kapital": {
+                    "belop": 5502831.55,
+                    "antallAksjer": 110056631,
+                    "type": "Aksjekapital",
+                    "valuta": "NOK",
+                    "innfortDato": "2025-10-27"
+                },
+                "_links": {
+                    "self": {
+                        "href": "https://data.brreg.no/enhetsregisteret/api/enheter/938702675"
+                    }
+                },
+                "respons_klasse": "Enhet"
+            },
+            {
+                "organisasjonsnummer": "923974709",
+                "navn": "AGILYX ASA",
+                "organisasjonsform": {
+                    "kode": "ASA",
+                    "beskrivelse": "Allmennaksjeselskap",
+                    "_links": {
+                        "self": {
+                            "href": "https://data.brreg.no/enhetsregisteret/api/organisasjonsformer/ASA"
+                        }
+                    }
+                },
+                "hjemmeside": "www.agilyx.com",
+                "registreringsdatoEnhetsregisteret": "2019-11-28",
+                "registrertIMvaregisteret": false,
+                "naeringskode1": {
+                    "kode": "64.220",
+                    "beskrivelse": "Spesielle holdingselskaper"
+                },
+                "harRegistrertAntallAnsatte": true,
+                "registreringsdatoAntallAnsatteEnhetsregisteret": "2025-01-14",
+                "registreringsdatoAntallAnsatteNAVAaregisteret": "2025-01-10",
+                "forretningsadresse": {
+                    "land": "Norge",
+                    "landkode": "NO",
+                    "postnummer": "0287",
+                    "poststed": "OSLO",
+                    "adresse": [
+                        "Bygd<U+00F8>y terrasse 4"
+                    ],
+                    "kommune": "OSLO",
+                    "kommunenummer": "0301"
+                },
+                "stiftelsesdato": "2019-11-22",
+                "institusjonellSektorkode": {
+                    "kode": "4900",
+                    "beskrivelse": "<U+00D8>vrige finansielle foretak unntatt forsikring"
+                },
+                "registrertIForetaksregisteret": true,
+                "registrertIStiftelsesregisteret": false,
+                "registrertIFrivillighetsregisteret": false,
+                "sisteInnsendteAarsregnskap": "2024",
+                "konkurs": false,
+                "underAvvikling": false,
+                "underTvangsavviklingEllerTvangsopplosning": false,
+                "maalform": "Bokm<U+00E5>l",
+                "vedtektsdato": "2026-02-02",
+                "vedtektsfestetFormaal": [
+                    "Eie aksjer i andre selskaper og enten selv eller gjennom andre",
+                    "selskaper utvikle, produsere, markedsf<U+00F8>re, lisensiere og selge IP og",
+                    "teknologi som gj<U+00F8>r det mulig ved hjelp av kjemiske prosesser <U+00E5> omforme",
+                    "plast som er vanskelig <U+00E5> resirkulere til drivstoff og plastr<U+00E5>stoff."
+                ],
+                "aktivitet": [
+                    "Eie aksjer i andre selskaper og enten selv eller gjennom andre",
+                    "selskaper utvikle, produsere, markedsf<U+00F8>re, lisensiere og selge IP og",
+                    "teknologi som gj<U+00F8>r det mulig ved hjelp av kjemiske prosesser <U+00E5> omforme",
+                    "plast som er vanskelig <U+00E5> resirkulere til drivstoff og plastr<U+00E5>stoff."
+                ],
+                "registreringsdatoForetaksregisteret": "2019-11-28",
+                "registrertIPartiregisteret": false,
+                "paategninger": [
+
+                ],
+                "erIKonsern": false,
+                "kapital": {
+                    "belop": 2517231.00,
+                    "antallAksjer": 125861550,
+                    "type": "Aksjekapital",
+                    "valuta": "NOK",
+                    "innfortDato": "2026-02-05"
+                },
+                "_links": {
+                    "self": {
+                        "href": "https://data.brreg.no/enhetsregisteret/api/enheter/923974709"
+                    }
+                },
+                "respons_klasse": "Enhet"
+            }
+        ]
+    },
+    "_links": {
+        "first": {
+            "href": "https://data.brreg.no/enhetsregisteret/api/enheter?organisasjonsform=ASA&page=0&size=5"
+        },
+        "self": {
+            "href": "https://data.brreg.no/enhetsregisteret/api/enheter?organisasjonsform=ASA&size=5&page=0"
+        },
+        "next": {
+            "href": "https://data.brreg.no/enhetsregisteret/api/enheter?organisasjonsform=ASA&page=1&size=5"
+        },
+        "last": {
+            "href": "https://data.brreg.no/enhetsregisteret/api/enheter?organisasjonsform=ASA&page=43&size=5"
+        }
+    },
+    "page": {
+        "size": 5,
+        "totalElements": 219,
+        "totalPages": 44,
+        "number": 0
+    }
+}

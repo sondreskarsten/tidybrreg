@@ -30,7 +30,8 @@ Output columns are named \verb{\{variable\}_\{function\}}.}
 
 \item{frequency}{One of \code{"year"}, \code{"quarter"}, \code{"month"}.}
 
-\item{from, to}{Date range. Defaults to range of available snapshots.}
+\item{from, to}{Start and end dates for the panel. \code{NULL} defaults
+to the range of available snapshots.}
 
 \item{type}{One of \code{"enheter"}, \code{"underenheter"}, \code{"roller"}.}
 

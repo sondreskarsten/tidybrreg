@@ -86,6 +86,8 @@ brreg_download <- function(type = c("enheter", "underenheter", "roller"),
 
   needs_download <- !file.exists(cache_file) || identical(refresh, TRUE)
 
+  sizes <- c(enheter = "~152 MB", underenheter = "~59 MB", roller = "~131 MB")
+
   url <- if (type == "roller") {
     paste0(brreg_base_url(), "/roller/totalbestand")
   } else if (format == "json") {
@@ -109,15 +111,16 @@ brreg_download <- function(type = c("enheter", "underenheter", "roller"),
   }
 
   if (needs_download) {
-    cli::cli_alert_info("Downloading full {type} register...")
+    cli::cli_progress_step("Downloading full {type} register ({sizes[type]})")
     resp <- httr2::request(url) |>
-      httr2::req_user_agent("tidybrreg (R package)") |>
+      httr2::req_user_agent("tidybrreg (https://github.com/sondreskarsten/tidybrreg; R package)") |>
       httr2::req_perform(path = cache_file)
     etag <- httr2::resp_header(resp, "ETag")
     if (!is.null(etag) && cache) {
       writeLines(etag, etag_file)
     }
     fsize <- file.size(cache_file)
+    cli::cli_progress_done()
     cli::cli_alert_success("Downloaded {round(fsize / 1024^2, 1)} MB to cache.")
     assign("last_download_resp", resp, envir = .brregEnv)
     assign("last_download_url", url, envir = .brregEnv)
@@ -257,7 +260,8 @@ drop_hal_links <- function(dat) {
 #'
 #' Shared between CSV and JSON parsing. Known dot-notation paths
 #' map to English names; unknown paths get auto snake_case.
-#' Type coercion follows `field_dict$type`.
+#' Type coercion follows `field_dict$type`. Parse failures are
+#' tracked and attached as a `brreg_parse_problems` attribute.
 #'
 #' @keywords internal
 rename_and_coerce <- function(dat) {
@@ -272,6 +276,8 @@ rename_and_coerce <- function(dat) {
 
   names(dat) <- new_names
 
+  problems <- list()
+
   for (i in seq_len(nrow(field_dict))) {
     col <- field_dict$col_name[i]
     target <- field_dict$type[i]
@@ -285,13 +291,35 @@ rename_and_coerce <- function(dat) {
       )
       next
     }
-    dat[[col]] <- switch(target,
-      Date      = as.Date(as.character(dat[[col]])),
-      integer   = suppressWarnings(as.integer(dat[[col]])),
-      logical   = as.logical(dat[[col]]),
-      character = as.character(dat[[col]]),
-      dat[[col]]
-    )
+    if (target == "integer") {
+      original <- dat[[col]]
+      parsed <- suppressWarnings(as.integer(original))
+      failed <- !is.na(original) & original != "" & is.na(parsed)
+      if (any(failed)) {
+        problems[[col]] <- tibble::tibble(
+          column = col, row = which(failed),
+          expected = "integer",
+          actual = as.character(original[failed])[seq_len(min(sum(failed), 20))]
+        )
+      }
+      dat[[col]] <- parsed
+    } else {
+      dat[[col]] <- switch(target,
+        Date      = as.Date(as.character(dat[[col]])),
+        logical   = as.logical(dat[[col]]),
+        character = as.character(dat[[col]]),
+        dat[[col]]
+      )
+    }
+  }
+
+  if (length(problems) > 0) {
+    prob_tbl <- dplyr::bind_rows(problems)
+    attr(dat, "brreg_parse_problems") <- prob_tbl
+    cli::cli_warn(c(
+      "{nrow(prob_tbl)} parse failure{?s} in {length(problems)} column{?s}.",
+      "i" = "Use {.code attr(result, \"brreg_parse_problems\")} to inspect."
+    ))
   }
   dat
 }

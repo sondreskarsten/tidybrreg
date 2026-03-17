@@ -12,6 +12,11 @@
 #' @param from,to Start and end dates for the panel. `NULL` defaults
 #'   to the range of available snapshots.
 #' @param dates Date vector for `frequency = "custom"`.
+#' @param max_gap Integer. Maximum number of periods a snapshot may
+#'   carry forward via LOCF. `NULL` (default) carries forward
+#'   indefinitely. Set `max_gap = 2` to prevent a quarterly snapshot
+#'   from representing a firm as active 3+ quarters after its last
+#'   observation.
 #' @param type One of `"enheter"` or `"underenheter"`.
 #' @param label Logical. If `TRUE`, apply [brreg_label()] to the
 #'   result.
@@ -39,6 +44,7 @@ brreg_panel <- function(frequency = c("year", "quarter", "month", "custom"),
                          from = NULL,
                          to = NULL,
                          dates = NULL,
+                         max_gap = NULL,
                          type = c("enheter", "underenheter", "roller"),
                          label = FALSE) {
   frequency <- match.arg(frequency)
@@ -68,6 +74,22 @@ brreg_panel <- function(frequency = c("year", "quarter", "month", "custom"),
   mapping <- resolve_snapshot_dates(available, targets)
   if (nrow(mapping) == 0) {
     cli::cli_abort("No snapshots available for the requested period range.")
+  }
+
+  if (!is.null(max_gap)) {
+    mapping$gap <- as.integer(difftime(mapping$target_date, mapping$snapshot_date, units = "days"))
+    period_days <- switch(frequency,
+      year = 365L, quarter = 92L, month = 31L, custom = max(mapping$gap, na.rm = TRUE)
+    )
+    max_days <- as.integer(max_gap) * period_days
+    mapping <- mapping[mapping$gap <= max_days, , drop = FALSE]
+    mapping$gap <- NULL
+    if (nrow(mapping) == 0) {
+      cli::cli_abort(c(
+        "No periods remain after applying {.arg max_gap = {max_gap}}.",
+        "i" = "Increase {.arg max_gap} or add more snapshots."
+      ))
+    }
   }
 
   needed_dates <- unique(mapping$snapshot_date)

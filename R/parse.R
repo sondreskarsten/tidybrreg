@@ -66,7 +66,11 @@ rename_from_dict <- function(flat) {
     }
   }
 
-  result <- lapply(result, \(v) if (is.null(v) || length(v) == 0) NA else v)
+  result <- lapply(result, function(v) {
+    if (is.null(v) || length(v) == 0) return(NA)
+    if (length(v) > 1) return(paste(v, collapse = "; "))
+    v
+  })
   tibble::as_tibble(result)
 }
 

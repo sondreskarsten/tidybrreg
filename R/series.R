@@ -14,7 +14,7 @@
 #'   (e.g. `"nace_1"`, `c("legal_form", "municipality_code")`).
 #'   `NULL` for national totals.
 #' @param frequency One of `"year"`, `"quarter"`, `"month"`.
-#' @param from,to Date range. Defaults to range of available snapshots.
+#' @inheritParams brreg_panel
 #' @param type One of `"enheter"`, `"underenheter"`, `"roller"`.
 #' @param label Logical. Translate group codes to English labels.
 #'
