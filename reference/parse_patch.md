@@ -1,7 +1,11 @@
-# Parse brreg flat JSON Patch array into a tibble
+# Parse brreg RFC 6902 JSON Patch operations into a tibble
 
-The brreg API returns field-level changes as a flat interleaved array:
-`["replace", "/path", "value", "replace", "/path2", "value2", ...]`.
+The brreg CDC endpoint returns `endringer` as a list of patch objects,
+each with `op`, `path`, and optionally `value`. Values may be scalars or
+nested objects (e.g. the full `naeringskode1` or `forretningsadresse`
+object). Nested objects are flattened to leaf-level rows so that
+`/naeringskode1` with value `{kode: "43.210", beskrivelse: "..."}`
+produces two rows: `naeringskode1_kode` and `naeringskode1_beskrivelse`.
 
 ## Usage
 
@@ -13,8 +17,10 @@ parse_patch(endringer)
 
 - endringer:
 
-  List or character vector of patch operations.
+  List of patch operations from the brreg API.
 
 ## Value
 
-A tibble with columns `operation`, `field`, `new_value`.
+A tibble with columns `operation`, `field`, `new_value`. All `new_value`
+entries are character. Array-index suffixes (e.g. `adresse_0`) are
+preserved.
