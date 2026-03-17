@@ -53,6 +53,10 @@ records).
   : Download the full Norwegian business register
 - [`brreg_status()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_status.md)
   : Check availability of local bulk datasets
+- [`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md)
+  : Synchronize local state with the brreg CDC stream
+- [`brreg_sync_status()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync_status.md)
+  : Display sync status
 
 ## Snapshot engine
 
@@ -86,6 +90,10 @@ tidyverts ecosystem.
   : Construct a firm-period panel from accumulated snapshots
 - [`brreg_flows()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_flows.md)
   : Compute daily entry and exit flows
+- [`brreg_changes()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_changes.md)
+  : Query the change log for field-level mutations
+- [`brreg_change_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_change_summary.md)
+  : Summarize changes by field and type
 - [`brreg_replay()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_replay.md)
   : Reconstruct register state by replaying CDC updates
 - [`brreg_events()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_events.md)
@@ -94,6 +102,10 @@ tidyverts ecosystem.
   : Compute aggregate time series from snapshots
 - [`as_brreg_tsibble()`](https://sondreskarsten.github.io/tidybrreg/reference/as_brreg_tsibble.md)
   : Convert tidybrreg output to tsibble
+- [`brreg_annotations()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotations.md)
+  : Retrieve registry annotations (påtegninger) for entities
+- [`brreg_annotation_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotation_summary.md)
+  : Count entities with active annotations
 
 ## Incremental updates (CDC)
 

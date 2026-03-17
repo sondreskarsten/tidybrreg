@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">tidybrreg</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,35 @@
       <small>Source: <a href="https://github.com/sondreskarsten/tidybrreg/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.2" id="tidybrreg-032">tidybrreg 0.3.2<a class="anchor" aria-label="anchor" href="#tidybrreg-032"></a></h2>
+<div class="section level3">
+<h3 id="event-sourcing-sync-engine-0-3-2">Event-sourcing sync engine<a class="anchor" aria-label="anchor" href="#event-sourcing-sync-engine-0-3-2"></a></h3>
+<ul><li>
+<code><a href="../reference/brreg_sync.html">brreg_sync()</a></code> — maintains a local mirror of the Enhetsregisteret by applying incremental CDC events to persistent parquet state files. On first run, bootstraps from bulk download. Subsequent runs poll from the last cursor position. Write ordering (changelog → state → cursor) ensures crash-safe idempotent replay.</li>
+<li>
+<code><a href="../reference/brreg_sync_status.html">brreg_sync_status()</a></code> — displays state file sizes, cursor positions, last sync time, and changelog partition count.</li>
+<li>Four state files maintained: <code>enheter.parquet</code>, <code>underenheter.parquet</code>, <code>roller.parquet</code>, <code>paategninger.parquet</code>.</li>
+<li>Hive-partitioned changelog under <code>state/changelog/sync_date=.../</code> for efficient date-range queries via <code><a href="https://arrow.apache.org/docs/r/reference/open_dataset.html" class="external-link">arrow::open_dataset()</a></code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="registry-annotations-påtegninger-0-3-2">Registry annotations (påtegninger)<a class="anchor" aria-label="anchor" href="#registry-annotations-p%C3%A5tegninger-0-3-2"></a></h3>
+<ul><li>
+<code><a href="../reference/brreg_annotations.html">brreg_annotations()</a></code> — query the påtegninger state table by org_nr and/or infotype code. Påtegninger are registry-level annotations about entity data quality — the earliest formal signal of entity distress, preceding forced dissolution by weeks to months.</li>
+<li>
+<code><a href="../reference/brreg_annotation_summary.html">brreg_annotation_summary()</a></code> — count entities with active annotations grouped by infotype.</li>
+<li>Påtegninger treated as a conceptually distinct fourth data stream alongside enheter, underenheter, and roller.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="unified-change-tracking-0-3-2">Unified change tracking<a class="anchor" aria-label="anchor" href="#unified-change-tracking-0-3-2"></a></h3>
+<ul><li>
+<code><a href="../reference/brreg_changes.html">brreg_changes()</a></code> — query the changelog for field-level mutations across all four streams. Filter by track (field names), registry, change_type, date range, and org_nr.</li>
+<li>
+<code><a href="../reference/brreg_change_summary.html">brreg_change_summary()</a></code> — count changes by registry, type, field.</li>
+<li>
+<code><a href="../reference/brreg_flows.html">brreg_flows()</a></code> now auto-detects the changelog when called with no arguments: <code><a href="../reference/brreg_flows.html">brreg_flows()</a></code> reads from the sync changelog, <code>brreg_flows(data)</code> uses the original bulk + CDC path.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.1" id="tidybrreg-031">tidybrreg 0.3.1<a class="anchor" aria-label="anchor" href="#tidybrreg-031"></a></h2>
 <div class="section level3">

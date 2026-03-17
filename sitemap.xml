@@ -16,8 +16,12 @@
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/add_entry_exit.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/apply_patch_to_row.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/as_brreg_tsibble.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotation_summary.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotations.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_network.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_summary.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_change_summary.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_changes.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_children.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_cleanup.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_data_dir.html</loc></url>
@@ -44,6 +48,8 @@
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_snapshots.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_status.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_survival_data.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync_status.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_underenheter.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates_roller.html</loc></url>

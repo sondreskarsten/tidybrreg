@@ -1,5 +1,50 @@
 # Changelog
 
+## tidybrreg 0.3.2
+
+### Event-sourcing sync engine
+
+- [`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md)
+  — maintains a local mirror of the Enhetsregisteret by applying
+  incremental CDC events to persistent parquet state files. On first
+  run, bootstraps from bulk download. Subsequent runs poll from the last
+  cursor position. Write ordering (changelog → state → cursor) ensures
+  crash-safe idempotent replay.
+- [`brreg_sync_status()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync_status.md)
+  — displays state file sizes, cursor positions, last sync time, and
+  changelog partition count.
+- Four state files maintained: `enheter.parquet`,
+  `underenheter.parquet`, `roller.parquet`, `paategninger.parquet`.
+- Hive-partitioned changelog under `state/changelog/sync_date=.../` for
+  efficient date-range queries via
+  [`arrow::open_dataset()`](https://arrow.apache.org/docs/r/reference/open_dataset.html).
+
+### Registry annotations (påtegninger)
+
+- [`brreg_annotations()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotations.md)
+  — query the påtegninger state table by org_nr and/or infotype code.
+  Påtegninger are registry-level annotations about entity data quality —
+  the earliest formal signal of entity distress, preceding forced
+  dissolution by weeks to months.
+- [`brreg_annotation_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotation_summary.md)
+  — count entities with active annotations grouped by infotype.
+- Påtegninger treated as a conceptually distinct fourth data stream
+  alongside enheter, underenheter, and roller.
+
+### Unified change tracking
+
+- [`brreg_changes()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_changes.md)
+  — query the changelog for field-level mutations across all four
+  streams. Filter by track (field names), registry, change_type, date
+  range, and org_nr.
+- [`brreg_change_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_change_summary.md)
+  — count changes by registry, type, field.
+- [`brreg_flows()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_flows.md)
+  now auto-detects the changelog when called with no arguments:
+  [`brreg_flows()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_flows.md)
+  reads from the sync changelog, `brreg_flows(data)` uses the original
+  bulk + CDC path.
+
 ## tidybrreg 0.3.1
 
 ### New functions

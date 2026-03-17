@@ -21,7 +21,7 @@ computed. Pass CDC data to unlock exit counts.
 
 ``` r
 brreg_flows(
-  data,
+  data = NULL,
   updates = NULL,
   by = c("nace_1", "municipality_code"),
   from = NULL,
@@ -34,12 +34,11 @@ brreg_flows(
 
 - data:
 
-  A tibble from
+  Optional. A tibble from
   [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md)
-  or a snapshot read via
-  [`read_parquet_safe()`](https://sondreskarsten.github.io/tidybrreg/reference/read_parquet_safe.md).
-  Must contain `org_nr`, `registration_date`, `nace_1`, and
-  `municipality_code`.
+  or a snapshot. When `NULL` and a sync changelog exists, flows are
+  computed from the changelog instead. Must contain `org_nr`,
+  `registration_date`, `nace_1`, and `municipality_code` when provided.
 
 - updates:
 
@@ -102,7 +101,7 @@ Other tidybrreg panel functions:
 # \donttest{
 entities <- brreg_download()
 #> ℹ Downloading full enheter register (~152 MB)
-#> ✔ Downloading full enheter register (~152 MB) [2m 21.6s]
+#> ✔ Downloading full enheter register (~152 MB) [3m 7s]
 #> 
 #> ✔ Downloaded 145.4 MB to cache.
 flows <- brreg_flows(entities)
