@@ -29,6 +29,8 @@ reference:
     See `vignette("tidybrreg")` for a complete walkthrough.
   contents:
   - brreg_entity
+  - brreg_underenheter
+  - brreg_children
   - brreg_validate
 
 - title: Search
@@ -47,6 +49,7 @@ reference:
   - brreg_roles_legal
   - brreg_board_summary
   - brreg_board_network
+  - brreg_network
   - brreg_survival_data
 
 - title: Bulk downloads
@@ -56,6 +59,7 @@ reference:
     roller (~5M role records).
   contents:
   - brreg_download
+  - brreg_status
 
 - title: Snapshot engine
   desc: >
