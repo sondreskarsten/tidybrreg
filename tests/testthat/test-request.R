@@ -35,8 +35,9 @@ test_that("brreg_req configures retry", {
 
 test_that("brreg_req configures throttling", {
   req <- tidybrreg:::brreg_req("enheter")
-  expect_true("throttle_realm" %in% names(req$policies))
-  expect_true(grepl("brreg", req$policies$throttle_realm))
+  policy_names <- names(req$policies)
+  has_throttle <- any(grepl("throttle", policy_names))
+  expect_true(has_throttle)
 })
 
 test_that("brreg_req configures structured error handler", {

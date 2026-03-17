@@ -4,8 +4,9 @@ FROM rocker/r-ver:${R_VERSION}
 LABEL org.opencontainers.image.source="https://github.com/sondreskarsten/tidybrreg"
 LABEL org.opencontainers.image.description="CI test image for tidybrreg R package"
 
-# System dependencies for arrow, igraph/tidygraph, httr2/curl
+# System dependencies for arrow, igraph/tidygraph, httr2/curl, SSL
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
     libcurl4-openssl-dev \
     libssl-dev \
     libglpk-dev \
@@ -13,6 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgmp3-dev \
     cmake \
     git \
+    && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Install pak for fast dependency resolution
