@@ -41,7 +41,17 @@ as_brreg_tsibble <- function(x, key = NULL, index = NULL) {
   }
 
   if (index == "period" && is.character(x$period)) {
-    x$period <- as.Date(paste0(x$period, "-01"))
+    x$period <- vapply(x$period, function(p) {
+      if (grepl("^\\d{4}$", p)) return(as.Date(paste0(p, "-01-01")))
+      if (grepl("^\\d{4}-\\d{2}$", p)) return(as.Date(paste0(p, "-01")))
+      if (grepl("^\\d{4}-Q\\d$", p)) {
+        yr <- sub("-Q.*", "", p)
+        q <- as.integer(sub(".*Q", "", p))
+        return(as.Date(paste0(yr, "-", sprintf("%02d", q * 3 - 2), "-01")))
+      }
+      as.Date(p)
+    }, numeric(1))
+    x$period <- as.Date(x$period, origin = "1970-01-01")
   }
 
   if (length(key) == 0 || is.null(key)) {
