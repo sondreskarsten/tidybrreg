@@ -1,0 +1,377 @@
+# tidybrreg
+
+Tidy R interface to Norway’s [Central Coordinating Register for Legal
+Entities](https://www.brreg.no/en/) (Enhetsregisteret), maintained by
+the Brønnøysund Register Centre. The register contains approximately 1
+million active entities. Data is freely available under the [Norwegian
+Licence for Open Government Data (NLOD
+2.0)](https://data.norge.no/nlod/en/2.0).
+
+## Installation
+
+``` r
+# install.packages("pak")
+pak::pak("sondreskarsten/tidybrreg")
+
+# For snapshot/panel features, also install a parquet backend:
+install.packages("nanoparquet")  # lightweight
+# OR
+install.packages("arrow")       # full-featured (lazy queries)
+```
+
+## Entity lookup
+
+``` r
+library(tidybrreg)
+
+brreg_entity("923609016")
+#> # A tibble: 1 x 65
+#>   org_nr    name        legal_form founding_date employees nace_1
+#>   <chr>     <chr>       <chr>      <date>            <int> <chr>
+#> 1 923609016 EQUINOR ASA ASA        1972-09-18        21408 06.100
+
+# Sub-entities (establishments)
+brreg_entity("974760843", registry = "underenheter")
+```
+
+Codes by default. Translate with `type = "label"` or
+[`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md):
+
+``` r
+brreg_entity("923609016", type = "label")
+
+brreg_entity("923609016") |>
+  brreg_label(code = c("legal_form", "nace_1"))
+```
+
+## Search
+
+``` r
+brreg_search(legal_form = "AS", municipality_code = "0301",
+             min_employees = 500, max_results = 10)
+
+# Sub-entity search
+brreg_search(name = "Equinor", registry = "underenheter", max_results = 5)
+```
+
+## Roles and governance
+
+``` r
+# Who holds roles IN an entity
+brreg_roles("923609016")
+brreg_roles("923609016") |> brreg_board_summary()
+
+# What roles does an entity hold in OTHER entities (reverse lookup)
+brreg_roles_legal("923609016")
+#> # A tibble: 70 x 8
+#>   org_nr    target_org_nr target_name                      role       share
+#>   <chr>     <chr>         <chr>                            <chr>      <chr>
+#> 1 923609016 819334552     TECHNOLOGY CENTRE MONGSTAD DA    Partner... 22%
+#> 2 923609016 925461784     EQUINOR DEZASSETE AS             Accountant NA
+```
+
+## Bulk downloads
+
+Three registries available as bulk downloads:
+
+``` r
+# Enheter: ~152 MB CSV or ~196 MB JSON
+entities <- brreg_download(type = "enheter")
+entities <- brreg_download(type = "enheter", format = "json")
+
+# Underenheter: ~59 MB CSV
+sub_entities <- brreg_download(type = "underenheter")
+
+# Roller: ~131 MB JSON (all roles for all entities)
+roles <- brreg_download(type = "roller")
+```
+
+## Snapshot engine
+
+Save dated bulk downloads as Hive-partitioned Parquet. Raw `.gz` files
+are preserved for provenance.
+
+``` r
+brreg_snapshot("enheter")
+brreg_snapshot("underenheter")
+brreg_snapshot("roller")
+
+# Import historical CSVs
+brreg_import("enheter_2024-12-31.csv.gz", snapshot_date = "2024-12-31")
+
+# List snapshots and provenance metadata
+brreg_snapshots()
+brreg_manifest()
+```
+
+## Panel construction
+
+Two paths for building firm-period panels:
+
+``` r
+# Path A: multi-snapshot diff
+panel <- brreg_panel(
+  frequency = "year",
+  cols = c("employees", "nace_1", "legal_form", "municipality_code")
+)
+
+# Path B: single snapshot + CDC replay
+base <- brreg_download(type_output = "tibble")
+cdc <- brreg_updates(since = "2025-09-23", size = 10000, include_changes = TRUE)
+state_dec <- brreg_replay(base, cdc, target_date = "2025-12-31")
+
+# Detect entries, exits, field changes between two snapshots
+events <- brreg_events("2024-01-01", "2025-01-01")
+events |> dplyr::count(event_type)
+```
+
+## Time series
+
+Aggregate any variable with any summary function, grouped by any column:
+
+``` r
+# Total employees by legal form per year
+brreg_series(.vars = "employees", by = "legal_form")
+
+# Multiple summaries
+brreg_series(.vars = "employees",
+             .fns = list(avg = mean, total = sum),
+             by = "nace_1")
+
+# Entity counts (default when .vars = NULL)
+brreg_series(by = "legal_form")
+
+# Convert to tsibble for tidyverts ecosystem
+brreg_series(.vars = "employees") |> as_brreg_tsibble()
+```
+
+## Harmonization
+
+``` r
+panel |> brreg_harmonize_kommune(target_date = "2024-01-01")
+panel |> brreg_harmonize_nace(from = "SN2007", to = "SN2025")
+```
+
+## Governance research
+
+``` r
+net <- brreg_board_network(c("923609016", "984851006"))
+surv <- brreg_search(legal_form = "AS", max_results = 1000) |>
+  brreg_survival_data()
+```
+
+## Validate organization numbers
+
+``` r
+library(tidybrreg)
+brreg_validate(c("923609016", "984851006", "123456789"))
+#> [1]  TRUE  TRUE FALSE
+```
+
+## Design
+
+**Codes by default, labels on demand.** Functions return Norwegian
+codes.
+[`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md)
+translates to English via bundled reference data or live SSB Klass API
+lookups.
+
+**Algorithmic unnesting.** JSON nested objects and list columns are
+flattened to atomic types. Character vectors are collapsed, data frames
+serialized, HAL links dropped. Both CSV and JSON paths share
+[`rename_and_coerce()`](https://sondreskarsten.github.io/tidybrreg/reference/rename_and_coerce.md)
+— no hardcoded format parity.
+
+**Zero-drop policy.** Unknown API fields pass through with
+auto-generated snake_case names. Schema evolution handled by
+`arrow::open_dataset(unify_schemas = TRUE)`.
+
+**Provenance tracking.** Raw download files preserved alongside
+processed Parquet. JSON manifest records HTTP headers (`Last-Modified`
+for data vintage, ETag for change detection), file hashes, and record
+counts.
+
+**Two panel construction paths.** Multi-snapshot diff
+([`brreg_panel()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_panel.md))
+for historical analysis. Single snapshot + CDC replay
+([`brreg_replay()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_replay.md))
+for forward reconstruction.
+
+## Functions
+
+| Function                                                                                                       | Description                                                    |
+|----------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|
+| [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md)                       | Single entity by organization number (enheter or underenheter) |
+| [`brreg_search()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_search.md)                       | Filtered search (enheter or underenheter)                      |
+| [`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md)                         | Board members, officers, auditors for an entity                |
+| [`brreg_roles_legal()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles_legal.md)             | Reverse: roles an entity holds in other entities               |
+| [`brreg_board_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_summary.md)         | Board-level covariates from role data                          |
+| [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md)                   | Full register bulk download (enheter, underenheter, roller)    |
+| [`brreg_updates()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates.md)                     | Incremental change stream (enheter, underenheter, roller)      |
+| [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md)                         | Translate codes to English descriptions                        |
+| [`brreg_validate()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_validate.md)                   | Organization number validation (modulus-11)                    |
+| [`get_brreg_dic()`](https://sondreskarsten.github.io/tidybrreg/reference/get_brreg_dic.md)                     | Fetch/cache NACE or sector dictionaries                        |
+| [`brreg_snapshot()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_snapshot.md)                   | Save dated bulk download as Parquet + raw file                 |
+| [`brreg_import()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_import.md)                       | Import historical CSV as snapshot partition                    |
+| [`brreg_snapshots()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_snapshots.md)                 | List available snapshots                                       |
+| [`brreg_manifest()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_manifest.md)                   | Read download provenance catalog                               |
+| [`brreg_open()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_open.md)                           | Open snapshot store as lazy Arrow Dataset                      |
+| [`brreg_cleanup()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_cleanup.md)                     | Remove old snapshot partitions                                 |
+| [`brreg_panel()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_panel.md)                         | Firm x period panel from snapshots                             |
+| [`brreg_replay()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_replay.md)                       | Reconstruct state from snapshot + CDC updates                  |
+| [`brreg_events()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_events.md)                       | Snapshot diff: entries, exits, field changes                   |
+| [`brreg_series()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_series.md)                       | Aggregate time series (any variable, any function)             |
+| [`as_brreg_tsibble()`](https://sondreskarsten.github.io/tidybrreg/reference/as_brreg_tsibble.md)               | Convert to tsibble for tidyverts ecosystem                     |
+| [`brreg_harmonize_kommune()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_harmonize_kommune.md) | Municipality code harmonization                                |
+| [`brreg_harmonize_nace()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_harmonize_nace.md)       | NACE code harmonization (SN2007/SN2025)                        |
+| [`brreg_board_network()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_network.md)         | Director interlock network (tidygraph)                         |
+| [`brreg_survival_data()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_survival_data.md)         | Firm survival data preparation                                 |
+| [`brreg_data_dir()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_data_dir.md)                   | Snapshot store location                                        |
+
+## License
+
+MIT. Data from Enhetsregisteret is available under [NLOD
+2.0](https://data.norge.no/nlod/en/2.0).
+
+# Package index
+
+## Entity lookup
+
+Retrieve details for specific entities by organization number. See
+[`vignette("tidybrreg")`](https://sondreskarsten.github.io/tidybrreg/articles/tidybrreg.md)
+for a complete walkthrough.
+
+- [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md)
+  : Look up a Norwegian legal entity
+- [`brreg_validate()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_validate.md)
+  : Validate Norwegian organization numbers
+
+## Search
+
+Query the register by name, legal form, industry, geography, and other
+criteria. Supports both main entities and sub-entities.
+
+- [`brreg_search()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_search.md)
+  : Search Norwegian legal entities
+
+## Roles and governance
+
+Board members, officers, auditors, and inter-company role relationships.
+See
+[`vignette("governance")`](https://sondreskarsten.github.io/tidybrreg/articles/governance.md)
+for network analysis.
+
+- [`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md)
+  : Retrieve board members, officers, and auditors
+- [`brreg_roles_legal()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles_legal.md)
+  : Retrieve roles an entity holds in other entities
+- [`brreg_board_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_summary.md)
+  : Derive board-level summary covariates from role data
+- [`brreg_board_network()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_network.md)
+  : Build a director interlock network
+- [`brreg_survival_data()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_survival_data.md)
+  : Prepare firm survival data
+
+## Bulk downloads
+
+Download the full register as CSV or JSON. Three registries: enheter
+(~1M entities), underenheter (~950K sub-entities), roller (~5M role
+records).
+
+- [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md)
+  : Download the full Norwegian business register
+
+## Snapshot engine
+
+Save dated bulk downloads as Hive-partitioned Parquet files for panel
+construction and historical analysis. See
+[`vignette("panels")`](https://sondreskarsten.github.io/tidybrreg/articles/panels.md)
+for workflows.
+
+- [`brreg_snapshot()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_snapshot.md)
+  : Save a dated snapshot of the full register
+- [`brreg_import()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_import.md)
+  : Import a historical CSV as a snapshot partition
+- [`brreg_snapshots()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_snapshots.md)
+  : List available snapshots
+- [`brreg_open()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_open.md)
+  : Open the snapshot store as a lazy Arrow Dataset
+- [`brreg_cleanup()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_cleanup.md)
+  : Remove old snapshots from the local store
+- [`brreg_data_dir()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_data_dir.md)
+  : Path to the tidybrreg snapshot store
+- [`brreg_manifest()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_manifest.md)
+  : Read the snapshot manifest
+
+## Panel construction and time series
+
+Build firm-period panels from snapshots, reconstruct state via CDC
+replay, compute aggregate time series, and convert to tsibble for the
+tidyverts ecosystem.
+
+- [`brreg_panel()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_panel.md)
+  : Construct a firm-period panel from accumulated snapshots
+- [`brreg_replay()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_replay.md)
+  : Reconstruct register state by replaying CDC updates
+- [`brreg_events()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_events.md)
+  : Detect changes between two snapshots
+- [`brreg_series()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_series.md)
+  : Compute aggregate time series from snapshots
+- [`as_brreg_tsibble()`](https://sondreskarsten.github.io/tidybrreg/reference/as_brreg_tsibble.md)
+  : Convert tidybrreg output to tsibble
+
+## Incremental updates (CDC)
+
+Fetch change events from the brreg API’s change data capture stream.
+Supports enheter, underenheter, and roller.
+
+- [`brreg_updates()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates.md)
+  : Retrieve incremental entity updates
+
+## Labels and translation
+
+Translate Norwegian codes to English descriptions. Follows the eurostat
+package’s `type = "label"` pattern.
+
+- [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md)
+  : Translate codes to human-readable English labels
+- [`get_brreg_dic()`](https://sondreskarsten.github.io/tidybrreg/reference/get_brreg_dic.md)
+  : Fetch a brreg dictionary
+
+## Harmonization
+
+Remap codes across classification changes (municipality boundary
+reforms, NACE reclassifications) using SSB KLASS.
+
+- [`brreg_harmonize_kommune()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_harmonize_kommune.md)
+  : Harmonize municipality codes across boundary reforms
+- [`brreg_harmonize_nace()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_harmonize_nace.md)
+  : Harmonize NACE industry codes across classification revisions
+
+## Reference data
+
+Bundled datasets mapping Norwegian codes to English names.
+
+- [`field_dict`](https://sondreskarsten.github.io/tidybrreg/reference/field_dict.md)
+  : Field dictionary: Norwegian API paths to English column names
+- [`legal_forms`](https://sondreskarsten.github.io/tidybrreg/reference/legal_forms.md)
+  : Norwegian legal form codes with English translations
+- [`role_types`](https://sondreskarsten.github.io/tidybrreg/reference/role_types.md)
+  : Role type codes with English translations
+- [`role_groups`](https://sondreskarsten.github.io/tidybrreg/reference/role_groups.md)
+  : Role group codes with English translations
+
+# Articles
+
+### All vignettes
+
+- [Package
+  architecture](https://sondreskarsten.github.io/tidybrreg/articles/architecture.md):
+- [Norwegian business entity
+  data](https://sondreskarsten.github.io/tidybrreg/articles/business-data.md):
+- [Corporate governance
+  research](https://sondreskarsten.github.io/tidybrreg/articles/governance.md):
+- [Building firm panels and time
+  series](https://sondreskarsten.github.io/tidybrreg/articles/panels.md):
+- [Getting started with
+  tidybrreg](https://sondreskarsten.github.io/tidybrreg/articles/tidybrreg.md):
