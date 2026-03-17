@@ -16,6 +16,7 @@ brreg_panel(
   from = NULL,
   to = NULL,
   dates = NULL,
+  max_gap = NULL,
   type = c("enheter", "underenheter", "roller"),
   label = FALSE
 )
@@ -42,6 +43,13 @@ brreg_panel(
 - dates:
 
   Date vector for `frequency = "custom"`.
+
+- max_gap:
+
+  Integer. Maximum number of periods a snapshot may carry forward via
+  LOCF. `NULL` (default) carries forward indefinitely. Set `max_gap = 2`
+  to prevent a quarterly snapshot from representing a firm as active 3+
+  quarters after its last observation.
 
 - type:
 

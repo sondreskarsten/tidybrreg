@@ -46,7 +46,8 @@ brreg_series(
 
 - from, to:
 
-  Date range. Defaults to range of available snapshots.
+  Start and end dates for the panel. `NULL` defaults to the range of
+  available snapshots.
 
 - type:
 

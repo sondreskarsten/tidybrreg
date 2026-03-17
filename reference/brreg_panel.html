@@ -63,6 +63,7 @@ prior snapshot (LOCF). Requires at least two snapshots saved via
 <span>  from <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  to <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  dates <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  max_gap <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"enheter"</span>, <span class="st">"underenheter"</span>, <span class="st">"roller"</span><span class="op">)</span>,</span>
 <span>  label <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -89,6 +90,14 @@ to the range of available snapshots.</p></dd>
 
 <dt id="arg-dates">dates<a class="anchor" aria-label="anchor" href="#arg-dates"></a></dt>
 <dd><p>Date vector for <code>frequency = "custom"</code>.</p></dd>
+
+
+<dt id="arg-max-gap">max_gap<a class="anchor" aria-label="anchor" href="#arg-max-gap"></a></dt>
+<dd><p>Integer. Maximum number of periods a snapshot may
+carry forward via LOCF. <code>NULL</code> (default) carries forward
+indefinitely. Set <code>max_gap = 2</code> to prevent a quarterly snapshot
+from representing a firm as active 3+ quarters after its last
+observation.</p></dd>
 
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>

@@ -13,6 +13,7 @@ build_manifest_entry(
   resp = NULL,
   raw_path = NULL,
   parquet_path = NULL,
-  record_count = NULL
+  record_count = NULL,
+  cdc_bridge_first_update_id = NULL
 )
 ```
