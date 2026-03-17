@@ -27,10 +27,12 @@ register keeper to warn third parties of irregularities.
 Requires \code{\link[=brreg_sync]{brreg_sync()}} to have been run.
 }
 \examples{
+\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
 brreg_sync()
 brreg_annotations()
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=brreg_sync]{brreg_sync()}} to populate annotation data,

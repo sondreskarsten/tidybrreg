@@ -38,11 +38,13 @@ Returns a filtered view of all recorded changes across the four
 sync streams: enheter, underenheter, roller, and påtegninger.
 }
 \examples{
+\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
 brreg_sync()
 brreg_changes(from = Sys.Date() - 30)
 brreg_changes(track = "nace_1", change_type = "change")
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=brreg_sync]{brreg_sync()}} to populate the changelog,

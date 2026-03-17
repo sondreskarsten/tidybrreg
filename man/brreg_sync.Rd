@@ -38,10 +38,12 @@ idempotent (upsert by org_nr), so replay is safe.
 }
 
 \examples{
+\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
 brreg_sync()
 brreg_sync_status()
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=brreg_sync_status]{brreg_sync_status()}} to check current state,
