@@ -53,10 +53,12 @@ brreg_updates(since = Sys.Date() - 1, size = 5, include_changes = TRUE)
 
 Other tidybrreg entity functions: 
 \code{\link{brreg_board_summary}()},
+\code{\link{brreg_children}()},
 \code{\link{brreg_download}()},
 \code{\link{brreg_entity}()},
 \code{\link{brreg_roles}()},
 \code{\link{brreg_roles_legal}()},
-\code{\link{brreg_search}()}
+\code{\link{brreg_search}()},
+\code{\link{brreg_underenheter}()}
 }
 \concept{tidybrreg entity functions}

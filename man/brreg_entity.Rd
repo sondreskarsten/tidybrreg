@@ -6,7 +6,7 @@
 \usage{
 brreg_entity(
   org_nr,
-  registry = c("enheter", "underenheter"),
+  registry = c("auto", "enheter", "underenheter"),
   type = c("code", "label")
 )
 }
@@ -14,9 +14,10 @@ brreg_entity(
 \item{org_nr}{Character. A 9-digit Norwegian organization number.
 Validated using \code{\link[=brreg_validate]{brreg_validate()}} before the API call.}
 
-\item{registry}{One of \code{"enheter"} (main entities, default) or
-\code{"underenheter"} (sub-entities / establishments). Sub-entities
-have different fields (e.g. \code{overordnetEnhet} for the parent
+\item{registry}{One of \code{"auto"} (default, tries enheter then
+underenheter), \code{"enheter"} (main entities only), or
+\code{"underenheter"} (sub-entities only). Sub-entities have
+different fields (e.g. \code{overordnetEnhet} for the parent
 entity, \code{beliggenhetsadresse} instead of \code{forretningsadresse}).}
 
 \item{type}{A type of variables: \code{"code"} (default) returns raw
@@ -65,10 +66,12 @@ brreg_entity("923609016") |> brreg_label(code = "legal_form")
 
 Other tidybrreg entity functions: 
 \code{\link{brreg_board_summary}()},
+\code{\link{brreg_children}()},
 \code{\link{brreg_download}()},
 \code{\link{brreg_roles}()},
 \code{\link{brreg_roles_legal}()},
 \code{\link{brreg_search}()},
+\code{\link{brreg_underenheter}()},
 \code{\link{brreg_updates}()}
 }
 \concept{tidybrreg entity functions}

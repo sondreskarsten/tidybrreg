@@ -27,11 +27,13 @@ brreg_roles("923609016") |> brreg_board_summary()
 \code{\link[=brreg_roles]{brreg_roles()}} for the underlying role data.
 
 Other tidybrreg entity functions: 
+\code{\link{brreg_children}()},
 \code{\link{brreg_download}()},
 \code{\link{brreg_entity}()},
 \code{\link{brreg_roles}()},
 \code{\link{brreg_roles_legal}()},
 \code{\link{brreg_search}()},
+\code{\link{brreg_underenheter}()},
 \code{\link{brreg_updates}()}
 }
 \concept{tidybrreg entity functions}

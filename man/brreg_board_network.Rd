@@ -23,6 +23,11 @@ Construct a bipartite graph of entities and persons linked by
 board/officer roles. Returns a \code{tbl_graph} (tidygraph) object
 suitable for centrality analysis and ggraph visualization.
 }
+\details{
+For a full ego network including sub-units, child entities, and
+legal roles in addition to board roles, use \code{\link[=brreg_network]{brreg_network()}}
+instead.
+}
 \examples{
 \dontshow{if (interactive() && curl::has_internet() && requireNamespace("tidygraph", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 \donttest{
@@ -32,10 +37,12 @@ net
 \dontshow{\}) # examplesIf}
 }
 \seealso{
+\code{\link[=brreg_network]{brreg_network()}} for full entity network graphs,
 \code{\link[=brreg_roles]{brreg_roles()}} to fetch role data,
 \code{\link[=brreg_board_summary]{brreg_board_summary()}} for board-level covariates.
 
 Other tidybrreg governance functions: 
+\code{\link{brreg_network}()},
 \code{\link{brreg_survival_data}()}
 }
 \concept{tidybrreg governance functions}

@@ -95,10 +95,12 @@ entities <- brreg_download(refresh = TRUE)
 
 Other tidybrreg entity functions: 
 \code{\link{brreg_board_summary}()},
+\code{\link{brreg_children}()},
 \code{\link{brreg_entity}()},
 \code{\link{brreg_roles}()},
 \code{\link{brreg_roles_legal}()},
 \code{\link{brreg_search}()},
+\code{\link{brreg_underenheter}()},
 \code{\link{brreg_updates}()}
 }
 \concept{tidybrreg entity functions}
