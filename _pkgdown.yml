@@ -82,6 +82,7 @@ reference:
     to tsibble for the tidyverts ecosystem.
   contents:
   - brreg_panel
+  - brreg_flows
   - brreg_replay
   - brreg_events
   - brreg_series
