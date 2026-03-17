@@ -12,6 +12,10 @@
 #'   `"roller"` (all roles for all entities, via
 #'   `/roller/totalbestand`). Roller snapshots parse the nested
 #'   JSON into a flat tibble matching [brreg_roles()] output.
+#' @param format Download format: `"csv"` (default for enheter/underenheter)
+#'   or `"json"`. JSON captures additional fields not present in CSV
+#'   (e.g. `kapital`, `vedtektsfestetFormaal`, `paategninger`).
+#'   Roller is always JSON regardless of this parameter.
 #' @param date Date for this snapshot (default: today). Used as the
 #'   partition key, not as an API parameter — the brreg bulk endpoint
 #'   always returns the current-day state.
@@ -34,12 +38,16 @@
 #' brreg_snapshots()
 #' }
 brreg_snapshot <- function(type = c("enheter", "underenheter", "roller"),
+                            format = c("csv", "json"),
                             date = Sys.Date(),
                             force = FALSE,
                             ask = interactive()) {
   type <- match.arg(type)
+  format <- match.arg(format)
   check_parquet_available()
   date <- as.Date(date)
+
+  if (type == "roller") format <- "json"
 
   partition_dir <- file.path(brreg_data_dir(), type,
                               paste0("snapshot_date=", date))
@@ -52,24 +60,25 @@ brreg_snapshot <- function(type = c("enheter", "underenheter", "roller"),
 
   sizes <- c(enheter = "~152 MB", underenheter = "~59 MB", roller = "~131 MB")
   if (ask && !isTRUE(getOption("brreg.allow_download"))) {
-    msg <- paste0("Download full ", type, " register (", sizes[type], ") and save snapshot for ", date, "?")
+    msg <- paste0("Download full ", type, " register (", sizes[type], ", ", format, ") and save snapshot for ", date, "?")
     if (!isTRUE(utils::askYesNo(msg))) {
       cli::cli_abort("Cancelled by user.")
     }
   }
 
-  fmt <- if (type == "roller") "json" else "csv"
-  raw_cache <- brreg_download(type = type, format = fmt, type_output = "path", refresh = TRUE)
+  raw_cache <- brreg_download(type = type, format = format, type_output = "path", refresh = TRUE)
 
   raw_dir <- file.path(partition_dir, "raw")
   dir.create(raw_dir, recursive = TRUE, showWarnings = FALSE)
   raw_dest <- file.path(raw_dir, basename(raw_cache))
   file.copy(raw_cache, raw_dest, overwrite = TRUE)
 
-  if (type == "roller") {
-    dat <- parse_roles_bulk(raw_cache)
+  dat <- if (type == "roller") {
+    parse_roles_bulk(raw_cache)
+  } else if (format == "json") {
+    parse_bulk_json(raw_cache, type = type)
   } else {
-    dat <- parse_bulk_csv(raw_cache, type = type)
+    parse_bulk_csv(raw_cache, type = type)
   }
   write_parquet_safe(dat, parquet_path)
 
@@ -77,7 +86,7 @@ brreg_snapshot <- function(type = c("enheter", "underenheter", "roller"),
   url <- tryCatch(get("last_download_url", envir = .brregEnv), error = \(e) NA_character_)
   entry <- build_manifest_entry(
     type = type, snapshot_date = date,
-    endpoint = url, format = fmt,
+    endpoint = url, format = format,
     resp = resp, raw_path = raw_dest,
     parquet_path = parquet_path, record_count = nrow(dat)
   )
