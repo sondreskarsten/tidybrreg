@@ -57,8 +57,7 @@ as_brreg_tsibble <- function(x, key = NULL, index = NULL) {
   if (length(key) == 0 || is.null(key)) {
     tsibble::as_tsibble(x, index = !!rlang::sym(index), regular = FALSE)
   } else {
-    key_syms <- rlang::syms(key)
-    tsibble::as_tsibble(x, key = !!key_syms, index = !!rlang::sym(index),
-                         regular = FALSE)
+    tsibble::as_tsibble(x, key = dplyr::all_of(key),
+                         index = !!rlang::sym(index), regular = FALSE)
   }
 }
