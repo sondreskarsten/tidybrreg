@@ -2,36 +2,35 @@
 #'
 #' Calculate daily counts of entity registrations (entries) and
 #' deletions (exits) classified by industry (NACE code) and
-#' geography (municipality code). Combines two data sources:
+#' geography (municipality code). Three data paths, selected
+#' automatically:
 #'
-#' 1. **Bulk download** — the `registration_date` column provides
-#'    the complete entry history for all currently-active entities.
-#'    No exit information (deleted entities are purged from the
-#'    nightly bulk export).
+#' 1. **Changelog path** (preferred) — when [brreg_sync()] has been
+#'    run, reads directly from the persistent changelog. Provides
+#'    timestamped entries, exits, and field-level transitions.
+#'    No arguments needed.
 #'
-#' 2. **CDC stream** — `Ny` (new) and `Sletting` (deleted) events
-#'    from the [brreg_updates()] endpoint, enriched with entity
-#'    attributes from the bulk data. Provides both entries and exits
-#'    with real event timestamps.
+#' 2. **Bulk + CDC path** — pass `data` (from [brreg_download()])
+#'    and optionally `updates` (from [brreg_updates()]).
+#'    Registration dates provide historical entries; CDC provides
+#'    recent entries + exits.
 #'
-#' When only bulk data is provided (no `updates`), only entries
-#' are computed. Pass CDC data to unlock exit counts.
+#' 3. **Bulk-only path** — pass `data` alone. Only entries are
+#'    computed (no exit data available).
 #'
 #' @section Entry vs. founding date:
 #' This function uses `registration_date`
 #' (registreringsdatoEnhetsregisteret), NOT `founding_date`
 #' (stiftelsesdato). Registration date is when the entity entered
 #' the registry. Founding date can precede registration by months
-#' (AS companies) or years (associations). See vignette for
-#' comparison with SSB business demography definitions.
+#' (AS companies) or years (associations).
 #'
-#' @param data A tibble from [brreg_download()] or a snapshot
-#'   read via [read_parquet_safe()]. Must contain `org_nr`,
-#'   `registration_date`, `nace_1`, and `municipality_code`.
+#' @param data Optional. A tibble from [brreg_download()] or a
+#'   snapshot. Required when no changelog exists. Must contain
+#'   `org_nr`, `registration_date`, `nace_1`, and
+#'   `municipality_code`.
 #' @param updates Optional. A tibble from [brreg_updates()] with
-#'   CDC events. When provided, entries and exits from the CDC
-#'   stream are enriched with attributes from `data` and merged
-#'   with the registration-date-based entries.
+#'   CDC events.
 #' @param by Character vector of grouping columns. Default
 #'   `c("nace_1", "municipality_code")`. Use `NULL` for national
 #'   totals, or any column present in `data`.
@@ -68,12 +67,23 @@
 #'   dplyr::summarise(entries = sum(entries), exits = sum(exits),
 #'                    .by = c(month, nace_section))
 #' }
-brreg_flows <- function(data,
+brreg_flows <- function(data     = NULL,
                          updates  = NULL,
                          by       = c("nace_1", "municipality_code"),
                          from     = NULL,
                          to       = NULL,
                          legal_form = NULL) {
+
+  if (is.null(data) && has_changelog()) {
+    return(flows_from_changelog(by = by, from = from, to = to))
+  }
+
+  if (is.null(data)) {
+    cli::cli_abort(c(
+      "No data provided and no sync changelog found.",
+      "i" = "Either pass {.arg data} from {.fn brreg_download}, or run {.fn brreg_sync} first."
+    ))
+  }
 
   required <- c("org_nr", "registration_date")
   missing_cols <- setdiff(required, names(data))
@@ -177,4 +187,66 @@ enrich_cdc <- function(updates, bulk, by) {
   }
 
   list(entries = entries, exits = exits)
+}
+
+
+#' Check whether a changelog exists with data
+#' @keywords internal
+has_changelog <- function() {
+  cl_dir <- file.path(brreg_data_dir(), "state", "changelog")
+  if (!dir.exists(cl_dir)) return(FALSE)
+  length(list.files(cl_dir, pattern = "\\.parquet$", recursive = TRUE)) > 0
+}
+
+
+#' Compute flows from the persistent changelog
+#' @keywords internal
+flows_from_changelog <- function(by = c("nace_1", "municipality_code"),
+                                  from = NULL, to = NULL) {
+  log <- read_changelog(
+    from = from, to = to,
+    registry = "enheter",
+    change_type = c("entry", "exit")
+  )
+
+  if (nrow(log) == 0) {
+    cols <- c("date", by, "entries", "exits", "net")
+    result <- tibble::as_tibble(
+      stats::setNames(
+        lapply(cols, function(x) if (x == "date") as.Date(character()) else integer()),
+        cols
+      )
+    )
+    attr(result, "flow_source") <- "changelog"
+    return(result)
+  }
+
+  log$date <- as.Date(substr(log$timestamp, 1, 10))
+
+  state <- read_state("enheter")
+  if (!is.null(state)) {
+    attr_cols <- intersect(c("org_nr", by), names(state))
+    lookup <- state[, attr_cols, drop = FALSE]
+    lookup <- lookup[!duplicated(lookup$org_nr), ]
+    log <- dplyr::left_join(log, lookup, by = "org_nr")
+  }
+
+  group_cols <- c("date", intersect(by, names(log)))
+
+  entry_counts <- log[log$change_type == "entry", ] |>
+    dplyr::summarise(entries = dplyr::n(), .by = dplyr::all_of(group_cols))
+
+  exit_counts <- log[log$change_type == "exit", ] |>
+    dplyr::summarise(exits = dplyr::n(), .by = dplyr::all_of(group_cols))
+
+  result <- dplyr::full_join(entry_counts, exit_counts, by = group_cols)
+  result$entries[is.na(result$entries)] <- 0L
+  result$exits[is.na(result$exits)] <- 0L
+  result$net <- result$entries - result$exits
+  result <- result[order(result$date), ]
+
+  attr(result, "flow_source") <- "changelog"
+  attr(result, "by") <- by
+  attr(result, "brreg_panel_meta") <- list(index = "date", key = by, frequency = "day")
+  result
 }

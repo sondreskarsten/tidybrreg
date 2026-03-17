@@ -5,7 +5,7 @@
 \title{Compute daily entry and exit flows}
 \usage{
 brreg_flows(
-  data,
+  data = NULL,
   updates = NULL,
   by = c("nace_1", "municipality_code"),
   from = NULL,
@@ -14,9 +14,11 @@ brreg_flows(
 )
 }
 \arguments{
-\item{data}{A tibble from \code{\link[=brreg_download]{brreg_download()}} or a snapshot
-read via \code{read_parquet_safe()}. Must contain \code{org_nr},
-\code{registration_date}, \code{nace_1}, and \code{municipality_code}.}
+\item{data}{Optional. A tibble from \code{\link[=brreg_download]{brreg_download()}} or a snapshot.
+When \code{NULL} and a sync changelog exists, flows are computed
+from the changelog instead. Must contain \code{org_nr},
+\code{registration_date}, \code{nace_1}, and \code{municipality_code}
+when provided.}
 
 \item{updates}{Optional. A tibble from \code{\link[=brreg_updates]{brreg_updates()}} with
 CDC events. When provided, entries and exits from the CDC

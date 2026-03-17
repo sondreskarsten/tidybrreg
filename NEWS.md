@@ -1,3 +1,41 @@
+# tidybrreg 0.3.2
+
+## Event-sourcing sync engine
+
+* `brreg_sync()` — maintains a local mirror of the Enhetsregisteret
+  by applying incremental CDC events to persistent parquet state
+  files. On first run, bootstraps from bulk download. Subsequent
+  runs poll from the last cursor position. Write ordering
+  (changelog → state → cursor) ensures crash-safe idempotent replay.
+* `brreg_sync_status()` — displays state file sizes, cursor
+  positions, last sync time, and changelog partition count.
+* Four state files maintained: `enheter.parquet`,
+  `underenheter.parquet`, `roller.parquet`, `paategninger.parquet`.
+* Hive-partitioned changelog under `state/changelog/sync_date=.../`
+  for efficient date-range queries via `arrow::open_dataset()`.
+
+## Registry annotations (påtegninger)
+
+* `brreg_annotations()` — query the påtegninger state table by
+  org_nr and/or infotype code. Påtegninger are registry-level
+  annotations about entity data quality — the earliest formal
+  signal of entity distress, preceding forced dissolution by
+  weeks to months.
+* `brreg_annotation_summary()` — count entities with active
+  annotations grouped by infotype.
+* Påtegninger treated as a conceptually distinct fourth data
+  stream alongside enheter, underenheter, and roller.
+
+## Unified change tracking
+
+* `brreg_changes()` — query the changelog for field-level mutations
+  across all four streams. Filter by track (field names), registry,
+  change_type, date range, and org_nr.
+* `brreg_change_summary()` — count changes by registry, type, field.
+* `brreg_flows()` now auto-detects the changelog when called with
+  no arguments: `brreg_flows()` reads from the sync changelog,
+  `brreg_flows(data)` uses the original bulk + CDC path.
+
 # tidybrreg 0.3.1
 
 ## New functions

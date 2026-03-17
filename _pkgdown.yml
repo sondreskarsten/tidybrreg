@@ -60,6 +60,8 @@ reference:
   contents:
   - brreg_download
   - brreg_status
+  - brreg_sync
+  - brreg_sync_status
 
 - title: Snapshot engine
   desc: >
@@ -83,10 +85,14 @@ reference:
   contents:
   - brreg_panel
   - brreg_flows
+  - brreg_changes
+  - brreg_change_summary
   - brreg_replay
   - brreg_events
   - brreg_series
   - as_brreg_tsibble
+  - brreg_annotations
+  - brreg_annotation_summary
 
 - title: Incremental updates (CDC)
   desc: >
