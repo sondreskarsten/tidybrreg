@@ -39,14 +39,14 @@ for one-off downloads.
 
 ``` r
 brreg_status()
-#> ✖ enheter: not available
+#> ✔ enheter: available (download cache)
 #> ✖ underenheter: not available
 #> ✖ roller: not available
 #> $available
-#> character(0)
+#> [1] "enheter"
 #> 
 #> $missing
-#> [1] "enheter"      "underenheter" "roller"      
+#> [1] "underenheter" "roller"      
 #> 
 #> $all_ready
 #> [1] FALSE

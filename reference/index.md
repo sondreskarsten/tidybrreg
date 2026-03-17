@@ -84,6 +84,8 @@ tidyverts ecosystem.
 
 - [`brreg_panel()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_panel.md)
   : Construct a firm-period panel from accumulated snapshots
+- [`brreg_flows()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_flows.md)
+  : Compute daily entry and exit flows
 - [`brreg_replay()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_replay.md)
   : Reconstruct register state by replaying CDC updates
 - [`brreg_events()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_events.md)

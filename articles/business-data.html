@@ -82,7 +82,7 @@ number (organisasjonsnummer) upon registration. The number uses
 modulus-11 check digit validation:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://sondreskarsten.github.io/tidybrreg/">tidybrreg</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; tidybrreg: bulk data not yet downloaded for: enheter, underenheter, roller.</span></span>
+<span><span class="co">#&gt; tidybrreg: bulk data not yet downloaded for: underenheter, roller.</span></span>
 <span><span class="co">#&gt; Run brreg_snapshot() for full network/panel support. See ?brreg_status for details.</span></span>
 <span><span class="fu"><a href="../reference/brreg_validate.html">brreg_validate</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"923609016"</span>, <span class="st">"984851006"</span>, <span class="st">"123456789"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1]  TRUE  TRUE FALSE</span></span></code></pre></div>
