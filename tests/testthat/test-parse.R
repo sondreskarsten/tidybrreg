@@ -43,3 +43,54 @@ test_that("parse_entity maps known fields and passes through unknown", {
   expect_equal(result$bankrupt, FALSE)
   expect_true("unknown_new_field" %in% names(result))
 })
+
+test_that("rename_and_coerce guarantees all field_dict columns", {
+  dat <- tibble::tibble(
+    organisasjonsnummer = "923609016",
+    navn = "TEST"
+  )
+  result <- tidybrreg:::rename_and_coerce(dat)
+
+  expect_true("org_nr" %in% names(result))
+  expect_true("name" %in% names(result))
+  expect_true("founding_date" %in% names(result))
+  expect_true("employees" %in% names(result))
+  expect_true("purpose" %in% names(result))
+  expect_true("activity" %in% names(result))
+  expect_true("bankrupt" %in% names(result))
+
+  expect_true(is.na(result$founding_date))
+  expect_true(is.na(result$employees))
+  expect_true(is.na(result$purpose))
+  expect_true(is.na(result$activity))
+
+  expect_s3_class(result$founding_date, "Date")
+  expect_type(result$employees, "integer")
+  expect_type(result$purpose, "character")
+})
+
+test_that("parse_bulk_json produces all field_dict columns even when absent from data", {
+  json_data <- jsonlite::toJSON(list(
+    list(organisasjonsnummer = "923609016", navn = "EQUINOR ASA",
+         organisasjonsform = list(kode = "ASA"),
+         antallAnsatte = 21408)
+  ), auto_unbox = TRUE)
+
+  tmp <- tempfile(fileext = ".json.gz")
+  con <- gzfile(tmp, "w")
+  writeLines(as.character(json_data), con)
+  close(con)
+
+  dat <- tidybrreg:::parse_bulk_json(tmp)
+
+  expect_true("purpose" %in% names(dat))
+  expect_true("activity" %in% names(dat))
+  expect_true("founding_date" %in% names(dat))
+  expect_true("bankrupt" %in% names(dat))
+
+  expect_true(is.na(dat$purpose))
+  expect_true(is.na(dat$activity))
+  expect_equal(dat$employees, 21408L)
+  expect_equal(dat$org_nr, "923609016")
+  unlink(tmp)
+})

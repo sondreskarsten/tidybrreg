@@ -8,7 +8,8 @@ test_that("brreg_manifest returns empty tibble when no manifest exists", {
   expect_true(all(c("id", "type", "snapshot_date", "endpoint", "format",
                      "download_timestamp", "last_modified", "etag",
                      "file_hash", "record_count", "raw_path",
-                     "parquet_path") %in% names(result)))
+                     "parquet_path",
+                     "cdc_bridge_first_update_id") %in% names(result)))
 })
 
 test_that("write_manifest_entry creates manifest and appends entries", {
@@ -67,4 +68,50 @@ test_that("build_manifest_entry constructs correct entry without response", {
   expect_true(is.na(entry$last_modified))
   expect_true(is.na(entry$etag))
   expect_true(!is.na(entry$file_hash))
+})
+
+test_that("build_manifest_entry stores cdc_bridge_first_update_id", {
+  tmp <- withr::local_tempdir()
+  raw <- file.path(tmp, "test.csv.gz")
+  writeLines("test", raw)
+
+  entry <- tidybrreg:::build_manifest_entry(
+    type = "enheter", snapshot_date = as.Date("2025-01-01"),
+    endpoint = "https://data.brreg.no/test", format = "csv",
+    raw_path = raw, record_count = 500,
+    cdc_bridge_first_update_id = 12345678L
+  )
+
+  expect_equal(entry$cdc_bridge_first_update_id, 12345678L)
+})
+
+test_that("manifest round-trips cdc_bridge_first_update_id", {
+  tmp <- withr::local_tempdir()
+  withr::local_options(brreg.data_dir = tmp)
+
+  entry_with <- list(
+    id = "enheter_2025-01-01", type = "enheter",
+    snapshot_date = "2025-01-01", endpoint = "https://example.com",
+    format = "csv", download_timestamp = "2025-01-01T10:00:00Z",
+    last_modified = NA_character_, etag = NA_character_,
+    file_hash = NA_character_, record_count = 100,
+    raw_path = NA_character_, parquet_path = NA_character_,
+    cdc_bridge_first_update_id = 99887766
+  )
+  tidybrreg:::write_manifest_entry(entry_with)
+
+  entry_without <- list(
+    id = "enheter_2025-07-01", type = "enheter",
+    snapshot_date = "2025-07-01", endpoint = "https://example.com",
+    format = "json", download_timestamp = "2025-07-01T10:00:00Z",
+    last_modified = NA_character_, etag = NA_character_,
+    file_hash = NA_character_, record_count = 200,
+    raw_path = NA_character_, parquet_path = NA_character_
+  )
+  tidybrreg:::write_manifest_entry(entry_without)
+
+  result <- brreg_manifest()
+  expect_equal(nrow(result), 2)
+  expect_equal(result$cdc_bridge_first_update_id[1], 99887766L)
+  expect_true(is.na(result$cdc_bridge_first_update_id[2]))
 })

@@ -274,8 +274,17 @@ rename_and_coerce <- function(dat) {
 
   for (i in seq_len(nrow(field_dict))) {
     col <- field_dict$col_name[i]
-    if (!col %in% names(dat)) next
     target <- field_dict$type[i]
+    if (!col %in% names(dat)) {
+      dat[[col]] <- switch(target,
+        Date      = as.Date(NA_character_),
+        integer   = NA_integer_,
+        logical   = NA,
+        character = NA_character_,
+        NA
+      )
+      next
+    }
     dat[[col]] <- switch(target,
       Date      = as.Date(as.character(dat[[col]])),
       integer   = suppressWarnings(as.integer(dat[[col]])),

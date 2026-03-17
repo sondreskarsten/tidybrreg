@@ -20,25 +20,29 @@ brreg_manifest <- function() {
       download_timestamp = as.POSIXct(character()),
       last_modified = character(), etag = character(),
       file_hash = character(), record_count = integer(),
-      raw_path = character(), parquet_path = character()
+      raw_path = character(), parquet_path = character(),
+      cdc_bridge_first_update_id = integer()
     ))
   }
   entries <- jsonlite::fromJSON(path, simplifyVector = FALSE)$downloads
   if (length(entries) == 0) return(brreg_manifest())
   dplyr::bind_rows(lapply(entries, function(e) {
+    safe_chr <- function(x) if (is.null(x) || length(x) == 0) NA_character_ else as.character(x)
+    safe_int <- function(x) if (is.null(x) || length(x) == 0) NA_integer_ else as.integer(x)
     tibble::tibble(
-      id                 = e$id %||% NA_character_,
-      type               = e$type %||% NA_character_,
-      snapshot_date      = as.Date(e$snapshot_date %||% NA_character_),
-      endpoint           = e$endpoint %||% NA_character_,
-      format             = e$format %||% NA_character_,
-      download_timestamp = as.POSIXct(e$download_timestamp %||% NA_character_),
-      last_modified      = e$last_modified %||% NA_character_,
-      etag               = e$etag %||% NA_character_,
-      file_hash          = e$file_hash %||% NA_character_,
-      record_count       = as.integer(e$record_count %||% NA),
-      raw_path           = e$raw_path %||% NA_character_,
-      parquet_path       = e$parquet_path %||% NA_character_
+      id                 = safe_chr(e$id),
+      type               = safe_chr(e$type),
+      snapshot_date      = as.Date(safe_chr(e$snapshot_date)),
+      endpoint           = safe_chr(e$endpoint),
+      format             = safe_chr(e$format),
+      download_timestamp = as.POSIXct(safe_chr(e$download_timestamp)),
+      last_modified      = safe_chr(e$last_modified),
+      etag               = safe_chr(e$etag),
+      file_hash          = safe_chr(e$file_hash),
+      record_count       = safe_int(e$record_count),
+      raw_path           = safe_chr(e$raw_path),
+      parquet_path       = safe_chr(e$parquet_path),
+      cdc_bridge_first_update_id = safe_int(e$cdc_bridge_first_update_id)
     )
   }))
 }
@@ -70,7 +74,8 @@ write_manifest_entry <- function(entry) {
 #' @keywords internal
 build_manifest_entry <- function(type, snapshot_date, endpoint, format,
                                   resp = NULL, raw_path = NULL,
-                                  parquet_path = NULL, record_count = NULL) {
+                                  parquet_path = NULL, record_count = NULL,
+                                  cdc_bridge_first_update_id = NULL) {
   entry <- list(
     id                 = paste0(type, "_", snapshot_date),
     type               = type,
@@ -83,7 +88,8 @@ build_manifest_entry <- function(type, snapshot_date, endpoint, format,
     file_hash          = if (!is.null(raw_path) && file.exists(raw_path)) rlang::hash_file(raw_path) else NA_character_,
     record_count       = record_count,
     raw_path           = raw_path,
-    parquet_path       = parquet_path
+    parquet_path       = parquet_path,
+    cdc_bridge_first_update_id = cdc_bridge_first_update_id
   )
   entry
 }
