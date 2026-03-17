@@ -95,36 +95,56 @@ brreg_updates_roller <- function(since, size) {
 }
 
 
-#' Parse brreg flat JSON Patch array into a tibble
+#' Parse brreg RFC 6902 JSON Patch operations into a tibble
 #'
-#' The brreg API returns field-level changes as a flat interleaved array:
-#' `["replace", "/path", "value", "replace", "/path2", "value2", ...]`.
+#' The brreg CDC endpoint returns `endringer` as a list of patch
+#' objects, each with `op`, `path`, and optionally `value`. Values
+#' may be scalars or nested objects (e.g. the full
+#' `naeringskode1` or `forretningsadresse` object). Nested objects
+#' are flattened to leaf-level rows so that `/naeringskode1` with
+#' value `{kode: "43.210", beskrivelse: "..."}` produces two rows:
+#' `naeringskode1_kode` and `naeringskode1_beskrivelse`.
 #'
-#' @param endringer List or character vector of patch operations.
+#' @param endringer List of patch operations from the brreg API.
 #'
 #' @returns A tibble with columns `operation`, `field`, `new_value`.
+#'   All `new_value` entries are character. Array-index suffixes
+#'   (e.g. `adresse_0`) are preserved.
 #'
 #' @keywords internal
 parse_patch <- function(endringer) {
   if (is.null(endringer) || length(endringer) == 0) return(tibble::tibble())
-  ops <- unlist(endringer)
-  i <- 1L
-  rows <- list()
-  while (i <= length(ops)) {
-    op <- ops[i]
-    if (op %in% c("replace", "add", "remove")) {
-      path <- if (i + 1L <= length(ops)) ops[i + 1L] else NA_character_
-      value <- if (op != "remove" && i + 2L <= length(ops)) ops[i + 2L] else NA_character_
-      field <- sub("^/", "", path)
-      field <- gsub("/", "_", field)
-      field <- sub("_\\d+$", "", field)
-      rows <- c(rows, list(tibble::tibble(
-        operation = op, field = field, new_value = value
-      )))
-      i <- i + if (op == "remove") 2L else 3L
-    } else {
-      i <- i + 1L
+  dplyr::bind_rows(lapply(endringer, function(e) {
+    op <- e$op %||% NA_character_
+    path <- sub("^/", "", e$path %||% "")
+    if (op == "remove" || is.null(e$value)) {
+      field <- gsub("/", "_", path)
+      return(tibble::tibble(operation = op, field = field, new_value = NA_character_))
     }
+    flatten_value(op, path, e$value)
+  }))
+}
+
+
+#' Recursively flatten a patch value to leaf-level rows
+#' @keywords internal
+flatten_value <- function(op, path_prefix, value) {
+  if (is.list(value) && !is.null(names(value))) {
+    dplyr::bind_rows(lapply(names(value), function(key) {
+      child_path <- paste0(path_prefix, "/", key)
+      flatten_value(op, child_path, value[[key]])
+    }))
+  } else if (is.list(value) && is.null(names(value))) {
+    dplyr::bind_rows(lapply(seq_along(value), function(i) {
+      child_path <- paste0(path_prefix, "/", i - 1L)
+      flatten_value(op, child_path, value[[i]])
+    }))
+  } else {
+    field <- gsub("/", "_", path_prefix)
+    tibble::tibble(
+      operation = op,
+      field = field,
+      new_value = as.character(value)
+    )
   }
-  dplyr::bind_rows(rows)
 }

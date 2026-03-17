@@ -2,18 +2,25 @@
 % Please edit documentation in R/updates.R
 \name{parse_patch}
 \alias{parse_patch}
-\title{Parse brreg flat JSON Patch array into a tibble}
+\title{Parse brreg RFC 6902 JSON Patch operations into a tibble}
 \usage{
 parse_patch(endringer)
 }
 \arguments{
-\item{endringer}{List or character vector of patch operations.}
+\item{endringer}{List of patch operations from the brreg API.}
 }
 \value{
 A tibble with columns \code{operation}, \code{field}, \code{new_value}.
+All \code{new_value} entries are character. Array-index suffixes
+(e.g. \code{adresse_0}) are preserved.
 }
 \description{
-The brreg API returns field-level changes as a flat interleaved array:
-\verb{["replace", "/path", "value", "replace", "/path2", "value2", ...]}.
+The brreg CDC endpoint returns \code{endringer} as a list of patch
+objects, each with \code{op}, \code{path}, and optionally \code{value}. Values
+may be scalars or nested objects (e.g. the full
+\code{naeringskode1} or \code{forretningsadresse} object). Nested objects
+are flattened to leaf-level rows so that \code{/naeringskode1} with
+value \verb{\{kode: "43.210", beskrivelse: "..."\}} produces two rows:
+\code{naeringskode1_kode} and \code{naeringskode1_beskrivelse}.
 }
 \keyword{internal}
