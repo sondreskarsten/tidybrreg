@@ -16,7 +16,8 @@ Description: A tidy interface to download, search, and analyze data from the Nor
     SSB Klass API. Data is freely available under the Norwegian Licence for
     Open Government Data (NLOD 2.0).
 License: MIT + file LICENSE
-URL: https://github.com/sondreskarsten/tidybrreg
+URL: https://sondreskarsten.github.io/tidybrreg/,
+    https://github.com/sondreskarsten/tidybrreg
 BugReports: https://github.com/sondreskarsten/tidybrreg/issues
 Depends: 
     R (>= 4.1.0)
@@ -34,12 +35,15 @@ Suggests:
     curl,
     duckdb,
     klassR,
+    knitr,
+    rmarkdown,
     tidygraph,
     tidyr,
     tsibble,
     httptest2,
     testthat (>= 3.0.0),
     withr
+VignetteBuilder: knitr
 Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true

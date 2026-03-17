@@ -1,0 +1,116 @@
+url: https://sondreskarsten.github.io/tidybrreg/
+
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+  components:
+    articles:
+      text: Articles
+      menu:
+      - text: Getting started
+        href: articles/tidybrreg.html
+      - text: Norwegian business data
+        href: articles/business-data.html
+      - text: Building firm panels
+        href: articles/panels.html
+      - text: Governance research
+        href: articles/governance.html
+      - text: "---"
+      - text: Architecture
+        href: articles/architecture.html
+
+reference:
+- title: Entity lookup
+  desc: >
+    Retrieve details for specific entities by organization number.
+    See `vignette("tidybrreg")` for a complete walkthrough.
+  contents:
+  - brreg_entity
+  - brreg_validate
+
+- title: Search
+  desc: >
+    Query the register by name, legal form, industry, geography,
+    and other criteria. Supports both main entities and sub-entities.
+  contents:
+  - brreg_search
+
+- title: Roles and governance
+  desc: >
+    Board members, officers, auditors, and inter-company role
+    relationships. See `vignette("governance")` for network analysis.
+  contents:
+  - brreg_roles
+  - brreg_roles_legal
+  - brreg_board_summary
+  - brreg_board_network
+  - brreg_survival_data
+
+- title: Bulk downloads
+  desc: >
+    Download the full register as CSV or JSON. Three registries:
+    enheter (~1M entities), underenheter (~950K sub-entities),
+    roller (~5M role records).
+  contents:
+  - brreg_download
+
+- title: Snapshot engine
+  desc: >
+    Save dated bulk downloads as Hive-partitioned Parquet files
+    for panel construction and historical analysis.
+    See `vignette("panels")` for workflows.
+  contents:
+  - brreg_snapshot
+  - brreg_import
+  - brreg_snapshots
+  - brreg_open
+  - brreg_cleanup
+  - brreg_data_dir
+  - brreg_manifest
+
+- title: Panel construction and time series
+  desc: >
+    Build firm-period panels from snapshots, reconstruct state
+    via CDC replay, compute aggregate time series, and convert
+    to tsibble for the tidyverts ecosystem.
+  contents:
+  - brreg_panel
+  - brreg_replay
+  - brreg_events
+  - brreg_series
+  - as_brreg_tsibble
+
+- title: Incremental updates (CDC)
+  desc: >
+    Fetch change events from the brreg API's change data capture
+    stream. Supports enheter, underenheter, and roller.
+  contents:
+  - brreg_updates
+
+- title: Labels and translation
+  desc: >
+    Translate Norwegian codes to English descriptions.
+    Follows the eurostat package's `type = "label"` pattern.
+  contents:
+  - brreg_label
+  - get_brreg_dic
+
+- title: Harmonization
+  desc: >
+    Remap codes across classification changes (municipality
+    boundary reforms, NACE reclassifications) using SSB KLASS.
+  contents:
+  - brreg_harmonize_kommune
+  - brreg_harmonize_nace
+
+- title: Reference data
+  desc: >
+    Bundled datasets mapping Norwegian codes to English names.
+  contents:
+  - field_dict
+  - legal_forms
+  - role_types
+  - role_groups

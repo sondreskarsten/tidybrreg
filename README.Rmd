@@ -11,10 +11,11 @@ knitr::opts_chunk$set(
 )
 ```
 
-# tidybrreg
+# tidybrreg <img src="man/figures/logo.svg" align="right" height="139" alt="tidybrreg logo" />
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/sondreskarsten/tidybrreg/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/sondreskarsten/tidybrreg/actions/workflows/R-CMD-check.yaml)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
 Tidy R interface to Norway's [Central Coordinating Register for Legal Entities](https://www.brreg.no/en/) (Enhetsregisteret), maintained by the Brønnøysund Register Centre. The register contains approximately 1 million active entities. Data is freely available under the [Norwegian Licence for Open Government Data (NLOD 2.0)](https://data.norge.no/nlod/en/2.0).

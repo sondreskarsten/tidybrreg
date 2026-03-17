@@ -11,6 +11,7 @@ A tidy interface to download, search, and analyze data from the Norwegian Centra
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://sondreskarsten.github.io/tidybrreg/}
   \item \url{https://github.com/sondreskarsten/tidybrreg}
   \item Report bugs at \url{https://github.com/sondreskarsten/tidybrreg/issues}
 }
