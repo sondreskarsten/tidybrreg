@@ -254,6 +254,15 @@ collect_legal_roles <- function(org_nr) {
 # DEPTH-2 EXPANSION — person → entity reverse lookup via bulk data
 # =============================================================================
 
+#' Expand network through person nodes using local bulk data
+#'
+#' Lazy pipeline: resolves roller first, filters to seed persons,
+#' early-exits if no new orgs discovered, then resolves
+#' enheter/underenheter only for the org_nrs actually needed.
+#' With arrow + parquet snapshots, only matching row groups are
+#' read from disk at each step.
+#'
+#' @keywords internal
 expand_depth_2 <- function(nodes, edges, seed_orgs, download = FALSE) {
   if (download) {
     require_bulk_data()
@@ -264,8 +273,6 @@ expand_depth_2 <- function(nodes, edges, seed_orgs, download = FALSE) {
     }
   }
 
-  bulk <- resolve_bulk_data()
-
   person_nodes <- nodes[nodes$node_type == "person" & !is.na(nodes$person_id), ]
   if (nrow(person_nodes) == 0) {
     return(list(nodes = empty_nodes(), edges = empty_edges()))
@@ -274,54 +281,39 @@ expand_depth_2 <- function(nodes, edges, seed_orgs, download = FALSE) {
   seed_persons <- unique(person_nodes$person_id)
   known_orgs <- unique(nodes$org_nr[!is.na(nodes$org_nr)])
 
-  roller <- if (inherits(bulk$roller, "ArrowObject")) {
-    bulk$roller |>
-      dplyr::filter(.data$person_id %in% seed_persons) |>
-      dplyr::collect()
-  } else {
-    bulk$roller[bulk$roller$person_id %in% seed_persons, ]
-  }
+  roller_data <- resolve_bulk("roller")
+  roller <- filter_bulk(roller_data, "person_id", seed_persons)
+  roller <- roller[!roller$org_nr %in% known_orgs, , drop = FALSE]
 
-  roller <- roller[!roller$org_nr %in% known_orgs, ]
   if (nrow(roller) == 0) {
     return(list(nodes = empty_nodes(), edges = empty_edges()))
   }
 
   new_orgs <- unique(roller$org_nr)
 
-  enheter_match <- if (inherits(bulk$enheter, "ArrowObject")) {
-    bulk$enheter |>
-      dplyr::filter(.data$org_nr %in% new_orgs) |>
-      dplyr::select(dplyr::any_of(c("org_nr", "name"))) |>
-      dplyr::collect()
-  } else {
-    cols <- intersect(c("org_nr", "name"), names(bulk$enheter))
-    bulk$enheter[bulk$enheter$org_nr %in% new_orgs, cols, drop = FALSE]
-  }
+  enheter_data <- resolve_bulk("enheter")
+  enheter_match <- filter_bulk(enheter_data, "org_nr", new_orgs, select = c("org_nr", "name"))
 
-  under_match <- if (inherits(bulk$underenheter, "ArrowObject")) {
-    bulk$underenheter |>
-      dplyr::filter(.data$org_nr %in% new_orgs) |>
-      dplyr::select(dplyr::any_of(c("org_nr", "name"))) |>
-      dplyr::collect()
-  } else {
-    cols <- intersect(c("org_nr", "name"), names(bulk$underenheter))
-    bulk$underenheter[bulk$underenheter$org_nr %in% new_orgs, cols, drop = FALSE]
-  }
+  under_data <- resolve_bulk("underenheter")
+  under_match <- filter_bulk(under_data, "org_nr", new_orgs, select = c("org_nr", "name"))
 
   all_found <- dplyr::bind_rows(
     if (nrow(enheter_match) > 0) dplyr::mutate(enheter_match, node_type = "entity") else NULL,
     if (nrow(under_match) > 0) dplyr::mutate(under_match, node_type = "underenhet") else NULL
   )
-  all_found <- all_found[!duplicated(all_found$org_nr), ]
+  all_found <- all_found[!duplicated(all_found$org_nr), , drop = FALSE]
 
-  new_nodes <- tibble::tibble(
-    node_id   = paste0("o:", all_found$org_nr),
-    node_type = all_found$node_type,
-    name      = all_found$name,
-    org_nr    = all_found$org_nr,
-    person_id = NA_character_
-  )
+  new_nodes <- if (nrow(all_found) > 0) {
+    tibble::tibble(
+      node_id   = paste0("o:", all_found$org_nr),
+      node_type = all_found$node_type,
+      name      = all_found$name,
+      org_nr    = all_found$org_nr,
+      person_id = NA_character_
+    )
+  } else {
+    empty_nodes()
+  }
 
   new_edges <- tibble::tibble(
     from      = paste0("p:", roller$person_id),
