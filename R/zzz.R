@@ -25,3 +25,19 @@ utils::globalVariables(c("legal_forms", "role_types", "role_groups"))
     }
   }
 }
+
+.onAttach <- function(libname, pkgname) {
+  types <- c("enheter", "underenheter", "roller")
+  found <- vapply(types, function(t) {
+    nrow(brreg_snapshots(t)) > 0 || has_cached_download(t)
+  }, logical(1))
+  if (!all(found)) {
+    missing <- types[!found]
+    packageStartupMessage(
+      "tidybrreg: bulk data not yet downloaded for: ",
+      paste(missing, collapse = ", "), ".\n",
+      "Run brreg_snapshot() for full network/panel support. ",
+      "See ?brreg_status for details."
+    )
+  }
+}

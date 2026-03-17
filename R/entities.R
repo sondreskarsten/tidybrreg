@@ -14,9 +14,10 @@
 #'
 #' @param org_nr Character. A 9-digit Norwegian organization number.
 #'   Validated using [brreg_validate()] before the API call.
-#' @param registry One of `"enheter"` (main entities, default) or
-#'   `"underenheter"` (sub-entities / establishments). Sub-entities
-#'   have different fields (e.g. `overordnetEnhet` for the parent
+#' @param registry One of `"auto"` (default, tries enheter then
+#'   underenheter), `"enheter"` (main entities only), or
+#'   `"underenheter"` (sub-entities only). Sub-entities have
+#'   different fields (e.g. `overordnetEnhet` for the parent
 #'   entity, `beliggenhetsadresse` instead of `forretningsadresse`).
 #' @param type A type of variables: `"code"` (default) returns raw
 #'   codes, `"label"` returns English labels for coded columns
@@ -45,7 +46,7 @@
 #'
 #' # Or pipe to brreg_label() for more control
 #' brreg_entity("923609016") |> brreg_label(code = "legal_form")
-brreg_entity <- function(org_nr, registry = c("enheter", "underenheter"),
+brreg_entity <- function(org_nr, registry = c("auto", "enheter", "underenheter"),
                           type = c("code", "label")) {
   registry <- match.arg(registry)
   type <- match.arg(type)
@@ -57,26 +58,41 @@ brreg_entity <- function(org_nr, registry = c("enheter", "underenheter"),
       "i" = "Examples: 923609016 (Equinor), 984851006 (DNB Bank)"
     ))
   }
-  resp <- brreg_req(paste0(registry, "/", org_nr)) |>
-    httr2::req_error(is_error = \(resp) FALSE) |>
-    httr2::req_perform()
+
+  registries <- if (registry == "auto") c("enheter", "underenheter") else registry
+
+  resp <- NULL
+  matched_registry <- NA_character_
+  for (reg in registries) {
+    resp <- brreg_req(paste0(reg, "/", org_nr)) |>
+      httr2::req_error(is_error = \(resp) FALSE) |>
+      httr2::req_perform()
+    status <- httr2::resp_status(resp)
+    if (status == 200L) { matched_registry <- reg; break }
+    if (status == 410L) { matched_registry <- reg; break }
+    if (status != 404L) break
+  }
 
   status <- httr2::resp_status(resp)
   if (status == 410L) {
     body <- httr2::resp_body_json(resp)
     cli::cli_warn("Entity {.val {org_nr}} was deleted on {body$slettedato}.")
     return(tibble::tibble(
-      org_nr = org_nr, deleted = TRUE,
-      deletion_date = as.Date(body$slettedato)
+      org_nr = org_nr, registry = matched_registry,
+      deleted = TRUE, deletion_date = as.Date(body$slettedato)
     ))
   }
   if (status == 404L) {
-    cli::cli_abort("Entity {.val {org_nr}} not found in the Norwegian Business Registry.")
+    cli::cli_abort(c(
+      "Entity {.val {org_nr}} not found in the Norwegian Business Registry.",
+      "i" = "Searched: {.val {registries}}"
+    ))
   }
   if (status >= 400L) {
     cli::cli_abort("Norwegian Business Registry API error: HTTP {status}")
   }
   result <- parse_entity(httr2::resp_body_json(resp))
+  result$registry <- matched_registry
   if (identical(type, "label")) result <- brreg_label(result)
   result
 }
@@ -188,4 +204,67 @@ brreg_search <- function(name = NULL, legal_form = NULL,
   attr(result, "total_matches") <- total
   if (identical(type, "label")) result <- brreg_label(result)
   result
+}
+
+
+#' Get all sub-units (underenheter) belonging to an entity
+#'
+#' Convenience wrapper around [brreg_search()] that queries the
+#' underenheter registry filtered by `overordnetEnhet`. Each Norwegian
+#' legal entity that operates a business has one or more sub-units
+#' (BEDR/AAFY) representing physical locations or activities.
+#'
+#' @param org_nr Character. 9-digit organization number of the
+#'   parent entity (hovedenhet).
+#' @param max_results Integer. Maximum sub-units to return (default 200).
+#' @param type One of `"code"` (default) or `"label"`.
+#'
+#' @returns A tibble with one row per sub-unit. Same column schema as
+#'   [brreg_search()] with `registry = "underenheter"`.
+#'
+#' @family tidybrreg entity functions
+#' @seealso [brreg_entity()] for the parent entity,
+#'   [brreg_children()] for child enheter in the ORGL hierarchy.
+#'
+#' @export
+#' @examplesIf interactive() && curl::has_internet()
+#' brreg_underenheter("923609016")
+brreg_underenheter <- function(org_nr, max_results = 200,
+                                type = c("code", "label")) {
+  brreg_search(
+    parent_org_nr = as.character(org_nr),
+    registry      = "underenheter",
+    max_results   = max_results,
+    type          = type
+  )
+}
+
+
+#' Get child entities in the organisational hierarchy
+#'
+#' Query the enheter registry for entities whose `overordnetEnhet`
+#' matches the given org number. This traverses the ORGL parent-child
+#' hierarchy (e.g. Stortinget to Riksrevisjonen), which is distinct
+#' from the enhet-to-underenhet relationship.
+#'
+#' @inheritParams brreg_underenheter
+#'
+#' @returns A tibble with one row per child entity. Same column schema
+#'   as [brreg_search()] with `registry = "enheter"`.
+#'
+#' @family tidybrreg entity functions
+#' @seealso [brreg_underenheter()] for sub-units (BEDR/AAFY),
+#'   [brreg_entity()] for single lookups.
+#'
+#' @export
+#' @examplesIf interactive() && curl::has_internet()
+#' brreg_children("971524960")
+brreg_children <- function(org_nr, max_results = 200,
+                            type = c("code", "label")) {
+  brreg_search(
+    parent_org_nr = as.character(org_nr),
+    registry      = "enheter",
+    max_results   = max_results,
+    type          = type
+  )
 }

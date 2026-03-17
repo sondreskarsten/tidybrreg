@@ -4,6 +4,10 @@
 #' board/officer roles. Returns a `tbl_graph` (tidygraph) object
 #' suitable for centrality analysis and ggraph visualization.
 #'
+#' For a full ego network including sub-units, child entities, and
+#' legal roles in addition to board roles, use [brreg_network()]
+#' instead.
+#'
 #' @param org_nrs Character vector of organization numbers to include.
 #'   Roles are fetched via [brreg_roles()] for each entity.
 #' @param roles_data Optional pre-fetched roles tibble (from
@@ -14,7 +18,8 @@
 #'   attributes include `role_code`, `role_group_code`, and `org_nr`.
 #'
 #' @family tidybrreg governance functions
-#' @seealso [brreg_roles()] to fetch role data,
+#' @seealso [brreg_network()] for full entity network graphs,
+#'   [brreg_roles()] to fetch role data,
 #'   [brreg_board_summary()] for board-level covariates.
 #'
 #' @export
