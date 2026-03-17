@@ -1,3 +1,22 @@
+# tidybrreg 0.3.0
+
+## Documentation
+
+* pkgdown site with 10 reference groups deployed to GitHub Pages.
+* 5 vignettes: Getting started, Norwegian business data, Building
+  firm panels, Corporate governance research, Package architecture.
+* ARCHITECTURE.md (390 lines) documenting full data flow.
+* CONTRIBUTING.md, CODE_OF_CONDUCT.md, GitHub issue templates.
+* Hex sticker logo at `man/figures/logo.svg`.
+* Lifecycle experimental badge in README.
+* r-universe registration for binary installs.
+* Install instructions updated: pak (recommended), r-universe, remotes.
+
+## Test coverage
+
+* New test files for `brreg_manifest()`, `brreg_replay()`,
+  `brreg_series()`, and `as_brreg_tsibble()`.
+
 # tidybrreg 0.2.0
 
 ## New features
