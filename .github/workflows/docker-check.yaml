@@ -1,0 +1,62 @@
+name: Docker R-CMD-check (all deps)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  docker-check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        r-version: ['4.3.3', '4.4.1']
+    name: Docker R ${{ matrix.r-version }}
+
+    container:
+      image: ghcr.io/sondreskarsten/tidybrreg-ci:r${{ matrix.r-version }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+      NOT_CRAN: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install any new dependencies
+        run: Rscript -e 'pak::local_install_deps(dependencies = TRUE)'
+        shell: bash
+
+      - name: R CMD check
+        run: |
+          Rscript -e '
+            rcmdcheck::rcmdcheck(
+              args = c("--no-manual", "--no-vignettes"),
+              error_on = "error",
+              check_dir = "check"
+            )
+          '
+        shell: bash
+
+      - name: Show test output
+        if: always()
+        run: |
+          find check -name 'testthat.Rout*' -exec cat '{}' \; 2>/dev/null || true
+        shell: bash
+
+      - name: Upload check results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-check-r${{ matrix.r-version }}
+          path: check

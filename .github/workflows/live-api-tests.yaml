@@ -1,0 +1,57 @@
+name: Live API Integration Tests
+
+on:
+  schedule:
+    - cron: '43 7 * * 3'    # Weekly Wednesday 07:43 UTC
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual run'
+        required: false
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/sondreskarsten/tidybrreg-ci:r4.4.1
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    env:
+      NOT_CRAN: true
+      TIDYBRREG_LIVE_API: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install package from source
+        run: Rscript -e 'pak::local_install(dependencies = FALSE)'
+        shell: bash
+
+      - name: Run full test suite with live API
+        run: |
+          Rscript -e '
+            library(testthat)
+            library(tidybrreg)
+            results <- test_dir("tests/testthat", reporter = "summary")
+            df <- as.data.frame(results)
+            cat("\n=== Summary ===\n")
+            cat("Pass:", sum(df$passed), "\n")
+            cat("Fail:", sum(df$failed), "\n")
+            cat("Skip:", sum(df$skipped), "\n")
+            cat("Warn:", sum(df$warning), "\n")
+            if (sum(df$failed) > 0) quit(status = 1)
+          '
+        shell: bash
+
+      - name: Upload test output on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-api-test-results
+          path: tests/testthat/

@@ -1,0 +1,51 @@
+name: Build CI Docker Image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Dockerfile'
+      - 'DESCRIPTION'
+      - '.github/workflows/docker-image.yaml'
+  schedule:
+    - cron: '17 6 * * 1'    # Weekly Monday 06:17 UTC
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: sondreskarsten/tidybrreg-ci
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        r-version: ['4.3.3', '4.4.1']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          build-args: R_VERSION=${{ matrix.r-version }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:r${{ matrix.r-version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:r${{ matrix.r-version }}-${{ github.sha }}
+          cache-from: type=gha,scope=r-${{ matrix.r-version }}
+          cache-to: type=gha,mode=max,scope=r-${{ matrix.r-version }}

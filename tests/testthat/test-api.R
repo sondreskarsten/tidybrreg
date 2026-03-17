@@ -1,31 +1,4 @@
-# These tests hit the live brreg API and are skipped on CRAN
-# and when no internet is available
-
-skip_if_offline <- function() {
-  skip_on_cran()
-  tryCatch({
-    httr2::request("https://data.brreg.no") |>
-      httr2::req_method("HEAD") |>
-      httr2::req_timeout(10) |>
-      httr2::req_perform()
-  }, error = function(e) skip("brreg API not reachable"))
-}
-
-# Wrap API calls so transient network errors skip instead of fail.
-# httr2 wraps curl errors via rlang::abort(parent=), so the actual
-# curl/schannel message lives in e$parent$message, not e$message.
-safely <- function(expr) {
-  tryCatch(expr, error = function(e) {
-    msgs <- paste(c(conditionMessage(e),
-                     if (!is.null(e$parent)) conditionMessage(e$parent)),
-                   collapse = " ")
-    if (grepl("curl|connection|timeout|schannel|SSL|receive|reset|closed|Failure.*peer",
-              msgs, ignore.case = TRUE)) {
-      skip(paste("Network error:", msgs))
-    }
-    stop(e)
-  })
-}
+# Live API tests — skip_if_offline() and safely() defined in helper-api.R
 
 test_that("brreg_entity returns correct structure", {
   skip_if_offline()
