@@ -114,6 +114,7 @@ brreg_download <- function(type = c("enheter", "underenheter", "roller"),
     cli::cli_progress_step("Downloading full {type} register ({sizes[type]})")
     resp <- httr2::request(url) |>
       httr2::req_user_agent("tidybrreg (https://github.com/sondreskarsten/tidybrreg; R package)") |>
+      httr2::req_progress() |>
       httr2::req_perform(path = cache_file)
     etag <- httr2::resp_header(resp, "ETag")
     if (!is.null(etag) && cache) {
