@@ -111,7 +111,7 @@ brreg_download <- function(type = c("enheter", "underenheter", "roller"),
   }
 
   if (needs_download) {
-    cli::cli_progress_step("Downloading full {type} register ({sizes[type]})")
+    cli::cli_alert_info("Downloading full {type} register ({sizes[type]})")
     resp <- httr2::request(url) |>
       httr2::req_user_agent("tidybrreg (https://github.com/sondreskarsten/tidybrreg; R package)") |>
       httr2::req_progress() |>
@@ -121,7 +121,6 @@ brreg_download <- function(type = c("enheter", "underenheter", "roller"),
       writeLines(etag, etag_file)
     }
     fsize <- file.size(cache_file)
-    cli::cli_progress_done()
     cli::cli_alert_success("Downloaded {round(fsize / 1024^2, 1)} MB to cache.")
     assign("last_download_resp", resp, envir = .brregEnv)
     assign("last_download_url", url, envir = .brregEnv)
