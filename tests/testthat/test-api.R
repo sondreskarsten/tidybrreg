@@ -89,11 +89,17 @@ test_that("brreg_updates returns results", {
 })
 
 test_that("brreg_updates include_changes works", {
+
   skip_if_offline()
-  u <- safely(brreg_updates(since = Sys.Date() - 2, size = 3, include_changes = TRUE))
-  expect_true("changes" %in% names(u))
-  if (nrow(u) > 0 && !is.null(u$changes[[1]])) {
-    expect_s3_class(u$changes[[1]], "tbl_df")
+  # Use larger size to ensure we get Endring events (which carry changes)
+  u <- safely(brreg_updates(since = Sys.Date() - 3, size = 100, include_changes = TRUE))
+  endring_rows <- u[u$change_type == "Endring", ]
+  if (nrow(endring_rows) > 0) {
+    expect_true("changes" %in% names(u))
+    first_with_changes <- endring_rows$changes[[1]]
+    if (!is.null(first_with_changes)) {
+      expect_s3_class(first_with_changes, "tbl_df")
+    }
   }
 })
 

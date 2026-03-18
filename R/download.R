@@ -155,7 +155,7 @@ brreg_download <- function(type = c("enheter", "underenheter", "roller"),
 
 #' Parse a brreg bulk CSV into a tibble using the field dictionary
 #'
-#' The bulk CSV uses `;` delimiter with `.` notation for nested fields
+#' The bulk CSV uses `,` (comma) delimiter with `.` notation for nested fields
 #' (e.g. `forretningsadresse.kommune`). This function reads all columns
 #' as character, then applies [rename_and_coerce()] for field_dict
 #' mapping and type coercion — the same rename/coerce pipeline used

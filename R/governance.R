@@ -53,8 +53,9 @@ brreg_board_network <- function(org_nrs = NULL, roles_data = NULL) {
                                       by = c("name" = "org_nr"))
   }
 
+  person_ids <- unique(roles_data$person_id[!is.na(roles_data$person_id)])
   person_nodes <- tibble::tibble(
-    name = unique(roles_data$person_id),
+    name = person_ids,
     node_type = "person"
   )
   if (all(c("first_name", "last_name") %in% names(roles_data))) {
@@ -67,7 +68,7 @@ brreg_board_network <- function(org_nrs = NULL, roles_data = NULL) {
   nodes <- dplyr::bind_rows(entity_nodes, person_nodes)
 
   edge_cols <- intersect(c("person_id", "org_nr", "role_code", "role_group_code"), names(roles_data))
-  edges <- roles_data[, edge_cols, drop = FALSE]
+  edges <- roles_data[!is.na(roles_data$person_id), edge_cols, drop = FALSE]
   names(edges)[names(edges) == "person_id"] <- "from"
   names(edges)[names(edges) == "org_nr"] <- "to"
 
