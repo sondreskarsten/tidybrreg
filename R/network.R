@@ -269,7 +269,10 @@ expand_depth_2 <- function(nodes, edges, seed_orgs, download = FALSE) {
   } else {
     status <- brreg_status(quiet = TRUE)
     if (!status$all_ready) {
-      require_bulk_data()
+      cli::cli_abort(c(
+        "Bulk data not available for depth-2 expansion.",
+        "i" = "Run {.code brreg_download()} first, or use {.arg download = TRUE}."
+      ))
     }
   }
 

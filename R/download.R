@@ -277,11 +277,13 @@ rename_and_coerce <- function(dat) {
   names(dat) <- new_names
 
   problems <- list()
+  already_coerced <- character()
 
   for (i in seq_len(nrow(field_dict))) {
     col <- field_dict$col_name[i]
     target <- field_dict$type[i]
     if (!col %in% names(dat)) {
+      # Column absent — add typed NA placeholder
       dat[[col]] <- switch(target,
         Date      = as.Date(NA_character_),
         integer   = NA_integer_,
@@ -291,6 +293,10 @@ rename_and_coerce <- function(dat) {
       )
       next
     }
+    # Skip coercion if already processed (multiple api_paths can share a
+    # col_name, e.g. forretningsadresse.* and beliggenhetsadresse.*)
+    if (col %in% already_coerced) next
+    already_coerced <- c(already_coerced, col)
     if (target == "integer") {
       original <- dat[[col]]
       parsed <- suppressWarnings(as.integer(original))

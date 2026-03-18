@@ -52,7 +52,9 @@ rename_from_dict <- function(flat) {
     if (api_path %in% names(flat)) {
       result[[col_name]] <- flat[[api_path]]
       mapped_api_paths <- c(mapped_api_paths, api_path)
-    } else {
+    } else if (is.null(result[[col_name]])) {
+      # Only set NA if column hasn't been populated by a prior dict row
+      # (e.g. forretningsadresse.* and beliggenhetsadresse.* share col_names)
       result[[col_name]] <- na_for_type(dict$type[i])
     }
   }
