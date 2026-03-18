@@ -198,7 +198,11 @@ brreg_search <- function(name = NULL, legal_form = NULL,
       break
     }
   }
-  if (length(all_items) == 0) return(tibble::tibble())
+  if (length(all_items) == 0) {
+    result <- tibble::tibble()
+    attr(result, "total_matches") <- total %||% 0L
+    return(result)
+  }
   n <- min(length(all_items), max_results)
   result <- parse_entities(all_items[seq_len(n)])
   attr(result, "total_matches") <- total

@@ -487,31 +487,65 @@ apply_roller_events <- function(state, updates, verbose = TRUE) {
 #' @keywords internal
 find_state_column <- function(cdc_field, state_cols) {
   cdc_to_col <- c(
+    # NACE codes (both parent-level and _kode sub-path)
+    "naeringskode1"                         = "nace_1",
     "naeringskode1_kode"                    = "nace_1",
     "naeringskode1_beskrivelse"             = "nace_1_desc",
+    "naeringskode2"                         = "nace_2",
     "naeringskode2_kode"                    = "nace_2",
     "naeringskode2_beskrivelse"             = "nace_2_desc",
+    "naeringskode3"                         = "nace_3",
     "naeringskode3_kode"                    = "nace_3",
     "naeringskode3_beskrivelse"             = "nace_3_desc",
+
+    # Business address (forretningsadresse)
     "forretningsadresse_kommunenummer"      = "municipality_code",
     "forretningsadresse_kommune"            = "municipality",
-    "forretningsadresse_postnummer"         = "postal_code",
-    "forretningsadresse_poststed"           = "postal_place",
+    "forretningsadresse_postnummer"         = "business_postcode",
+    "forretningsadresse_poststed"           = "business_city",
     "forretningsadresse_landkode"           = "country_code",
     "forretningsadresse_land"               = "country",
-    "forretningsadresse_adresse_0"          = "street_address",
+    "forretningsadresse_adresse_0"          = "business_address",
+    "forretningsadresse_adresse_1"          = "business_address",
+
+    # Location address (underenheter)
     "beliggenhetsadresse_kommunenummer"     = "municipality_code",
     "beliggenhetsadresse_kommune"           = "municipality",
-    "beliggenhetsadresse_postnummer"        = "postal_code",
-    "beliggenhetsadresse_poststed"          = "postal_place",
+    "beliggenhetsadresse_postnummer"        = "business_postcode",
+    "beliggenhetsadresse_poststed"          = "business_city",
+
+    # Postal address
+    "postadresse_adresse_0"                 = "postal_address",
+    "postadresse_adresse_1"                 = "postal_address",
+    "postadresse_postnummer"                = "postal_postcode",
+    "postadresse_poststed"                  = "postal_city",
+    "postadresse_kommunenummer"             = "postal_municipality_code",
+    "postadresse_kommune"                   = "postal_municipality",
+
+    # Legal form / sector (both parent-level and _kode sub-path)
+    "organisasjonsform"                     = "legal_form",
     "organisasjonsform_kode"                = "legal_form",
     "organisasjonsform_beskrivelse"         = "legal_form_desc",
+    "institusjonellSektorkode"              = "sector_code",
     "institusjonellSektorkode_kode"         = "sector_code",
     "institusjonellSektorkode_beskrivelse"  = "sector_desc",
+
+    # Employees
     "antallAnsatte"                         = "employees",
-    "harRegistrertAntallAnsatte"            = "has_registered_employees",
-    "registreringsdatoAntallAnsatteEnhetsregisteret" = "employee_reg_date",
-    "registreringsdatoAntallAnsatteNAVAaregisteret"  = "employee_nav_date",
+    "harRegistrertAntallAnsatte"            = "employees_reported",
+
+    # Registration dates
+    "registreringsdatoEnhetsregisteret"     = "registration_date",
+    "registreringsdatoForetaksregisteret"   = "business_register_date",
+
+    # Register membership flags
+    "registrertIForetaksregisteret"         = "in_business_register",
+    "registrertIFrivillighetsregisteret"    = "in_nonprofit_register",
+    "registrertIMvaregisteret"              = "vat_registered",
+    "registrertIStiftelsesregisteret"       = "in_foundation_register",
+    "registrertIPartiregisteret"            = "registrert_ipartiregisteret",
+
+    # Core entity fields
     "konkurs"                               = "bankrupt",
     "konkursdato"                           = "bankruptcy_date",
     "underAvvikling"                        = "in_liquidation",
@@ -519,17 +553,20 @@ find_state_column <- function(cdc_field, state_cols) {
     "underTvangsavviklingEllerTvangsopplosning" = "forced_dissolution",
     "navn"                                  = "name",
     "stiftelsesdato"                        = "founding_date",
-    "vedtektsdato"                          = "charter_date",
+    "vedtektsdato"                          = "articles_date",
     "sisteInnsendteAarsregnskap"            = "last_annual_accounts",
-    "erIKonsern"                            = "is_group",
+    "erIKonsern"                            = "in_corporate_group",
     "maalform"                              = "language_form",
     "overordnetEnhet"                       = "parent_org_nr",
-    "epostadresse"                          = "email",
-    "hjemmeside"                            = "website",
-    "telefon"                               = "phone",
-    "mobil"                                 = "mobile",
     "slettedato"                            = "deletion_date",
-    "datoEierskifte"                        = "ownership_change_date"
+    "datoEierskifte"                        = "ownership_change_date",
+    "aktivitet"                             = "activity",
+
+    # Contact info
+    "epostadresse"                          = "epostadresse",
+    "hjemmeside"                            = "website",
+    "telefon"                               = "telefon",
+    "mobil"                                 = "mobil"
   )
 
   mapped <- cdc_to_col[cdc_field]
@@ -603,7 +640,37 @@ extract_paategninger <- function(entities) {
   has_paat <- !is.na(entities$paategninger) & entities$paategninger != ""
   if (!any(has_paat)) return(empty_paategninger())
 
-  empty_paategninger()
+  paat_entities <- entities[has_paat, , drop = FALSE]
+  rows <- vector("list", sum(has_paat))
+
+  for (i in seq_len(nrow(paat_entities))) {
+    org <- paat_entities$org_nr[i]
+    raw <- paat_entities$paategninger[i]
+
+    parsed <- tryCatch(
+      jsonlite::fromJSON(raw, simplifyVector = FALSE),
+      error = function(e) NULL
+    )
+    if (is.null(parsed)) next
+
+    # Handle both list-of-lists (JSON array) and single object
+    if (!is.null(names(parsed))) parsed <- list(parsed)
+
+    for (j in seq_along(parsed)) {
+      p <- parsed[[j]]
+      rows[[length(rows) + 1L]] <- tibble::tibble(
+        org_nr        = org,
+        position      = j - 1L,
+        infotype      = p$infotype %||% NA_character_,
+        tekst         = p$tekst %||% NA_character_,
+        innfoert_dato = p$innfoertDato %||% NA_character_
+      )
+    }
+  }
+
+  result <- dplyr::bind_rows(rows)
+  if (nrow(result) == 0) return(empty_paategninger())
+  result
 }
 
 

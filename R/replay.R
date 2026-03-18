@@ -92,7 +92,18 @@ brreg_replay <- function(base, updates, target_date = Sys.Date(),
           field <- patch$field[j]
           col <- lookup_patch_field(field, names(state))
           if (!is.null(col) && col %in% names(state)) {
-            state[[col]][idx] <- as.character(patch$new_value[j])
+            new_val <- patch$new_value[j]
+            if (is.integer(state[[col]])) {
+              state[[col]][idx] <- suppressWarnings(as.integer(new_val))
+            } else if (is.logical(state[[col]])) {
+              state[[col]][idx] <- as.logical(new_val)
+            } else if (inherits(state[[col]], "Date")) {
+              state[[col]][idx] <- as.Date(new_val)
+            } else if (is.numeric(state[[col]])) {
+              state[[col]][idx] <- suppressWarnings(as.numeric(new_val))
+            } else {
+              state[[col]][idx] <- new_val
+            }
           }
         }
       }
