@@ -111,16 +111,16 @@ brreg_download <- function(type = c("enheter", "underenheter", "roller"),
   }
 
   if (needs_download) {
-    cli::cli_progress_step("Downloading full {type} register ({sizes[type]})")
+    cli::cli_alert_info("Downloading full {type} register ({sizes[type]})")
     resp <- httr2::request(url) |>
       httr2::req_user_agent("tidybrreg (https://github.com/sondreskarsten/tidybrreg; R package)") |>
+      httr2::req_progress() |>
       httr2::req_perform(path = cache_file)
     etag <- httr2::resp_header(resp, "ETag")
     if (!is.null(etag) && cache) {
       writeLines(etag, etag_file)
     }
     fsize <- file.size(cache_file)
-    cli::cli_progress_done()
     cli::cli_alert_success("Downloaded {round(fsize / 1024^2, 1)} MB to cache.")
     assign("last_download_resp", resp, envir = .brregEnv)
     assign("last_download_url", url, envir = .brregEnv)
@@ -277,11 +277,13 @@ rename_and_coerce <- function(dat) {
   names(dat) <- new_names
 
   problems <- list()
+  already_coerced <- character()
 
   for (i in seq_len(nrow(field_dict))) {
     col <- field_dict$col_name[i]
     target <- field_dict$type[i]
     if (!col %in% names(dat)) {
+      # Column absent — add typed NA placeholder
       dat[[col]] <- switch(target,
         Date      = as.Date(NA_character_),
         integer   = NA_integer_,
@@ -291,6 +293,10 @@ rename_and_coerce <- function(dat) {
       )
       next
     }
+    # Skip coercion if already processed (multiple api_paths can share a
+    # col_name, e.g. forretningsadresse.* and beliggenhetsadresse.*)
+    if (col %in% already_coerced) next
+    already_coerced <- c(already_coerced, col)
     if (target == "integer") {
       original <- dat[[col]]
       parsed <- suppressWarnings(as.integer(original))

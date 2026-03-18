@@ -99,16 +99,20 @@ brreg_snapshot <- function(type = c("enheter", "underenheter", "roller"),
 }
 
 
-#' Import a historical CSV as a snapshot partition
+#' Import a historical bulk file as a snapshot partition
 #'
-#' Read a brreg bulk CSV file (as downloaded by [brreg_download()] or
-#' from the brreg website), normalize column names via [field_dict],
+#' Read a brreg bulk CSV or JSON file (as downloaded by [brreg_download()] or
+#' from the brreg website / GCS bucket), normalize column names via [field_dict],
 #' and save as a dated Parquet partition in the snapshot store.
 #'
-#' @param path Path to a brreg CSV file (gzipped or plain).
-#' @param snapshot_date The date this CSV represents. Required — the
-#'   CSV itself contains no date metadata.
-#' @param type One of `"enheter"` or `"underenheter"`.
+#' The file format is detected automatically from the file extension:
+#' `.csv` or `.csv.gz` routes to [parse_bulk_csv()], `.json` or `.json.gz`
+#' routes to [parse_bulk_json()] (or [parse_roles_bulk()] for roller).
+#'
+#' @param path Path to a brreg bulk file (CSV or JSON, gzipped or plain).
+#' @param snapshot_date The date this file represents. Required — the
+#'   file itself contains no date metadata.
+#' @param type One of `"enheter"`, `"underenheter"`, or `"roller"`.
 #' @param force Logical. Overwrite existing partition.
 #'
 #' @returns The file path to the written Parquet partition (invisibly).
@@ -118,8 +122,16 @@ brreg_snapshot <- function(type = c("enheter", "underenheter", "roller"),
 #'
 #' @export
 #' @examplesIf FALSE
-#' # Import a historical download
+#' # Import a historical CSV download
 #' brreg_import("enheter_2024-12-31.csv.gz", snapshot_date = "2024-12-31")
+#'
+#' # Import a JSON download (e.g. from GCS bucket)
+#' brreg_import("enheter_alle_2025-01-15.json.gz",
+#'              snapshot_date = "2025-01-15", type = "enheter")
+#'
+#' # Import roller (JSON only)
+#' brreg_import("roller_2025-01-15.json.gz",
+#'              snapshot_date = "2025-01-15", type = "roller")
 brreg_import <- function(path, snapshot_date,
                           type = c("enheter", "underenheter", "roller"),
                           force = FALSE) {
@@ -136,12 +148,30 @@ brreg_import <- function(path, snapshot_date,
     return(invisible(parquet_path))
   }
 
-  dat <- parse_bulk_csv(path, type = type)
+  fmt <- detect_bulk_format(path)
+  dat <- switch(fmt,
+    csv = parse_bulk_csv(path, type = type),
+    json = if (type == "roller") parse_roles_bulk(path) else parse_bulk_json(path, type = type),
+    cli::cli_abort("Cannot detect format of {.path {path}}. Expected .csv, .csv.gz, .json, or .json.gz.")
+  )
   write_parquet_safe(dat, parquet_path)
 
   fsize <- file.size(parquet_path)
-  cli::cli_alert_success("Imported: {snapshot_date} ({round(fsize / 1024^2, 1)} MB, {nrow(dat)} rows)")
+  n_label <- if (type == "roller") "role records" else "entities"
+  cli::cli_alert_success("Imported: {snapshot_date} ({round(fsize / 1024^2, 1)} MB, {nrow(dat)} {n_label})")
   invisible(parquet_path)
+}
+
+
+#' Detect bulk file format from extension
+#' @param path File path.
+#' @returns `"csv"`, `"json"`, or `"unknown"`.
+#' @keywords internal
+detect_bulk_format <- function(path) {
+  lp <- tolower(path)
+  if (grepl("\\.csv(\\.gz)?$", lp)) return("csv")
+  if (grepl("\\.json(\\.gz)?$", lp)) return("json")
+  "unknown"
 }
 
 

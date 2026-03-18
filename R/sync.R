@@ -487,14 +487,12 @@ apply_roller_events <- function(state, updates, verbose = TRUE) {
 #' @keywords internal
 find_state_column <- function(cdc_field, state_cols) {
   cdc_to_col <- c(
-    # NACE codes (both parent-level and _kode sub-path)
-    "naeringskode1"                         = "nace_1",
+    # NACE codes (_kode sub-path only; parent-level objects are flattened
+    # by parse_patch() so no parent mapping needed)
     "naeringskode1_kode"                    = "nace_1",
     "naeringskode1_beskrivelse"             = "nace_1_desc",
-    "naeringskode2"                         = "nace_2",
     "naeringskode2_kode"                    = "nace_2",
     "naeringskode2_beskrivelse"             = "nace_2_desc",
-    "naeringskode3"                         = "nace_3",
     "naeringskode3_kode"                    = "nace_3",
     "naeringskode3_beskrivelse"             = "nace_3_desc",
 
@@ -513,6 +511,10 @@ find_state_column <- function(cdc_field, state_cols) {
     "beliggenhetsadresse_kommune"           = "municipality",
     "beliggenhetsadresse_postnummer"        = "business_postcode",
     "beliggenhetsadresse_poststed"          = "business_city",
+    "beliggenhetsadresse_landkode"          = "country_code",
+    "beliggenhetsadresse_land"              = "country",
+    "beliggenhetsadresse_adresse_0"         = "business_address",
+    "beliggenhetsadresse_adresse_1"         = "business_address",
 
     # Postal address
     "postadresse_adresse_0"                 = "postal_address",
@@ -522,11 +524,10 @@ find_state_column <- function(cdc_field, state_cols) {
     "postadresse_kommunenummer"             = "postal_municipality_code",
     "postadresse_kommune"                   = "postal_municipality",
 
-    # Legal form / sector (both parent-level and _kode sub-path)
-    "organisasjonsform"                     = "legal_form",
+    # Legal form / sector (_kode sub-path only; parent-level objects are
+    # flattened by parse_patch())
     "organisasjonsform_kode"                = "legal_form",
     "organisasjonsform_beskrivelse"         = "legal_form_desc",
-    "institusjonellSektorkode"              = "sector_code",
     "institusjonellSektorkode_kode"         = "sector_code",
     "institusjonellSektorkode_beskrivelse"  = "sector_desc",
 
