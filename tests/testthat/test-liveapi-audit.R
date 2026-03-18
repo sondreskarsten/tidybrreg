@@ -479,8 +479,8 @@ test_that("rapid sequential requests succeed (rate limiting works)", {
 # ── to_snake ─────────────────────────────────────────────────────────────
 
 test_that("to_snake: converts camelCase correctly", {
-  expect_equal(to_snake("organisasjonsnummer"), "organisasjonsnummer")
-  expect_equal(to_snake("antallAnsatte"), "antall_ansatte")
-  expect_equal(to_snake("forretningsadresse.kommune"), "forretningsadresse_kommune")
-  expect_equal(to_snake("naeringskode1.kode"), "naeringskode1_kode")
+  expect_equal(tidybrreg:::to_snake("organisasjonsnummer"), "organisasjonsnummer")
+  expect_equal(tidybrreg:::to_snake("antallAnsatte"), "antall_ansatte")
+  expect_equal(tidybrreg:::to_snake("forretningsadresse.kommune"), "forretningsadresse_kommune")
+  expect_equal(tidybrreg:::to_snake("naeringskode1.kode"), "naeringskode1_kode")
 })
