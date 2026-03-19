@@ -112,8 +112,8 @@ brreg_update_fields <- function(since = Sys.Date() - 1, size = 100,
   )
 
   cursor_id <- NULL
-  raw_pages <- vector("list", max_pages)
-  n_fetched <- 0L
+  all_results <- vector("list", max_pages)
+  key <- paste0("oppdaterte", tools::toTitleCase(type))
 
   for (page in seq_len(max_pages)) {
     query <- list(size = size, includeChanges = "true")
@@ -130,87 +130,32 @@ brreg_update_fields <- function(since = Sys.Date() - 1, size = 100,
 
     if (httr2::resp_status(resp) >= 400L) break
 
-    raw_bytes <- httr2::resp_body_raw(resp)
-    cursor_id <- extract_max_cursor(raw_bytes)
-    if (is.null(cursor_id)) break
+    body <- httr2::resp_body_json(resp)
+    raw <- body[["_embedded"]][[key]]
+    if (is.null(raw) || length(raw) == 0) break
 
-    n_fetched <- n_fetched + 1L
-    raw_pages[[n_fetched]] <- raw_bytes
+    flat <- flatten_page_patches(raw)
+    all_results[[page]] <- flat
+    cursor_id <- max(flat$update_id, na.rm = TRUE)
 
-    if (verbose) cli::cli_alert_info("Page {page}: fetched ({round(length(raw_bytes) / 1024^2, 1)} MB)")
-
-    n_events <- count_events_fast(raw_bytes)
-    if (n_events < size) break
+    if (verbose) {
+      n_events <- length(raw)
+      cli::cli_alert_info("Page {page}: {n_events} events, {nrow(flat)} fields (cursor {cursor_id})")
+    }
+    if (length(raw) < size) break
   }
 
-  if (n_fetched == 0L) return(empty)
-  raw_pages <- raw_pages[seq_len(n_fetched)]
-
-  key <- paste0("oppdaterte", tools::toTitleCase(type))
-
-  process_page <- function(raw_bytes) {
-    body <- parse_json_raw(raw_bytes)
-    updates <- body[["_embedded"]][[key]]
-    if (is.null(updates) || length(updates) == 0) return(empty)
-    flatten_page_patches(updates)
-  }
-
-  if (n_fetched > 1L && .Platform$OS.type == "unix") {
-    n_cores <- min(n_fetched, max(1L, parallel::detectCores() - 1L))
-    if (verbose) cli::cli_alert_info("Parsing {n_fetched} pages on {n_cores} cores")
-    all_results <- parallel::mclapply(raw_pages, process_page, mc.cores = n_cores)
-  } else {
-    all_results <- lapply(raw_pages, process_page)
-  }
-
+  all_results <- all_results[!vapply(all_results, is.null, logical(1))]
+  if (length(all_results) == 0) return(empty)
   dplyr::bind_rows(all_results)
 }
 
 
-#' Parse JSON from an httr2 response, using RcppSimdJson if available
+
+#' Parse JSON from an httr2 response
 #' @keywords internal
 parse_json_response <- function(resp) {
-  if (requireNamespace("RcppSimdJson", quietly = TRUE)) {
-    raw <- httr2::resp_body_raw(resp)
-    RcppSimdJson::fparse(rawToChar(raw))
-  } else {
-    httr2::resp_body_json(resp)
-  }
-}
-
-
-#' Parse raw bytes to an R list, using RcppSimdJson if available
-#' @keywords internal
-parse_json_raw <- function(raw_bytes) {
-  if (requireNamespace("RcppSimdJson", quietly = TRUE)) {
-    RcppSimdJson::fparse(rawToChar(raw_bytes))
-  } else {
-    jsonlite::fromJSON(rawToChar(raw_bytes), simplifyVector = FALSE)
-  }
-}
-
-
-#' Extract the maximum oppdateringsid from raw JSON bytes
-#'
-#' Uses a regex on the raw string to find the last oppdateringsid
-#' without fully parsing the JSON. Falls back to full parse on failure.
-#' @keywords internal
-extract_max_cursor <- function(raw_bytes) {
-  txt <- rawToChar(raw_bytes)
-  matches <- gregexpr('"oppdateringsid"\\s*:\\s*(\\d+)', txt)
-  ids <- regmatches(txt, matches)[[1]]
-  if (length(ids) == 0) return(NULL)
-  ids <- as.integer(sub('.*:\\s*', '', ids))
-  max(ids)
-}
-
-
-#' Count events in a raw JSON page without full parsing
-#' @keywords internal
-count_events_fast <- function(raw_bytes) {
-  txt <- rawToChar(raw_bytes)
-  matches <- gregexpr('"oppdateringsid"', txt, fixed = TRUE)
-  length(matches[[1]])
+  httr2::resp_body_json(resp)
 }
 
 
