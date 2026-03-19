@@ -11,34 +11,24 @@
 #' @param max_pages Integer. Maximum pages to fetch. Default 1.
 #'   Set higher to paginate through large result sets automatically.
 #' @param include_changes Logical. If `TRUE`, include field-level change
-#'   details per update as a list-column of tibbles. The brreg API
-#'   returns changes in a flat RFC 6902-style JSON Patch format.
-#' @param type One of `"enheter"` (main entities), `"underenheter"`
-#'   (sub-entities), or `"roller"` (role assignments). Roller updates
-#'   use CloudEvents format (`afterTime`/`afterId` pagination) rather
-#'   than the HAL-based format used by enheter/underenheter.
-#'   `include_changes` is ignored for roller.
-#' @param verbose Logical. Print page-level progress when
-#'   `max_pages > 1`.
+#'   details per update as a list-column of tibbles.
+#' @param type One of `"enheter"`, `"underenheter"`, or `"roller"`.
+#'   Roller uses CloudEvents format; `include_changes` is ignored.
+#' @param verbose Logical. Print page-level progress.
 #'
-#' @returns A tibble with columns: `update_id` (integer), `org_nr`
-#'   (character), `change_type` (character: Ny/Endring/Sletting),
-#'   `timestamp` (POSIXct). If `include_changes = TRUE`, an additional
-#'   list-column `changes` contains tibbles with columns `operation`,
-#'   `field`, `new_value`.
+#' @returns A tibble with columns: `update_id`, `org_nr`,
+#'   `change_type`, `timestamp`. If `include_changes = TRUE`, a
+#'   list-column `changes` with tibbles of `operation`, `field`,
+#'   `new_value`.
 #'
 #' @family tidybrreg entity functions
-#' @seealso [brreg_update_fields()] for a flat alternative,
-#'   [brreg_entity()] to fetch the current state of a changed entity.
+#' @seealso [brreg_update_fields()] for a flat alternative.
 #'
 #' @export
 #' @examplesIf interactive() && curl::has_internet()
 #' brreg_updates(since = Sys.Date() - 1, size = 10)
 #'
-#' # With field-level change details
-#' brreg_updates(since = Sys.Date() - 1, size = 5, include_changes = TRUE)
-#'
-#' # Auto-paginate through large result sets
+#' # Auto-paginate
 #' brreg_updates(since = "2026-03-01", size = 10000, max_pages = 50,
 #'               verbose = TRUE)
 brreg_updates <- function(since = Sys.Date() - 1, size = 100,
@@ -90,10 +80,10 @@ brreg_updates <- function(since = Sys.Date() - 1, size = 100,
 
 #' Retrieve field-level CDC changes as a flat tibble
 #'
-#' Convenience wrapper around [brreg_updates()] that returns one row
-#' per field-level change instead of one row per event with a nested
-#' `changes` list-column. Suitable for direct filtering, grouping,
-#' and display in notebooks.
+#' Returns one row per field-level change. All events from all pages
+#' are flattened in a single pass with no recursion — substantially
+#' faster than [brreg_updates()] with `include_changes = TRUE`
+#' followed by unnesting.
 #'
 #' @inheritParams brreg_updates
 #'
@@ -111,10 +101,7 @@ brreg_update_fields <- function(since = Sys.Date() - 1, size = 100,
                                  type = c("enheter", "underenheter"),
                                  verbose = FALSE) {
   type <- match.arg(type)
-  cdc <- brreg_updates(
-    since = since, size = size, max_pages = max_pages,
-    include_changes = TRUE, type = type, verbose = verbose
-  )
+  size <- min(as.integer(size), 10000L)
 
   empty <- tibble::tibble(
     update_id = integer(), org_nr = character(),
@@ -123,23 +110,221 @@ brreg_update_fields <- function(since = Sys.Date() - 1, size = 100,
     new_value = character()
   )
 
-  if (nrow(cdc) == 0 || !"changes" %in% names(cdc)) return(empty)
+  cursor_id <- NULL
+  all_results <- vector("list", max_pages)
 
-  has_changes <- vapply(cdc$changes, \(x) is.data.frame(x) && nrow(x) > 0, logical(1))
-  if (!any(has_changes)) return(empty)
+  for (page in seq_len(max_pages)) {
+    query <- list(size = size, includeChanges = "true")
+    if (is.null(cursor_id)) {
+      query$dato <- format(as.POSIXct(since), "%Y-%m-%dT00:00:00.000Z")
+    } else {
+      query$oppdateringsid <- cursor_id + 1L
+    }
 
-  idx <- which(has_changes)
-  expanded <- dplyr::bind_rows(lapply(idx, \(i) {
-    ch <- cdc$changes[[i]]
-    ch$update_id <- cdc$update_id[i]
-    ch$org_nr <- cdc$org_nr[i]
-    ch$change_type <- cdc$change_type[i]
-    ch$timestamp <- cdc$timestamp[i]
-    ch
-  }))
+    resp <- brreg_req(paste0("oppdateringer/", type)) |>
+      httr2::req_url_query(!!!query) |>
+      httr2::req_error(is_error = \(resp) FALSE) |>
+      httr2::req_perform()
 
-  expanded[, c("update_id", "org_nr", "change_type", "timestamp",
-               "operation", "field", "new_value")]
+    if (httr2::resp_status(resp) >= 400L) break
+
+    body <- httr2::resp_body_json(resp)
+    key <- paste0("oppdaterte", tools::toTitleCase(type))
+    raw <- body[["_embedded"]][[key]]
+    if (is.null(raw) || length(raw) == 0) break
+
+    flat <- flatten_page_patches(raw)
+    all_results[[page]] <- flat
+    cursor_id <- max(flat$update_id, na.rm = TRUE)
+
+    if (verbose) {
+      n_events <- length(raw)
+      cli::cli_alert_info("Page {page}: {n_events} events, {nrow(flat)} fields (cursor {cursor_id})")
+    }
+    if (length(raw) < size) break
+  }
+
+  all_results <- all_results[!vapply(all_results, is.null, logical(1))]
+  if (length(all_results) == 0) return(empty)
+  dplyr::bind_rows(all_results)
+}
+
+
+#' Flatten all patches from a page of CDC events in a single pass
+#'
+#' No recursion. The brreg CDC nesting depth is bounded at 2 levels:
+#' object -> scalar, or object -> array -> scalar. This function
+#' inlines the unpack for both levels, avoiding function call overhead,
+#' closure allocation, and `<<-` assignment entirely.
+#'
+#' @param raw_updates List of raw update objects from the API.
+#' @returns A flat tibble with update_id, org_nr, change_type,
+#'   timestamp, operation, field, new_value.
+#' @keywords internal
+flatten_page_patches <- function(raw_updates) {
+  n_est <- length(raw_updates) * 8L
+  r_uid   <- integer(n_est)
+  r_org   <- character(n_est)
+  r_ctype <- character(n_est)
+  r_ts    <- character(n_est)
+  r_op    <- character(n_est)
+  r_field <- character(n_est)
+  r_val   <- character(n_est)
+  k <- 0L
+
+  for (u in raw_updates) {
+    uid   <- u$oppdateringsid %||% NA_integer_
+    org   <- u$organisasjonsnummer %||% NA_character_
+    ctype <- u$endringstype %||% NA_character_
+    ts    <- u$dato %||% NA_character_
+
+    endringer <- u$endringer
+    if (is.null(endringer) || length(endringer) == 0) next
+
+    for (e in endringer) {
+      op <- e$op %||% NA_character_
+      path <- sub("^/", "", e$path %||% "")
+      val <- e$value
+
+      if (op == "remove" || is.null(val)) {
+        k <- k + 1L
+        if (k > length(r_uid)) {
+          r_uid   <- c(r_uid, integer(length(r_uid)))
+          r_org   <- c(r_org, character(length(r_org)))
+          r_ctype <- c(r_ctype, character(length(r_ctype)))
+          r_ts    <- c(r_ts, character(length(r_ts)))
+          r_op    <- c(r_op, character(length(r_op)))
+          r_field <- c(r_field, character(length(r_field)))
+          r_val   <- c(r_val, character(length(r_val)))
+        }
+        r_uid[k]   <- uid
+        r_org[k]   <- org
+        r_ctype[k] <- ctype
+        r_ts[k]    <- ts
+        r_op[k]    <- op
+        r_field[k] <- gsub("/", "_", path)
+        r_val[k]   <- NA_character_
+        next
+      }
+
+      if (is.atomic(val) && length(val) == 1L) {
+        k <- k + 1L
+        if (k > length(r_uid)) {
+          r_uid   <- c(r_uid, integer(length(r_uid)))
+          r_org   <- c(r_org, character(length(r_org)))
+          r_ctype <- c(r_ctype, character(length(r_ctype)))
+          r_ts    <- c(r_ts, character(length(r_ts)))
+          r_op    <- c(r_op, character(length(r_op)))
+          r_field <- c(r_field, character(length(r_field)))
+          r_val   <- c(r_val, character(length(r_val)))
+        }
+        r_uid[k]   <- uid
+        r_org[k]   <- org
+        r_ctype[k] <- ctype
+        r_ts[k]    <- ts
+        r_op[k]    <- op
+        r_field[k] <- gsub("/", "_", path)
+        r_val[k]   <- as.character(val)
+        next
+      }
+
+      if (is.list(val) && !is.null(names(val))) {
+        for (key in names(val)) {
+          child <- val[[key]]
+          child_path <- paste0(path, "_", key)
+
+          if (is.null(child) || (is.atomic(child) && length(child) == 0L)) {
+            k <- k + 1L
+            if (k > length(r_uid)) {
+              r_uid   <- c(r_uid, integer(length(r_uid)))
+              r_org   <- c(r_org, character(length(r_org)))
+              r_ctype <- c(r_ctype, character(length(r_ctype)))
+              r_ts    <- c(r_ts, character(length(r_ts)))
+              r_op    <- c(r_op, character(length(r_op)))
+              r_field <- c(r_field, character(length(r_field)))
+              r_val   <- c(r_val, character(length(r_val)))
+            }
+            r_uid[k] <- uid; r_org[k] <- org; r_ctype[k] <- ctype; r_ts[k] <- ts
+            r_op[k] <- op; r_field[k] <- gsub("/", "_", child_path); r_val[k] <- NA_character_
+          } else if (is.list(child) && is.null(names(child))) {
+            for (j in seq_along(child)) {
+              arr_val <- child[[j]]
+              k <- k + 1L
+              if (k > length(r_uid)) {
+                r_uid   <- c(r_uid, integer(length(r_uid)))
+                r_org   <- c(r_org, character(length(r_org)))
+                r_ctype <- c(r_ctype, character(length(r_ctype)))
+                r_ts    <- c(r_ts, character(length(r_ts)))
+                r_op    <- c(r_op, character(length(r_op)))
+                r_field <- c(r_field, character(length(r_field)))
+                r_val   <- c(r_val, character(length(r_val)))
+              }
+              r_uid[k] <- uid; r_org[k] <- org; r_ctype[k] <- ctype; r_ts[k] <- ts
+              r_op[k] <- op
+              r_field[k] <- paste0(gsub("/", "_", child_path), "_", j - 1L)
+              r_val[k] <- if (is.null(arr_val)) NA_character_ else as.character(arr_val)
+            }
+          } else {
+            k <- k + 1L
+            if (k > length(r_uid)) {
+              r_uid   <- c(r_uid, integer(length(r_uid)))
+              r_org   <- c(r_org, character(length(r_org)))
+              r_ctype <- c(r_ctype, character(length(r_ctype)))
+              r_ts    <- c(r_ts, character(length(r_ts)))
+              r_op    <- c(r_op, character(length(r_op)))
+              r_field <- c(r_field, character(length(r_field)))
+              r_val   <- c(r_val, character(length(r_val)))
+            }
+            r_uid[k] <- uid; r_org[k] <- org; r_ctype[k] <- ctype; r_ts[k] <- ts
+            r_op[k] <- op; r_field[k] <- gsub("/", "_", child_path)
+            r_val[k] <- as.character(child)
+          }
+        }
+        next
+      }
+
+      if (is.list(val) && is.null(names(val))) {
+        for (j in seq_along(val)) {
+          arr_val <- val[[j]]
+          k <- k + 1L
+          if (k > length(r_uid)) {
+            r_uid   <- c(r_uid, integer(length(r_uid)))
+            r_org   <- c(r_org, character(length(r_org)))
+            r_ctype <- c(r_ctype, character(length(r_ctype)))
+            r_ts    <- c(r_ts, character(length(r_ts)))
+            r_op    <- c(r_op, character(length(r_op)))
+            r_field <- c(r_field, character(length(r_field)))
+            r_val   <- c(r_val, character(length(r_val)))
+          }
+          r_uid[k] <- uid; r_org[k] <- org; r_ctype[k] <- ctype; r_ts[k] <- ts
+          r_op[k] <- op
+          r_field[k] <- paste0(gsub("/", "_", path), "_", j - 1L)
+          r_val[k] <- if (is.null(arr_val)) NA_character_ else as.character(arr_val)
+        }
+        next
+      }
+    }
+  }
+
+  if (k == 0L) {
+    return(tibble::tibble(
+      update_id = integer(), org_nr = character(),
+      change_type = character(), timestamp = as.POSIXct(character()),
+      operation = character(), field = character(),
+      new_value = character()
+    ))
+  }
+
+  s <- seq_len(k)
+  tibble::tibble(
+    update_id   = r_uid[s],
+    org_nr      = r_org[s],
+    change_type = r_ctype[s],
+    timestamp   = as.POSIXct(r_ts[s], format = "%Y-%m-%dT%H:%M:%OS"),
+    operation   = r_op[s],
+    field       = r_field[s],
+    new_value   = r_val[s]
+  )
 }
 
 
@@ -235,17 +420,12 @@ parse_updates_page <- function(raw_updates, include_changes = FALSE) {
 
 #' Parse brreg RFC 6902 JSON Patch operations into a tibble
 #'
-#' Uses a collector-based approach: accumulates into pre-allocated
-#' character vectors and builds a single tibble at the end. Nested
-#' objects are flattened to leaf-level rows so that `/naeringskode1`
-#' with value `{kode: "43.210", beskrivelse: "..."}` produces two
-#' rows: `naeringskode1_kode` and `naeringskode1_beskrivelse`.
-#' NULL values in arrays produce `NA_character_`.
+#' Collector-based, non-recursive for the common cases (scalar, remove).
+#' Falls back to [flatten_value_into()] only for nested objects/arrays.
+#' Used by [parse_updates_page()] and the sync engine.
 #'
 #' @param endringer List of patch operations from the brreg API.
-#'
 #' @returns A tibble with columns `operation`, `field`, `new_value`.
-#'
 #' @keywords internal
 parse_patch <- function(endringer) {
   empty <- tibble::tibble(
