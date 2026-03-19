@@ -101,15 +101,13 @@ Other tidybrreg panel functions:
 # \donttest{
 entities <- brreg_download()
 #> ℹ Downloading full enheter register (~152 MB)
-#> ✔ Downloading full enheter register (~152 MB) [2m 21.4s]
+#> ✔ Downloading full enheter register (~152 MB) [2m 49s]
 #> 
 #> ✔ Downloaded 145.5 MB to cache.
 flows <- brreg_flows(entities)
 
 # With CDC exits
 cdc <- brreg_updates(since = "2026-01-01", size = 10000)
-#> Error in u$oppdateringsid: $ operator is invalid for atomic vectors
 flows <- brreg_flows(entities, updates = cdc)
-#> Error: object 'cdc' not found
 # }
 ```
