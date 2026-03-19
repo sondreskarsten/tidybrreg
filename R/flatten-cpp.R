@@ -1,8 +1,9 @@
 #' Get the fast C++ flatten function, JIT-compiling on first use
 #'
 #' Returns a compiled C++ function that replaces flatten_page_patches().
-#' Requires Rcpp in Suggests. Compiled once per session and cached in
-#' .brregEnv. Returns NULL if Rcpp is not available.
+#' Only compiles when `options(tidybrreg.use_cpp = TRUE)` is set.
+#' Requires Rcpp in Suggests. Compiled once per session (~10s) and
+#' cached in .brregEnv.
 #'
 #' @keywords internal
 get_flatten_cpp <- function() {
@@ -10,49 +11,44 @@ get_flatten_cpp <- function() {
     return(get(".flatten_cpp", envir = .brregEnv))
   }
 
+  if (!isTRUE(getOption("tidybrreg.use_cpp"))) {
+    return(NULL)
+  }
+
   if (!requireNamespace("Rcpp", quietly = TRUE)) {
     assign(".flatten_cpp", NULL, envir = .brregEnv)
     return(NULL)
   }
 
-  cpp_src <- '
+  cli::cli_alert_info("Compiling C++ flatten (one-time, ~10s)...")
+
+  fn <- tryCatch({
+    Rcpp::cppFunction(flatten_cpp_source(), plugins = "cpp11", rebuild = FALSE)
+  }, error = function(e) {
+    cli::cli_alert_warning("C++ compilation failed: {e$message}. Using R fallback.")
+    NULL
+  })
+
+  assign(".flatten_cpp", fn, envir = .brregEnv)
+
+  if (!is.null(fn)) cli::cli_alert_success("C++ flatten ready.")
+  fn
+}
+
+
+#' C++ source for flatten_patches_cpp
+#' @keywords internal
+flatten_cpp_source <- function() {
+'
 #include <Rcpp.h>
 using namespace Rcpp;
 
-// Replace "/" with "_" in a std::string
 std::string slash_to_under(const std::string& s) {
   std::string out = s;
-  for (auto& c : out) if (c == \'/\') c = \'_\';
+  for (size_t i = 0; i < out.size(); i++) if (out[i] == \'/\') out[i] = \'_\';
   return out;
 }
 
-// Remove leading "/" from path
-std::string strip_leading_slash(const std::string& s) {
-  if (!s.empty() && s[0] == \'/\') return s.substr(1);
-  return s;
-}
-
-// Get a string from a list element, or NA
-String safe_string(List x, const char* key) {
-  if (!x.containsElementNamed(key)) return NA_STRING;
-  SEXP val = x[key];
-  if (Rf_isNull(val)) return NA_STRING;
-  if (TYPEOF(val) == STRSXP && Rf_length(val) > 0) return as<String>(val);
-  if (TYPEOF(val) == INTSXP && Rf_length(val) > 0) return String(std::to_string(as<int>(val)));
-  if (TYPEOF(val) == REALSXP && Rf_length(val) > 0) return String(std::to_string((int)as<double>(val)));
-  return NA_STRING;
-}
-
-int safe_int(List x, const char* key) {
-  if (!x.containsElementNamed(key)) return NA_INTEGER;
-  SEXP val = x[key];
-  if (Rf_isNull(val)) return NA_INTEGER;
-  if (TYPEOF(val) == INTSXP) return as<int>(val);
-  if (TYPEOF(val) == REALSXP) return (int)as<double>(val);
-  return NA_INTEGER;
-}
-
-// Convert any SEXP scalar to string
 String sexp_to_string(SEXP val) {
   if (Rf_isNull(val)) return NA_STRING;
   if (TYPEOF(val) == STRSXP && Rf_length(val) > 0) return String(CHAR(STRING_ELT(val, 0)));
@@ -64,7 +60,6 @@ String sexp_to_string(SEXP val) {
   if (TYPEOF(val) == REALSXP && Rf_length(val) > 0) {
     double v = REAL(val)[0];
     if (ISNA(v)) return NA_STRING;
-    // Avoid trailing zeros for integers stored as double
     if (v == (int)v) return String(std::to_string((int)v));
     return String(std::to_string(v));
   }
@@ -81,161 +76,158 @@ DataFrame flatten_patches_cpp(List raw_updates) {
   int n = raw_updates.size();
   int est = n * 8;
 
-  IntegerVector r_uid(est);
-  CharacterVector r_org(est);
-  CharacterVector r_ctype(est);
-  CharacterVector r_ts(est);
-  CharacterVector r_op(est);
-  CharacterVector r_field(est);
-  CharacterVector r_val(est);
-  int k = 0;
-
-  auto maybe_grow = [&]() {
-    if (k >= r_uid.size()) {
-      int new_size = r_uid.size() * 2;
-      IntegerVector new_uid(new_size); CharacterVector new_org(new_size);
-      CharacterVector new_ctype(new_size); CharacterVector new_ts(new_size);
-      CharacterVector new_op(new_size); CharacterVector new_field(new_size);
-      CharacterVector new_val(new_size);
-      for (int i = 0; i < k; i++) {
-        new_uid[i] = r_uid[i]; new_org[i] = r_org[i];
-        new_ctype[i] = r_ctype[i]; new_ts[i] = r_ts[i];
-        new_op[i] = r_op[i]; new_field[i] = r_field[i];
-        new_val[i] = r_val[i];
-      }
-      r_uid = new_uid; r_org = new_org; r_ctype = new_ctype;
-      r_ts = new_ts; r_op = new_op; r_field = new_field; r_val = new_val;
-    }
-  };
-
-  auto emit = [&](int uid, String org, String ctype, String ts,
-                   String op, const std::string& field, String val) {
-    maybe_grow();
-    r_uid[k] = uid; r_org[k] = org; r_ctype[k] = ctype;
-    r_ts[k] = ts; r_op[k] = op;
-    r_field[k] = field; r_val[k] = val;
-    k++;
-  };
+  std::vector<int> v_uid;          v_uid.reserve(est);
+  std::vector<String> v_org;       v_org.reserve(est);
+  std::vector<String> v_ctype;     v_ctype.reserve(est);
+  std::vector<String> v_ts;        v_ts.reserve(est);
+  std::vector<String> v_op;        v_op.reserve(est);
+  std::vector<std::string> v_field; v_field.reserve(est);
+  std::vector<String> v_val;       v_val.reserve(est);
 
   for (int i = 0; i < n; i++) {
-    List u = raw_updates[i];
-    int uid = safe_int(u, "oppdateringsid");
-    String org = safe_string(u, "organisasjonsnummer");
-    String ctype = safe_string(u, "endringstype");
-    String ts = safe_string(u, "dato");
+    List u = as<List>(raw_updates[i]);
+
+    int uid = NA_INTEGER;
+    if (u.containsElementNamed("oppdateringsid")) {
+      SEXP s = u["oppdateringsid"];
+      if (TYPEOF(s) == INTSXP) uid = as<int>(s);
+      else if (TYPEOF(s) == REALSXP) uid = (int)as<double>(s);
+    }
+
+    String org = NA_STRING;
+    if (u.containsElementNamed("organisasjonsnummer")) {
+      SEXP s = u["organisasjonsnummer"];
+      if (!Rf_isNull(s) && TYPEOF(s) == STRSXP) org = String(CHAR(STRING_ELT(s, 0)));
+    }
+
+    String ctype = NA_STRING;
+    if (u.containsElementNamed("endringstype")) {
+      SEXP s = u["endringstype"];
+      if (!Rf_isNull(s) && TYPEOF(s) == STRSXP) ctype = String(CHAR(STRING_ELT(s, 0)));
+    }
+
+    String ts = NA_STRING;
+    if (u.containsElementNamed("dato")) {
+      SEXP s = u["dato"];
+      if (!Rf_isNull(s) && TYPEOF(s) == STRSXP) ts = String(CHAR(STRING_ELT(s, 0)));
+    }
 
     if (!u.containsElementNamed("endringer")) continue;
-    SEXP endringer_sexp = u["endringer"];
-    if (Rf_isNull(endringer_sexp) || TYPEOF(endringer_sexp) != VECSXP) continue;
-    List endringer(endringer_sexp);
+    SEXP end_sexp = u["endringer"];
+    if (Rf_isNull(end_sexp) || TYPEOF(end_sexp) != VECSXP) continue;
+    List endringer(end_sexp);
     if (endringer.size() == 0) continue;
 
     for (int ei = 0; ei < endringer.size(); ei++) {
-      List e = endringer[ei];
-      String op_str = safe_string(e, "op");
+      List e = as<List>(endringer[ei]);
+
+      String op_str = NA_STRING;
+      std::string op_s = "";
+      if (e.containsElementNamed("op")) {
+        SEXP s = e["op"];
+        if (!Rf_isNull(s) && TYPEOF(s) == STRSXP) {
+          op_s = CHAR(STRING_ELT(s, 0));
+          op_str = String(op_s);
+        }
+      }
+
       std::string path = "";
       if (e.containsElementNamed("path")) {
-        SEXP ps = e["path"];
-        if (!Rf_isNull(ps) && TYPEOF(ps) == STRSXP)
-          path = as<std::string>(ps);
-      }
-      path = strip_leading_slash(path);
-
-      bool is_remove = false;
-      if (op_str != NA_STRING) {
-        std::string op_s = as<std::string>(op_str);
-        is_remove = (op_s == "remove");
+        SEXP s = e["path"];
+        if (!Rf_isNull(s) && TYPEOF(s) == STRSXP) {
+          path = CHAR(STRING_ELT(s, 0));
+          if (!path.empty() && path[0] == \'/\') path = path.substr(1);
+        }
       }
 
-      if (is_remove || !e.containsElementNamed("value") || Rf_isNull(e["value"])) {
-        emit(uid, org, ctype, ts, op_str, slash_to_under(path), NA_STRING);
+      bool is_remove = (op_s == "remove");
+      bool no_value = !e.containsElementNamed("value") || Rf_isNull(e["value"]);
+
+      if (is_remove || no_value) {
+        v_uid.push_back(uid); v_org.push_back(org); v_ctype.push_back(ctype);
+        v_ts.push_back(ts); v_op.push_back(op_str);
+        v_field.push_back(slash_to_under(path)); v_val.push_back(NA_STRING);
         continue;
       }
 
       SEXP val = e["value"];
 
-      // Scalar
       if (Rf_isNull(val)) {
-        emit(uid, org, ctype, ts, op_str, slash_to_under(path), NA_STRING);
+        v_uid.push_back(uid); v_org.push_back(org); v_ctype.push_back(ctype);
+        v_ts.push_back(ts); v_op.push_back(op_str);
+        v_field.push_back(slash_to_under(path)); v_val.push_back(NA_STRING);
         continue;
       }
 
       if (TYPEOF(val) != VECSXP) {
-        emit(uid, org, ctype, ts, op_str, slash_to_under(path), sexp_to_string(val));
+        v_uid.push_back(uid); v_org.push_back(org); v_ctype.push_back(ctype);
+        v_ts.push_back(ts); v_op.push_back(op_str);
+        v_field.push_back(slash_to_under(path)); v_val.push_back(sexp_to_string(val));
         continue;
       }
 
       List val_list(val);
+      SEXP names_sexp = Rf_getAttrib(val, R_NamesSymbol);
+      bool has_names = !Rf_isNull(names_sexp);
 
-      // Named list (object) — depth 1
-      if (!Rf_isNull(val_list.names())) {
-        CharacterVector keys = val_list.names();
+      if (has_names) {
+        CharacterVector keys(names_sexp);
         for (int ki = 0; ki < keys.size(); ki++) {
-          std::string child_path = path + "_" + as<std::string>(keys[ki]);
+          std::string cpath = path + "_" + as<std::string>(keys[ki]);
           SEXP child = val_list[ki];
 
           if (Rf_isNull(child)) {
-            emit(uid, org, ctype, ts, op_str, slash_to_under(child_path), NA_STRING);
+            v_uid.push_back(uid); v_org.push_back(org); v_ctype.push_back(ctype);
+            v_ts.push_back(ts); v_op.push_back(op_str);
+            v_field.push_back(slash_to_under(cpath)); v_val.push_back(NA_STRING);
             continue;
           }
 
-          // Child is unnamed list (array) — depth 2
           if (TYPEOF(child) == VECSXP && Rf_isNull(Rf_getAttrib(child, R_NamesSymbol))) {
             List arr(child);
             for (int ai = 0; ai < arr.size(); ai++) {
-              std::string arr_path = child_path + "_" + std::to_string(ai);
-              SEXP arr_val = arr[ai];
-              emit(uid, org, ctype, ts, op_str, slash_to_under(arr_path),
-                   Rf_isNull(arr_val) ? NA_STRING : sexp_to_string(arr_val));
+              std::string apath = cpath + "_" + std::to_string(ai);
+              SEXP av = arr[ai];
+              v_uid.push_back(uid); v_org.push_back(org); v_ctype.push_back(ctype);
+              v_ts.push_back(ts); v_op.push_back(op_str);
+              v_field.push_back(slash_to_under(apath));
+              v_val.push_back(Rf_isNull(av) ? NA_STRING : sexp_to_string(av));
             }
-          } else if (TYPEOF(child) == VECSXP) {
-            // Named child at depth 2 — serialize as string (shouldn't happen with brreg)
-            emit(uid, org, ctype, ts, op_str, slash_to_under(child_path), NA_STRING);
           } else {
-            emit(uid, org, ctype, ts, op_str, slash_to_under(child_path), sexp_to_string(child));
+            v_uid.push_back(uid); v_org.push_back(org); v_ctype.push_back(ctype);
+            v_ts.push_back(ts); v_op.push_back(op_str);
+            v_field.push_back(slash_to_under(cpath)); v_val.push_back(sexp_to_string(child));
           }
         }
         continue;
       }
 
-      // Unnamed list (array) — depth 1
       for (int ai = 0; ai < val_list.size(); ai++) {
-        std::string arr_path = path + "_" + std::to_string(ai);
-        SEXP arr_val = val_list[ai];
-        emit(uid, org, ctype, ts, op_str, slash_to_under(arr_path),
-             Rf_isNull(arr_val) ? NA_STRING : sexp_to_string(arr_val));
+        std::string apath = path + "_" + std::to_string(ai);
+        SEXP av = val_list[ai];
+        v_uid.push_back(uid); v_org.push_back(org); v_ctype.push_back(ctype);
+        v_ts.push_back(ts); v_op.push_back(op_str);
+        v_field.push_back(slash_to_under(apath));
+        v_val.push_back(Rf_isNull(av) ? NA_STRING : sexp_to_string(av));
       }
     }
   }
 
-  // Trim to actual size
-  IntegerVector f_uid(k); CharacterVector f_org(k); CharacterVector f_ctype(k);
-  CharacterVector f_ts(k); CharacterVector f_op(k);
-  CharacterVector f_field(k); CharacterVector f_val(k);
+  int k = v_uid.size();
+  IntegerVector f_uid(k);
+  CharacterVector f_org(k), f_ctype(k), f_ts(k), f_op(k), f_field(k), f_val(k);
   for (int i = 0; i < k; i++) {
-    f_uid[i] = r_uid[i]; f_org[i] = r_org[i]; f_ctype[i] = r_ctype[i];
-    f_ts[i] = r_ts[i]; f_op[i] = r_op[i]; f_field[i] = r_field[i]; f_val[i] = r_val[i];
+    f_uid[i] = v_uid[i]; f_org[i] = v_org[i]; f_ctype[i] = v_ctype[i];
+    f_ts[i] = v_ts[i]; f_op[i] = v_op[i]; f_field[i] = String(v_field[i]);
+    f_val[i] = v_val[i];
   }
 
   return DataFrame::create(
-    Named("update_id") = f_uid,
-    Named("org_nr") = f_org,
-    Named("change_type") = f_ctype,
-    Named("timestamp") = f_ts,
-    Named("operation") = f_op,
-    Named("field") = f_field,
-    Named("new_value") = f_val,
-    Named("stringsAsFactors") = false
+    Named("update_id") = f_uid, Named("org_nr") = f_org,
+    Named("change_type") = f_ctype, Named("timestamp") = f_ts,
+    Named("operation") = f_op, Named("field") = f_field,
+    Named("new_value") = f_val, Named("stringsAsFactors") = false
   );
 }
 '
-
-  fn <- tryCatch({
-    Rcpp::cppFunction(cpp_src, rebuild = FALSE)
-  }, error = function(e) {
-    NULL
-  })
-
-  assign(".flatten_cpp", fn, envir = .brregEnv)
-  fn
 }
