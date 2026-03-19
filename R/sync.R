@@ -509,10 +509,14 @@ find_state_column <- function(cdc_field, state_cols) {
     "forretningsadresse_adresse_1"          = "business_address",
 
     # Location address (underenheter)
-    "beliggenhetsadresse_kommunenummer"     = "municipality_code",
-    "beliggenhetsadresse_kommune"           = "municipality",
-    "beliggenhetsadresse_postnummer"        = "business_postcode",
-    "beliggenhetsadresse_poststed"          = "business_city",
+    "beliggenhetsadresse_kommunenummer"     = "location_municipality_code",
+    "beliggenhetsadresse_kommune"           = "location_municipality",
+    "beliggenhetsadresse_postnummer"        = "location_postcode",
+    "beliggenhetsadresse_poststed"          = "location_city",
+    "beliggenhetsadresse_landkode"          = "location_country_code",
+    "beliggenhetsadresse_land"              = "location_country",
+    "beliggenhetsadresse_adresse_0"         = "location_address",
+    "beliggenhetsadresse_adresse_1"         = "location_address",
 
     # Postal address
     "postadresse_adresse_0"                 = "postal_address",
@@ -521,6 +525,8 @@ find_state_column <- function(cdc_field, state_cols) {
     "postadresse_poststed"                  = "postal_city",
     "postadresse_kommunenummer"             = "postal_municipality_code",
     "postadresse_kommune"                   = "postal_municipality",
+    "postadresse_landkode"                  = "postal_country_code",
+    "postadresse_land"                      = "postal_country",
 
     # Legal form / sector (both parent-level and _kode sub-path)
     "organisasjonsform"                     = "legal_form",

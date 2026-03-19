@@ -59,10 +59,17 @@ label_df <- function(x, code = NULL, lang = "en") {
             "website", "business_address", "business_postcode", "business_city",
             "municipality_code", "municipality", "country_code", "country",
             "postal_address", "postal_postcode", "postal_city",
+            "postal_municipality_code", "postal_municipality",
+            "postal_country_code", "postal_country",
+            "location_address", "location_postcode", "location_city",
+            "location_municipality_code", "location_municipality",
+            "location_country_code", "location_country",
+            "foreign_reg_address", "foreign_reg_country", "foreign_reg_city",
             "bankrupt", "bankruptcy_date", "in_liquidation", "liquidation_date",
             "forced_dissolution", "vat_registered", "in_business_register",
             "in_nonprofit_register", "parent_org_nr", "in_corporate_group",
             "purpose", "timestamp", "update_id", "change_type",
+            "deletion_date", "ownership_change_date",
             "first_name", "middle_name", "last_name", "birth_date",
             "deceased", "entity_org_nr", "entity_name", "resigned", "person_id")
   labelable <- setdiff(labelable, skip)
