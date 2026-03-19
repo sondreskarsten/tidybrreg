@@ -101,9 +101,9 @@ Other tidybrreg panel functions:
 # \donttest{
 entities <- brreg_download()
 #> ℹ Downloading full enheter register (~152 MB)
-#> ✔ Downloading full enheter register (~152 MB) [3m 33.1s]
+#> ✔ Downloading full enheter register (~152 MB) [3m 13.5s]
 #> 
-#> ✔ Downloaded 145.4 MB to cache.
+#> ✔ Downloaded 145.5 MB to cache.
 flows <- brreg_flows(entities)
 
 # With CDC exits
