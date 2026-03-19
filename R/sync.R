@@ -202,6 +202,39 @@ sync_one_type <- function(type, cursor, size = 10000L, verbose = TRUE) {
 }
 
 
+#' Parse a page of raw CDC objects for the sync path (stores raw endringer)
+#' @keywords internal
+parse_sync_page <- function(raw_updates) {
+  n <- length(raw_updates)
+  ids <- integer(n)
+  orgs <- character(n)
+  types <- character(n)
+  timestamps <- character(n)
+  raw_changes <- vector("list", n)
+
+  for (i in seq_len(n)) {
+    u <- raw_updates[[i]]
+    ids[i] <- u$oppdateringsid %||% NA_integer_
+    orgs[i] <- u$organisasjonsnummer %||% NA_character_
+    types[i] <- u$endringstype %||% NA_character_
+    timestamps[i] <- u$dato %||% NA_character_
+    raw_changes[[i]] <- if (!is.null(u$endringer) && length(u$endringer) > 0) {
+      u$endringer
+    } else {
+      NULL
+    }
+  }
+
+  tibble::tibble(
+    update_id   = ids,
+    org_nr      = orgs,
+    change_type = types,
+    timestamp   = timestamps,
+    endringer   = raw_changes
+  )
+}
+
+
 #' Paginate through CDC events from cursor position
 #' @keywords internal
 paginate_cdc <- function(type, from_id, size = 10000L, verbose = TRUE) {
@@ -249,20 +282,7 @@ paginate_cdc <- function(type, from_id, size = 10000L, verbose = TRUE) {
       raw_updates <- body[["_embedded"]][[key]]
       if (is.null(raw_updates) || length(raw_updates) == 0) break
 
-      updates <- dplyr::bind_rows(lapply(raw_updates, function(u) {
-        base <- tibble::tibble(
-          update_id   = u$oppdateringsid,
-          org_nr      = u$organisasjonsnummer,
-          change_type = u$endringstype,
-          timestamp   = u$dato
-        )
-        if (!is.null(u$endringer) && length(u$endringer) > 0) {
-          base$endringer <- list(u$endringer)
-        } else {
-          base$endringer <- list(NULL)
-        }
-        base
-      }))
+      updates <- parse_sync_page(raw_updates)
     }
 
     if (is.null(updates) || nrow(updates) == 0) break
@@ -321,7 +341,40 @@ apply_ny_events <- function(state, ny_events, type) {
 #' Apply Endring (change) events to state
 #' @keywords internal
 apply_endring_events <- function(state, paat_state, endring_events, type) {
-  changelog <- list()
+  cl_ts <- character(nrow(endring_events) * 10L)
+  cl_org <- character(length(cl_ts))
+  cl_reg <- character(length(cl_ts))
+  cl_ct <- character(length(cl_ts))
+  cl_field <- character(length(cl_ts))
+  cl_from <- character(length(cl_ts))
+  cl_to <- character(length(cl_ts))
+  cl_uid <- integer(length(cl_ts))
+  cl_k <- 0L
+
+  grow_cl <- function() {
+    n <- length(cl_ts)
+    cl_ts <<- c(cl_ts, character(n))
+    cl_org <<- c(cl_org, character(n))
+    cl_reg <<- c(cl_reg, character(n))
+    cl_ct <<- c(cl_ct, character(n))
+    cl_field <<- c(cl_field, character(n))
+    cl_from <<- c(cl_from, character(n))
+    cl_to <<- c(cl_to, character(n))
+    cl_uid <<- c(cl_uid, integer(n))
+  }
+
+  emit_cl <- function(ts, org, reg, ct, fld, vfrom, vto, uid) {
+    cl_k <<- cl_k + 1L
+    if (cl_k > length(cl_ts)) grow_cl()
+    cl_ts[cl_k] <<- ts
+    cl_org[cl_k] <<- org
+    cl_reg[cl_k] <<- reg
+    cl_ct[cl_k] <<- ct
+    cl_field[cl_k] <<- fld
+    cl_from[cl_k] <<- vfrom
+    cl_to[cl_k] <<- vto
+    cl_uid[cl_k] <<- uid
+  }
 
   for (i in seq_len(nrow(endring_events))) {
     row <- endring_events[i, ]
@@ -339,7 +392,13 @@ apply_endring_events <- function(state, paat_state, endring_events, type) {
                                           paat_patches, row$timestamp,
                                           row$update_id)
       paat_state <- result$state
-      changelog <- c(changelog, list(result$changelog))
+      if (nrow(result$changelog) > 0) {
+        for (j in seq_len(nrow(result$changelog))) {
+          r <- result$changelog[j, ]
+          emit_cl(r$timestamp, r$org_nr, r$registry, r$change_type,
+                  r$field, r$value_from, r$value_to, r$update_id)
+        }
+      }
     }
 
     if (nrow(field_patches) == 0) next
@@ -350,23 +409,16 @@ apply_endring_events <- function(state, paat_state, endring_events, type) {
 
     for (j in seq_len(nrow(field_patches))) {
       p <- field_patches[j, ]
-      if (p$operation == "remove") {
-        col <- find_state_column(p$field, names(state))
-        if (!is.null(col)) {
-          old_val <- as.character(state[[col]][idx])
-          state[[col]][idx] <- NA
-          changelog <- c(changelog, list(tibble::tibble(
-            timestamp = row$timestamp, org_nr = row$org_nr,
-            registry = type, change_type = "change",
-            field = col, value_from = old_val,
-            value_to = NA_character_, update_id = row$update_id
-          )))
-        }
-        next
-      }
-
       col <- find_state_column(p$field, names(state))
       if (is.null(col)) next
+
+      if (p$operation == "remove") {
+        old_val <- as.character(state[[col]][idx])
+        state[[col]][idx] <- NA
+        emit_cl(row$timestamp, row$org_nr, type, "change",
+                col, old_val, NA_character_, row$update_id)
+        next
+      }
 
       old_val <- as.character(state[[col]][idx])
       new_val <- p$new_value
@@ -381,19 +433,33 @@ apply_endring_events <- function(state, paat_state, endring_events, type) {
         } else {
           state[[col]][idx] <- new_val
         }
-
-        changelog <- c(changelog, list(tibble::tibble(
-          timestamp = row$timestamp, org_nr = row$org_nr,
-          registry = type, change_type = "change",
-          field = col, value_from = old_val,
-          value_to = new_val, update_id = row$update_id
-        )))
+        emit_cl(row$timestamp, row$org_nr, type, "change",
+                col, old_val, new_val, row$update_id)
       }
     }
   }
 
-  list(state = state, paat_state = paat_state,
-       changelog = dplyr::bind_rows(changelog))
+  changelog <- if (cl_k > 0L) {
+    tibble::tibble(
+      timestamp   = cl_ts[seq_len(cl_k)],
+      org_nr      = cl_org[seq_len(cl_k)],
+      registry    = cl_reg[seq_len(cl_k)],
+      change_type = cl_ct[seq_len(cl_k)],
+      field       = cl_field[seq_len(cl_k)],
+      value_from  = cl_from[seq_len(cl_k)],
+      value_to    = cl_to[seq_len(cl_k)],
+      update_id   = cl_uid[seq_len(cl_k)]
+    )
+  } else {
+    tibble::tibble(
+      timestamp = character(), org_nr = character(),
+      registry = character(), change_type = character(),
+      field = character(), value_from = character(),
+      value_to = character(), update_id = integer()
+    )
+  }
+
+  list(state = state, paat_state = paat_state, changelog = changelog)
 }
 
 
