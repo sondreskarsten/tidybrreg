@@ -216,28 +216,15 @@ count_events_fast <- function(raw_bytes) {
 
 #' Flatten all patches from a page of CDC events in a single pass
 #'
-#' Dispatches to a JIT-compiled C++ implementation when Rcpp is
-#' installed (~20x faster), falling back to pure R. The C++ function
-#' is compiled once per session on first use.
+#' No recursion. The brreg CDC nesting depth is bounded at 2 levels:
+#' object -> scalar, or object -> array -> scalar. Inlines the unpack
+#' for both levels.
 #'
 #' @param raw_updates List of raw update objects from the API.
 #' @returns A flat tibble with update_id, org_nr, change_type,
 #'   timestamp, operation, field, new_value.
 #' @keywords internal
 flatten_page_patches <- function(raw_updates) {
-  cpp_fn <- get_flatten_cpp()
-  if (!is.null(cpp_fn)) {
-    result <- cpp_fn(raw_updates)
-    result$timestamp <- as.POSIXct(result$timestamp, format = "%Y-%m-%dT%H:%M:%OS")
-    return(tibble::as_tibble(result))
-  }
-  flatten_page_patches_r(raw_updates)
-}
-
-
-#' Pure R fallback for flatten_page_patches
-#' @keywords internal
-flatten_page_patches_r <- function(raw_updates) {
   n_est <- length(raw_updates) * 8L
   r_uid   <- integer(n_est)
   r_org   <- character(n_est)
