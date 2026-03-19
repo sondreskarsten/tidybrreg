@@ -44,6 +44,17 @@ field_dict <- tribble(
   "postadresse.kommunenummer",                       "postal_municipality_code",  "character",
   "postadresse.kommune",                             "postal_municipality",       "character",
   "postadresse.landkode",                            "postal_country_code",       "character",
+  "postadresse.land",                                "postal_country",            "character",
+  "beliggenhetsadresse.adresse",                     "location_address",          "character",
+  "beliggenhetsadresse.postnummer",                  "location_postcode",         "character",
+  "beliggenhetsadresse.poststed",                    "location_city",             "character",
+  "beliggenhetsadresse.kommunenummer",               "location_municipality_code","character",
+  "beliggenhetsadresse.kommune",                     "location_municipality",     "character",
+  "beliggenhetsadresse.landkode",                    "location_country_code",     "character",
+  "beliggenhetsadresse.land",                        "location_country",          "character",
+  "utenlandskRegisterAdresse.adresse",               "foreign_reg_address",       "character",
+  "utenlandskRegisterAdresse.land",                  "foreign_reg_country",       "character",
+  "utenlandskRegisterAdresse.poststed",              "foreign_reg_city",          "character",
   "konkurs",                                         "bankrupt",                  "logical",
   "konkursdato",                                     "bankruptcy_date",           "Date",
   "underAvvikling",                                  "in_liquidation",            "logical",
@@ -62,7 +73,9 @@ field_dict <- tribble(
   "vedtektsdato",                                    "articles_date",             "Date",
   "sisteInnsendteAarsregnskap",                      "last_annual_accounts",      "integer",
   "maalform",                                        "language_form",             "character",
-  "aktivitet",                                       "activity",                  "character"
+  "aktivitet",                                       "activity",                  "character",
+  "slettedato",                                      "deletion_date",             "Date",
+  "datoEierskifte",                                  "ownership_change_date",     "Date"
 )
 
 
@@ -184,14 +197,14 @@ usethis_available <- requireNamespace("usethis", quietly = TRUE)
 
 save(field_dict, legal_forms, role_types, role_groups,
      nace_codes, sector_codes,
-     file = "/home/claude/brreg/R/sysdata.rda", compress = "xz")
+     file = "R/sysdata.rda", compress = "xz")
 cat("Saved sysdata.rda:",
-    round(file.size("/home/claude/brreg/R/sysdata.rda") / 1024, 1), "KB\n")
+    round(file.size("R/sysdata.rda") / 1024, 1), "KB\n")
 
-save(legal_forms, file = "/home/claude/brreg/data/legal_forms.rda", compress = "xz")
-save(role_types, file = "/home/claude/brreg/data/role_types.rda", compress = "xz")
-save(role_groups, file = "/home/claude/brreg/data/role_groups.rda", compress = "xz")
-save(field_dict, file = "/home/claude/brreg/data/field_dict.rda", compress = "xz")
+save(legal_forms, file = "data/legal_forms.rda", compress = "xz")
+save(role_types, file = "data/role_types.rda", compress = "xz")
+save(role_groups, file = "data/role_groups.rda", compress = "xz")
+save(field_dict, file = "data/field_dict.rda", compress = "xz")
 
 cat("\nExported datasets:\n")
 cat("  legal_forms:", nrow(legal_forms), "x", ncol(legal_forms), "\n")
