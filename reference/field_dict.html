@@ -13,7 +13,7 @@ rather than being silently dropped."><meta property="og:image" content="https://
 
     <a class="navbar-brand me-2" href="../index.html">tidybrreg</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -88,144 +88,40 @@ rather than being silently dropped.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">field_dict</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                      api_path                   col_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                         organisasjonsnummer                     org_nr</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                        navn                       name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                      organisasjonsform.kode                 legal_form</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4               organisasjonsform.beskrivelse            legal_form_desc</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                              stiftelsesdato              founding_date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6           registreringsdatoEnhetsregisteret          registration_date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                               antallAnsatte                  employees</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                  harRegistrertAntallAnsatte         employees_reported</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                  hjemmeside                    website</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                         naeringskode1.kode                     nace_1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                  naeringskode1.beskrivelse                nace_1_desc</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                         naeringskode2.kode                     nace_2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                  naeringskode2.beskrivelse                nace_2_desc</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14                         naeringskode3.kode                     nace_3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                  naeringskode3.beskrivelse                nace_3_desc</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16              institusjonellSektorkode.kode                sector_code</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17       institusjonellSektorkode.beskrivelse                sector_desc</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18                 forretningsadresse.adresse           business_address</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19              forretningsadresse.postnummer          business_postcode</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20                forretningsadresse.poststed              business_city</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21           forretningsadresse.kommunenummer          municipality_code</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22                 forretningsadresse.kommune               municipality</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23                forretningsadresse.landkode               country_code</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24                    forretningsadresse.land                    country</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25                        postadresse.adresse             postal_address</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26                     postadresse.postnummer            postal_postcode</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27                       postadresse.poststed                postal_city</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28                  postadresse.kommunenummer   postal_municipality_code</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29                        postadresse.kommune        postal_municipality</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30                       postadresse.landkode        postal_country_code</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31                           postadresse.land             postal_country</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32                beliggenhetsadresse.adresse           location_address</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33             beliggenhetsadresse.postnummer          location_postcode</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34               beliggenhetsadresse.poststed              location_city</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35          beliggenhetsadresse.kommunenummer location_municipality_code</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36                beliggenhetsadresse.kommune      location_municipality</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37               beliggenhetsadresse.landkode      location_country_code</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38                   beliggenhetsadresse.land           location_country</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 39          utenlandskRegisterAdresse.adresse        foreign_reg_address</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 40             utenlandskRegisterAdresse.land        foreign_reg_country</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41         utenlandskRegisterAdresse.poststed           foreign_reg_city</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 42                                    konkurs                   bankrupt</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 43                                konkursdato            bankruptcy_date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 44                             underAvvikling             in_liquidation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 45                         underAvviklingDato           liquidation_date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 46  underTvangsavviklingEllerTvangsopplosning         forced_dissolution</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 47                   registrertIMvaregisteret             vat_registered</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48 registreringsdatoMerverdiavgiftsregisteret      vat_registration_date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 49              registrertIForetaksregisteret       in_business_register</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 50        registreringsdatoForetaksregisteret     business_register_date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 51         registrertIFrivillighetsregisteret      in_nonprofit_register</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 52   registreringsdatoFrivillighetsregisteret    nonprofit_register_date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 53            registrertIStiftelsesregisteret     in_foundation_register</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 54                            overordnetEnhet              parent_org_nr</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 55                                 erIKonsern         in_corporate_group</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 56                      vedtektsfestetFormaal                    purpose</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 57                               vedtektsdato              articles_date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 58                 sisteInnsendteAarsregnskap       last_annual_accounts</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 59                                   maalform              language_form</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 60                                  aktivitet                   activity</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 61                                 slettedato              deletion_date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 62                             datoEierskifte      ownership_change_date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5       Date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6       Date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7    integer</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8    logical</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9  character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 19 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 20 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 21 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 22 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 23 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 24 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 25 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 26 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 27 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 28 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 29 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 30 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 31 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 32 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 33 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 34 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 35 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 36 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 37 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 38 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 39 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 40 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 41 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 42   logical</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 43      Date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 44   logical</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 45      Date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 46   logical</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 47   logical</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48      Date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 49   logical</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 50      Date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 51   logical</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 52      Date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 53   logical</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 54 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 55   logical</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 56 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 57      Date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 58   integer</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 59 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 60 character</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 61      Date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 62      Date</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 70 × 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    api_path                          col_name           type     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> organisasjonsnummer               org_nr             character</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> navn                              name               character</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> organisasjonsform.kode            legal_form         character</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> organisasjonsform.beskrivelse     legal_form_desc    character</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> stiftelsesdato                    founding_date      Date     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> registreringsdatoEnhetsregisteret registration_date  Date     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> antallAnsatte                     employees          integer  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> harRegistrertAntallAnsatte        employees_reported logical  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> hjemmeside                        website            character</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> naeringskode1.kode                nace_1             character</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 60 more rows</span></span>
 <span class="r-in"><span><span class="va">field_dict</span><span class="op">[</span><span class="va">field_dict</span><span class="op">$</span><span class="va">type</span> <span class="op">==</span> <span class="st">"Date"</span>, <span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                      api_path                col_name type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                              stiftelsesdato           founding_date Date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6           registreringsdatoEnhetsregisteret       registration_date Date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 43                                konkursdato         bankruptcy_date Date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 45                         underAvviklingDato        liquidation_date Date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 48 registreringsdatoMerverdiavgiftsregisteret   vat_registration_date Date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 50        registreringsdatoForetaksregisteret  business_register_date Date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 52   registreringsdatoFrivillighetsregisteret nonprofit_register_date Date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 57                               vedtektsdato           articles_date Date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 61                                 slettedato           deletion_date Date</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 62                             datoEierskifte   ownership_change_date Date</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 16 × 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    api_path                                                   col_name     type </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> stiftelsesdato                                             founding_da… Date </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> registreringsdatoEnhetsregisteret                          registratio… Date </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> konkursdato                                                bankruptcy_… Date </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> underAvviklingDato                                         liquidation… Date </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> registreringsdatoMerverdiavgiftsregisteret                 vat_registr… Date </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> registreringsdatoForetaksregisteret                        business_re… Date </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> registreringsdatoFrivillighetsregisteret                   nonprofit_r… Date </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> vedtektsdato                                               articles_da… Date </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> slettedato                                                 deletion_da… Date </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> datoEierskifte                                             ownership_c… Date </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> fravalgRevisjonDato                                        audit_exemp… Date </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span> fravalgRevisjonBeslutningsDato                             audit_exemp… Date </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span> registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret vat_registr… Date </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">14</span> registreringsdatoAntallAnsatteEnhetsregisteret             employee_re… Date </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">15</span> registreringsdatoAntallAnsatteNavAaregisteret              employee_re… Date </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">16</span> oppstartsdato                                              start_date   Date </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

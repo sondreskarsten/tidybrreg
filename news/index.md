@@ -1,5 +1,54 @@
 # Changelog
 
+## tidybrreg 0.3.3
+
+### Bug fixes
+
+- `brreg_update_fields()` no longer silently drops Ny, Sletting, and
+  Fjernet CDC events. Events with no `endringer` array now emit a
+  synthetic row with `operation = NA`, `field = NA`, `new_value = NA`,
+  preserving event metadata for downstream filtering and counting.
+  Previously, filtering `brreg_update_fields()` output for
+  `change_type == "Ny"` returned zero rows.
+- `flatten_page_patches()` and
+  [`parse_patch()`](https://sondreskarsten.github.io/tidybrreg/reference/parse_patch.md)
+  now handle RFC 6902 `move` operations correctly: the value is written
+  to the destination path and a synthetic `remove` row is emitted for
+  the source path (from `$from`). `copy` operations already worked but
+  now follow the same explicit dispatch path.
+- Stale roxygen docstring for `brreg_update_fields()` removed references
+  to RcppSimdJson and parallel processing (both removed in 0.3.2).
+  Documentation now accurately describes the sequential
+  fetch-and-flatten loop and the synthetic row behaviour for Ny/
+  Sletting/Fjernet events.
+
+### Field dictionary
+
+- `field_dict` grows from 62 to 70 rows. New entries:
+  - `fravalgRevisjonDato` → `audit_exemption_date` (Date)
+  - `fravalgRevisjonBeslutningsDato` → `audit_exemption_decision_date`
+    (Date)
+  - `registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret` →
+    `vat_registration_date_er` (Date)
+  - `registreringsdatoAntallAnsatteEnhetsregisteret` →
+    `employee_reg_date_er` (Date)
+  - `registreringsdatoAntallAnsatteNavAaregisteret` →
+    `employee_reg_date_nav` (Date)
+  - `oppstartsdato` → `start_date` (Date) — underenhet operations start
+    date
+  - `registrertIPartiregisteret` → `in_party_register` (logical)
+  - `respons_klasse` → `response_class` (character) — API response
+    metadata class
+
+### Sync engine
+
+- `find_state_column()` gains mappings for all 8 new field_dict entries.
+  CDC field changes for audit exemption dates, employee registration
+  dates, VAT registration date in Enhetsregisteret, underenhet start
+  dates, and party register membership are no longer silently skipped
+  during
+  [`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md).
+
 ## tidybrreg 0.3.2
 
 ### Event-sourcing sync engine

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">tidybrreg</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,44 @@
       <small>Source: <a href="https://github.com/sondreskarsten/tidybrreg/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.3" id="tidybrreg-033">tidybrreg 0.3.3<a class="anchor" aria-label="anchor" href="#tidybrreg-033"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-0-3-3">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-3-3"></a></h3>
+<ul><li>
+<code>brreg_update_fields()</code> no longer silently drops Ny, Sletting, and Fjernet CDC events. Events with no <code>endringer</code> array now emit a synthetic row with <code>operation = NA</code>, <code>field = NA</code>, <code>new_value = NA</code>, preserving event metadata for downstream filtering and counting. Previously, filtering <code>brreg_update_fields()</code> output for <code>change_type == "Ny"</code> returned zero rows.</li>
+<li>
+<code>flatten_page_patches()</code> and <code><a href="../reference/parse_patch.html">parse_patch()</a></code> now handle RFC 6902 <code>move</code> operations correctly: the value is written to the destination path and a synthetic <code>remove</code> row is emitted for the source path (from <code>$from</code>). <code>copy</code> operations already worked but now follow the same explicit dispatch path.</li>
+<li>Stale roxygen docstring for <code>brreg_update_fields()</code> removed references to RcppSimdJson and parallel processing (both removed in 0.3.2). Documentation now accurately describes the sequential fetch-and-flatten loop and the synthetic row behaviour for Ny/ Sletting/Fjernet events.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="field-dictionary-0-3-3">Field dictionary<a class="anchor" aria-label="anchor" href="#field-dictionary-0-3-3"></a></h3>
+<ul><li>
+<code>field_dict</code> grows from 62 to 70 rows. New entries:
+<ul><li>
+<code>fravalgRevisjonDato</code> → <code>audit_exemption_date</code> (Date)</li>
+<li>
+<code>fravalgRevisjonBeslutningsDato</code> → <code>audit_exemption_decision_date</code> (Date)</li>
+<li>
+<code>registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret</code> → <code>vat_registration_date_er</code> (Date)</li>
+<li>
+<code>registreringsdatoAntallAnsatteEnhetsregisteret</code> → <code>employee_reg_date_er</code> (Date)</li>
+<li>
+<code>registreringsdatoAntallAnsatteNavAaregisteret</code> → <code>employee_reg_date_nav</code> (Date)</li>
+<li>
+<code>oppstartsdato</code> → <code>start_date</code> (Date) — underenhet operations start date</li>
+<li>
+<code>registrertIPartiregisteret</code> → <code>in_party_register</code> (logical)</li>
+<li>
+<code>respons_klasse</code> → <code>response_class</code> (character) — API response metadata class</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
+<h3 id="sync-engine-0-3-3">Sync engine<a class="anchor" aria-label="anchor" href="#sync-engine-0-3-3"></a></h3>
+<ul><li>
+<code>find_state_column()</code> gains mappings for all 8 new field_dict entries. CDC field changes for audit exemption dates, employee registration dates, VAT registration date in Enhetsregisteret, underenhet start dates, and party register membership are no longer silently skipped during <code><a href="../reference/brreg_sync.html">brreg_sync()</a></code>.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.2" id="tidybrreg-032">tidybrreg 0.3.2<a class="anchor" aria-label="anchor" href="#tidybrreg-032"></a></h2>
 <div class="section level3">
