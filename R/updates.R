@@ -80,16 +80,21 @@ brreg_updates <- function(since = Sys.Date() - 1, size = 100,
 
 #' Retrieve field-level CDC changes as a flat tibble
 #'
-#' Returns one row per field-level change. Uses a two-phase approach:
-#' pages are fetched sequentially (cursor pagination requires this),
-#' then parsed and flattened in parallel when multiple pages are
-#' available. JSON parsing uses RcppSimdJson when installed (~5x
-#' faster than jsonlite for large responses).
+#' Returns one row per field-level change, plus one synthetic row for
+#' each event that carries no field patches (Ny, Sletting, Fjernet).
+#' Synthetic rows have `operation = NA`, `field = NA`,
+#' `new_value = NA`, preserving event-level metadata in the output.
+#'
+#' To retrieve initial field values for newly registered entities
+#' (change_type `"Ny"`), call [brreg_entity()] per org_nr — the CDC
+#' payload for Ny events contains no field-level patches.
 #'
 #' @inheritParams brreg_updates
 #'
 #' @returns A tibble with columns: `update_id`, `org_nr`, `change_type`,
 #'   `timestamp`, `operation`, `field`, `new_value`. No list-columns.
+#'   Events without field patches (Ny, Sletting, Fjernet) appear as
+#'   rows with `operation`, `field`, and `new_value` all `NA`.
 #'
 #' @family tidybrreg entity functions
 #' @seealso [brreg_updates()] for the event-level view.
@@ -163,7 +168,9 @@ parse_json_response <- function(resp) {
 #'
 #' No recursion. The brreg CDC nesting depth is bounded at 2 levels:
 #' object -> scalar, or object -> array -> scalar. Inlines the unpack
-#' for both levels.
+#' for both levels. Events with no `endringer` (Ny, Sletting, Fjernet)
+#' emit a single synthetic row with `operation = NA`, `field = NA`,
+#' `new_value = NA`.
 #'
 #' @param raw_updates List of raw update objects from the API.
 #' @returns A flat tibble with update_id, org_nr, change_type,
@@ -198,7 +205,13 @@ flatten_page_patches <- function(raw_updates) {
     ts    <- u$dato %||% NA_character_
 
     endringer <- u$endringer
-    if (is.null(endringer) || length(endringer) == 0) next
+    if (is.null(endringer) || length(endringer) == 0) {
+      k <- k + 1L
+      if (k > length(r_uid)) grow()
+      r_uid[k] <- uid; r_org[k] <- org; r_ctype[k] <- ctype; r_ts[k] <- ts
+      r_op[k] <- NA_character_; r_field[k] <- NA_character_; r_val[k] <- NA_character_
+      next
+    }
 
     for (e in endringer) {
       op <- e$op %||% NA_character_
@@ -218,10 +231,7 @@ flatten_page_patches <- function(raw_updates) {
         if (k > length(r_uid)) grow()
         r_uid[k] <- uid; r_org[k] <- org; r_ctype[k] <- ctype; r_ts[k] <- ts
         r_op[k] <- op; r_field[k] <- gsub("/", "_", path); r_val[k] <- as.character(val)
-        next
-      }
-
-      if (is.list(val) && !is.null(names(val))) {
+      } else if (is.list(val) && !is.null(names(val))) {
         for (key in names(val)) {
           child <- val[[key]]
           child_path <- paste0(path, "_", key)
@@ -248,10 +258,7 @@ flatten_page_patches <- function(raw_updates) {
             r_val[k] <- as.character(child)
           }
         }
-        next
-      }
-
-      if (is.list(val) && is.null(names(val))) {
+      } else if (is.list(val) && is.null(names(val))) {
         for (j in seq_along(val)) {
           k <- k + 1L
           if (k > length(r_uid)) grow()
@@ -260,7 +267,14 @@ flatten_page_patches <- function(raw_updates) {
           r_field[k] <- paste0(gsub("/", "_", path), "_", j - 1L)
           r_val[k] <- if (is.null(val[[j]])) NA_character_ else as.character(val[[j]])
         }
-        next
+      }
+
+      if (op == "move" && !is.null(e$from)) {
+        from_path <- sub("^/", "", e$from)
+        k <- k + 1L
+        if (k > length(r_uid)) grow()
+        r_uid[k] <- uid; r_org[k] <- org; r_ctype[k] <- ctype; r_ts[k] <- ts
+        r_op[k] <- "remove"; r_field[k] <- gsub("/", "_", from_path); r_val[k] <- NA_character_
       }
     }
   }
@@ -383,6 +397,10 @@ parse_updates_page <- function(raw_updates, include_changes = FALSE) {
 #' [parse_updates_page()] and the sync engine. For the flat-output
 #' path, [flatten_page_patches()] is used instead.
 #'
+#' RFC 6902 `move` operations emit two rows: an add/replace at the
+#' destination path and a `remove` at the source path (from `$from`).
+#' `copy` operations emit one row at the destination.
+#'
 #' @param endringer List of patch operations from the brreg API.
 #' @returns A tibble with columns `operation`, `field`, `new_value`.
 #' @keywords internal
@@ -425,6 +443,19 @@ parse_patch <- function(endringer) {
       fields[k] <<- f
       values[k] <<- v
     })
+
+    if (op == "move" && !is.null(e$from)) {
+      from_path <- sub("^/", "", e$from)
+      k <- k + 1L
+      if (k > length(ops)) {
+        ops <- c(ops, character(length(ops)))
+        fields <- c(fields, character(length(fields)))
+        values <- c(values, character(length(values)))
+      }
+      ops[k] <- "remove"
+      fields[k] <- gsub("/", "_", from_path)
+      values[k] <- NA_character_
+    }
   }
 
   if (k == 0L) return(empty)

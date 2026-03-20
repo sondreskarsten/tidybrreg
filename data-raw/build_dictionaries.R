@@ -75,7 +75,15 @@ field_dict <- tribble(
   "maalform",                                        "language_form",             "character",
   "aktivitet",                                       "activity",                  "character",
   "slettedato",                                      "deletion_date",             "Date",
-  "datoEierskifte",                                  "ownership_change_date",     "Date"
+  "datoEierskifte",                                  "ownership_change_date",     "Date",
+  "fravalgRevisjonDato",                             "audit_exemption_date",      "Date",
+  "fravalgRevisjonBeslutningsDato",                  "audit_exemption_decision_date", "Date",
+  "registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret", "vat_registration_date_er", "Date",
+  "registreringsdatoAntallAnsatteEnhetsregisteret",  "employee_reg_date_er",      "Date",
+  "registreringsdatoAntallAnsatteNavAaregisteret",   "employee_reg_date_nav",     "Date",
+  "oppstartsdato",                                   "start_date",                "Date",
+  "registrertIPartiregisteret",                      "in_party_register",         "logical",
+  "respons_klasse",                                  "response_class",            "character"
 )
 
 

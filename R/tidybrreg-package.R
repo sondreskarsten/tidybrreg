@@ -14,7 +14,7 @@ NULL
 #' this dictionary pass through with auto-generated snake_case names
 #' rather than being silently dropped.
 #'
-#' @format A tibble with 49 rows and 3 columns:
+#' @format A tibble with 70 rows and 3 columns:
 #' \describe{
 #'   \item{api_path}{Dot-notation path in the brreg JSON response
 #'     (e.g. `"organisasjonsnummer"`, `"forretningsadresse.kommune"`).}

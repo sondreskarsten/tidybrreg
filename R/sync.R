@@ -638,7 +638,22 @@ find_state_column <- function(cdc_field, state_cols) {
     "epostadresse"                          = "epostadresse",
     "hjemmeside"                            = "website",
     "telefon"                               = "telefon",
-    "mobil"                                 = "mobil"
+    "mobil"                                 = "mobil",
+
+    # Audit exemption
+    "fravalgRevisjonDato"                   = "audit_exemption_date",
+    "fravalgRevisjonBeslutningsDato"        = "audit_exemption_decision_date",
+
+    # Additional registration dates
+    "registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret" = "vat_registration_date_er",
+    "registreringsdatoAntallAnsatteEnhetsregisteret"  = "employee_reg_date_er",
+    "registreringsdatoAntallAnsatteNavAaregisteret"   = "employee_reg_date_nav",
+
+    # Underenhet start date
+    "oppstartsdato"                         = "start_date",
+
+    # Party register
+    "registrertIPartiregisteret"            = "in_party_register"
   )
 
   mapped <- cdc_to_col[cdc_field]
