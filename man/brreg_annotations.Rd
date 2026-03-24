@@ -14,7 +14,8 @@ brreg_annotations(org_nr = NULL, infotype = NULL, active_only = TRUE)
 to filter by (e.g. \code{"FADR"}, \code{"NAVN"}).}
 
 \item{active_only}{Logical. If \code{TRUE} (default), return only
-annotations currently in force.}
+annotations currently in force. If \code{FALSE}, include cleared
+annotations from the changelog.}
 }
 \value{
 A tibble with columns: \code{org_nr}, \code{position} (array
@@ -23,14 +24,21 @@ index), \code{infotype}, \code{tekst} (annotation text),
 }
 \description{
 Påtegninger are public annotations placed on entities by the
-register keeper to warn third parties of irregularities.
-Requires \code{\link[=brreg_sync]{brreg_sync()}} to have been run.
+register keeper to warn third parties of irregularities — missing
+board members, undelivered accounts, deceased officers. They are
+the earliest formal signal that an entity is in regulatory
+trouble, preceding forced dissolution warnings by weeks to months.
+}
+\details{
+Requires \code{\link[=brreg_sync]{brreg_sync()}} to have been run at least once to
+populate the local påtegninger state.
 }
 \examples{
-\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 \donttest{
 brreg_sync()
 brreg_annotations()
+brreg_annotations(infotype = "FADR")
 }
 \dontshow{\}) # examplesIf}
 }
@@ -38,8 +46,12 @@ brreg_annotations()
 \code{\link[=brreg_sync]{brreg_sync()}} to populate annotation data,
 \code{\link[=brreg_changes]{brreg_changes()}} to track annotation events over time.
 
-Other tidybrreg data management functions:
+Other tidybrreg data management functions: 
+\code{\link{brreg_annotation_summary}()},
+\code{\link{brreg_status}()},
 \code{\link{brreg_sync}()},
-\code{\link{brreg_annotation_summary}()}
+\code{\link{brreg_sync_status}()},
+\code{\link{diff_roller_state}()},
+\code{\link{read_changelog}()}
 }
 \concept{tidybrreg data management functions}

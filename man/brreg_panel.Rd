@@ -67,7 +67,10 @@ panel <- brreg_panel("month", cols = c("employees", "nace_1", "legal_form"))
 
 Other tidybrreg panel functions: 
 \code{\link{as_brreg_tsibble}()},
+\code{\link{brreg_change_summary}()},
+\code{\link{brreg_changes}()},
 \code{\link{brreg_events}()},
+\code{\link{brreg_flows}()},
 \code{\link{brreg_replay}()},
 \code{\link{brreg_series}()}
 }

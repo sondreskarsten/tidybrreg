@@ -13,7 +13,8 @@ brreg_roles(org_nr)
 A tibble with one row per role assignment. Columns:
 \code{org_nr}, \code{role_group}, \code{role_group_code}, \code{role}, \code{role_code},
 \code{first_name}, \code{middle_name}, \code{last_name}, \code{birth_date}, \code{deceased},
-\code{entity_org_nr}, \code{entity_name}, \code{resigned}, \code{person_id}.
+\code{entity_org_nr}, \code{entity_name}, \code{resigned}, \code{deregistered},
+\code{ordering}, \code{elected_by}, \code{group_modified}, \code{person_id}.
 Returns an empty tibble if the entity has no registered roles.
 }
 \description{
@@ -54,6 +55,7 @@ Other tidybrreg entity functions:
 \code{\link{brreg_roles_legal}()},
 \code{\link{brreg_search}()},
 \code{\link{brreg_underenheter}()},
+\code{\link{brreg_update_fields}()},
 \code{\link{brreg_updates}()}
 }
 \concept{tidybrreg entity functions}

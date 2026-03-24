@@ -14,16 +14,13 @@ brreg_flows(
 )
 }
 \arguments{
-\item{data}{Optional. A tibble from \code{\link[=brreg_download]{brreg_download()}} or a snapshot.
-When \code{NULL} and a sync changelog exists, flows are computed
-from the changelog instead. Must contain \code{org_nr},
-\code{registration_date}, \code{nace_1}, and \code{municipality_code}
-when provided.}
+\item{data}{Optional. A tibble from \code{\link[=brreg_download]{brreg_download()}} or a
+snapshot. Required when no changelog exists. Must contain
+\code{org_nr}, \code{registration_date}, \code{nace_1}, and
+\code{municipality_code}.}
 
 \item{updates}{Optional. A tibble from \code{\link[=brreg_updates]{brreg_updates()}} with
-CDC events. When provided, entries and exits from the CDC
-stream are enriched with attributes from \code{data} and merged
-with the registration-date-based entries.}
+CDC events.}
 
 \item{by}{Character vector of grouping columns. Default
 \code{c("nace_1", "municipality_code")}. Use \code{NULL} for national
@@ -44,20 +41,22 @@ which data sources contributed.
 \description{
 Calculate daily counts of entity registrations (entries) and
 deletions (exits) classified by industry (NACE code) and
-geography (municipality code). Combines two data sources:
-\enumerate{
-\item \strong{Bulk download} — the \code{registration_date} column provides
-the complete entry history for all currently-active entities.
-No exit information (deleted entities are purged from the
-nightly bulk export).
-\item \strong{CDC stream} — \code{Ny} (new) and \code{Sletting} (deleted) events
-from the \code{\link[=brreg_updates]{brreg_updates()}} endpoint, enriched with entity
-attributes from the bulk data. Provides both entries and exits
-with real event timestamps.
+geography (municipality code). Three data paths, selected
+automatically:
 }
-
-When only bulk data is provided (no \code{updates}), only entries
-are computed. Pass CDC data to unlock exit counts.
+\details{
+\enumerate{
+\item \strong{Changelog path} (preferred) — when \code{\link[=brreg_sync]{brreg_sync()}} has been
+run, reads directly from the persistent changelog. Provides
+timestamped entries, exits, and field-level transitions.
+No arguments needed.
+\item \strong{Bulk + CDC path} — pass \code{data} (from \code{\link[=brreg_download]{brreg_download()}})
+and optionally \code{updates} (from \code{\link[=brreg_updates]{brreg_updates()}}).
+Registration dates provide historical entries; CDC provides
+recent entries + exits.
+\item \strong{Bulk-only path} — pass \code{data} alone. Only entries are
+computed (no exit data available).
+}
 }
 \section{Entry vs. founding date}{
 
@@ -69,6 +68,7 @@ the registry. Founding date can precede registration by months
 }
 
 \examples{
+\dontshow{if (interactive() && curl::has_internet()) withAutoprint(\{ # examplesIf}
 \donttest{
 entities <- brreg_download()
 flows <- brreg_flows(entities)
@@ -76,7 +76,15 @@ flows <- brreg_flows(entities)
 # With CDC exits
 cdc <- brreg_updates(since = "2026-01-01", size = 10000)
 flows <- brreg_flows(entities, updates = cdc)
+
+# Monthly by NACE section
+flows |>
+  dplyr::mutate(month = format(date, "\%Y-\%m"),
+                nace_section = substr(nace_1, 1, 2)) |>
+  dplyr::summarise(entries = sum(entries), exits = sum(exits),
+                   .by = c(month, nace_section))
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=brreg_download]{brreg_download()}} to get bulk data,
@@ -84,9 +92,13 @@ flows <- brreg_flows(entities, updates = cdc)
 \code{\link[=brreg_series]{brreg_series()}} for snapshot-based time series,
 \code{\link[=as_brreg_tsibble]{as_brreg_tsibble()}} for tsibble conversion.
 
-Other tidybrreg panel functions:
+Other tidybrreg panel functions: 
+\code{\link{as_brreg_tsibble}()},
+\code{\link{brreg_change_summary}()},
+\code{\link{brreg_changes}()},
 \code{\link{brreg_events}()},
 \code{\link{brreg_panel}()},
+\code{\link{brreg_replay}()},
 \code{\link{brreg_series}()}
 }
 \concept{tidybrreg panel functions}

@@ -18,9 +18,12 @@ changelog size.
 brreg_sync_status()
 }
 \seealso{
-Other tidybrreg data management functions:
-\code{\link{brreg_sync}()},
+Other tidybrreg data management functions: 
+\code{\link{brreg_annotation_summary}()},
 \code{\link{brreg_annotations}()},
-\code{\link{brreg_status}()}
+\code{\link{brreg_status}()},
+\code{\link{brreg_sync}()},
+\code{\link{diff_roller_state}()},
+\code{\link{read_changelog}()}
 }
 \concept{tidybrreg data management functions}

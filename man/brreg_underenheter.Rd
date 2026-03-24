@@ -41,6 +41,7 @@ Other tidybrreg entity functions:
 \code{\link{brreg_roles}()},
 \code{\link{brreg_roles_legal}()},
 \code{\link{brreg_search}()},
+\code{\link{brreg_update_fields}()},
 \code{\link{brreg_updates}()}
 }
 \concept{tidybrreg entity functions}

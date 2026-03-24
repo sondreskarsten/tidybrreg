@@ -25,6 +25,13 @@
 #' @param types Character vector of streams to sync. Default
 #'   syncs all four.
 #' @param size Integer. CDC page size per API call (max 10000).
+#' @param roller_method One of `"bulk"` (default) or `"cdc"`.
+#'   `"bulk"` downloads the full totalbestand (~131 MB) and
+#'   computes a field-level diff against previous state — fast
+#'   and produces granular changelogs. `"cdc"` fetches current
+#'   roles per-org via the API for each CDC event — slower but
+#'   provides sub-daily attribution when syncing multiple times
+#'   per day.
 #' @param verbose Logical. Print progress messages.
 #'
 #' @returns A list with sync summary: events processed per type,
@@ -43,9 +50,11 @@
 #' }
 brreg_sync <- function(types = c("enheter", "underenheter", "roller"),
                         size = 10000L,
+                        roller_method = c("bulk", "cdc"),
                         verbose = TRUE) {
   types <- match.arg(types, c("enheter", "underenheter", "roller"),
                       several.ok = TRUE)
+  roller_method <- match.arg(roller_method)
   check_parquet_available()
   t0 <- Sys.time()
 
@@ -61,7 +70,8 @@ brreg_sync <- function(types = c("enheter", "underenheter", "roller"),
 
   for (type in types) {
     if (verbose) cli::cli_h3("Syncing {type}")
-    result <- sync_one_type(type, cursor, size = size, verbose = verbose)
+    result <- sync_one_type(type, cursor, size = size,
+                             roller_method = roller_method, verbose = verbose)
     cursor[[paste0(type, "_id")]] <- result$new_cursor_id
     summary[[type]] <- result$summary
     if (!is.null(result$changelog) && nrow(result$changelog) > 0) {
@@ -128,8 +138,11 @@ bootstrap_state <- function(types, verbose = TRUE) {
 
 
 #' Sync one CDC stream
+#' @param roller_method Passed from [brreg_sync()]. Controls roller
+#'   sync strategy: `"bulk"` (totalbestand diff) or `"cdc"` (per-org).
 #' @keywords internal
-sync_one_type <- function(type, cursor, size = 10000L, verbose = TRUE) {
+sync_one_type <- function(type, cursor, size = 10000L,
+                           roller_method = "bulk", verbose = TRUE) {
   cursor_id <- cursor[[paste0(type, "_id")]]
 
   updates <- paginate_cdc(type, cursor_id, size = size, verbose = verbose)
@@ -154,7 +167,11 @@ sync_one_type <- function(type, cursor, size = 10000L, verbose = TRUE) {
   changelog <- list()
 
   if (type == "roller") {
-    result <- apply_roller_events(state, updates, verbose = verbose)
+    if (roller_method == "bulk") {
+      result <- apply_roller_events(state, updates, verbose = verbose)
+    } else {
+      result <- apply_roller_events_cdc(state, updates, verbose = verbose)
+    }
     state <- result$state
     changelog <- c(changelog, list(result$changelog))
   } else {
@@ -496,9 +513,75 @@ apply_slett_events <- function(state, paat_state, slett_events, type) {
 #' @keywords internal
 apply_roller_events <- function(state, updates, verbose = TRUE) {
   affected_orgs <- unique(updates$org_nr)
-  if (verbose) cli::cli_alert_info("{length(affected_orgs)} unique entities with role changes")
+  if (verbose) {
+    cli::cli_alert_info(
+      "{length(affected_orgs)} entities with role changes \u2014 downloading totalbestand for bulk diff"
+    )
+  }
 
-  changelog <- list()
+  new_state <- brreg_download("roller", refresh = TRUE, type_output = "tibble")
+  if (verbose) cli::cli_alert_success("Downloaded {nrow(new_state)} role records")
+
+  event_map <- updates |>
+    dplyr::summarise(
+      timestamp = max(.data$timestamp, na.rm = TRUE),
+      update_id = max(.data$update_id, na.rm = TRUE),
+      .by = "org_nr"
+    )
+
+  default_ts <- updates$timestamp[nrow(updates)]
+  default_id <- max(updates$update_id)
+
+  changelog <- diff_roller_state(
+    old_state  = state,
+    new_state  = new_state,
+    timestamp  = default_ts,
+    update_id  = default_id
+  )
+
+  if (nrow(changelog) > 0 && nrow(event_map) > 0) {
+    changelog <- dplyr::rows_update(
+      changelog, event_map,
+      by = "org_nr", unmatched = "ignore"
+    )
+  }
+
+  if (verbose && nrow(changelog) > 0) {
+    n_orgs <- dplyr::n_distinct(changelog$org_nr)
+    summary_label <- changelog |>
+      dplyr::count(.data$change_type) |>
+      dplyr::mutate(label = paste0(.data$change_type, "=", .data$n)) |>
+      dplyr::pull("label") |>
+      paste(collapse = ", ")
+    cli::cli_alert_success("{nrow(changelog)} changelog rows across {n_orgs} orgs ({summary_label})")
+  }
+
+  list(state = new_state, changelog = changelog)
+}
+
+
+#' Apply roller CDC events via per-org API re-fetch (legacy fallback)
+#'
+#' Fetches current roles for each affected org via [brreg_roles()].
+#' Produces field-level changelogs using [diff_roller_state()] on a
+#' per-org basis. Slower than [apply_roller_events()] (bulk method)
+#' but provides per-event timestamp attribution for sub-daily syncs.
+#'
+#' @param state Current roller state tibble.
+#' @param updates Tibble of CDC events with `org_nr`, `timestamp`,
+#'   `update_id`.
+#' @param verbose Logical.
+#' @returns List with `state` and `changelog`.
+#' @keywords internal
+apply_roller_events_cdc <- function(state, updates, verbose = TRUE) {
+  affected_orgs <- unique(updates$org_nr)
+  if (verbose) {
+    cli::cli_alert_info(
+      "{length(affected_orgs)} entities \u2014 fetching roles per-org (cdc method)"
+    )
+  }
+
+  all_changelog <- list()
   removed_orgs <- character()
   new_rows <- list()
 
@@ -511,24 +594,24 @@ apply_roller_events <- function(state, updates, verbose = TRUE) {
     )
 
     old_roles <- state[state$org_nr == org, ]
-    old_n <- nrow(old_roles)
-    new_n <- if (!is.null(new_roles)) nrow(new_roles) else 0L
-
-    if (old_n != new_n) {
-      changelog <- c(changelog, list(tibble::tibble(
-        timestamp = event_row$timestamp, org_nr = org,
-        registry = "roller", change_type = "change",
-        field = "role_count",
-        value_from = as.character(old_n),
-        value_to = as.character(new_n),
-        update_id = event_row$update_id
-      )))
+    new_roles_safe <- if (!is.null(new_roles) && nrow(new_roles) > 0) {
+      new_roles
+    } else {
+      tibble::tibble()
     }
 
+    cl <- diff_roller_state(
+      old_state  = if (nrow(old_roles) > 0) old_roles else NULL,
+      new_state  = if (nrow(new_roles_safe) > 0) new_roles_safe else tibble::tibble(),
+      timestamp  = event_row$timestamp,
+      update_id  = event_row$update_id
+    )
+    if (nrow(cl) > 0) all_changelog <- c(all_changelog, list(cl))
+
     removed_orgs <- c(removed_orgs, org)
-    if (!is.null(new_roles) && new_n > 0) {
-      common_cols <- intersect(names(state), names(new_roles))
-      new_rows <- c(new_rows, list(new_roles[, common_cols, drop = FALSE]))
+    if (nrow(new_roles_safe) > 0) {
+      common_cols <- intersect(names(state), names(new_roles_safe))
+      new_rows <- c(new_rows, list(new_roles_safe[, common_cols, drop = FALSE]))
     }
   }
 
@@ -537,7 +620,7 @@ apply_roller_events <- function(state, updates, verbose = TRUE) {
     state <- dplyr::bind_rows(state, dplyr::bind_rows(new_rows))
   }
 
-  list(state = state, changelog = dplyr::bind_rows(changelog))
+  list(state = state, changelog = dplyr::bind_rows(all_changelog))
 }
 
 

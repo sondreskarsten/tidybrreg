@@ -12,7 +12,8 @@ brreg_board_summary(roles)
 \value{
 A 1-row tibble with columns: \code{org_nr}, \code{board_size},
 \code{n_chair}, \code{n_deputy_chair}, \code{n_members}, \code{n_alternates},
-\code{n_observers}, \code{has_ceo}, \code{has_auditor}, \code{auditor_org_nr}.
+\code{n_observers}, \code{n_employee_elected}, \code{has_ceo}, \code{has_auditor},
+\code{auditor_org_nr}. Counts exclude resigned and deregistered roles.
 }
 \description{
 Compute firm-level variables commonly used in corporate governance
@@ -34,6 +35,7 @@ Other tidybrreg entity functions:
 \code{\link{brreg_roles_legal}()},
 \code{\link{brreg_search}()},
 \code{\link{brreg_underenheter}()},
+\code{\link{brreg_update_fields}()},
 \code{\link{brreg_updates}()}
 }
 \concept{tidybrreg entity functions}

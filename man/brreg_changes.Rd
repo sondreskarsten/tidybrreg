@@ -18,9 +18,10 @@ brreg_changes(
 \code{c("nace_1", "municipality_code", "employees")}). \code{NULL}
 returns all fields.}
 
-\item{registry}{Character vector of streams to include.}
+\item{registry}{Character vector of streams to include.
+Default includes all four.}
 
-\item{change_type}{Character vector of event types.
+\item{change_type}{Character vector of event types to include.
 Options: \code{"entry"}, \code{"exit"}, \code{"change"},
 \code{"annotation_added"}, \code{"annotation_cleared"}.}
 
@@ -36,13 +37,25 @@ A tibble with columns: \code{timestamp}, \code{org_nr},
 \description{
 Returns a filtered view of all recorded changes across the four
 sync streams: enheter, underenheter, roller, and påtegninger.
+Every call to \code{\link[=brreg_sync]{brreg_sync()}} appends events to the changelog;
+this function reads and filters them.
 }
 \examples{
-\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 \donttest{
 brreg_sync()
+
+# All changes this month
 brreg_changes(from = Sys.Date() - 30)
+
+# NACE reclassifications only
 brreg_changes(track = "nace_1", change_type = "change")
+
+# Entries and exits for a specific entity
+brreg_changes(org_nr = "923609016", change_type = c("entry", "exit"))
+
+# All annotation events
+brreg_changes(registry = "paategninger")
 }
 \dontshow{\}) # examplesIf}
 }
@@ -50,10 +63,13 @@ brreg_changes(track = "nace_1", change_type = "change")
 \code{\link[=brreg_sync]{brreg_sync()}} to populate the changelog,
 \code{\link[=brreg_flows]{brreg_flows()}} for aggregated entry/exit counts.
 
-Other tidybrreg panel functions:
+Other tidybrreg panel functions: 
+\code{\link{as_brreg_tsibble}()},
+\code{\link{brreg_change_summary}()},
 \code{\link{brreg_events}()},
 \code{\link{brreg_flows}()},
 \code{\link{brreg_panel}()},
+\code{\link{brreg_replay}()},
 \code{\link{brreg_series}()}
 }
 \concept{tidybrreg panel functions}

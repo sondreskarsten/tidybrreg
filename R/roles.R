@@ -22,7 +22,8 @@
 #' @returns A tibble with one row per role assignment. Columns:
 #'   `org_nr`, `role_group`, `role_group_code`, `role`, `role_code`,
 #'   `first_name`, `middle_name`, `last_name`, `birth_date`, `deceased`,
-#'   `entity_org_nr`, `entity_name`, `resigned`, `person_id`.
+#'   `entity_org_nr`, `entity_name`, `resigned`, `deregistered`,
+#'   `ordering`, `elected_by`, `group_modified`, `person_id`.
 #'   Returns an empty tibble if the entity has no registered roles.
 #'
 #' @family tidybrreg entity functions
@@ -57,6 +58,7 @@ flatten_roles <- function(raw, org_nr) {
   for (g in grupper) {
     if (is.null(g$roller)) next
     g_code <- g$type$kode %||% NA_character_
+    g_modified <- g$sistEndret %||% NA_character_
     for (r in g$roller) {
       k <- k + 1L
       rows[[k]] <- list(
@@ -72,13 +74,18 @@ flatten_roles <- function(raw, org_nr) {
         deceased        = r$person$erDoed %||% NA,
         entity_org_nr   = r$enhet$organisasjonsnummer %||% NA_character_,
         entity_name     = r$enhet$navn$navnelinje1 %||% NA_character_,
-        resigned        = r$fratraadt %||% FALSE
+        resigned        = r$fratraadt %||% FALSE,
+        deregistered    = r$avregistrert %||% NA,
+        ordering        = r$rekkefolge %||% NA_integer_,
+        elected_by      = r$valgtAv$kode %||% NA_character_,
+        group_modified  = g_modified
       )
     }
   }
   if (k == 0L) return(tibble::tibble())
   result <- dplyr::bind_rows(lapply(rows[seq_len(k)], tibble::as_tibble))
   result$birth_date <- as.Date(result$birth_date)
+  result$group_modified <- as.Date(result$group_modified)
   result$person_id <- ifelse(
     !is.na(result$birth_date) & !is.na(result$last_name),
     paste(result$birth_date, tolower(result$last_name),
@@ -117,7 +124,8 @@ lookup_role_group <- function(code) {
 #'
 #' @returns A 1-row tibble with columns: `org_nr`, `board_size`,
 #'   `n_chair`, `n_deputy_chair`, `n_members`, `n_alternates`,
-#'   `n_observers`, `has_ceo`, `has_auditor`, `auditor_org_nr`.
+#'   `n_observers`, `n_employee_elected`, `has_ceo`, `has_auditor`,
+#'   `auditor_org_nr`. Counts exclude resigned and deregistered roles.
 #'
 #' @family tidybrreg entity functions
 #' @seealso [brreg_roles()] for the underlying role data.
@@ -126,7 +134,11 @@ lookup_role_group <- function(code) {
 #' @examplesIf interactive() && curl::has_internet()
 #' brreg_roles("923609016") |> brreg_board_summary()
 brreg_board_summary <- function(roles) {
-  board <- roles[roles$role_group_code == "STYR" & !is.na(roles$person_id), ]
+  active_filter <- !isTRUE(roles$resigned) & !isTRUE(roles$deregistered)
+  if ("resigned" %in% names(roles)) {
+    active_filter <- !(roles$resigned %in% TRUE) & !(roles$deregistered %in% TRUE)
+  }
+  board <- roles[roles$role_group_code == "STYR" & !is.na(roles$person_id) & active_filter, ]
   tibble::tibble(
     org_nr         = roles$org_nr[1],
     board_size     = nrow(board),
@@ -135,10 +147,11 @@ brreg_board_summary <- function(roles) {
     n_members      = sum(board$role_code == "MEDL", na.rm = TRUE),
     n_alternates   = sum(board$role_code == "VARA", na.rm = TRUE),
     n_observers    = sum(board$role_code == "OBS", na.rm = TRUE),
-    has_ceo        = any(roles$role_group_code == "DAGL", na.rm = TRUE),
-    has_auditor    = any(roles$role_group_code == "REVI", na.rm = TRUE),
+    n_employee_elected = sum(!is.na(board$elected_by), na.rm = TRUE),
+    has_ceo        = any(roles$role_group_code == "DAGL" & active_filter, na.rm = TRUE),
+    has_auditor    = any(roles$role_group_code == "REVI" & active_filter, na.rm = TRUE),
     auditor_org_nr = {
-      revi <- roles[roles$role_group_code == "REVI" & !is.na(roles$entity_org_nr), ]
+      revi <- roles[roles$role_group_code == "REVI" & !is.na(roles$entity_org_nr) & active_filter, ]
       if (nrow(revi) > 0) revi$entity_org_nr[1] else NA_character_
     }
   )

@@ -17,7 +17,7 @@ parse_bulk_csv(path, type = "enheter", n_max = Inf)
 A tibble with columns mapped via \link{field_dict}.
 }
 \description{
-The bulk CSV uses \verb{;} delimiter with \code{.} notation for nested fields
+The bulk CSV uses \verb{,} (comma) delimiter with \code{.} notation for nested fields
 (e.g. \code{forretningsadresse.kommune}). This function reads all columns
 as character, then applies \code{\link[=rename_and_coerce]{rename_and_coerce()}} for field_dict
 mapping and type coercion — the same rename/coerce pipeline used

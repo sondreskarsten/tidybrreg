@@ -37,7 +37,10 @@ as_brreg_tsibble(panel)
 \code{\link[=brreg_panel]{brreg_panel()}}, \code{\link[=brreg_series]{brreg_series()}}.
 
 Other tidybrreg panel functions: 
+\code{\link{brreg_change_summary}()},
+\code{\link{brreg_changes}()},
 \code{\link{brreg_events}()},
+\code{\link{brreg_flows}()},
 \code{\link{brreg_panel}()},
 \code{\link{brreg_replay}()},
 \code{\link{brreg_series}()}

@@ -14,10 +14,17 @@ Quick summary of how many entities currently carry påtegninger,
 grouped by annotation type.
 }
 \examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 brreg_annotation_summary()
+\dontshow{\}) # examplesIf}
 }
 \seealso{
-Other tidybrreg data management functions:
-\code{\link{brreg_annotations}()}
+Other tidybrreg data management functions: 
+\code{\link{brreg_annotations}()},
+\code{\link{brreg_status}()},
+\code{\link{brreg_sync}()},
+\code{\link{brreg_sync_status}()},
+\code{\link{diff_roller_state}()},
+\code{\link{read_changelog}()}
 }
 \concept{tidybrreg data management functions}

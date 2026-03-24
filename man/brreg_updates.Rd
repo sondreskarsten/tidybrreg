@@ -7,32 +7,34 @@
 brreg_updates(
   since = Sys.Date() - 1,
   size = 100,
+  max_pages = 1L,
   include_changes = FALSE,
-  type = c("enheter", "underenheter", "roller")
+  type = c("enheter", "underenheter", "roller"),
+  verbose = FALSE
 )
 }
 \arguments{
 \item{since}{Date or POSIXct. Return updates after this timestamp.
 Defaults to yesterday.}
 
-\item{size}{Integer. Number of updates to fetch (max 10000).}
+\item{size}{Integer. Number of updates per page (max 10000).}
+
+\item{max_pages}{Integer. Maximum pages to fetch. Default 1.
+Set higher to paginate through large result sets automatically.}
 
 \item{include_changes}{Logical. If \code{TRUE}, include field-level change
-details per update as a list-column of tibbles. The brreg API
-returns changes in a flat RFC 6902-style JSON Patch format.}
+details per update as a list-column of tibbles.}
 
-\item{type}{One of \code{"enheter"} (main entities), \code{"underenheter"}
-(sub-entities), or \code{"roller"} (role assignments). Roller updates
-use CloudEvents format (\code{afterTime}/\code{afterId} pagination) rather
-than the HAL-based format used by enheter/underenheter.
-\code{include_changes} is ignored for roller.}
+\item{type}{One of \code{"enheter"}, \code{"underenheter"}, or \code{"roller"}.
+Roller uses CloudEvents format; \code{include_changes} is ignored.}
+
+\item{verbose}{Logical. Print page-level progress.}
 }
 \value{
-A tibble with columns: \code{update_id} (integer), \code{org_nr}
-(character), \code{change_type} (character: Ny/Endring/Sletting),
-\code{timestamp} (POSIXct). If \code{include_changes = TRUE}, an additional
-list-column \code{changes} contains tibbles with columns \code{operation},
-\code{field}, \code{new_value}.
+A tibble with columns: \code{update_id}, \code{org_nr},
+\code{change_type}, \code{timestamp}. If \code{include_changes = TRUE}, a
+list-column \code{changes} with tibbles of \code{operation}, \code{field},
+\code{new_value}.
 }
 \description{
 Query the brreg change data capture (CDC) endpoint for entities
@@ -44,12 +46,13 @@ deduplication.
 \dontshow{if (interactive() && curl::has_internet()) withAutoprint(\{ # examplesIf}
 brreg_updates(since = Sys.Date() - 1, size = 10)
 
-# With field-level change details
-brreg_updates(since = Sys.Date() - 1, size = 5, include_changes = TRUE)
+# Auto-paginate
+brreg_updates(since = "2026-03-01", size = 10000, max_pages = 50,
+              verbose = TRUE)
 \dontshow{\}) # examplesIf}
 }
 \seealso{
-\code{\link[=brreg_entity]{brreg_entity()}} to fetch the current state of a changed entity.
+\code{\link[=brreg_update_fields]{brreg_update_fields()}} for a flat alternative.
 
 Other tidybrreg entity functions: 
 \code{\link{brreg_board_summary}()},
@@ -59,6 +62,7 @@ Other tidybrreg entity functions:
 \code{\link{brreg_roles}()},
 \code{\link{brreg_roles_legal}()},
 \code{\link{brreg_search}()},
-\code{\link{brreg_underenheter}()}
+\code{\link{brreg_underenheter}()},
+\code{\link{brreg_update_fields}()}
 }
 \concept{tidybrreg entity functions}

@@ -57,7 +57,10 @@ state <- brreg_replay(base, updates, target_date = Sys.Date())
 
 Other tidybrreg panel functions: 
 \code{\link{as_brreg_tsibble}()},
+\code{\link{brreg_change_summary}()},
+\code{\link{brreg_changes}()},
 \code{\link{brreg_events}()},
+\code{\link{brreg_flows}()},
 \code{\link{brreg_panel}()},
 \code{\link{brreg_series}()}
 }

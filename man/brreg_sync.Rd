@@ -7,14 +7,23 @@
 brreg_sync(
   types = c("enheter", "underenheter", "roller"),
   size = 10000L,
+  roller_method = c("bulk", "cdc"),
   verbose = TRUE
 )
 }
 \arguments{
 \item{types}{Character vector of streams to sync. Default
-syncs all three entity types.}
+syncs all four.}
 
 \item{size}{Integer. CDC page size per API call (max 10000).}
+
+\item{roller_method}{One of \code{"bulk"} (default) or \code{"cdc"}.
+\code{"bulk"} downloads the full totalbestand (~131 MB) and
+computes a field-level diff against previous state — fast
+and produces granular changelogs. \code{"cdc"} fetches current
+roles per-org via the API for each CDC event — slower but
+provides sub-daily attribution when syncing multiple times
+per day.}
 
 \item{verbose}{Logical. Print progress messages.}
 }
@@ -29,6 +38,19 @@ state table. On first run, bootstraps from a bulk download.
 Subsequent runs poll the CDC endpoints from the last cursor
 position and apply mutations.
 }
+\details{
+Four state files are maintained:
+\itemize{
+\item \code{enheter.parquet} — main entities (~1M rows)
+\item \code{underenheter.parquet} — sub-entities (~500K rows)
+\item \code{roller.parquet} — all roles (~4.5M rows)
+\item \code{paategninger.parquet} — registry annotations
+}
+
+Every mutation is logged to a Hive-partitioned changelog
+under \verb{state/changelog/sync_date=\{date\}/}. The changelog
+drives \code{\link[=brreg_changes]{brreg_changes()}} and \code{\link[=brreg_flows]{brreg_flows()}}.
+}
 \section{Write ordering}{
 
 Changelog is written first (WAL), then state files, then
@@ -38,7 +60,7 @@ idempotent (upsert by org_nr), so replay is safe.
 }
 
 \examples{
-\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (interactive() && curl::has_internet()) withAutoprint(\{ # examplesIf}
 \donttest{
 brreg_sync()
 brreg_sync_status()
@@ -50,9 +72,12 @@ brreg_sync_status()
 \code{\link[=brreg_changes]{brreg_changes()}} to query the changelog,
 \code{\link[=brreg_flows]{brreg_flows()}} for entry/exit counts.
 
-Other tidybrreg data management functions:
-\code{\link{brreg_sync_status}()},
+Other tidybrreg data management functions: 
+\code{\link{brreg_annotation_summary}()},
 \code{\link{brreg_annotations}()},
-\code{\link{brreg_status}()}
+\code{\link{brreg_status}()},
+\code{\link{brreg_sync_status}()},
+\code{\link{diff_roller_state}()},
+\code{\link{read_changelog}()}
 }
 \concept{tidybrreg data management functions}
