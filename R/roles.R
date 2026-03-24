@@ -73,7 +73,7 @@ flatten_roles <- function(raw, org_nr) {
         birth_date      = r$person$fodselsdato %||% NA_character_,
         deceased        = r$person$erDoed %||% NA,
         entity_org_nr   = r$enhet$organisasjonsnummer %||% NA_character_,
-        entity_name     = r$enhet$navn$navnelinje1 %||% NA_character_,
+        entity_name     = extract_entity_name(r$enhet$navn),
         resigned        = r$fratraadt %||% FALSE,
         deregistered    = r$avregistrert %||% NA,
         ordering        = r$rekkefolge %||% NA_integer_,
@@ -98,6 +98,22 @@ flatten_roles <- function(raw, org_nr) {
 }
 
 
+#' Extract entity name from role JSON (parser-agnostic)
+#'
+#' jsonlite returns `navn` as a named list (`$navnelinje1`).
+#' yyjsonr collapses single-element objects to bare character.
+#' This handles both.
+#'
+#' @param navn The `enhet$navn` element from parsed role JSON.
+#' @returns Character scalar.
+#' @keywords internal
+extract_entity_name <- function(navn) {
+  if (is.null(navn)) return(NA_character_)
+  if (is.character(navn)) return(paste(navn, collapse = " "))
+  navn$navnelinje1 %||% NA_character_
+}
+
+
 #' @keywords internal
 lookup_role <- function(code) {
   if (is.null(code) || is.na(code)) return(NA_character_)
@@ -112,6 +128,32 @@ lookup_role_group <- function(code) {
   idx <- match(enc2utf8(code), enc2utf8(role_groups$code))
   if (is.na(idx)) return(code)
   role_groups$name_en[idx]
+}
+
+
+#' Vectorised role code to English label
+#' @param codes Character vector of role type codes.
+#' @returns Character vector of English labels. Unknown codes pass through.
+#' @keywords internal
+lookup_role_vec <- function(codes) {
+  idx <- match(codes, role_types$code)
+  out <- role_types$name_en[idx]
+  fallback <- is.na(idx) & !is.na(codes)
+  out[fallback] <- codes[fallback]
+  out
+}
+
+
+#' Vectorised role group code to English label
+#' @param codes Character vector of role group codes.
+#' @returns Character vector of English labels. Unknown codes pass through.
+#' @keywords internal
+lookup_role_group_vec <- function(codes) {
+  idx <- match(codes, role_groups$code)
+  out <- role_groups$name_en[idx]
+  fallback <- is.na(idx) & !is.na(codes)
+  out[fallback] <- codes[fallback]
+  out
 }
 
 

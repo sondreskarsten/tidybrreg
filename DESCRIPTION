@@ -1,6 +1,6 @@
 Package: tidybrreg
 Title: Tidy Access to Norway's Business Registry ('Enhetsregisteret')
-Version: 0.3.3
+Version: 0.3.4
 Authors@R: 
     person("Sondre", "Skarsten", role = c("aut", "cre"),
            email = "sondre.skarsten@example.com")
@@ -40,6 +40,7 @@ Suggests:
     tidygraph,
     tidyr,
     tsibble,
+    yyjsonr,
     httptest2,
     testthat (>= 3.0.0),
     withr

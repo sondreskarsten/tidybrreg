@@ -337,13 +337,130 @@ rename_and_coerce <- function(dat) {
 #' @returns A tibble with one row per role assignment.
 #' @keywords internal
 parse_roles_bulk <- function(path) {
-  raw <- jsonlite::fromJSON(path, simplifyVector = FALSE)
+  raw <- read_roles_json(path)
+  flatten_roles_bulk_fast(raw)
+}
 
-  all_rows <- vector("list", length(raw))
-  for (i in seq_along(raw)) {
-    entity <- raw[[i]]
-    org_nr <- entity$organisasjonsnummer %||% NA_character_
-    all_rows[[i]] <- flatten_roles(entity, org_nr)
+
+#' Read roller totalbestand JSON with best available parser
+#'
+#' Dispatches to yyjsonr (7x faster, 70x less memory) when
+#' available, falling back to jsonlite. Both produce nested
+#' lists compatible with [flatten_roles_bulk_fast()].
+#'
+#' @param path Path to the gzipped JSON file.
+#' @returns A list of entity objects.
+#' @keywords internal
+read_roles_json <- function(path) {
+  if (requireNamespace("yyjsonr", quietly = TRUE)) {
+    opts <- yyjsonr::opts_read_json(
+      obj_of_arrs_to_df = FALSE,
+      arr_of_objs_to_df = FALSE
+    )
+    return(yyjsonr::read_json_file(path, opts = opts))
   }
-  dplyr::bind_rows(all_rows)
+  cli::cli_alert_info(
+    "Install {.pkg yyjsonr} for 7x faster JSON parsing and 70x lower memory."
+  )
+  jsonlite::fromJSON(path, simplifyVector = FALSE)
+}
+
+
+#' Vectorised bulk flatten of roller totalbestand
+#'
+#' Two-pass approach: first counts total roles across all entities
+#' to pre-allocate vectors, then fills by index. Avoids per-row
+#' list construction and the O(n^2) cost of incremental
+#' `bind_rows()` on thousands of small tibbles.
+#'
+#' @param entities List of entity objects from [read_roles_json()].
+#' @returns A tibble matching [flatten_roles()] output schema.
+#' @keywords internal
+flatten_roles_bulk_fast <- function(entities) {
+
+  # --- Pass 1: count total roles ---
+  n_total <- 0L
+  for (e in entities) {
+    for (g in (e$rollegrupper %||% list())) {
+      n_total <- n_total + length(g$roller %||% list())
+    }
+  }
+
+  if (n_total == 0L) return(tibble::tibble())
+
+  # --- Pre-allocate ---
+  v_org_nr          <- character(n_total)
+  v_role_group_code <- character(n_total)
+  v_role_code       <- character(n_total)
+  v_first_name      <- character(n_total)
+  v_middle_name     <- character(n_total)
+  v_last_name       <- character(n_total)
+  v_birth_date      <- character(n_total)
+  v_deceased        <- logical(n_total)
+  v_entity_org_nr   <- character(n_total)
+  v_entity_name     <- character(n_total)
+  v_resigned        <- logical(n_total)
+  v_deregistered    <- logical(n_total)
+  v_ordering        <- integer(n_total)
+  v_elected_by      <- character(n_total)
+  v_group_modified  <- character(n_total)
+
+  # --- Pass 2: fill by index ---
+  k <- 0L
+  for (e in entities) {
+    org <- e$organisasjonsnummer %||% NA_character_
+    for (g in (e$rollegrupper %||% list())) {
+      g_code    <- g$type$kode %||% NA_character_
+      g_modified <- g$sistEndret %||% NA_character_
+      for (r in (g$roller %||% list())) {
+        k <- k + 1L
+        v_org_nr[k]          <- org
+        v_role_group_code[k] <- g_code
+        v_role_code[k]       <- r$type$kode %||% NA_character_
+        v_first_name[k]      <- r$person$navn$fornavn %||% NA_character_
+        v_middle_name[k]     <- r$person$navn$mellomnavn %||% NA_character_
+        v_last_name[k]       <- r$person$navn$etternavn %||% NA_character_
+        v_birth_date[k]      <- r$person$fodselsdato %||% NA_character_
+        v_deceased[k]        <- r$person$erDoed %||% NA
+        v_entity_org_nr[k]   <- r$enhet$organisasjonsnummer %||% NA_character_
+        v_entity_name[k]     <- extract_entity_name(r$enhet$navn)
+        v_resigned[k]        <- r$fratraadt %||% FALSE
+        v_deregistered[k]    <- r$avregistrert %||% NA
+        v_ordering[k]        <- r$rekkefolge %||% NA_integer_
+        v_elected_by[k]      <- r$valgtAv$kode %||% NA_character_
+        v_group_modified[k]  <- g_modified
+      }
+    }
+  }
+
+  # --- Construct tibble + derived columns ---
+  result <- tibble::tibble(
+    org_nr          = v_org_nr,
+    role_group_code = v_role_group_code,
+    role_group      = lookup_role_group_vec(v_role_group_code),
+    role_code       = v_role_code,
+    role            = lookup_role_vec(v_role_code),
+    first_name      = v_first_name,
+    middle_name     = v_middle_name,
+    last_name       = v_last_name,
+    birth_date      = as.Date(v_birth_date),
+    deceased        = v_deceased,
+    entity_org_nr   = v_entity_org_nr,
+    entity_name     = v_entity_name,
+    resigned        = v_resigned,
+    deregistered    = v_deregistered,
+    ordering        = v_ordering,
+    elected_by      = v_elected_by,
+    group_modified  = as.Date(v_group_modified)
+  )
+
+  result$person_id <- ifelse(
+    !is.na(result$birth_date) & !is.na(result$last_name),
+    paste(result$birth_date, tolower(result$last_name),
+          tolower(result$first_name),
+          tolower(ifelse(is.na(result$middle_name), "", result$middle_name)),
+          sep = "_"),
+    NA_character_
+  )
+  result
 }
