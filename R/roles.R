@@ -110,6 +110,9 @@ flatten_roles <- function(raw, org_nr) {
 extract_entity_name <- function(navn) {
   if (is.null(navn)) return(NA_character_)
   if (is.character(navn)) return(paste(navn, collapse = " "))
+  if (is.list(navn) && is.null(names(navn))) {
+    return(paste(unlist(navn), collapse = " "))
+  }
   navn$navnelinje1 %||% NA_character_
 }
 
