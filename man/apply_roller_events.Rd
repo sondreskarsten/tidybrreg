@@ -2,13 +2,29 @@
 % Please edit documentation in R/sync.R
 \name{apply_roller_events}
 \alias{apply_roller_events}
-\title{Apply roller CDC events to state}
+\title{Apply roller CDC events via bulk totalbestand diff}
 \usage{
 apply_roller_events(state, updates, verbose = TRUE)
 }
+\arguments{
+\item{state}{Current roller state tibble (from previous sync).}
+
+\item{updates}{Tibble of CDC events with \code{org_nr}, \code{timestamp},
+\code{update_id}. Used for cursor advancement and per-org timestamp
+enrichment on the changelog.}
+
+\item{verbose}{Logical. Print progress messages.}
+}
+\value{
+List with \code{state} (updated tibble) and \code{changelog}
+(field-level diff tibble matching \code{\link[=brreg_changes]{brreg_changes()}} schema).
+}
 \description{
-Roller events are bare notifications (\code{rolle.oppdatert} with only
-org_nr). For each unique affected org_nr, fetches current roles
-via API, diffs against stored state, and logs changes.
+Downloads the full roller totalbestand (~131 MB), parses it via
+\code{\link[=read_roles_json]{read_roles_json()}} + \code{\link[=flatten_roles_bulk_fast]{flatten_roles_bulk_fast()}}, and computes a
+field-level diff against stored state using \code{\link[=diff_roller_state]{diff_roller_state()}}.
+Roller CDC events are bare notifications (\code{rolle.oppdatert} with
+only org_nr) — they carry no field-level changes, so the bulk diff
+is the only way to determine what actually changed.
 }
 \keyword{internal}

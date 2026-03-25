@@ -18,6 +18,8 @@ navbar:
         href: articles/panels.html
       - text: Governance research
         href: articles/governance.html
+      - text: Tracking role changes
+        href: articles/roller-cdc.html
       - text: "---"
       - text: Architecture
         href: articles/architecture.html
@@ -43,7 +45,8 @@ reference:
 - title: Roles and governance
   desc: >
     Board members, officers, auditors, and inter-company role
-    relationships. See `vignette("governance")` for network analysis.
+    relationships. See `vignette("governance")` for network analysis
+    and `vignette("roller-cdc")` for change detection.
   contents:
   - brreg_roles
   - brreg_roles_legal
@@ -51,6 +54,7 @@ reference:
   - brreg_board_network
   - brreg_network
   - brreg_survival_data
+  - diff_roller_state
 
 - title: Bulk downloads
   desc: >

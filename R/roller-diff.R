@@ -37,7 +37,21 @@
 #'   `value_to`, `update_id`.
 #'
 #' @family tidybrreg data management functions
+#' @seealso [brreg_sync()] for automated sync with changelog persistence,
+#'   [brreg_roles()] for fetching current roles,
+#'   [brreg_changes()] for querying stored changelogs.
+#'
 #' @export
+#' @examplesIf interactive() && curl::has_internet()
+#' # Detect board changes for a single company
+#' old <- brreg_roles("923609016")
+#' Sys.sleep(1)
+#' new <- brreg_roles("923609016")
+#' diff_roller_state(old, new)
+#'
+#' # Bootstrap: NULL old state treats all roles as entries
+#' roles <- brreg_roles("923609016")
+#' diff_roller_state(NULL, roles)
 diff_roller_state <- function(old_state, new_state,
                                timestamp = format(Sys.time(),
                                                    "%Y-%m-%dT%H:%M:%S"),

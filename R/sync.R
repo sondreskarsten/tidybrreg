@@ -567,12 +567,22 @@ apply_slett_events <- function(state, paat_state, slett_events, type) {
 }
 
 
-#' Apply roller CDC events to state
+#' Apply roller CDC events via bulk totalbestand diff
 #'
-#' Roller events are bare notifications (`rolle.oppdatert` with only
-#' org_nr). For each unique affected org_nr, fetches current roles
-#' via API, diffs against stored state, and logs changes.
+#' Downloads the full roller totalbestand (~131 MB), parses it via
+#' [read_roles_json()] + [flatten_roles_bulk_fast()], and computes a
+#' field-level diff against stored state using [diff_roller_state()].
+#' Roller CDC events are bare notifications (`rolle.oppdatert` with
+#' only org_nr) — they carry no field-level changes, so the bulk diff
+#' is the only way to determine what actually changed.
 #'
+#' @param state Current roller state tibble (from previous sync).
+#' @param updates Tibble of CDC events with `org_nr`, `timestamp`,
+#'   `update_id`. Used for cursor advancement and per-org timestamp
+#'   enrichment on the changelog.
+#' @param verbose Logical. Print progress messages.
+#' @returns List with `state` (updated tibble) and `changelog`
+#'   (field-level diff tibble matching [brreg_changes()] schema).
 #' @keywords internal
 apply_roller_events <- function(state, updates, verbose = TRUE) {
   affected_orgs <- unique(updates$org_nr)

@@ -1,3 +1,62 @@
+# tidybrreg 0.3.4
+
+## Roller CDC: field-level change detection
+
+* `diff_roller_state()` (new, exported) — computes field-level diffs
+  between two flattened roller state tibbles. Returns a long-format
+  changelog with `change_type` (entry/exit/change), `field`,
+  `value_from`, `value_to`. Roles are keyed by a composite of
+  `(org_nr, role_group_code, role_code, holder_id)` where holder_id
+  is derived from `person_id` (person-held) or
+  `entity:{org_nr}` (entity-held).
+* `brreg_sync(roller_method = "bulk")` — new default strategy for
+  roller CDC. Downloads the full totalbestand (~131 MB), diffs against
+  stored state, and writes a field-level changelog. Replaces the
+  per-org API pattern for full-register syncs.
+* `brreg_sync(roller_method = "cdc")` — per-org API fallback for
+  sub-daily syncs. Fetches current roles via `brreg_roles()` for each
+  CDC event, diffs per-org. Slower but provides per-event timestamp
+  attribution.
+* `flatten_roles()` gains 4 new columns: `deregistered` (avregistrert),
+  `ordering` (rekkefolge), `elected_by` (valgtAv$kode),
+  `group_modified` (sistEndret as Date).
+* `brreg_board_summary()` now excludes resigned and deregistered roles
+  from all counts and gains `n_employee_elected` (count of board
+  members with a non-NA `elected_by` value).
+
+## Performance
+
+* `flatten_roles_bulk_fast()` (internal) — vectorized two-pass
+  flatten for bulk totalbestand. Pre-allocates vectors and fills by
+  index. 4.1× faster than the per-entity `flatten_roles()` path
+  (4,192 vs 1,028 roles/sec).
+* `read_roles_json()` (internal) — dispatches to yyjsonr when
+  available (10× parse speed, 70× lower memory vs jsonlite).
+  yyjsonr added to Suggests.
+* `lookup_role_vec()` and `lookup_role_group_vec()` (internal) —
+  vectorized code-to-label lookups replacing per-row `match()`.
+
+## Bug fixes
+
+* `extract_entity_name()` no longer returns NA for entity-held roles.
+  The brreg API returns `enhet.navn` as a JSON array `["ERNST & YOUNG
+  AS"]`, not a named object. jsonlite parses this as an unnamed list,
+  which the old code did not handle. Added unnamed list branch.
+* `read_roles_json()` now decompresses `.gz` files to a temp file
+  before passing to yyjsonr. yyjsonr cannot read gzipped files
+  directly; the previous code crashed with a buffer allocation error
+  on the 131 MB totalbestand.
+* `paginate_cdc_bounded()` (internal) caps roller CDC pagination at
+  5 pages (50K events) when using `roller_method = "bulk"`. The
+  previous unbounded `paginate_cdc()` fetched the entire CDC history
+  (1.1M+ events) from cursor 0 on first bootstrap, causing 30-minute
+  timeouts.
+* `add_role_key()` no longer crashes on 0-row tibbles. Previously,
+  `case_when(df$person_id ...)` received NULL instead of NA when
+  passed a 0-column tibble from a 404 API response.
+* `apply_roller_events_cdc()` skips `diff_roller_state()` when both
+  old and new state are empty (entity not in state AND 404 from API).
+
 # tidybrreg 0.3.3
 
 ## Bug fixes

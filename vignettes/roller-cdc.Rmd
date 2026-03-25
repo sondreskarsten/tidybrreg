@@ -1,0 +1,183 @@
+---
+title: "Tracking board and role changes"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Tracking board and role changes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+The Norwegian business registry records every board member, CEO,
+auditor, and accountant for all ~1 million legal entities. tidybrreg
+provides two mechanisms to detect when these roles change: automated
+sync via `brreg_sync()`, and manual diffing via `diff_roller_state()`.
+
+## Roller data: two types of role holder
+
+Every role assignment is either **person-held** (board members, CEOs,
+sole proprietors) or **entity-held** (auditor firms, accountants).
+The two types have completely disjoint column patterns:
+
+| Column | Person-held | Entity-held |
+|---|---|---|
+| `person_id` | `1968-05-04_opedal_anders_` | NA |
+| `entity_org_nr` | NA | `976389387` |
+| `entity_name` | NA | `ERNST & YOUNG AS` |
+| `first_name` | `Anders` | NA |
+| `birth_date` | `1968-05-04` | NA |
+
+Person-held roles make up ~80% of the register. Entity-held roles
+(auditors, accountants) make up ~20%.
+
+## Fetching roles
+
+```{r}
+library(tidybrreg)
+library(dplyr)
+
+# Single entity
+roles <- brreg_roles("923609016")
+roles
+```
+
+`brreg_roles()` returns one row per role assignment with 18 columns.
+The `role_group_code` column identifies the category (STYR = board,
+DAGL = CEO, REVI = auditor, REGN = accountant), while `role_code`
+identifies the specific position (LEDE = chair, MEDL = member, etc.).
+
+## Board summary
+
+```{r}
+roles |> brreg_board_summary()
+```
+
+`brreg_board_summary()` computes governance covariates from the role
+data. Resigned and deregistered roles are excluded from all counts.
+The `n_employee_elected` count identifies board members elected by
+employees (those with a non-NA `elected_by` value).
+
+## Detecting changes with diff_roller_state()
+
+`diff_roller_state()` is the core change detection function. It takes
+two role state tibbles and returns a long-format changelog recording
+every field-level mutation.
+
+```{r}
+old <- brreg_roles("810556722")
+# ... time passes, board changes occur ...
+new <- brreg_roles("810556722")
+
+changes <- diff_roller_state(old, new)
+changes
+```
+
+The changelog has 8 columns: `timestamp`, `org_nr`, `registry`,
+`change_type`, `field`, `value_from`, `value_to`, `update_id`.
+
+Three types of change are detected:
+
+- **entry**: a new role assignment appears (new board member, new auditor)
+- **exit**: a role assignment disappears (board member steps down)
+- **change**: a field value changes on a continuing role (e.g. `deceased` FALSE → TRUE)
+
+Roles are identified by a composite key: `(org_nr, role_group_code,
+role_code, holder_id)`. For person-held roles, `holder_id` is the
+synthetic `person_id`. For entity-held roles, it is
+`entity:{org_nr}`. When an auditor switches from PwC to Deloitte,
+this appears as an exit + entry pair (different holder identity), not
+as a field modification.
+
+## Automated sync
+
+`brreg_sync()` automates the download-diff-persist cycle. Two
+strategies are available for roller data:
+
+### Bulk method (default)
+
+```{r}
+brreg_sync(types = "roller", roller_method = "bulk")
+```
+
+Downloads the full totalbestand (~131 MB), parses it, diffs against
+stored state, writes the changelog and updated state. The CDC
+endpoint is polled only for cursor advancement (capped at 5 pages).
+This is the recommended approach for daily or weekly syncs.
+
+### CDC method (per-org fallback)
+
+```{r}
+brreg_sync(types = "roller", roller_method = "cdc")
+```
+
+Polls the CDC endpoint for affected org numbers, then calls
+`brreg_roles()` for each org individually and diffs per-org. Slower
+(one API call per affected entity), but provides per-event timestamp
+attribution. Useful for sub-daily monitoring of a known entity set.
+
+### Querying the changelog
+
+After sync, the changelog is stored as Hive-partitioned Parquet:
+
+```{r}
+# All roller changes
+brreg_changes(registry = "roller")
+
+# Board entries only
+brreg_changes(registry = "roller", change_type = "entry")
+
+# Changes for a specific company
+brreg_changes(registry = "roller", org_nr = "923609016")
+
+# Summary counts
+brreg_change_summary(registry = "roller")
+```
+
+## Example: monitoring board turnover
+
+A typical use case is detecting board/management changes for a
+portfolio of companies:
+
+```{r}
+# 1. Poll CDC for orgs with role changes
+cdc <- brreg_updates(type = "roller", since = Sys.Date() - 7)
+
+# 2. Fetch current roles for changed orgs
+changed_orgs <- unique(cdc$org_nr)
+current <- bind_rows(lapply(changed_orgs, function(org) {
+  tryCatch(brreg_roles(org), error = function(e) tibble())
+}))
+
+# 3. Filter to board/management
+board_mgmt <- current |>
+  filter(role_group_code %in% c("STYR", "DAGL"))
+
+# 4. Diff against previous state
+previous <- arrow::read_parquet("previous_state.parquet") |>
+  filter(org_nr %in% changed_orgs,
+         role_group_code %in% c("STYR", "DAGL"))
+
+changes <- diff_roller_state(previous, board_mgmt)
+
+# 5. Inspect
+changes |>
+  filter(change_type %in% c("entry", "exit")) |>
+  count(change_type, field = "role_group")
+```
+
+## Schema evolution
+
+State files written before v0.3.4 have 14 columns. Current state
+has 18 columns (added `deregistered`, `ordering`, `elected_by`,
+`group_modified`). When `brreg_sync()` encounters a legacy state
+file, it backfills the missing columns as NA before diffing. The
+resulting changelog contains `change` events for every role where
+the new columns have non-NA values (NA → actual value). This is a
+one-time migration artifact reflecting real data enrichment.

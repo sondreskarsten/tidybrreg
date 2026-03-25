@@ -57,7 +57,24 @@ are \code{NA} in the old state are excluded. For modifications, a change
 from \code{NA} to a non-NA value (or vice versa) is recorded.
 }
 
+\examples{
+\dontshow{if (interactive() && curl::has_internet()) withAutoprint(\{ # examplesIf}
+# Detect board changes for a single company
+old <- brreg_roles("923609016")
+Sys.sleep(1)
+new <- brreg_roles("923609016")
+diff_roller_state(old, new)
+
+# Bootstrap: NULL old state treats all roles as entries
+roles <- brreg_roles("923609016")
+diff_roller_state(NULL, roles)
+\dontshow{\}) # examplesIf}
+}
 \seealso{
+\code{\link[=brreg_sync]{brreg_sync()}} for automated sync with changelog persistence,
+\code{\link[=brreg_roles]{brreg_roles()}} for fetching current roles,
+\code{\link[=brreg_changes]{brreg_changes()}} for querying stored changelogs.
+
 Other tidybrreg data management functions: 
 \code{\link{brreg_annotation_summary}()},
 \code{\link{brreg_annotations}()},

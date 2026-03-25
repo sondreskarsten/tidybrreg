@@ -86,6 +86,28 @@ brreg_roles_legal("923609016")
 #> 2 923609016 925461784     EQUINOR DEZASSETE AS             Accountant NA
 ```
 
+## Role change detection
+
+Detect board and management changes at field level. Two approaches:
+
+``` r
+# Manual diff between two states
+old <- brreg_roles("810556722")
+new <- brreg_roles("810556722")
+diff_roller_state(old, new)
+#> # A tibble: 12 x 8
+#>   timestamp  org_nr    registry change_type field      value_from value_to
+#>   <chr>      <chr>     <chr>    <chr>       <chr>      <chr>      <chr>
+#> 1 2026-03-25 810556722 roller   entry       role_group NA         Board...
+#> 2 2026-03-25 810556722 roller   exit        first_name Kari       NA
+
+# Automated sync with persistent state + changelog
+brreg_sync(types = "roller", roller_method = "bulk")
+brreg_changes(registry = "roller", change_type = "entry")
+```
+
+See `vignette("roller-cdc")` for the full workflow.
+
 ## Bulk downloads
 
 Three registries available as bulk downloads:
@@ -180,6 +202,8 @@ surv <- brreg_search(legal_form = "AS", max_results = 1000) |>
 
 ``` r
 library(tidybrreg)
+#> tidybrreg: bulk data not yet downloaded for: enheter, underenheter.
+#> Run brreg_snapshot() for full network/panel support. See ?brreg_status for details.
 brreg_validate(c("923609016", "984851006", "123456789"))
 #> [1]  TRUE  TRUE FALSE
 ```
