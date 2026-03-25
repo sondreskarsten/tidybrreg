@@ -2,14 +2,19 @@
 % Please edit documentation in R/state.R
 \name{write_cursor}
 \alias{write_cursor}
-\title{Write the sync cursor atomically}
+\title{Write the sync cursor}
 \usage{
 write_cursor(cursor)
 }
 \arguments{
-\item{cursor}{A list with cursor positions.}
+\item{cursor}{A list with \code{enheter_id}, \code{underenheter_id},
+\code{roller_id} (integer cursor positions).}
+}
+\value{
+The file path (invisibly).
 }
 \description{
-Write the sync cursor atomically
+Stores cursor positions as a single-row parquet file. The
+\code{last_sync} field is set to the current time automatically.
 }
 \keyword{internal}

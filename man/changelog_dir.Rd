@@ -6,7 +6,11 @@
 \usage{
 changelog_dir()
 }
+\value{
+Character path or URI.
+}
 \description{
-Path to the changelog directory
+Returns \verb{state_dir()/changelog/}. Changelog entries are
+Hive-partitioned by \code{sync_date}.
 }
 \keyword{internal}

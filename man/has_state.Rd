@@ -6,6 +6,12 @@
 \usage{
 has_state(type)
 }
+\arguments{
+\item{type}{Registry type string.}
+}
+\value{
+Logical.
+}
 \description{
 Check whether state exists for a given type
 }

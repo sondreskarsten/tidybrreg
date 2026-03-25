@@ -187,22 +187,43 @@ brreg_snapshots <- function(type = c("enheter", "underenheter", "roller")) {
 }
 
 
-#' Path to the tidybrreg snapshot store
+#' Path to the tidybrreg data store
 #'
-#' Returns (and creates if needed) the directory where tidybrreg stores
-#' Parquet snapshots. Location follows R's standard user data directory
-#' convention via `tools::R_user_dir("tidybrreg", "data")`.
-#' Override with `options(brreg.data_dir = "/custom/path")`.
+#' Returns (and creates if needed) the root directory where tidybrreg
+#' stores Parquet snapshots, sync state, and changelog files.
 #'
-#' @returns Character path.
+#' By default uses R's standard user data directory via
+#' `tools::R_user_dir("tidybrreg", "data")`. Override with
+#' `options(brreg.data_dir = "/custom/path")`.
+#'
+#' Supports cloud storage URIs (`gs://`, `s3://`) when \pkg{arrow}
+#' is installed with the corresponding backend compiled in. Cloud
+#' paths skip local directory creation — object stores use key
+#' prefixes rather than explicit directories.
+#'
+#' @returns Character path or URI.
 #'
 #' @family tidybrreg snapshot functions
 #' @export
 #' @examples
 #' brreg_data_dir()
+#'
+#' \dontrun{
+#' # Use Google Cloud Storage as the data store
+#' options(brreg.data_dir = "gs://my-bucket/tidybrreg")
+#' brreg_data_dir()
+#'
+#' # Use S3-compatible storage
+#' options(brreg.data_dir = "s3://my-bucket/tidybrreg")
+#' brreg_data_dir()
+#' }
 brreg_data_dir <- function() {
   dir <- getOption("brreg.data_dir", tools::R_user_dir("tidybrreg", "data"))
-  if (!dir.exists(dir)) dir.create(dir, recursive = TRUE, showWarnings = FALSE)
+  if (is_cloud_path(dir)) {
+    check_cloud_arrow(dir)
+  } else {
+    if (!dir.exists(dir)) dir.create(dir, recursive = TRUE, showWarnings = FALSE)
+  }
   dir
 }
 

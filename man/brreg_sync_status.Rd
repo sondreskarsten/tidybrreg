@@ -12,7 +12,7 @@ A list with status components (invisibly).
 \description{
 Shows the current state of the sync engine: which state files
 exist, when the last sync occurred, cursor positions, and
-changelog size.
+changelog size. Works on both local and cloud storage backends.
 }
 \examples{
 brreg_sync_status()

@@ -2,21 +2,39 @@
 % Please edit documentation in R/snapshot.R
 \name{brreg_data_dir}
 \alias{brreg_data_dir}
-\title{Path to the tidybrreg snapshot store}
+\title{Path to the tidybrreg data store}
 \usage{
 brreg_data_dir()
 }
 \value{
-Character path.
+Character path or URI.
 }
 \description{
-Returns (and creates if needed) the directory where tidybrreg stores
-Parquet snapshots. Location follows R's standard user data directory
-convention via \code{tools::R_user_dir("tidybrreg", "data")}.
-Override with \code{options(brreg.data_dir = "/custom/path")}.
+Returns (and creates if needed) the root directory where tidybrreg
+stores Parquet snapshots, sync state, and changelog files.
+}
+\details{
+By default uses R's standard user data directory via
+\code{tools::R_user_dir("tidybrreg", "data")}. Override with
+\code{options(brreg.data_dir = "/custom/path")}.
+
+Supports cloud storage URIs (\verb{gs://}, \verb{s3://}) when \pkg{arrow}
+is installed with the corresponding backend compiled in. Cloud
+paths skip local directory creation — object stores use key
+prefixes rather than explicit directories.
 }
 \examples{
 brreg_data_dir()
+
+\dontrun{
+# Use Google Cloud Storage as the data store
+options(brreg.data_dir = "gs://my-bucket/tidybrreg")
+brreg_data_dir()
+
+# Use S3-compatible storage
+options(brreg.data_dir = "s3://my-bucket/tidybrreg")
+brreg_data_dir()
+}
 }
 \seealso{
 Other tidybrreg snapshot functions: 

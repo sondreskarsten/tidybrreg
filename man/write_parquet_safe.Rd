@@ -2,17 +2,23 @@
 % Please edit documentation in R/parquet-utils.R
 \name{write_parquet_safe}
 \alias{write_parquet_safe}
-\title{Write a data frame to parquet atomically}
+\title{Write a data frame to parquet}
 \usage{
 write_parquet_safe(df, path)
 }
 \arguments{
-\item{df}{A data frame.}
+\item{df}{A data frame or tibble.}
 
-\item{path}{Target file path.}
+\item{path}{Target file path or cloud URI.}
+}
+\value{
+The path (invisibly).
 }
 \description{
-Writes to a temporary file first, then renames to the target path.
-Dispatches to arrow or nanoparquet depending on availability.
+On local paths, writes to a temporary file first then renames for
+atomicity. On cloud URIs (\verb{gs://}, \verb{s3://}), writes directly via
+\code{\link[arrow:write_parquet]{arrow::write_parquet()}} — cloud object stores provide their own
+atomicity guarantees. Dispatches to \pkg{nanoparquet} when
+\pkg{arrow} is unavailable and the path is local.
 }
 \keyword{internal}

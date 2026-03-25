@@ -7,7 +7,7 @@
 read_changelog(from = NULL, to = NULL, registry = NULL, change_type = NULL)
 }
 \arguments{
-\item{from, to}{Optional date bounds.}
+\item{from, to}{Optional date bounds (character or Date).}
 
 \item{registry}{Optional filter: \code{"enheter"}, \code{"underenheter"},
 \code{"roller"}, \code{"paategninger"}.}
@@ -20,8 +20,10 @@ A tibble of changelog rows.
 }
 \description{
 Reads all or filtered changelog partitions. Uses
-\code{arrow::open_dataset()} when available for partition pruning,
-falls back to reading individual parquet files.
+\code{\link[arrow:open_dataset]{arrow::open_dataset()}} when available for partition pruning;
+required for cloud URIs. Falls back to reading individual
+parquet files on local paths when only \pkg{nanoparquet} is
+installed.
 }
 \seealso{
 Other tidybrreg data management functions: 

@@ -17,6 +17,7 @@ A tibble or \code{NULL}.
 }
 \description{
 Loads state from parquet, caching in \code{.brregEnv} for the session.
-Returns \code{NULL} if no state file exists.
+Returns \code{NULL} if no state file exists. Works transparently on
+local paths and cloud URIs.
 }
 \keyword{internal}

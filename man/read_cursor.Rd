@@ -7,12 +7,19 @@
 read_cursor()
 }
 \value{
-A list with \code{enheter_id}, \code{underenheter_id}, \code{roller_id},
-\code{last_sync}. Returns defaults if no cursor exists.
+A list with \code{enheter_id} (integer), \code{underenheter_id}
+(integer), \code{roller_id} (integer), \code{last_sync} (character ISO
+timestamp or \code{NA}).
 }
 \description{
-The cursor tracks the last-seen \code{oppdateringsid} for each CDC
-stream and the last sync timestamp. Stored as JSON in
-\code{state/sync_cursor.json}.
+The cursor tracks the last-seen \code{update_id} for each CDC stream
+and the last sync timestamp. Stored as a single-row parquet file
+at \code{state/sync_cursor.parquet}.
+}
+\details{
+On first read after upgrading from v0.3.x, migrates the legacy
+JSON cursor (\code{sync_cursor.json}) to parquet automatically. The
+JSON file is deleted after successful migration. Migration is
+skipped on cloud paths (no legacy JSON expected).
 }
 \keyword{internal}

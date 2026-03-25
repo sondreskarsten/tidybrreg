@@ -10,6 +10,8 @@ parquet_tier()
 One of \code{"arrow"}, \code{"nanoparquet"}, or \code{"none"}.
 }
 \description{
-Detect available parquet backend
+Returns the best available parquet library. Prefers \pkg{arrow}
+(full-featured, supports cloud storage) over \pkg{nanoparquet}
+(lightweight, local only).
 }
 \keyword{internal}

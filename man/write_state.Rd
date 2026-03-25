@@ -11,7 +11,12 @@ write_state(df, type)
 
 \item{type}{Registry type.}
 }
+\value{
+The file path (invisibly).
+}
 \description{
-Write state atomically and update session cache
+Writes a state tibble to parquet under \code{state_dir()}. On local
+paths uses temp-file-and-rename for atomicity. On cloud URIs
+writes directly (cloud object stores are atomic per-object).
 }
 \keyword{internal}

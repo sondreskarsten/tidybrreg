@@ -7,12 +7,13 @@
 read_parquet_safe(path)
 }
 \arguments{
-\item{path}{Path to parquet file.}
+\item{path}{Path or cloud URI to a parquet file.}
 }
 \value{
-A tibble.
+A \link[tibble:tibble-package]{tibble}.
 }
 \description{
-Read a parquet file to tibble
+Cloud URIs require \pkg{arrow}. Local paths dispatch to
+\pkg{nanoparquet} when \pkg{arrow} is unavailable.
 }
 \keyword{internal}

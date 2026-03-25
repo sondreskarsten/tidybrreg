@@ -7,12 +7,18 @@
 write_changelog(changes, sync_date = Sys.Date())
 }
 \arguments{
-\item{changes}{A tibble with changelog rows.}
+\item{changes}{A tibble with changelog rows matching the schema
+returned by \code{\link[=empty_changelog]{empty_changelog()}}.}
 
-\item{sync_date}{Date for the partition key.}
+\item{sync_date}{Date for the partition key. Defaults to today.}
+}
+\value{
+The written file path (invisibly), or \code{NULL} if
+\code{changes} is empty.
 }
 \description{
 Writes one parquet file per sync batch under
-\verb{changelog/sync_date=\{date\}/batch-\{time\}.parquet}.
+\verb{changelog/sync_date=\{date\}/batch-\{time\}.parquet}. Works on
+local paths and cloud URIs.
 }
 \keyword{internal}

@@ -6,6 +6,9 @@
 \usage{
 empty_changelog()
 }
+\value{
+A zero-row tibble with the changelog column spec.
+}
 \description{
 Empty changelog tibble with correct schema
 }

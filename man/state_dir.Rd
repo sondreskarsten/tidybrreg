@@ -7,10 +7,11 @@
 state_dir()
 }
 \value{
-Character path (created if absent).
+Character path or URI.
 }
 \description{
 Returns \verb{brreg_data_dir()/state/}. Contains live state parquets,
-the sync cursor, and the Hive-partitioned changelog.
+the sync cursor, and the Hive-partitioned changelog. On cloud
+URIs the directory is virtual (implied by object key prefix).
 }
 \keyword{internal}
