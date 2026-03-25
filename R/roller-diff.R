@@ -102,6 +102,11 @@ diff_roller_state <- function(old_state, new_state,
 #' @returns The input with `holder_id` and `role_key` appended.
 #' @keywords internal
 add_role_key <- function(df) {
+  if (nrow(df) == 0L) {
+    df$holder_id <- character(0)
+    df$role_key  <- character(0)
+    return(df)
+  }
   df$holder_id <- dplyr::case_when(
     !is.na(df$person_id)     ~ df$person_id,
     !is.na(df$entity_org_nr) ~ paste0("entity:", df$entity_org_nr),

@@ -663,9 +663,11 @@ apply_roller_events_cdc <- function(state, updates, verbose = TRUE) {
       tibble::tibble()
     }
 
+    if (nrow(old_roles) == 0 && nrow(new_roles_safe) == 0) next
+
     cl <- diff_roller_state(
       old_state  = if (nrow(old_roles) > 0) old_roles else NULL,
-      new_state  = if (nrow(new_roles_safe) > 0) new_roles_safe else tibble::tibble(),
+      new_state  = new_roles_safe,
       timestamp  = event_row$timestamp,
       update_id  = event_row$update_id
     )
