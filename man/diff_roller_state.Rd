@@ -67,4 +67,3 @@ Other tidybrreg data management functions:
 \code{\link{read_changelog}()}
 }
 \concept{tidybrreg data management functions}
-\keyword{internal}

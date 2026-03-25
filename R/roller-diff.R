@@ -37,7 +37,7 @@
 #'   `value_to`, `update_id`.
 #'
 #' @family tidybrreg data management functions
-#' @keywords internal
+#' @export
 diff_roller_state <- function(old_state, new_state,
                                timestamp = format(Sys.time(),
                                                    "%Y-%m-%dT%H:%M:%S"),
