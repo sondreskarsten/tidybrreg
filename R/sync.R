@@ -299,7 +299,7 @@ paginate_cdc_bounded <- function(from_id, size = 10000L,
         org_nr      = e$data$organisasjonsnummer %||% NA_character_,
         change_type = sub(".*\\.", "", e$type %||% ""),
         timestamp   = e$time %||% NA_character_,
-        endringer   = list(NULL)
+        endringer   = list(list())
       )
     }))
 
@@ -343,7 +343,7 @@ paginate_cdc <- function(type, from_id, size = 10000L, verbose = TRUE) {
           org_nr      = e$data$organisasjonsnummer %||% NA_character_,
           change_type = sub(".*\\.", "", e$type %||% ""),
           timestamp   = e$time %||% NA_character_,
-          endringer   = list(NULL)
+          endringer   = list(list())
         )
       }))
     } else {
