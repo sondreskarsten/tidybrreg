@@ -51,6 +51,12 @@
   previous unbounded `paginate_cdc()` fetched the entire CDC history
   (1.1M+ events) from cursor 0 on first bootstrap, causing 30-minute
   timeouts.
+* `parse_sync_page()` no longer produces tibble column size mismatches
+  when CDC pages contain events without `endringer` (Ny/Sletting).
+  `raw_changes[[i]] <- NULL` was deleting list elements instead of
+  preserving NULL placeholders (R double-bracket assignment semantics).
+  Fix: `list()` as empty placeholder. Affected all enheter and
+  underenheter sync since v0.3.2.
 * `add_role_key()` no longer crashes on 0-row tibbles. Previously,
   `case_when(df$person_id ...)` received NULL instead of NA when
   passed a 0-column tibble from a 404 API response.
