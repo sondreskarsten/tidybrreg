@@ -242,7 +242,7 @@ parse_sync_page <- function(raw_updates) {
     raw_changes[[i]] <- if (!is.null(u$endringer) && length(u$endringer) > 0) {
       u$endringer
     } else {
-      NULL
+      list()
     }
   }
 
