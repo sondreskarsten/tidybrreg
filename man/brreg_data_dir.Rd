@@ -19,6 +19,9 @@ Override with \code{options(brreg.data_dir = "/custom/path")}.
 brreg_data_dir()
 }
 \seealso{
+\code{\link[=brreg_snapshot]{brreg_snapshot()}} to save snapshots,
+\code{\link[=brreg_open]{brreg_open()}} to read them.
+
 Other tidybrreg snapshot functions: 
 \code{\link{brreg_cleanup}()},
 \code{\link{brreg_import}()},

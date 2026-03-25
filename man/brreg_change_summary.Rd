@@ -26,6 +26,9 @@ brreg_change_summary(from = Sys.Date() - 7)
 \dontshow{\}) # examplesIf}
 }
 \seealso{
+\code{\link[=brreg_changes]{brreg_changes()}} for raw changelog rows,
+\code{\link[=brreg_sync]{brreg_sync()}} to populate the changelog.
+
 Other tidybrreg panel functions: 
 \code{\link{as_brreg_tsibble}()},
 \code{\link{brreg_changes}()},

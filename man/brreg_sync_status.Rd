@@ -18,6 +18,9 @@ changelog size.
 brreg_sync_status()
 }
 \seealso{
+\code{\link[=brreg_sync]{brreg_sync()}} to run a sync,
+\code{\link[=brreg_changes]{brreg_changes()}} to query the changelog.
+
 Other tidybrreg data management functions: 
 \code{\link{brreg_annotation_summary}()},
 \code{\link{brreg_annotations}()},

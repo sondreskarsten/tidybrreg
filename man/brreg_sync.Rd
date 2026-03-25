@@ -43,7 +43,7 @@ Four state files are maintained:
 \itemize{
 \item \code{enheter.parquet} — main entities (~1M rows)
 \item \code{underenheter.parquet} — sub-entities (~500K rows)
-\item \code{roller.parquet} — all roles (~4.5M rows)
+\item \code{roller.parquet} — all roles (~3.4M rows)
 \item \code{paategninger.parquet} — registry annotations
 }
 

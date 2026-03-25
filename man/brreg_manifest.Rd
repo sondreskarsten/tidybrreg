@@ -19,6 +19,9 @@ The manifest lives at \code{brreg_data_dir()/manifest.json}.
 brreg_manifest()
 }
 \seealso{
+\code{\link[=brreg_snapshot]{brreg_snapshot()}} to create snapshots,
+\code{\link[=brreg_snapshots]{brreg_snapshots()}} to list them.
+
 Other tidybrreg snapshot functions: 
 \code{\link{brreg_cleanup}()},
 \code{\link{brreg_data_dir}()},

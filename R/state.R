@@ -197,6 +197,8 @@ empty_changelog <- function() {
 #' @returns A list with status components (invisibly).
 #'
 #' @family tidybrreg data management functions
+#' @seealso [brreg_sync()] to run a sync,
+#'   [brreg_changes()] to query the changelog.
 #' @export
 #' @examples
 #' brreg_sync_status()

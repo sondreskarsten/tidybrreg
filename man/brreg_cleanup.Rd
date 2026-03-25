@@ -33,6 +33,9 @@ brreg_cleanup(max_age_days = 365)
 \dontshow{\}) # examplesIf}
 }
 \seealso{
+\code{\link[=brreg_snapshots]{brreg_snapshots()}} to list available snapshots,
+\code{\link[=brreg_data_dir]{brreg_data_dir()}} for storage location.
+
 Other tidybrreg snapshot functions: 
 \code{\link{brreg_data_dir}()},
 \code{\link{brreg_import}()},

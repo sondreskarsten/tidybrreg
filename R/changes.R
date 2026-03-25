@@ -79,6 +79,8 @@ brreg_changes <- function(track = NULL,
 #' @returns A tibble with `registry`, `change_type`, `field`, `n`.
 #'
 #' @family tidybrreg panel functions
+#' @seealso [brreg_changes()] for raw changelog rows,
+#'   [brreg_sync()] to populate the changelog.
 #' @export
 #' @examplesIf interactive()
 #' brreg_change_summary(from = Sys.Date() - 7)

@@ -29,6 +29,8 @@ get_brreg_dic("sector")
 \dontshow{\}) # examplesIf}
 }
 \seealso{
+\code{\link[=brreg_label]{brreg_label()}} for translating columns in place.
+
 Other tidybrreg utilities: 
 \code{\link{brreg_label}()},
 \code{\link{brreg_validate}()}

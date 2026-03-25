@@ -60,7 +60,7 @@ reference:
   desc: >
     Download the full register as CSV or JSON. Three registries:
     enheter (~1M entities), underenheter (~950K sub-entities),
-    roller (~5M role records).
+    roller (~3.4M role records).
   contents:
   - brreg_download
   - brreg_status

@@ -9,7 +9,7 @@
 #' Four state files are maintained:
 #' - `enheter.parquet` — main entities (~1M rows)
 #' - `underenheter.parquet` — sub-entities (~500K rows)
-#' - `roller.parquet` — all roles (~4.5M rows)
+#' - `roller.parquet` — all roles (~3.4M rows)
 #' - `paategninger.parquet` — registry annotations
 #'
 #' Every mutation is logged to a Hive-partitioned changelog

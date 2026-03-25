@@ -143,6 +143,7 @@ build_label_map <- function(lang = "en") {
 #' @returns A tibble with columns `code`, `name_en`, `level`.
 #'
 #' @family tidybrreg utilities
+#' @seealso [brreg_label()] for translating columns in place.
 #' @export
 #' @examplesIf interactive() && curl::has_internet()
 #' get_brreg_dic("nace")

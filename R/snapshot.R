@@ -197,6 +197,8 @@ brreg_snapshots <- function(type = c("enheter", "underenheter", "roller")) {
 #' @returns Character path.
 #'
 #' @family tidybrreg snapshot functions
+#' @seealso [brreg_snapshot()] to save snapshots,
+#'   [brreg_open()] to read them.
 #' @export
 #' @examples
 #' brreg_data_dir()
@@ -221,6 +223,8 @@ brreg_data_dir <- function() {
 #' @returns A tibble of deleted snapshots (invisibly).
 #'
 #' @family tidybrreg snapshot functions
+#' @seealso [brreg_snapshots()] to list available snapshots,
+#'   [brreg_data_dir()] for storage location.
 #' @export
 #' @examplesIf FALSE
 #' brreg_cleanup(keep_n = 12)

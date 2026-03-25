@@ -8,6 +8,8 @@
 #'   if no manifest exists.
 #'
 #' @family tidybrreg snapshot functions
+#' @seealso [brreg_snapshot()] to create snapshots,
+#'   [brreg_snapshots()] to list them.
 #' @export
 #' @examples
 #' brreg_manifest()
