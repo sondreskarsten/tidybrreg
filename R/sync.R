@@ -145,7 +145,11 @@ sync_one_type <- function(type, cursor, size = 10000L,
                            roller_method = "bulk", verbose = TRUE) {
   cursor_id <- cursor[[paste0(type, "_id")]]
 
-  updates <- paginate_cdc(type, cursor_id, size = size, verbose = verbose)
+  if (type == "roller" && roller_method == "bulk") {
+    updates <- paginate_cdc_bounded(cursor_id, size = size, verbose = verbose)
+  } else {
+    updates <- paginate_cdc(type, cursor_id, size = size, verbose = verbose)
+  }
 
   if (is.null(updates) || nrow(updates) == 0) {
     if (verbose) cli::cli_alert_info("No new events")
@@ -249,6 +253,65 @@ parse_sync_page <- function(raw_updates) {
     timestamp   = timestamps,
     endringer   = raw_changes
   )
+}
+
+
+#' Paginate roller CDC with bounded page count
+#'
+#' For `roller_method = "bulk"`, the CDC poll is only used for
+#' cursor advancement and per-org timestamp enrichment. The bulk
+#' totalbestand diff covers all changes regardless of CDC events.
+#' This function caps pagination at `max_pages` to avoid fetching
+#' the entire CDC history on first bootstrap (cursor_id = 0).
+#'
+#' @param from_id Cursor position.
+#' @param size Page size.
+#' @param max_pages Hard cap on pages (default 5 = 50K events).
+#' @param verbose Print progress.
+#' @returns Tibble of CDC events, or empty tibble.
+#' @keywords internal
+paginate_cdc_bounded <- function(from_id, size = 10000L,
+                                  max_pages = 5L, verbose = TRUE) {
+  all_updates <- list()
+  current_id <- from_id
+  page <- 0L
+
+  repeat {
+    page <- page + 1L
+    if (page > max_pages) {
+      if (verbose) cli::cli_alert_info("Bulk roller: capped CDC poll at {max_pages} pages")
+      break
+    }
+
+    query <- list(afterId = current_id, size = size)
+    resp <- brreg_req("oppdateringer/roller") |>
+      httr2::req_url_query(!!!query) |>
+      httr2::req_error(is_error = \(resp) FALSE) |>
+      httr2::req_perform()
+
+    if (httr2::resp_status(resp) >= 400L) break
+    events <- httr2::resp_body_json(resp)
+    if (length(events) == 0) break
+
+    updates <- dplyr::bind_rows(lapply(events, function(e) {
+      tibble::tibble(
+        update_id   = as.integer(e$id %||% NA),
+        org_nr      = e$data$organisasjonsnummer %||% NA_character_,
+        change_type = sub(".*\\.", "", e$type %||% ""),
+        timestamp   = e$time %||% NA_character_,
+        endringer   = list(NULL)
+      )
+    }))
+
+    if (is.null(updates) || nrow(updates) == 0) break
+    all_updates <- c(all_updates, list(updates))
+    current_id <- max(updates$update_id)
+    if (verbose && page > 1) cli::cli_alert_info("  page {page}: {nrow(updates)} events")
+    if (nrow(updates) < size) break
+  }
+
+  if (length(all_updates) == 0) return(tibble::tibble())
+  dplyr::bind_rows(all_updates)
 }
 
 
