@@ -352,13 +352,32 @@ parse_roles_bulk <- function(path) {
 #' @returns A list of entity objects.
 #' @keywords internal
 read_roles_json <- function(path) {
+  is_gz <- grepl("\\.gz$", path)
+
   if (requireNamespace("yyjsonr", quietly = TRUE)) {
     opts <- yyjsonr::opts_read_json(
       obj_of_arrs_to_df = FALSE,
       arr_of_objs_to_df = FALSE
     )
+    if (is_gz) {
+      json_path <- tempfile(fileext = ".json")
+      on.exit(unlink(json_path), add = TRUE)
+      con_in  <- gzfile(path, open = "rb")
+      con_out <- file(json_path, open = "wb")
+      on.exit(close(con_in), add = TRUE)
+      on.exit(close(con_out), add = TRUE)
+      while (length(chunk <- readBin(con_in, "raw", n = 2^20)) > 0) {
+        writeBin(chunk, con_out)
+      }
+      close(con_out)
+      close(con_in)
+      on.exit(NULL)
+      on.exit(unlink(json_path), add = TRUE)
+      return(yyjsonr::read_json_file(json_path, opts = opts))
+    }
     return(yyjsonr::read_json_file(path, opts = opts))
   }
+
   cli::cli_alert_info(
     "Install {.pkg yyjsonr} for 7x faster JSON parsing and 70x lower memory."
   )
