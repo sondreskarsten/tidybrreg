@@ -2,6 +2,15 @@
 
 ## Roller CDC: field-level change detection
 
+* `bootstrap_state()` now initializes the CDC cursor to the current
+  tip (max event ID) at bootstrap time via `get_cdc_tip()`. Previously
+  the cursor remained at 0 after bootstrap, causing the first CDC poll
+  to replay the entire event history (~4.4M roller events, ~24M enheter
+  events). This caused OOM and timeout failures on Cloud Run.
+* `paginate_cdc()` gains a `max_pages` parameter and a safety guard:
+  if `cursor_id == 0` (no prior sync), pagination caps at 5 pages and
+  emits a `cli::cli_warn()`. Belt-and-suspenders — should never trigger
+  after a correct bootstrap.
 * `diff_roller_state()` (new, exported) — computes field-level diffs
   between two flattened roller state tibbles. Returns a long-format
   changelog with `change_type` (entry/exit/change), `field`,

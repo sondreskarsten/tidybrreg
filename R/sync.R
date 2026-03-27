@@ -134,6 +134,18 @@ bootstrap_state <- function(types, verbose = TRUE) {
     write_state(df, type)
     if (verbose) cli::cli_alert_success("{type}: {format(nrow(df), big.mark = ',')} rows")
   }
+
+  if (verbose) cli::cli_alert_info("Initializing cursor from CDC tip...")
+  cursor <- read_cursor()
+  for (type in types) {
+    cursor_key <- paste0(type, "_id")
+    if (cursor[[cursor_key]] == 0L) {
+      tip <- get_cdc_tip(type)
+      cursor[[cursor_key]] <- tip
+      if (verbose) cli::cli_alert_success("{type} cursor: {format(tip, big.mark = ',')}")
+    }
+  }
+  write_cursor(cursor)
 }
 
 
@@ -317,13 +329,28 @@ paginate_cdc_bounded <- function(from_id, size = 10000L,
 
 #' Paginate through CDC events from cursor position
 #' @keywords internal
-paginate_cdc <- function(type, from_id, size = 10000L, verbose = TRUE) {
+paginate_cdc <- function(type, from_id, size = 10000L, max_pages = NULL,
+                          verbose = TRUE) {
+  if (from_id == 0L && is.null(max_pages)) {
+    max_pages <- 5L
+    if (verbose) {
+      cli::cli_warn(c(
+        "!" = "CDC cursor is at 0 (no prior sync) \u2014 capping at {max_pages} pages.",
+        "i" = "Run {.fn bootstrap_state} or set cursor manually to avoid replaying history."
+      ))
+    }
+  }
+
   all_updates <- list()
   current_id <- from_id
   page <- 0L
 
   repeat {
     page <- page + 1L
+    if (!is.null(max_pages) && page > max_pages) {
+      if (verbose) cli::cli_alert_info("Capped CDC poll at {max_pages} pages")
+      break
+    }
     if (type == "roller") {
       query <- list(afterId = current_id, size = size)
 
@@ -374,6 +401,67 @@ paginate_cdc <- function(type, from_id, size = 10000L, verbose = TRUE) {
 
   if (length(all_updates) == 0) return(tibble::tibble())
   dplyr::bind_rows(all_updates)
+}
+
+
+#' Query the current CDC tip (max event ID) for a stream
+#'
+#' Used during bootstrap to initialize the cursor at the current
+#' position, preventing the first CDC poll from replaying the
+#' entire event history.
+#'
+#' @param type One of `"enheter"`, `"underenheter"`, `"roller"`.
+#' @returns Integer max event ID, or 0L if the endpoint is empty.
+#' @keywords internal
+get_cdc_tip <- function(type) {
+  today <- format(Sys.time(), "%Y-%m-%dT00:00:00.000Z")
+
+  if (type == "roller") {
+    resp <- brreg_req("oppdateringer/roller") |>
+      httr2::req_url_query(afterTime = today, size = 10000L) |>
+      httr2::req_error(is_error = \(resp) FALSE) |>
+      httr2::req_perform()
+    if (httr2::resp_status(resp) >= 400L) return(0L)
+    events <- httr2::resp_body_json(resp)
+    if (length(events) == 0) return(0L)
+    max_id <- as.integer(events[[length(events)]]$id %||% 0L)
+    while (length(events) == 10000L) {
+      resp <- brreg_req("oppdateringer/roller") |>
+        httr2::req_url_query(afterId = max_id, size = 10000L) |>
+        httr2::req_error(is_error = \(resp) FALSE) |>
+        httr2::req_perform()
+      if (httr2::resp_status(resp) >= 400L) break
+      events <- httr2::resp_body_json(resp)
+      if (length(events) == 0) break
+      max_id <- as.integer(events[[length(events)]]$id %||% max_id)
+    }
+    return(max_id)
+  }
+
+  resp <- brreg_req(paste0("oppdateringer/", type)) |>
+    httr2::req_url_query(dato = today, size = 10000L) |>
+    httr2::req_error(is_error = \(resp) FALSE) |>
+    httr2::req_perform()
+  if (httr2::resp_status(resp) >= 400L) return(0L)
+  body <- httr2::resp_body_json(resp)
+  key <- paste0("oppdaterte", tools::toTitleCase(type))
+  items <- body[["_embedded"]][[key]]
+  if (is.null(items) || length(items) == 0) return(0L)
+  max_id <- as.integer(items[[length(items)]]$oppdateringsid %||% 0L)
+  nxt <- body[["_links"]][["next"]][["href"]]
+  while (!is.null(nxt)) {
+    resp <- httr2::request(nxt) |>
+      httr2::req_headers(Accept = "application/json;charset=UTF-8") |>
+      httr2::req_error(is_error = \(resp) FALSE) |>
+      httr2::req_perform()
+    if (httr2::resp_status(resp) >= 400L) break
+    body <- httr2::resp_body_json(resp)
+    items <- body[["_embedded"]][[key]]
+    if (is.null(items) || length(items) == 0) break
+    max_id <- as.integer(items[[length(items)]]$oppdateringsid %||% max_id)
+    nxt <- body[["_links"]][["next"]][["href"]]
+  }
+  max_id
 }
 
 

@@ -4,7 +4,7 @@
 \alias{paginate_cdc}
 \title{Paginate through CDC events from cursor position}
 \usage{
-paginate_cdc(type, from_id, size = 10000L, verbose = TRUE)
+paginate_cdc(type, from_id, size = 10000L, max_pages = NULL, verbose = TRUE)
 }
 \description{
 Paginate through CDC events from cursor position
