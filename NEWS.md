@@ -7,6 +7,11 @@
   the cursor remained at 0 after bootstrap, causing the first CDC poll
   to replay the entire event history (~4.4M roller events, ~24M enheter
   events). This caused OOM and timeout failures on Cloud Run.
+* `bootstrap_state(roller_method = "cdc")` skips the roller
+  totalbestand download entirely. Writes an empty state table and
+  builds state incrementally via per-org `brreg_roles()` calls.
+  Reduces bootstrap from 32 GiB RAM / 30+ minutes to <10 seconds
+  and negligible memory.
 * `paginate_cdc()` gains a `max_pages` parameter and a safety guard:
   if `cursor_id == 0` (no prior sync), pagination caps at 5 pages and
   emits a `cli::cli_warn()`. Belt-and-suspenders — should never trigger

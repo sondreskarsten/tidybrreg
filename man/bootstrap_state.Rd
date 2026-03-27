@@ -4,9 +4,19 @@
 \alias{bootstrap_state}
 \title{Bootstrap state from bulk download}
 \usage{
-bootstrap_state(types, verbose = TRUE)
+bootstrap_state(types, roller_method = "bulk", verbose = TRUE)
+}
+\arguments{
+\item{types}{Character vector of streams to bootstrap.}
+
+\item{roller_method}{Passed from \code{\link[=brreg_sync]{brreg_sync()}}.}
+
+\item{verbose}{Logical.}
 }
 \description{
-Bootstrap state from bulk download
+When \code{roller_method = "cdc"}, writes an empty roller state instead
+of downloading the totalbestand (~125 MB compressed, ~3.4M rows).
+The CDC method builds state incrementally via per-org
+\code{\link[=brreg_roles]{brreg_roles()}} calls; full-register parse requires 32 GiB RAM.
 }
 \keyword{internal}

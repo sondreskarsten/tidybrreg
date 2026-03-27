@@ -61,7 +61,7 @@ brreg_sync <- function(types = c("enheter", "underenheter", "roller"),
   needs_bootstrap <- !all(vapply(types, has_state, logical(1)))
   if (needs_bootstrap) {
     if (verbose) cli::cli_h2("Bootstrapping state from bulk download")
-    bootstrap_state(types, verbose = verbose)
+    bootstrap_state(types, roller_method = roller_method, verbose = verbose)
   }
 
   cursor <- read_cursor()
@@ -115,10 +115,30 @@ brreg_sync <- function(types = c("enheter", "underenheter", "roller"),
 
 
 #' Bootstrap state from bulk download
+#'
+#' When `roller_method = "cdc"`, writes an empty roller state instead
+#' of downloading the totalbestand (~125 MB compressed, ~3.4M rows).
+#' The CDC method builds state incrementally via per-org
+#' [brreg_roles()] calls; full-register parse requires 32 GiB RAM.
+#'
+#' @param types Character vector of streams to bootstrap.
+#' @param roller_method Passed from [brreg_sync()].
+#' @param verbose Logical.
 #' @keywords internal
-bootstrap_state <- function(types, verbose = TRUE) {
+bootstrap_state <- function(types, roller_method = "bulk", verbose = TRUE) {
   for (type in types) {
     if (has_state(type)) next
+
+    if (type == "roller" && roller_method == "cdc") {
+      if (verbose) {
+        cli::cli_alert_info(
+          "Roller CDC method: writing empty state (skipping {.strong 125 MB} totalbestand download)"
+        )
+      }
+      write_state(empty_roller_state(), type)
+      next
+    }
+
     if (verbose) cli::cli_alert_info("Downloading {type} bulk data...")
     df <- brreg_download(type = type, type_output = "tibble")
 
@@ -1016,5 +1036,31 @@ empty_paategninger <- function() {
     infotype      = character(),
     tekst         = character(),
     innfoert_dato = character()
+  )
+}
+
+
+#' Empty roller state tibble matching [brreg_roles()] schema
+#' @keywords internal
+empty_roller_state <- function() {
+  tibble::tibble(
+    org_nr          = character(),
+    role_group_code = character(),
+    role_group      = character(),
+    role_code       = character(),
+    role            = character(),
+    first_name      = character(),
+    middle_name     = character(),
+    last_name       = character(),
+    birth_date      = as.Date(character()),
+    deceased        = logical(),
+    entity_org_nr   = character(),
+    entity_name     = character(),
+    resigned        = logical(),
+    deregistered    = logical(),
+    ordering        = integer(),
+    elected_by      = character(),
+    group_modified  = as.Date(character()),
+    person_id       = character()
   )
 }
