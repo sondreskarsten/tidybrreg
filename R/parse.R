@@ -41,6 +41,7 @@ rename_from_dict <- function(flat) {
       character = NA_character_,
       Date      = as.Date(NA),
       integer   = NA_integer_,
+      numeric   = NA_real_,
       logical   = NA,
       NA
     )
@@ -85,6 +86,7 @@ coerce_types <- function(tbl) {
     tbl[[col]] <- switch(target,
       Date      = as.Date(as.character(tbl[[col]])),
       integer   = as.integer(tbl[[col]]),
+      numeric   = as.numeric(tbl[[col]]),
       logical   = as.logical(tbl[[col]]),
       character = as.character(tbl[[col]]),
       tbl[[col]]

@@ -5,7 +5,7 @@
 \alias{field_dict}
 \title{Field dictionary: Norwegian API paths to English column names}
 \format{
-A tibble with 70 rows and 3 columns:
+A tibble with 103 rows and 3 columns:
 \describe{
 \item{api_path}{Dot-notation path in the brreg JSON response
 (e.g. \code{"organisasjonsnummer"}, \code{"forretningsadresse.kommune"}).}

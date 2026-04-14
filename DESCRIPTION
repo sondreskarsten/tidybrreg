@@ -1,6 +1,6 @@
 Package: tidybrreg
 Title: Tidy Access to Norway's Business Registry ('Enhetsregisteret')
-Version: 0.3.4
+Version: 0.3.5
 Authors@R: 
     person("Sondre", "Skarsten", role = c("aut", "cre"),
            email = "sondre.skarsten@example.com")
