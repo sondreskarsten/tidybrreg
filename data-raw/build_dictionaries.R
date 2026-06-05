@@ -208,6 +208,17 @@ role_groups <- tribble(
   "HLSE", "Health/Environment/Safety", "Helse, milj\u00f8 og sikkerhet"
 )
 
+annotation_infotypes <- tribble(
+  ~code,       ~name_en,
+  "NAVN",      "Name annotation",
+  "FADR",      "Business address presumed incorrect",
+  "KONT",      "Missing contact person",
+  "DAGL",      "Missing general manager",
+  "FF\u00d8R", "Missing business manager",
+  "REPR",      "Missing Norwegian representative",
+  "SAM",       "Incomplete co-owner information"
+)
+
 
 # =============================================================================
 # 4. NACE CODES: from SSB Klass API (English, current classification)
@@ -236,7 +247,7 @@ cat("Institutional sector codes:", nrow(sector_codes), "entries\n")
 
 usethis_available <- requireNamespace("usethis", quietly = TRUE)
 
-save(field_dict, legal_forms, role_types, role_groups,
+save(field_dict, legal_forms, role_types, role_groups, annotation_infotypes,
      nace_codes, sector_codes,
      file = "R/sysdata.rda", compress = "xz")
 cat("Saved sysdata.rda:",
@@ -246,6 +257,7 @@ save(legal_forms, file = "data/legal_forms.rda", compress = "xz")
 save(role_types, file = "data/role_types.rda", compress = "xz")
 save(role_groups, file = "data/role_groups.rda", compress = "xz")
 save(field_dict, file = "data/field_dict.rda", compress = "xz")
+save(annotation_infotypes, file = "data/annotation_infotypes.rda", compress = "xz")
 
 cat("\nExported datasets:\n")
 cat("  legal_forms:", nrow(legal_forms), "x", ncol(legal_forms), "\n")

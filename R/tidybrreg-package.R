@@ -21,7 +21,7 @@ NULL
 #'   \item{col_name}{English column name used in package output
 #'     (e.g. `"org_nr"`, `"municipality"`).}
 #'   \item{type}{R type for coercion: `"character"`, `"Date"`,
-#'     `"integer"`, or `"logical"`.}
+#'     `"integer"`, `"numeric"`, or `"logical"`.}
 #' }
 #'
 #' @family tidybrreg reference data
@@ -91,3 +91,26 @@ NULL
 #' @examples
 #' role_groups
 "role_groups"
+
+#' Annotation infotype codes with English descriptions
+#'
+#' Maps brreg påtegning `infotype` codes to English descriptions. Used by
+#' [brreg_annotations()] when `translate = TRUE`. Covers the infotype
+#' codes documented in the brreg API reference (`"NAVN"`, `"FADR"`) and
+#' those observed in live data (role codes used for missing-role
+#' annotations); unknown codes pass through unchanged. Each annotation's
+#' own Norwegian text is available in the `tekst` column of
+#' [brreg_annotations()] output.
+#'
+#' @format A tibble with 7 rows and 2 columns:
+#' \describe{
+#'   \item{code}{Annotation infotype code (e.g. `"FADR"`, `"NAVN"`).}
+#'   \item{name_en}{English description.}
+#' }
+#'
+#' @family tidybrreg reference data
+#' @seealso [brreg_annotations()] for the function that uses this table.
+#'
+#' @examples
+#' annotation_infotypes
+"annotation_infotypes"

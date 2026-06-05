@@ -16,14 +16,19 @@
 #' @param active_only Logical. If `TRUE` (default), return only
 #'   annotations currently in force. If `FALSE`, include cleared
 #'   annotations from the changelog.
+#' @param translate Logical. If `TRUE`, add an `infotype_desc` column
+#'   with English descriptions from [annotation_infotypes]; unknown
+#'   codes pass through unchanged. Default `FALSE`.
 #'
 #' @returns A tibble with columns: `org_nr`, `position` (array
 #'   index), `infotype`, `tekst` (annotation text),
-#'   `innfoert_dato` (date introduced).
+#'   `innfoert_dato` (date introduced). With `translate = TRUE`, an
+#'   `infotype_desc` column is inserted after `infotype`.
 #'
 #' @family tidybrreg data management functions
 #' @seealso [brreg_sync()] to populate annotation data,
-#'   [brreg_changes()] to track annotation events over time.
+#'   [brreg_changes()] to track annotation events over time,
+#'   [annotation_infotypes] for the English `infotype` lookup table.
 #'
 #' @export
 #' @examplesIf interactive()
@@ -31,9 +36,10 @@
 #' brreg_sync()
 #' brreg_annotations()
 #' brreg_annotations(infotype = "FADR")
+#' brreg_annotations(translate = TRUE)
 #' }
 brreg_annotations <- function(org_nr = NULL, infotype = NULL,
-                               active_only = TRUE) {
+                               active_only = TRUE, translate = FALSE) {
   state <- read_state("paategninger")
   if (is.null(state) || nrow(state) == 0) {
     cli::cli_alert_warning("No annotation data. Run {.code brreg_sync()} first.")
@@ -46,6 +52,10 @@ brreg_annotations <- function(org_nr = NULL, infotype = NULL,
   }
   if (!is.null(infotype)) {
     result <- result[result$infotype %in% infotype, ]
+  }
+  if (translate) {
+    result$infotype_desc <- lookup_infotype_vec(result$infotype)
+    result <- dplyr::relocate(result, "infotype_desc", .after = "infotype")
   }
   result
 }
@@ -75,4 +85,18 @@ brreg_annotation_summary <- function() {
       .by = "infotype"
     ) |>
     dplyr::arrange(dplyr::desc(.data$n_annotations))
+}
+
+
+#' Vectorised annotation infotype code to English label
+#'
+#' @param codes Character vector of infotype codes.
+#' @returns Character vector of English labels; unknown codes pass through.
+#' @keywords internal
+lookup_infotype_vec <- function(codes) {
+  idx <- match(codes, annotation_infotypes$code)
+  out <- annotation_infotypes$name_en[idx]
+  fallback <- is.na(idx) & !is.na(codes)
+  out[fallback] <- codes[fallback]
+  out
 }

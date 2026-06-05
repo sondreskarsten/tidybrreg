@@ -3,7 +3,7 @@
 .brregEnv <- new.env(parent = emptyenv())
 
 # Suppress R CMD check NOTE for lazy-loaded datasets used in package functions
-utils::globalVariables(c("legal_forms", "role_types", "role_groups"))
+utils::globalVariables(c("legal_forms", "role_types", "role_groups", "annotation_infotypes"))
 
 #' @keywords internal
 .onLoad <- function(libname, pkgname) {

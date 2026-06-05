@@ -4,7 +4,12 @@
 \alias{brreg_annotations}
 \title{Retrieve registry annotations (påtegninger) for entities}
 \usage{
-brreg_annotations(org_nr = NULL, infotype = NULL, active_only = TRUE)
+brreg_annotations(
+  org_nr = NULL,
+  infotype = NULL,
+  active_only = TRUE,
+  translate = FALSE
+)
 }
 \arguments{
 \item{org_nr}{Optional character vector of organisation numbers.
@@ -16,11 +21,16 @@ to filter by (e.g. \code{"FADR"}, \code{"NAVN"}).}
 \item{active_only}{Logical. If \code{TRUE} (default), return only
 annotations currently in force. If \code{FALSE}, include cleared
 annotations from the changelog.}
+
+\item{translate}{Logical. If \code{TRUE}, add an \code{infotype_desc} column
+with English descriptions from \link{annotation_infotypes}; unknown
+codes pass through unchanged. Default \code{FALSE}.}
 }
 \value{
 A tibble with columns: \code{org_nr}, \code{position} (array
 index), \code{infotype}, \code{tekst} (annotation text),
-\code{innfoert_dato} (date introduced).
+\code{innfoert_dato} (date introduced). With \code{translate = TRUE}, an
+\code{infotype_desc} column is inserted after \code{infotype}.
 }
 \description{
 Påtegninger are public annotations placed on entities by the
@@ -39,12 +49,14 @@ populate the local påtegninger state.
 brreg_sync()
 brreg_annotations()
 brreg_annotations(infotype = "FADR")
+brreg_annotations(translate = TRUE)
 }
 \dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=brreg_sync]{brreg_sync()}} to populate annotation data,
-\code{\link[=brreg_changes]{brreg_changes()}} to track annotation events over time.
+\code{\link[=brreg_changes]{brreg_changes()}} to track annotation events over time,
+\link{annotation_infotypes} for the English \code{infotype} lookup table.
 
 Other tidybrreg data management functions: 
 \code{\link{brreg_annotation_summary}()},

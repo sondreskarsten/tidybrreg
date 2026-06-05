@@ -1,3 +1,21 @@
+# tidybrreg 0.3.7
+
+## New features
+
+* New bundled dataset [annotation_infotypes]: maps brreg påtegning
+  `infotype` codes to English descriptions. Sourced from the brreg API
+  reference (`NAVN`, `FADR`) and codes observed in live data (role codes
+  used for missing-role annotations); unknown codes pass through.
+* `brreg_annotations()` gains a `translate` argument. With
+  `translate = TRUE` an `infotype_desc` column with English descriptions
+  (from `annotation_infotypes`) is added after `infotype`. Default
+  `FALSE`, so existing behaviour is unchanged.
+
+## Documentation
+
+* `field_dict` documentation now lists `numeric` among the coercion
+  types (added in 0.3.6 for `capital_shares`).
+
 # tidybrreg 0.3.6
 
 ## Bug fixes

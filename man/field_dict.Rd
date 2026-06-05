@@ -12,7 +12,7 @@ A tibble with 103 rows and 3 columns:
 \item{col_name}{English column name used in package output
 (e.g. \code{"org_nr"}, \code{"municipality"}).}
 \item{type}{R type for coercion: \code{"character"}, \code{"Date"},
-\code{"integer"}, or \code{"logical"}.}
+\code{"integer"}, \code{"numeric"}, or \code{"logical"}.}
 }
 }
 \usage{
@@ -32,6 +32,7 @@ field_dict[field_dict$type == "Date", ]
 \code{\link[=brreg_entity]{brreg_entity()}} for the function that uses this dictionary.
 
 Other tidybrreg reference data: 
+\code{\link{annotation_infotypes}},
 \code{\link{legal_forms}},
 \code{\link{role_groups}},
 \code{\link{role_types}}
