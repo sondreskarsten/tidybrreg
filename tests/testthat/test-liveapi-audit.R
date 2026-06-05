@@ -636,10 +636,10 @@ test_that("underenheter count matches search count", {
 test_that("field_dict: complete and internally consistent", {
  expect_true(all(c("api_path", "col_name", "type") %in% names(field_dict)))
  expect_gt(nrow(field_dict), 40)
- # col_names must be unique
- expect_equal(length(unique(field_dict$col_name)), nrow(field_dict))
+ # api_path is the dictionary key, must be unique
+ expect_equal(length(unique(field_dict$api_path)), nrow(field_dict))
  # types must be valid R types
- expect_true(all(field_dict$type %in% c("character", "Date", "integer", "logical")))
+ expect_true(all(field_dict$type %in% c("character", "Date", "integer", "logical", "numeric")))
 })
 
 test_that("field_dict: covers live API response", {

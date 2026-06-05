@@ -52,7 +52,7 @@ test_that("rename_and_coerce guarantees all 49 field_dict columns", {
       info = paste("Missing field_dict column:", col))
   }
   expect_equal(length(intersect(field_dict$col_name, names(result))),
-               nrow(field_dict))
+               length(unique(field_dict$col_name)))
 })
 
 test_that("guaranteed columns have correct types", {

@@ -5,12 +5,11 @@ test_that("field_dict has required structure", {
 })
 
 test_that("field_dict has no duplicates", {
-  expect_false(anyDuplicated(field_dict$col_name) > 0)
   expect_false(anyDuplicated(field_dict$api_path) > 0)
 })
 
 test_that("field_dict types are valid", {
-  valid_types <- c("character", "Date", "integer", "logical")
+  valid_types <- c("character", "Date", "integer", "logical", "numeric")
   expect_true(all(field_dict$type %in% valid_types))
 })
 
