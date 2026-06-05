@@ -985,45 +985,52 @@ apply_paategning_patches <- function(paat_state, org_nr, patches,
 }
 
 
-#' Extract påtegninger from bulk entity data into separate table
+#' Extract påtegninger for flagged entities into a separate table
+#'
+#' The enheter bulk download exposes påtegninger only as a boolean
+#' presence flag (column `annotations` after [field_dict] renaming).
+#' Annotation content is fetched per entity from the enheter endpoint
+#' for the entities whose flag is true.
+#' @param entities A tibble of bulk entity data with `org_nr` and the
+#'   `annotations` presence flag.
 #' @keywords internal
 extract_paategninger <- function(entities) {
-  if (!"paategninger" %in% names(entities)) return(empty_paategninger())
+  flag_col <- intersect(c("annotations", "paategninger"), names(entities))
+  if (length(flag_col) == 0 || !"org_nr" %in% names(entities)) return(empty_paategninger())
 
-  has_paat <- !is.na(entities$paategninger) & entities$paategninger != ""
+  flag <- tolower(trimws(as.character(entities[[flag_col[1]]])))
+  has_paat <- !is.na(flag) & flag %in% c("true", "t", "1")
   if (!any(has_paat)) return(empty_paategninger())
 
-  paat_entities <- entities[has_paat, , drop = FALSE]
-  rows <- vector("list", sum(has_paat))
-
-  for (i in seq_len(nrow(paat_entities))) {
-    org <- paat_entities$org_nr[i]
-    raw <- paat_entities$paategninger[i]
-
-    parsed <- tryCatch(
-      jsonlite::fromJSON(raw, simplifyVector = FALSE),
-      error = function(e) NULL
-    )
-    if (is.null(parsed)) next
-
-    # Handle both list-of-lists (JSON array) and single object
-    if (!is.null(names(parsed))) parsed <- list(parsed)
-
-    for (j in seq_along(parsed)) {
-      p <- parsed[[j]]
-      rows[[length(rows) + 1L]] <- tibble::tibble(
-        org_nr        = org,
-        position      = j - 1L,
-        infotype      = p$infotype %||% NA_character_,
-        tekst         = p$tekst %||% NA_character_,
-        innfoert_dato = p$innfoertDato %||% NA_character_
-      )
-    }
-  }
-
+  orgs <- unique(entities$org_nr[has_paat])
+  rows <- lapply(orgs, fetch_entity_paategninger)
   result <- dplyr::bind_rows(rows)
   if (nrow(result) == 0) return(empty_paategninger())
   result
+}
+
+#' Fetch påtegninger for a single entity from the enheter endpoint
+#' @param org_nr A 9-digit organization number.
+#' @returns A tibble of påtegning rows, or `NULL` if none.
+#' @keywords internal
+fetch_entity_paategninger <- function(org_nr) {
+  resp <- brreg_req(paste0("enheter/", org_nr)) |>
+    httr2::req_error(is_error = function(resp) FALSE) |>
+    httr2::req_perform()
+  if (httr2::resp_status(resp) != 200L) return(NULL)
+  paat <- httr2::resp_body_json(resp)$paategninger
+  if (is.null(paat) || length(paat) == 0L) return(NULL)
+  rows <- lapply(seq_along(paat), function(j) {
+    p <- paat[[j]]
+    tibble::tibble(
+      org_nr        = org_nr,
+      position      = j - 1L,
+      infotype      = p$infotype %||% NA_character_,
+      tekst         = p$tekst %||% NA_character_,
+      innfoert_dato = p$innfoertDato %||% NA_character_
+    )
+  })
+  dplyr::bind_rows(rows)
 }
 
 

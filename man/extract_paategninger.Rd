@@ -2,11 +2,18 @@
 % Please edit documentation in R/sync.R
 \name{extract_paategninger}
 \alias{extract_paategninger}
-\title{Extract påtegninger from bulk entity data into separate table}
+\title{Extract påtegninger for flagged entities into a separate table}
 \usage{
 extract_paategninger(entities)
 }
+\arguments{
+\item{entities}{A tibble of bulk entity data with \code{org_nr} and the
+\code{annotations} presence flag.}
+}
 \description{
-Extract påtegninger from bulk entity data into separate table
+The enheter bulk download exposes påtegninger only as a boolean
+presence flag (column \code{annotations} after \link{field_dict} renaming).
+Annotation content is fetched per entity from the enheter endpoint
+for the entities whose flag is true.
 }
 \keyword{internal}

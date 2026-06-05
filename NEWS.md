@@ -1,3 +1,15 @@
+# tidybrreg 0.3.8
+
+## Bug fixes
+
+* `brreg_sync()` now populates `paategninger` state. The enheter bulk
+  download (CSV) only carries påtegninger as a boolean presence flag, not
+  the annotation content, so `extract_paategninger()` previously always
+  produced empty state and `brreg_annotations()` returned nothing after a
+  sync. The bootstrap now reads the flag (column `annotations`) and fetches
+  the actual annotation content per flagged entity from the enheter
+  endpoint. New internal helper `fetch_entity_paategninger()`.
+
 # tidybrreg 0.3.7
 
 ## New features
