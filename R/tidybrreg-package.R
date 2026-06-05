@@ -2,7 +2,7 @@
 "_PACKAGE"
 
 ## usethis namespace: start
-#' @importFrom rlang %||% .data
+#' @importFrom rlang %||% .data .env
 #' @importFrom dplyr bind_rows
 ## usethis namespace: end
 NULL

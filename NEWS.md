@@ -1,3 +1,30 @@
+# tidybrreg 0.3.6
+
+## Bug fixes
+
+* `field_dict`: `capital_shares` (`kapital.antallAksjer`) is now typed
+  `numeric` instead of `integer`. The share count exceeds the 32-bit
+  integer range for large-cap entities (e.g. Equinor ASA, 2,556,807,512
+  shares), so `coerce_types()` silently produced `NA` with an
+  "NAs introduced by coercion to integer range" warning. It now retains
+  the value, consistent with the other `kapital.*` fields.
+* Bundled `role_types` and `role_groups`: Norwegian role names
+  (`Observatør`, `Regnskapsfører`, `Forretningsfører`, `FFØR`,
+  `Helse, miljø og sikkerhet`) are now stored as UTF-8 escapes in
+  `data-raw/build_dictionaries.R` and saved with UTF-8 encoding marking.
+  String values are byte-identical to before; this only clears the
+  R CMD check "non-ASCII strings" data warning.
+
+## Internal
+
+* `read_changelog()`: the arrow branch now references the partition
+  column as `.data$sync_date` and imports the `rlang::.env` pronoun,
+  removing the "no visible binding for global variable" check note.
+  Runtime behaviour is unchanged.
+* Tests: `field_dict` invariants aligned with the v0.3.5 dictionary —
+  `api_path` is the unique key (multiple API-spelling variants map to a
+  single `col_name`), and `numeric` is an accepted type.
+
 # tidybrreg 0.3.4
 
 ## Roller CDC: field-level change detection

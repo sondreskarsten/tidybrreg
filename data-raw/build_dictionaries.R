@@ -97,7 +97,7 @@ field_dict <- tribble(
   "mobil",                                           "mobile",                    "character",
   "epostadresse",                                    "email",                     "character",
   "kapital.belop",                                   "capital_amount",            "numeric",
-  "kapital.antallAksjer",                            "capital_shares",            "integer",
+  "kapital.antallAksjer",                            "capital_shares",            "numeric",
   "kapital.valuta",                                  "capital_currency",          "character",
   "kapital.type",                                    "capital_type",              "character",
   "kapital.innfortDato",                             "capital_date",              "Date",
@@ -173,11 +173,11 @@ role_types <- tribble(
   "NEST", "Deputy Chair",                   "Nestleder",
   "MEDL", "Board Member",                   "Styremedlem",
   "VARA", "Alternate Board Member",         "Varamedlem",
-  "OBS",  "Observer",                       "Observatør",
+  "OBS",  "Observer",                       "Observat\u00f8r",
   "DAGL", "CEO / Managing Director",        "Daglig leder",
   "INNH", "Sole Proprietor",               "Innehaver",
   "REVI", "Auditor",                        "Revisor",
-  "REGN", "Accountant",                     "Regnskapsfører",
+  "REGN", "Accountant",                     "Regnskapsf\u00f8rer",
   "KONT", "Contact Person",                 "Kontaktperson",
   "DTPR", "Partner (full liability)",       "Deltaker med proratarisk ansvar",
   "DTSO", "Partner (limited liability)",    "Deltaker med solidarisk ansvar",
@@ -185,7 +185,7 @@ role_types <- tribble(
   "BOBE", "Bankruptcy Trustee",             "Bostyrer",
   "KOMP", "General Partner (KS)",           "Komplementar",
   "REPR", "Norwegian Representative",       "Norsk representant",
-  "FFØR", "Bookkeeper",                     "Forretningsfører",
+  "FF\u00d8R", "Bookkeeper",                     "Forretningsf\u00f8rer",
   "SAM",  "Co-owner",                       "Sameier"
 )
 
@@ -194,7 +194,7 @@ role_groups <- tribble(
   "STYR", "Board of Directors",        "Styre",
   "DAGL", "Management",                "Daglig leder/adm.dir",
   "REVI", "Auditor",                   "Revisor",
-  "REGN", "Accountant",                "Regnskapsfører",
+  "REGN", "Accountant",                "Regnskapsf\u00f8rer",
   "EIKM", "Owner Municipalities",      "Eierkommuner",
   "KOMP", "General Partners",          "Komplementarer",
   "DTPR", "Partners (full liability)", "Deltakere med proratarisk ansvar",
@@ -203,9 +203,9 @@ role_groups <- tribble(
   "KONT", "Contact",                   "Kontaktperson",
   "BEST", "Managing Shipowner",        "Bestyrende reder",
   "BOBE", "Bankruptcy Trustee",        "Bostyrer",
-  "FFØR", "Bookkeeper",               "Forretningsfører",
+  "FF\u00d8R", "Bookkeeper",               "Forretningsf\u00f8rer",
   "SAM",  "Co-owners",                 "Sameiere",
-  "HLSE", "Health/Environment/Safety", "Helse, miljø og sikkerhet"
+  "HLSE", "Health/Environment/Safety", "Helse, milj\u00f8 og sikkerhet"
 )
 
 

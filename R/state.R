@@ -146,8 +146,8 @@ read_changelog <- function(from = NULL, to = NULL,
       requireNamespace("arrow", quietly = TRUE)) {
     ds <- arrow::open_dataset(cl_dir, partitioning = "sync_date")
     q <- ds
-    if (!is.null(from)) q <- dplyr::filter(q, sync_date >= from)
-    if (!is.null(to)) q <- dplyr::filter(q, sync_date <= to)
+    if (!is.null(from)) q <- dplyr::filter(q, .data$sync_date >= from)
+    if (!is.null(to)) q <- dplyr::filter(q, .data$sync_date <= to)
     if (!is.null(registry)) q <- dplyr::filter(q, .data$registry %in% .env$registry)
     if (!is.null(change_type)) q <- dplyr::filter(q, .data$change_type %in% .env$change_type)
     result <- dplyr::collect(q)
