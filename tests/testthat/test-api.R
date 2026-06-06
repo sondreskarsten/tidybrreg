@@ -31,7 +31,7 @@ test_that("brreg_entity handles 404", {
 test_that("brreg_entity passes through unknown API fields", {
   skip_if_offline()
   eq <- safely(brreg_entity("923609016"))
-  expect_gt(ncol(eq), nrow(field_dict))
+  expect_true(any(!names(eq) %in% field_dict$col_name))
 })
 
 test_that("brreg_search returns results", {
