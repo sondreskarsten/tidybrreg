@@ -9,6 +9,7 @@ partnerships, sole proprietorships, associations, and government bodies.
 ## Installation
 
 ``` r
+
 # Recommended
 # install.packages("pak")
 pak::pak("sondreskarsten/tidybrreg")
@@ -22,6 +23,7 @@ install.packages("tidybrreg",
 For snapshot and panel features, also install a parquet backend:
 
 ``` r
+
 install.packages("nanoparquet")  # lightweight, read/write only
 # OR
 install.packages("arrow")       # full-featured, lazy queries
@@ -33,6 +35,7 @@ Every Norwegian legal entity has a unique 9-digit organization number
 (organisasjonsnummer). Look up Equinor ASA:
 
 ``` r
+
 library(tidybrreg)
 
 brreg_entity("923609016")
@@ -53,6 +56,7 @@ By default, functions return raw codes (`ASA`, `06.100`). Two ways to
 get English labels:
 
 ``` r
+
 # Option 1: inline via type = "label"
 brreg_entity("923609016", type = "label")
 
@@ -74,6 +78,7 @@ Query by name, legal form, geography, industry, employee count, or any
 combination:
 
 ``` r
+
 # Large private companies in Oslo
 brreg_search(
   legal_form = "AS",
@@ -93,6 +98,7 @@ Use `registry = "underenheter"` to search sub-entities — branch offices,
 plants, and establishments linked to a parent entity:
 
 ``` r
+
 brreg_search(name = "Equinor", registry = "underenheter", max_results = 5)
 ```
 
@@ -101,6 +107,7 @@ brreg_search(name = "Equinor", registry = "underenheter", max_results = 5)
 Board members, officers, and auditors for any entity:
 
 ``` r
+
 roles <- brreg_roles("923609016")
 roles
 #> # A tibble: 25 × 14
@@ -113,6 +120,7 @@ roles
 Derive board-level summary covariates:
 
 ``` r
+
 brreg_board_summary(roles)
 #> # A tibble: 1 × 10
 #>   org_nr    board_size n_chair n_members has_ceo has_auditor auditor_org_nr
@@ -123,6 +131,7 @@ brreg_board_summary(roles)
 Three registries available:
 
 ``` r
+
 # Main entities: ~152 MB CSV or ~196 MB JSON
 entities <- brreg_download(type = "enheter")
 
@@ -142,19 +151,19 @@ re-download only when the server has a newer version (ETag-based).
 
 ## Function → API endpoint mapping
 
-| Function                                          | API endpoint                              | Returns              |
-|---------------------------------------------------|-------------------------------------------|----------------------|
-| `brreg_entity(org_nr)`                            | `/enheter/{orgnr}`                        | 1-row tibble         |
-| `brreg_entity(org_nr, registry = "underenheter")` | `/underenheter/{orgnr}`                   | 1-row tibble         |
-| `brreg_search(...)`                               | `/enheter?...`                            | N-row tibble         |
-| `brreg_search(..., registry = "underenheter")`    | `/underenheter?...`                       | N-row tibble         |
-| `brreg_roles(org_nr)`                             | `/enheter/{orgnr}/roller`                 | N-row tibble         |
-| `brreg_roles_legal(org_nr)`                       | `/roller/enheter/{orgnr}/juridiskeroller` | N-row tibble         |
-| `brreg_download("enheter")`                       | `/enheter/lastned/csv`                    | Full register tibble |
-| `brreg_download("enheter", format = "json")`      | `/enheter/lastned`                        | Full register tibble |
-| `brreg_download("roller")`                        | `/roller/totalbestand`                    | Full roles tibble    |
-| `brreg_updates(type = "enheter")`                 | `/oppdateringer/enheter`                  | Change events tibble |
-| `brreg_updates(type = "roller")`                  | `/oppdateringer/roller`                   | Change events tibble |
+| Function | API endpoint | Returns |
+|----|----|----|
+| `brreg_entity(org_nr)` | `/enheter/{orgnr}` | 1-row tibble |
+| `brreg_entity(org_nr, registry = "underenheter")` | `/underenheter/{orgnr}` | 1-row tibble |
+| `brreg_search(...)` | `/enheter?...` | N-row tibble |
+| `brreg_search(..., registry = "underenheter")` | `/underenheter?...` | N-row tibble |
+| `brreg_roles(org_nr)` | `/enheter/{orgnr}/roller` | N-row tibble |
+| `brreg_roles_legal(org_nr)` | `/roller/enheter/{orgnr}/juridiskeroller` | N-row tibble |
+| `brreg_download("enheter")` | `/enheter/lastned/csv` | Full register tibble |
+| `brreg_download("enheter", format = "json")` | `/enheter/lastned` | Full register tibble |
+| `brreg_download("roller")` | `/roller/totalbestand` | Full roles tibble |
+| `brreg_updates(type = "enheter")` | `/oppdateringer/enheter` | Change events tibble |
+| `brreg_updates(type = "roller")` | `/oppdateringer/roller` | Change events tibble |
 
 ## Next steps
 

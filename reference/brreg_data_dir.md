@@ -17,6 +17,11 @@ Character path.
 
 ## See also
 
+[`brreg_snapshot()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_snapshot.md)
+to save snapshots,
+[`brreg_open()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_open.md)
+to read them.
+
 Other tidybrreg snapshot functions:
 [`brreg_cleanup()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_cleanup.md),
 [`brreg_import()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_import.md),

@@ -11,8 +11,9 @@ number (organisasjonsnummer) upon registration. The number uses
 modulus-11 check digit validation:
 
 ``` r
+
 library(tidybrreg)
-#> tidybrreg: bulk data not yet downloaded for: underenheter, roller.
+#> tidybrreg: bulk data not yet downloaded for: enheter, underenheter, roller.
 #> Run brreg_snapshot() for full network/panel support. See ?brreg_status for details.
 brreg_validate(c("923609016", "984851006", "123456789"))
 #> [1]  TRUE  TRUE FALSE
@@ -45,6 +46,7 @@ birth date) or entities (by organization number) to entities.
 The `organisasjonsform` field classifies entities. Common codes:
 
 ``` r
+
 legal_forms[legal_forms$code %in% c("AS", "ASA", "ENK", "NUF", "DA", "ANS", "SA", "STI"), ]
 #> # A tibble: 8 × 4
 #>   code  name_no                                 expired name_en                 
@@ -79,6 +81,7 @@ Rev. 2.1) in September 2025. Use
 to map between the two.
 
 ``` r
+
 # Translate NACE codes to English descriptions
 brreg_entity("923609016") |> brreg_label(code = "nace_1")
 #> nace_1 = "Extraction of crude petroleum"
@@ -134,6 +137,7 @@ contains old codes that no longer exist. Use
 to remap:
 
 ``` r
+
 panel <- tibble::tibble(
   municipality_code = c("0301", "1201", "0602"),  # Oslo, Bergen (old), Drammen (old)
   year = 2019
@@ -145,14 +149,14 @@ brreg_harmonize_kommune(panel, target_date = "2024-01-01")
 
 Key date fields and their meaning:
 
-| Column              | API field                           | Meaning                                       |
-|---------------------|-------------------------------------|-----------------------------------------------|
-| `founding_date`     | `stiftelsesdato`                    | Date the entity was founded/incorporated      |
-| `registration_date` | `registreringsdatoEnhetsregisteret` | Date of registration in the central register  |
-| `articles_date`     | `vedtektsdato`                      | Date of latest articles of association        |
-| `bankruptcy_date`   | `konkursdato`                       | Date bankruptcy was opened                    |
-| `liquidation_date`  | `underAvviklingDato`                | Date voluntary liquidation began              |
-| `deletion_date`     | `slettedato`                        | Date the entity was deleted from the register |
+| Column | API field | Meaning |
+|----|----|----|
+| `founding_date` | `stiftelsesdato` | Date the entity was founded/incorporated |
+| `registration_date` | `registreringsdatoEnhetsregisteret` | Date of registration in the central register |
+| `articles_date` | `vedtektsdato` | Date of latest articles of association |
+| `bankruptcy_date` | `konkursdato` | Date bankruptcy was opened |
+| `liquidation_date` | `underAvviklingDato` | Date voluntary liquidation began |
+| `deletion_date` | `slettedato` | Date the entity was deleted from the register |
 
 `registration_date` is more reliable than `founding_date` for
 determining when an entity entered the register — some entities have
@@ -162,13 +166,13 @@ founding dates predating the electronic register.
 
 The bulk download endpoints return different column sets:
 
-| Feature        | CSV (`/lastned/csv`)                         | JSON (`/lastned`)                                    |
-|----------------|----------------------------------------------|------------------------------------------------------|
-| Size (enheter) | 152 MB                                       | 196 MB                                               |
-| Columns        | ~90                                          | ~67 (after flattening)                               |
-| Extra fields   | Dissolution dates, foreign insolvency        | `kapital.*`, `vedtektsfestetFormaal`, `paategninger` |
-| Address format | Flat (one column per field)                  | Nested (array of address lines)                      |
-| Delimiter      | Comma (despite common belief it’s semicolon) | N/A                                                  |
+| Feature | CSV (`/lastned/csv`) | JSON (`/lastned`) |
+|----|----|----|
+| Size (enheter) | 152 MB | 196 MB |
+| Columns | ~90 | ~67 (after flattening) |
+| Extra fields | Dissolution dates, foreign insolvency | `kapital.*`, `vedtektsfestetFormaal`, `paategninger` |
+| Address format | Flat (one column per field) | Nested (array of address lines) |
+| Delimiter | Comma (despite common belief it’s semicolon) | N/A |
 
 Neither format is a superset of the other. The package’s algorithmic
 unnesting produces flat tibbles from both formats. Choose JSON when you

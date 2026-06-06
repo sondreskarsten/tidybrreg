@@ -11,6 +11,7 @@ Retrieve all registered roles for an entity and derive board-level
 covariates:
 
 ``` r
+
 library(tidybrreg)
 
 roles <- brreg_roles("923609016")  # Equinor ASA
@@ -48,6 +49,7 @@ answers the reverse question: what roles does entity X hold in OTHER
 entities?
 
 ``` r
+
 # Equinor's ownership and board roles in other entities
 holdings <- brreg_roles_legal("923609016")
 holdings
@@ -66,6 +68,7 @@ holding company relationships, and tracing ownership chains.
 Build a bipartite graph of entities and persons linked by board roles:
 
 ``` r
+
 # Select a set of entities (e.g., top energy companies)
 org_nrs <- c("923609016", "984851006", "985224323", "990888213")
 
@@ -85,6 +88,7 @@ The `tbl_graph` object is compatible with the tidygraph/ggraph ecosystem
 for centrality analysis and visualization:
 
 ``` r
+
 library(tidygraph)
 library(ggraph)
 
@@ -102,6 +106,7 @@ net |>
 For large networks, pre-fetch roles and pass them directly:
 
 ``` r
+
 all_roles <- brreg_download(type = "roller")
 net <- brreg_board_network(roles_data = all_roles)
 ```
@@ -112,6 +117,7 @@ Prepare time-to-event data compatible with
 [`survival::Surv()`](https://rdrr.io/pkg/survival/man/Surv.html):
 
 ``` r
+
 # Download or search for a population of firms
 firms <- brreg_search(legal_form = "AS", municipality_code = "0301",
                        max_results = 5000)
@@ -141,6 +147,7 @@ The function applies the following conventions:
 Use with the survival package:
 
 ``` r
+
 library(survival)
 km <- survfit(Surv(duration_years, event) ~ legal_form, data = surv)
 plot(km)
@@ -152,6 +159,7 @@ The roller totalbestand endpoint provides all roles for all entities in
 a single download. Save dated snapshots for historical comparison:
 
 ``` r
+
 # Save today's complete role data
 brreg_snapshot("roller")
 
@@ -162,6 +170,7 @@ brreg_snapshots("roller")
 Combine with entity snapshots for board composition panels:
 
 ``` r
+
 # Annual entity panel
 entity_panel <- brreg_panel("year", cols = c("legal_form", "employees"))
 

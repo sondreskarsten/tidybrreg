@@ -13,6 +13,7 @@ Parquet files. Each call to
 adds one partition.
 
 ``` r
+
 library(tidybrreg)
 
 # Save today's register (downloads ~152 MB, saves ~90 MB parquet)
@@ -28,6 +29,7 @@ Each snapshot preserves both the processed Parquet file and the raw
 `.gz` download for provenance. Check what’s available:
 
 ``` r
+
 brreg_snapshots("enheter")
 #> # A tibble: 12 × 3
 #>    snapshot_date file_size path
@@ -42,6 +44,7 @@ If you have historical CSV files from previous bulk downloads, import
 them into the snapshot store:
 
 ``` r
+
 csv_files <- list.files("~/brreg_archive/enheter/", full.names = TRUE)
 for (f in csv_files) {
   date <- sub(".*_(\\d{4}-\\d{2}-\\d{2}).*", "\\1", f)
@@ -57,6 +60,7 @@ quarter-end, or month-end), it selects the most recent prior snapshot —
 LOCF (last observation carried forward).
 
 ``` r
+
 # Annual panel with selected variables
 panel <- brreg_panel(
   frequency = "year",
@@ -76,6 +80,7 @@ two snapshots, the earlier snapshot carries forward.
 ### Custom date targets
 
 ``` r
+
 # Monthly panel
 brreg_panel("month", cols = c("employees"))
 
@@ -106,6 +111,7 @@ compares two specific snapshots and returns entries, exits, and
 field-level changes with both old and new values:
 
 ``` r
+
 events <- brreg_events("2024-01-01", "2025-01-01")
 events |> dplyr::count(event_type)
 #>   event_type     n
@@ -133,6 +139,7 @@ When you have one base snapshot and want to reconstruct the register at
 a later date without downloading again, replay CDC updates:
 
 ``` r
+
 # Start with today's download
 base <- brreg_download(type_output = "tibble")
 
@@ -168,6 +175,7 @@ The manifest records the `Last-Modified` header from each download —
 this is the data vintage date (when brreg regenerated the file):
 
 ``` r
+
 manifest <- brreg_manifest()
 manifest[, c("type", "snapshot_date", "last_modified")]
 ```
@@ -183,6 +191,7 @@ computes aggregate statistics from snapshots. Any variable, any summary
 function, any grouping:
 
 ``` r
+
 # Total employees by legal form per year
 brreg_series(.vars = "employees", by = "legal_form")
 
@@ -207,6 +216,7 @@ Convert panel or series output to tsibble for the tidyverts ecosystem
 (fable, feasts, slider):
 
 ``` r
+
 # Series → tsibble
 ts <- brreg_series(.vars = "employees", by = "legal_form") |>
   as_brreg_tsibble()
@@ -225,6 +235,7 @@ LOCF imputation to a regular grid.
 ## Managing the snapshot store
 
 ``` r
+
 # Where snapshots are stored
 brreg_data_dir()
 

@@ -44,7 +44,10 @@ A tsibble.
 [`brreg_series()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_series.md).
 
 Other tidybrreg panel functions:
+[`brreg_change_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_change_summary.md),
+[`brreg_changes()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_changes.md),
 [`brreg_events()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_events.md),
+[`brreg_flows()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_flows.md),
 [`brreg_panel()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_panel.md),
 [`brreg_replay()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_replay.md),
 [`brreg_series()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_series.md)

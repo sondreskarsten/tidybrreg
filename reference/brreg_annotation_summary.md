@@ -16,13 +16,17 @@ A tibble with `infotype` and `n`.
 ## See also
 
 Other tidybrreg data management functions:
-[`brreg_annotations()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotations.md)
+[`brreg_annotations()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotations.md),
+[`brreg_status()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_status.md),
+[`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md),
+[`brreg_sync_status()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync_status.md),
+[`diff_roller_state()`](https://sondreskarsten.github.io/tidybrreg/reference/diff_roller_state.md),
+[`read_changelog()`](https://sondreskarsten.github.io/tidybrreg/reference/read_changelog.md)
 
 ## Examples
 
 ``` r
+if (FALSE) { # interactive()
 brreg_annotation_summary()
-#> ! No annotation data. Run `brreg_sync()` first.
-#> # A tibble: 0 × 3
-#> # ℹ 3 variables: infotype <chr>, n_entities <int>, n_annotations <int>
+}
 ```

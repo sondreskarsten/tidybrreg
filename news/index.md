@@ -1,26 +1,194 @@
 # Changelog
 
+## tidybrreg 0.3.8
+
+### Bug fixes
+
+- [`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md)
+  now populates `paategninger` state. The enheter bulk download (CSV)
+  only carries påtegninger as a boolean presence flag, not the
+  annotation content, so
+  [`extract_paategninger()`](https://sondreskarsten.github.io/tidybrreg/reference/extract_paategninger.md)
+  previously always produced empty state and
+  [`brreg_annotations()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotations.md)
+  returned nothing after a sync. The bootstrap now reads the flag
+  (column `annotations`) and fetches the actual annotation content per
+  flagged entity from the enheter endpoint. New internal helper
+  [`fetch_entity_paategninger()`](https://sondreskarsten.github.io/tidybrreg/reference/fetch_entity_paategninger.md).
+
+## tidybrreg 0.3.7
+
+### New features
+
+- New bundled dataset \[annotation_infotypes\]: maps brreg påtegning
+  `infotype` codes to English descriptions. Sourced from the brreg API
+  reference (`NAVN`, `FADR`) and codes observed in live data (role codes
+  used for missing-role annotations); unknown codes pass through.
+- [`brreg_annotations()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotations.md)
+  gains a `translate` argument. With `translate = TRUE` an
+  `infotype_desc` column with English descriptions (from
+  `annotation_infotypes`) is added after `infotype`. Default `FALSE`, so
+  existing behaviour is unchanged.
+
+### Documentation
+
+- `field_dict` documentation now lists `numeric` among the coercion
+  types (added in 0.3.6 for `capital_shares`).
+
+## tidybrreg 0.3.6
+
+### Bug fixes
+
+- `field_dict`: `capital_shares` (`kapital.antallAksjer`) is now typed
+  `numeric` instead of `integer`. The share count exceeds the 32-bit
+  integer range for large-cap entities (e.g. Equinor ASA, 2,556,807,512
+  shares), so
+  [`coerce_types()`](https://sondreskarsten.github.io/tidybrreg/reference/coerce_types.md)
+  silently produced `NA` with an “NAs introduced by coercion to integer
+  range” warning. It now retains the value, consistent with the other
+  `kapital.*` fields.
+- Bundled `role_types` and `role_groups`: Norwegian role names
+  (`Observatør`, `Regnskapsfører`, `Forretningsfører`, `FFØR`,
+  `Helse, miljø og sikkerhet`) are now stored as UTF-8 escapes in
+  `data-raw/build_dictionaries.R` and saved with UTF-8 encoding marking.
+  String values are byte-identical to before; this only clears the R CMD
+  check “non-ASCII strings” data warning.
+
+### Internal
+
+- [`read_changelog()`](https://sondreskarsten.github.io/tidybrreg/reference/read_changelog.md):
+  the arrow branch now references the partition column as
+  `.data$sync_date` and imports the
+  [`rlang::.env`](https://rlang.r-lib.org/reference/dot-data.html)
+  pronoun, removing the “no visible binding for global variable” check
+  note. Runtime behaviour is unchanged.
+- Tests: `field_dict` invariants aligned with the v0.3.5 dictionary —
+  `api_path` is the unique key (multiple API-spelling variants map to a
+  single `col_name`), and `numeric` is an accepted type.
+
+## tidybrreg 0.3.4
+
+### Roller CDC: field-level change detection
+
+- [`bootstrap_state()`](https://sondreskarsten.github.io/tidybrreg/reference/bootstrap_state.md)
+  now initializes the CDC cursor to the current tip (max event ID) at
+  bootstrap time via
+  [`get_cdc_tip()`](https://sondreskarsten.github.io/tidybrreg/reference/get_cdc_tip.md).
+  Previously the cursor remained at 0 after bootstrap, causing the first
+  CDC poll to replay the entire event history (~4.4M roller events, ~24M
+  enheter events). This caused OOM and timeout failures on Cloud Run.
+- `bootstrap_state(roller_method = "cdc")` skips the roller totalbestand
+  download entirely. Writes an empty state table and builds state
+  incrementally via per-org
+  [`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md)
+  calls. Reduces bootstrap from 32 GiB RAM / 30+ minutes to \<10 seconds
+  and negligible memory.
+- [`paginate_cdc()`](https://sondreskarsten.github.io/tidybrreg/reference/paginate_cdc.md)
+  gains a `max_pages` parameter and a safety guard: if `cursor_id == 0`
+  (no prior sync), pagination caps at 5 pages and emits a
+  [`cli::cli_warn()`](https://cli.r-lib.org/reference/cli_abort.html).
+  Belt-and-suspenders — should never trigger after a correct bootstrap.
+- [`diff_roller_state()`](https://sondreskarsten.github.io/tidybrreg/reference/diff_roller_state.md)
+  (new, exported) — computes field-level diffs between two flattened
+  roller state tibbles. Returns a long-format changelog with
+  `change_type` (entry/exit/change), `field`, `value_from`, `value_to`.
+  Roles are keyed by a composite of
+  `(org_nr, role_group_code, role_code, holder_id)` where holder_id is
+  derived from `person_id` (person-held) or `entity:{org_nr}`
+  (entity-held).
+- `brreg_sync(roller_method = "bulk")` — new default strategy for
+  roller CDC. Downloads the full totalbestand (~131 MB), diffs against
+  stored state, and writes a field-level changelog. Replaces the per-org
+  API pattern for full-register syncs.
+- `brreg_sync(roller_method = "cdc")` — per-org API fallback for
+  sub-daily syncs. Fetches current roles via
+  [`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md)
+  for each CDC event, diffs per-org. Slower but provides per-event
+  timestamp attribution.
+- [`flatten_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/flatten_roles.md)
+  gains 4 new columns: `deregistered` (avregistrert), `ordering`
+  (rekkefolge), `elected_by` (valgtAv\$kode), `group_modified`
+  (sistEndret as Date).
+- [`brreg_board_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_summary.md)
+  now excludes resigned and deregistered roles from all counts and gains
+  `n_employee_elected` (count of board members with a non-NA
+  `elected_by` value).
+
+### Performance
+
+- [`flatten_roles_bulk_fast()`](https://sondreskarsten.github.io/tidybrreg/reference/flatten_roles_bulk_fast.md)
+  (internal) — vectorized two-pass flatten for bulk totalbestand.
+  Pre-allocates vectors and fills by index. 4.1× faster than the
+  per-entity
+  [`flatten_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/flatten_roles.md)
+  path (4,192 vs 1,028 roles/sec).
+- [`read_roles_json()`](https://sondreskarsten.github.io/tidybrreg/reference/read_roles_json.md)
+  (internal) — dispatches to yyjsonr when available (10× parse speed,
+  70× lower memory vs jsonlite). yyjsonr added to Suggests.
+- [`lookup_role_vec()`](https://sondreskarsten.github.io/tidybrreg/reference/lookup_role_vec.md)
+  and
+  [`lookup_role_group_vec()`](https://sondreskarsten.github.io/tidybrreg/reference/lookup_role_group_vec.md)
+  (internal) — vectorized code-to-label lookups replacing per-row
+  [`match()`](https://rdrr.io/r/base/match.html).
+
+### Bug fixes
+
+- [`extract_entity_name()`](https://sondreskarsten.github.io/tidybrreg/reference/extract_entity_name.md)
+  no longer returns NA for entity-held roles. The brreg API returns
+  `enhet.navn` as a JSON array `["ERNST & YOUNG AS"]`, not a named
+  object. jsonlite parses this as an unnamed list, which the old code
+  did not handle. Added unnamed list branch.
+- [`read_roles_json()`](https://sondreskarsten.github.io/tidybrreg/reference/read_roles_json.md)
+  now decompresses `.gz` files to a temp file before passing to yyjsonr.
+  yyjsonr cannot read gzipped files directly; the previous code crashed
+  with a buffer allocation error on the 131 MB totalbestand.
+- [`paginate_cdc_bounded()`](https://sondreskarsten.github.io/tidybrreg/reference/paginate_cdc_bounded.md)
+  (internal) caps roller CDC pagination at 5 pages (50K events) when
+  using `roller_method = "bulk"`. The previous unbounded
+  [`paginate_cdc()`](https://sondreskarsten.github.io/tidybrreg/reference/paginate_cdc.md)
+  fetched the entire CDC history (1.1M+ events) from cursor 0 on first
+  bootstrap, causing 30-minute timeouts.
+- [`parse_sync_page()`](https://sondreskarsten.github.io/tidybrreg/reference/parse_sync_page.md)
+  no longer produces tibble column size mismatches when CDC pages
+  contain events without `endringer` (Ny/Sletting).
+  `raw_changes[[i]] <- NULL` was deleting list elements instead of
+  preserving NULL placeholders (R double-bracket assignment semantics).
+  Fix: [`list()`](https://rdrr.io/r/base/list.html) as empty
+  placeholder. Affected all enheter and underenheter sync since v0.3.2.
+- [`add_role_key()`](https://sondreskarsten.github.io/tidybrreg/reference/add_role_key.md)
+  no longer crashes on 0-row tibbles. Previously,
+  `case_when(df$person_id ...)` received NULL instead of NA when passed
+  a 0-column tibble from a 404 API response.
+- [`apply_roller_events_cdc()`](https://sondreskarsten.github.io/tidybrreg/reference/apply_roller_events_cdc.md)
+  skips
+  [`diff_roller_state()`](https://sondreskarsten.github.io/tidybrreg/reference/diff_roller_state.md)
+  when both old and new state are empty (entity not in state AND 404
+  from API).
+
 ## tidybrreg 0.3.3
 
 ### Bug fixes
 
-- `brreg_update_fields()` no longer silently drops Ny, Sletting, and
-  Fjernet CDC events. Events with no `endringer` array now emit a
-  synthetic row with `operation = NA`, `field = NA`, `new_value = NA`,
-  preserving event metadata for downstream filtering and counting.
-  Previously, filtering `brreg_update_fields()` output for
-  `change_type == "Ny"` returned zero rows.
-- `flatten_page_patches()` and
+- [`brreg_update_fields()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_update_fields.md)
+  no longer silently drops Ny, Sletting, and Fjernet CDC events. Events
+  with no `endringer` array now emit a synthetic row with
+  `operation = NA`, `field = NA`, `new_value = NA`, preserving event
+  metadata for downstream filtering and counting. Previously, filtering
+  [`brreg_update_fields()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_update_fields.md)
+  output for `change_type == "Ny"` returned zero rows.
+- [`flatten_page_patches()`](https://sondreskarsten.github.io/tidybrreg/reference/flatten_page_patches.md)
+  and
   [`parse_patch()`](https://sondreskarsten.github.io/tidybrreg/reference/parse_patch.md)
   now handle RFC 6902 `move` operations correctly: the value is written
   to the destination path and a synthetic `remove` row is emitted for
   the source path (from `$from`). `copy` operations already worked but
   now follow the same explicit dispatch path.
-- Stale roxygen docstring for `brreg_update_fields()` removed references
-  to RcppSimdJson and parallel processing (both removed in 0.3.2).
-  Documentation now accurately describes the sequential
-  fetch-and-flatten loop and the synthetic row behaviour for Ny/
-  Sletting/Fjernet events.
+- Stale roxygen docstring for
+  [`brreg_update_fields()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_update_fields.md)
+  removed references to RcppSimdJson and parallel processing (both
+  removed in 0.3.2). Documentation now accurately describes the
+  sequential fetch-and-flatten loop and the synthetic row behaviour for
+  Ny/ Sletting/Fjernet events.
 
 ### Field dictionary
 
@@ -42,11 +210,11 @@
 
 ### Sync engine
 
-- `find_state_column()` gains mappings for all 8 new field_dict entries.
-  CDC field changes for audit exemption dates, employee registration
-  dates, VAT registration date in Enhetsregisteret, underenhet start
-  dates, and party register membership are no longer silently skipped
-  during
+- [`find_state_column()`](https://sondreskarsten.github.io/tidybrreg/reference/find_state_column.md)
+  gains mappings for all 8 new field_dict entries. CDC field changes for
+  audit exemption dates, employee registration dates, VAT registration
+  date in Enhetsregisteret, underenhet start dates, and party register
+  membership are no longer silently skipped during
   [`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md).
 
 ## tidybrreg 0.3.2

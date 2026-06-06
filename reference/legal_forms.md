@@ -36,6 +36,7 @@ A tibble with 44 rows and 4 columns:
 to translate legal form codes in entity data.
 
 Other tidybrreg reference data:
+[`annotation_infotypes`](https://sondreskarsten.github.io/tidybrreg/reference/annotation_infotypes.md),
 [`field_dict`](https://sondreskarsten.github.io/tidybrreg/reference/field_dict.md),
 [`role_groups`](https://sondreskarsten.github.io/tidybrreg/reference/role_groups.md),
 [`role_types`](https://sondreskarsten.github.io/tidybrreg/reference/role_types.md)

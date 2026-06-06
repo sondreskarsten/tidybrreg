@@ -11,6 +11,7 @@ endpoints from the last cursor position and apply mutations.
 brreg_sync(
   types = c("enheter", "underenheter", "roller"),
   size = 10000L,
+  roller_method = c("bulk", "cdc"),
   verbose = TRUE
 )
 ```
@@ -19,12 +20,20 @@ brreg_sync(
 
 - types:
 
-  Character vector of streams to sync. Default syncs all three entity
-  types.
+  Character vector of streams to sync. Default syncs all four.
 
 - size:
 
   Integer. CDC page size per API call (max 10000).
+
+- roller_method:
+
+  One of `"bulk"` (default) or `"cdc"`. `"bulk"` downloads the full
+  totalbestand (~131 MB) and computes a field-level diff against
+  previous state — fast and produces granular changelogs. `"cdc"`
+  fetches current roles per-org via the API for each CDC event — slower
+  but provides sub-daily attribution when syncing multiple times per
+  day.
 
 - verbose:
 
@@ -34,6 +43,24 @@ brreg_sync(
 
 A list with sync summary: events processed per type, changelog rows
 written, elapsed time.
+
+## Details
+
+Four state files are maintained:
+
+- `enheter.parquet` — main entities (~1M rows)
+
+- `underenheter.parquet` — sub-entities (~500K rows)
+
+- `roller.parquet` — all roles (~3.4M rows)
+
+- `paategninger.parquet` — registry annotations
+
+Every mutation is logged to a Hive-partitioned changelog under
+`state/changelog/sync_date={date}/`. The changelog drives
+[`brreg_changes()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_changes.md)
+and
+[`brreg_flows()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_flows.md).
 
 ## Write ordering
 
@@ -52,14 +79,17 @@ to query the changelog,
 for entry/exit counts.
 
 Other tidybrreg data management functions:
-[`brreg_sync_status()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync_status.md),
+[`brreg_annotation_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotation_summary.md),
 [`brreg_annotations()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotations.md),
-[`brreg_status()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_status.md)
+[`brreg_status()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_status.md),
+[`brreg_sync_status()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync_status.md),
+[`diff_roller_state()`](https://sondreskarsten.github.io/tidybrreg/reference/diff_roller_state.md),
+[`read_changelog()`](https://sondreskarsten.github.io/tidybrreg/reference/read_changelog.md)
 
 ## Examples
 
 ``` r
-if (FALSE) { # interactive()
+if (FALSE) { # interactive() && curl::has_internet()
 # \donttest{
 brreg_sync()
 brreg_sync_status()

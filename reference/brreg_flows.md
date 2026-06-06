@@ -2,20 +2,7 @@
 
 Calculate daily counts of entity registrations (entries) and deletions
 (exits) classified by industry (NACE code) and geography (municipality
-code). Combines two data sources:
-
-1.  **Bulk download** — the `registration_date` column provides the
-    complete entry history for all currently-active entities. No exit
-    information (deleted entities are purged from the nightly bulk
-    export).
-
-2.  **CDC stream** — `Ny` (new) and `Sletting` (deleted) events from the
-    [`brreg_updates()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates.md)
-    endpoint, enriched with entity attributes from the bulk data.
-    Provides both entries and exits with real event timestamps.
-
-When only bulk data is provided (no `updates`), only entries are
-computed. Pass CDC data to unlock exit counts.
+code). Three data paths, selected automatically:
 
 ## Usage
 
@@ -36,17 +23,14 @@ brreg_flows(
 
   Optional. A tibble from
   [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md)
-  or a snapshot. When `NULL` and a sync changelog exists, flows are
-  computed from the changelog instead. Must contain `org_nr`,
-  `registration_date`, `nace_1`, and `municipality_code` when provided.
+  or a snapshot. Required when no changelog exists. Must contain
+  `org_nr`, `registration_date`, `nace_1`, and `municipality_code`.
 
 - updates:
 
   Optional. A tibble from
   [`brreg_updates()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates.md)
-  with CDC events. When provided, entries and exits from the CDC stream
-  are enriched with attributes from `data` and merged with the
-  registration-date-based entries.
+  with CDC events.
 
 - by:
 
@@ -71,6 +55,24 @@ A tibble with columns: `date` (Date), grouping columns from `by`,
 exits). An attribute `flow_source` records which data sources
 contributed.
 
+## Details
+
+1.  **Changelog path** (preferred) — when
+    [`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md)
+    has been run, reads directly from the persistent changelog. Provides
+    timestamped entries, exits, and field-level transitions. No
+    arguments needed.
+
+2.  **Bulk + CDC path** — pass `data` (from
+    [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md))
+    and optionally `updates` (from
+    [`brreg_updates()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates.md)).
+    Registration dates provide historical entries; CDC provides recent
+    entries + exits.
+
+3.  **Bulk-only path** — pass `data` alone. Only entries are computed
+    (no exit data available).
+
 ## Entry vs. founding date
 
 This function uses `registration_date`
@@ -91,23 +93,32 @@ for snapshot-based time series,
 for tsibble conversion.
 
 Other tidybrreg panel functions:
+[`as_brreg_tsibble()`](https://sondreskarsten.github.io/tidybrreg/reference/as_brreg_tsibble.md),
+[`brreg_change_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_change_summary.md),
+[`brreg_changes()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_changes.md),
 [`brreg_events()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_events.md),
 [`brreg_panel()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_panel.md),
+[`brreg_replay()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_replay.md),
 [`brreg_series()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_series.md)
 
 ## Examples
 
 ``` r
+if (FALSE) { # interactive() && curl::has_internet()
 # \donttest{
 entities <- brreg_download()
-#> ℹ Downloading full enheter register (~152 MB)
-#> ✔ Downloading full enheter register (~152 MB) [3m 13.5s]
-#> 
-#> ✔ Downloaded 145.5 MB to cache.
 flows <- brreg_flows(entities)
 
 # With CDC exits
 cdc <- brreg_updates(since = "2026-01-01", size = 10000)
 flows <- brreg_flows(entities, updates = cdc)
+
+# Monthly by NACE section
+flows |>
+  dplyr::mutate(month = format(date, "%Y-%m"),
+                nace_section = substr(nace_1, 1, 2)) |>
+  dplyr::summarise(entries = sum(entries), exits = sum(exits),
+                   .by = c(month, nace_section))
 # }
+}
 ```

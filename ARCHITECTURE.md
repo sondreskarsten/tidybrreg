@@ -10,22 +10,22 @@ The Brønnøysund Register Centre maintains Norway’s Central Coordinating
 Register for Legal Entities (Enhetsregisteret) at `data.brreg.no`. The
 API exposes three registries:
 
-| Registry         | Content                                                          | Entities         | API base                             |
-|------------------|------------------------------------------------------------------|------------------|--------------------------------------|
-| **Enheter**      | Main legal entities (companies, associations, government bodies) | ~1.96M           | `/enhetsregisteret/api/enheter`      |
-| **Underenheter** | Sub-entities / establishments (branch offices, plants)           | ~950K            | `/enhetsregisteret/api/underenheter` |
-| **Roller**       | Board members, officers, auditors, shareholders for all entities | ~5M role records | `/enhetsregisteret/api/roller`       |
+| Registry | Content | Entities | API base |
+|----|----|----|----|
+| **Enheter** | Main legal entities (companies, associations, government bodies) | ~1.96M | `/enhetsregisteret/api/enheter` |
+| **Underenheter** | Sub-entities / establishments (branch offices, plants) | ~950K | `/enhetsregisteret/api/underenheter` |
+| **Roller** | Board members, officers, auditors, shareholders for all entities | ~5M role records | `/enhetsregisteret/api/roller` |
 
 Each registry has multiple access patterns:
 
-| Access pattern      | Enheter                         | Underenheter                        | Roller                                    |
-|---------------------|---------------------------------|-------------------------------------|-------------------------------------------|
-| Single lookup       | `/enheter/{orgnr}`              | `/underenheter/{orgnr}`             | `/enheter/{orgnr}/roller`                 |
-| Filtered search     | `/enheter?navn=...`             | `/underenheter?navn=...`            | —                                         |
-| Bulk CSV            | `/enheter/lastned/csv` (152 MB) | `/underenheter/lastned/csv` (59 MB) | —                                         |
-| Bulk JSON           | `/enheter/lastned` (196 MB)     | `/underenheter/lastned` (75 MB)     | `/roller/totalbestand` (131 MB)           |
-| CDC updates         | `/oppdateringer/enheter` (HAL)  | `/oppdateringer/underenheter` (HAL) | `/oppdateringer/roller` (CloudEvents)     |
-| Reverse role lookup | —                               | —                                   | `/roller/enheter/{orgnr}/juridiskeroller` |
+| Access pattern | Enheter | Underenheter | Roller |
+|----|----|----|----|
+| Single lookup | `/enheter/{orgnr}` | `/underenheter/{orgnr}` | `/enheter/{orgnr}/roller` |
+| Filtered search | `/enheter?navn=...` | `/underenheter?navn=...` | — |
+| Bulk CSV | `/enheter/lastned/csv` (152 MB) | `/underenheter/lastned/csv` (59 MB) | — |
+| Bulk JSON | `/enheter/lastned` (196 MB) | `/underenheter/lastned` (75 MB) | `/roller/totalbestand` (131 MB) |
+| CDC updates | `/oppdateringer/enheter` (HAL) | `/oppdateringer/underenheter` (HAL) | `/oppdateringer/roller` (CloudEvents) |
+| Reverse role lookup | — | — | `/roller/enheter/{orgnr}/juridiskeroller` |
 
 The CSV and JSON bulk endpoints for enheter/underenheter return
 different column sets. JSON carries fields absent from CSV
@@ -126,14 +126,14 @@ Three sub-pipelines, all ending at the same
 dot-notation columns but leaves JSON arrays as R list columns. The brreg
 JSON bulk download produces six types of list columns:
 
-| Column                             | R type            | Content                              | Flattening rule                                                                        |
-|------------------------------------|-------------------|--------------------------------------|----------------------------------------------------------------------------------------|
-| `forretningsadresse.adresse`       | `character[1-3]`  | Street address lines                 | `paste(collapse = "; ")`                                                               |
-| `postadresse.adresse`              | `character[1-3]`  | Postal address lines                 | `paste(collapse = "; ")`                                                               |
-| `aktivitet`                        | `character[1-10]` | Activity descriptions                | `paste(collapse = "; ")`                                                               |
-| `vedtektsfestetFormaal`            | `character[1-11]` | Articles of association              | `paste(collapse = "; ")`                                                               |
-| `paategninger`                     | `data.frame`      | Endorsements (infotype, tekst, dato) | [`jsonlite::toJSON()`](https://jeroen.r-universe.dev/jsonlite/reference/fromJSON.html) |
-| `links`, `organisasjonsform.links` | `list[0]`         | HAL hypermedia links                 | Dropped entirely                                                                       |
+| Column | R type | Content | Flattening rule |
+|----|----|----|----|
+| `forretningsadresse.adresse` | `character[1-3]` | Street address lines | `paste(collapse = "; ")` |
+| `postadresse.adresse` | `character[1-3]` | Postal address lines | `paste(collapse = "; ")` |
+| `aktivitet` | `character[1-10]` | Activity descriptions | `paste(collapse = "; ")` |
+| `vedtektsfestetFormaal` | `character[1-11]` | Articles of association | `paste(collapse = "; ")` |
+| `paategninger` | `data.frame` | Endorsements (infotype, tekst, dato) | [`jsonlite::toJSON()`](https://jeroen.r-universe.dev/jsonlite/reference/fromJSON.html) |
+| `links`, `organisasjonsform.links` | `list[0]` | HAL hypermedia links | Dropped entirely |
 
 [`flatten_cell()`](https://sondreskarsten.github.io/tidybrreg/reference/flatten_cell.md)
 dispatches on runtime type: atomic vectors are collapsed with
@@ -260,20 +260,20 @@ record).
 `manifest.json` is a JSON file with a `downloads` array. Each entry
 records:
 
-| Field                | Source                                                              | Purpose                                             |
-|----------------------|---------------------------------------------------------------------|-----------------------------------------------------|
-| `id`                 | `"{type}_{date}"`                                                   | Dedup key                                           |
-| `type`               | Function argument                                                   | `"enheter"` / `"underenheter"` / `"roller"`         |
-| `snapshot_date`      | Function argument                                                   | Date the snapshot represents                        |
-| `endpoint`           | Constructed URL                                                     | Which brreg endpoint was called                     |
-| `format`             | Function argument                                                   | `"csv"` or `"json"`                                 |
-| `download_timestamp` | [`Sys.time()`](https://rdrr.io/r/base/Sys.time.html)                | When the download occurred (wall clock)             |
-| `last_modified`      | HTTP `Last-Modified` header                                         | When brreg last regenerated the file (data vintage) |
-| `etag`               | HTTP `ETag` header                                                  | Server-side change detection token                  |
-| `file_hash`          | [`rlang::hash_file()`](https://rlang.r-lib.org/reference/hash.html) | Integrity verification (XXH128)                     |
-| `record_count`       | `nrow(dat)`                                                         | Number of rows in processed output                  |
-| `raw_path`           | File path                                                           | Location of preserved raw .gz                       |
-| `parquet_path`       | File path                                                           | Location of processed parquet                       |
+| Field | Source | Purpose |
+|----|----|----|
+| `id` | `"{type}_{date}"` | Dedup key |
+| `type` | Function argument | `"enheter"` / `"underenheter"` / `"roller"` |
+| `snapshot_date` | Function argument | Date the snapshot represents |
+| `endpoint` | Constructed URL | Which brreg endpoint was called |
+| `format` | Function argument | `"csv"` or `"json"` |
+| `download_timestamp` | [`Sys.time()`](https://rdrr.io/r/base/Sys.time.html) | When the download occurred (wall clock) |
+| `last_modified` | HTTP `Last-Modified` header | When brreg last regenerated the file (data vintage) |
+| `etag` | HTTP `ETag` header | Server-side change detection token |
+| `file_hash` | [`rlang::hash_file()`](https://rlang.r-lib.org/reference/hash.html) | Integrity verification (XXH128) |
+| `record_count` | `nrow(dat)` | Number of rows in processed output |
+| `raw_path` | File path | Location of preserved raw .gz |
+| `parquet_path` | File path | Location of processed parquet |
 
 The `last_modified` field is the critical timestamp for CDC bridging. It
 represents when brreg regenerated the bulk file, not when you downloaded
@@ -340,13 +340,13 @@ converts these to `field_dict` column names or auto snake_case.
 
 ### When to use which
 
-| Situation                                  | Use                                                                                                                     |
-|--------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
-| You have multiple historical snapshots     | [`brreg_panel()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_panel.md)                                  |
-| You have one snapshot + want future states | [`brreg_replay()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_replay.md)                                |
-| You need old AND new values for changes    | [`brreg_events()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_events.md) (snapshot diff gives both)     |
-| You need change events but only have CDC   | [`brreg_replay()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_replay.md) (CDC gives new values only)    |
-| You need pre-September 2025 field changes  | [`brreg_events()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_events.md) (CDC had no field detail then) |
+| Situation | Use |
+|----|----|
+| You have multiple historical snapshots | [`brreg_panel()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_panel.md) |
+| You have one snapshot + want future states | [`brreg_replay()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_replay.md) |
+| You need old AND new values for changes | [`brreg_events()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_events.md) (snapshot diff gives both) |
+| You need change events but only have CDC | [`brreg_replay()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_replay.md) (CDC gives new values only) |
+| You need pre-September 2025 field changes | [`brreg_events()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_events.md) (CDC had no field detail then) |
 
 ## Time series with arbitrary variables
 
@@ -354,6 +354,7 @@ converts these to `field_dict` column names or auto snake_case.
 accepts character vectors for variables, functions, and grouping:
 
 ``` r
+
 brreg_series(
   .vars = "employees",                              # any column name(s)
   .fns  = list(avg = mean, total = sum, sd = sd),   # any summary function(s)
@@ -371,6 +372,7 @@ The return value carries a `brreg_panel_meta` attribute with `index`,
 uses this to convert to tsibble automatically:
 
 ``` r
+
 brreg_series(.vars = "employees", by = "legal_form") |>
   as_brreg_tsibble()
 # → tsibble with index = period, key = legal_form, regular = FALSE
@@ -383,11 +385,11 @@ spaced (daily, weekly, monthly — whatever the user accumulated).
 
 Compares two dated snapshots and returns a tibble of events:
 
-| event_type | Meaning                                         | Detection                                 |
-|------------|-------------------------------------------------|-------------------------------------------|
-| `"entry"`  | Entity appears in `date_to` but not `date_from` | `setdiff(new_ids, old_ids)`               |
-| `"exit"`   | Entity appears in `date_from` but not `date_to` | `setdiff(old_ids, new_ids)`               |
-| `"change"` | Field value differs for same entity             | Column-by-column comparison on common IDs |
+| event_type | Meaning | Detection |
+|----|----|----|
+| `"entry"` | Entity appears in `date_to` but not `date_from` | `setdiff(new_ids, old_ids)` |
+| `"exit"` | Entity appears in `date_from` but not `date_to` | `setdiff(old_ids, new_ids)` |
+| `"change"` | Field value differs for same entity | Column-by-column comparison on common IDs |
 
 Change events include both `value_from` and `value_to` — this is the key
 advantage over CDC, which provides only new values.
@@ -472,11 +474,11 @@ validate, label) work with Imports only.
 
 ## Reference data
 
-| Dataset        | Rows | Source                     | Used by                                                                                                                                                                                                                                                                                        |
-|----------------|------|----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `field_dict`   | 49   | Manual curation            | [`rename_from_dict()`](https://sondreskarsten.github.io/tidybrreg/reference/rename_from_dict.md), [`rename_and_coerce()`](https://sondreskarsten.github.io/tidybrreg/reference/rename_and_coerce.md), [`coerce_types()`](https://sondreskarsten.github.io/tidybrreg/reference/coerce_types.md) |
-| `legal_forms`  | 44   | brreg API + manual English | [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md), [`build_label_map()`](https://sondreskarsten.github.io/tidybrreg/reference/build_label_map.md)                                                                                                         |
-| `role_types`   | 18   | brreg API + manual English | `lookup_role()`, [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md)                                                                                                                                                                                        |
-| `role_groups`  | 15   | brreg API + manual English | `lookup_role_group()`, [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md)                                                                                                                                                                                  |
-| `nace_codes`   | 1783 | SSB Klass API              | [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md) (sysdata.rda, updated via [`get_brreg_dic()`](https://sondreskarsten.github.io/tidybrreg/reference/get_brreg_dic.md))                                                                                   |
-| `sector_codes` | 33   | SSB Klass API              | [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md) (sysdata.rda, updated via [`get_brreg_dic()`](https://sondreskarsten.github.io/tidybrreg/reference/get_brreg_dic.md))                                                                                   |
+| Dataset | Rows | Source | Used by |
+|----|----|----|----|
+| `field_dict` | 49 | Manual curation | [`rename_from_dict()`](https://sondreskarsten.github.io/tidybrreg/reference/rename_from_dict.md), [`rename_and_coerce()`](https://sondreskarsten.github.io/tidybrreg/reference/rename_and_coerce.md), [`coerce_types()`](https://sondreskarsten.github.io/tidybrreg/reference/coerce_types.md) |
+| `legal_forms` | 44 | brreg API + manual English | [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md), [`build_label_map()`](https://sondreskarsten.github.io/tidybrreg/reference/build_label_map.md) |
+| `role_types` | 18 | brreg API + manual English | `lookup_role()`, [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md) |
+| `role_groups` | 15 | brreg API + manual English | `lookup_role_group()`, [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md) |
+| `nace_codes` | 1783 | SSB Klass API | [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md) (sysdata.rda, updated via [`get_brreg_dic()`](https://sondreskarsten.github.io/tidybrreg/reference/get_brreg_dic.md)) |
+| `sector_codes` | 33 | SSB Klass API | [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md) (sysdata.rda, updated via [`get_brreg_dic()`](https://sondreskarsten.github.io/tidybrreg/reference/get_brreg_dic.md)) |

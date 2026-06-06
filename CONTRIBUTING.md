@@ -37,6 +37,7 @@ Thank you for considering contributing to tidybrreg.
 ## Testing
 
 ``` r
+
 devtools::test()                    # offline tests
 Sys.setenv(NOT_CRAN = "true")
 devtools::test()                    # includes API tests
@@ -50,6 +51,7 @@ API tests use a `safely()` wrapper that skips on network errors. Add
 After changing roxygen comments or adding functions:
 
 ``` r
+
 roxygen2::roxygenise()
 rmarkdown::render("README.Rmd", output_format = "github_document")
 ```

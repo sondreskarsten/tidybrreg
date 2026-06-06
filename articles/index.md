@@ -10,5 +10,7 @@
   research](https://sondreskarsten.github.io/tidybrreg/articles/governance.md):
 - [Building firm panels and time
   series](https://sondreskarsten.github.io/tidybrreg/articles/panels.md):
+- [Tracking board and role
+  changes](https://sondreskarsten.github.io/tidybrreg/articles/roller-cdc.md):
 - [Getting started with
   tidybrreg](https://sondreskarsten.github.io/tidybrreg/articles/tidybrreg.md):

@@ -35,18 +35,26 @@ to download and cache bulk data,
 [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md)
 for one-off downloads.
 
+Other tidybrreg data management functions:
+[`brreg_annotation_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotation_summary.md),
+[`brreg_annotations()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotations.md),
+[`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md),
+[`brreg_sync_status()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync_status.md),
+[`diff_roller_state()`](https://sondreskarsten.github.io/tidybrreg/reference/diff_roller_state.md),
+[`read_changelog()`](https://sondreskarsten.github.io/tidybrreg/reference/read_changelog.md)
+
 ## Examples
 
 ``` r
 brreg_status()
-#> ✔ enheter: available (download cache)
+#> ✖ enheter: not available
 #> ✖ underenheter: not available
 #> ✖ roller: not available
 #> $available
-#> [1] "enheter"
+#> character(0)
 #> 
 #> $missing
-#> [1] "underenheter" "roller"      
+#> [1] "enheter"      "underenheter" "roller"      
 #> 
 #> $all_ready
 #> [1] FALSE

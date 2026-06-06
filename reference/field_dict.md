@@ -13,7 +13,7 @@ field_dict
 
 ## Format
 
-A tibble with 49 rows and 3 columns:
+A tibble with 103 rows and 3 columns:
 
 - api_path:
 
@@ -27,8 +27,8 @@ A tibble with 49 rows and 3 columns:
 
 - type:
 
-  R type for coercion: `"character"`, `"Date"`, `"integer"`, or
-  `"logical"`.
+  R type for coercion: `"character"`, `"Date"`, `"integer"`,
+  `"numeric"`, or `"logical"`.
 
 ## See also
 
@@ -36,6 +36,7 @@ A tibble with 49 rows and 3 columns:
 for the function that uses this dictionary.
 
 Other tidybrreg reference data:
+[`annotation_infotypes`](https://sondreskarsten.github.io/tidybrreg/reference/annotation_infotypes.md),
 [`legal_forms`](https://sondreskarsten.github.io/tidybrreg/reference/legal_forms.md),
 [`role_groups`](https://sondreskarsten.github.io/tidybrreg/reference/role_groups.md),
 [`role_types`](https://sondreskarsten.github.io/tidybrreg/reference/role_types.md)
@@ -44,7 +45,7 @@ Other tidybrreg reference data:
 
 ``` r
 field_dict
-#> # A tibble: 70 × 3
+#> # A tibble: 103 × 3
 #>    api_path                          col_name           type     
 #>    <chr>                             <chr>              <chr>    
 #>  1 organisasjonsnummer               org_nr             character
@@ -57,25 +58,20 @@ field_dict
 #>  8 harRegistrertAntallAnsatte        employees_reported logical  
 #>  9 hjemmeside                        website            character
 #> 10 naeringskode1.kode                nace_1             character
-#> # ℹ 60 more rows
+#> # ℹ 93 more rows
 field_dict[field_dict$type == "Date", ]
-#> # A tibble: 16 × 3
-#>    api_path                                                   col_name     type 
-#>    <chr>                                                      <chr>        <chr>
-#>  1 stiftelsesdato                                             founding_da… Date 
-#>  2 registreringsdatoEnhetsregisteret                          registratio… Date 
-#>  3 konkursdato                                                bankruptcy_… Date 
-#>  4 underAvviklingDato                                         liquidation… Date 
-#>  5 registreringsdatoMerverdiavgiftsregisteret                 vat_registr… Date 
-#>  6 registreringsdatoForetaksregisteret                        business_re… Date 
-#>  7 registreringsdatoFrivillighetsregisteret                   nonprofit_r… Date 
-#>  8 vedtektsdato                                               articles_da… Date 
-#>  9 slettedato                                                 deletion_da… Date 
-#> 10 datoEierskifte                                             ownership_c… Date 
-#> 11 fravalgRevisjonDato                                        audit_exemp… Date 
-#> 12 fravalgRevisjonBeslutningsDato                             audit_exemp… Date 
-#> 13 registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret vat_registr… Date 
-#> 14 registreringsdatoAntallAnsatteEnhetsregisteret             employee_re… Date 
-#> 15 registreringsdatoAntallAnsatteNavAaregisteret              employee_re… Date 
-#> 16 oppstartsdato                                              start_date   Date 
+#> # A tibble: 28 × 3
+#>    api_path                                            col_name            type 
+#>    <chr>                                               <chr>               <chr>
+#>  1 stiftelsesdato                                      founding_date       Date 
+#>  2 registreringsdatoEnhetsregisteret                   registration_date   Date 
+#>  3 konkursdato                                         bankruptcy_date     Date 
+#>  4 underAvviklingDato                                  liquidation_date    Date 
+#>  5 tvangsavvikletPgaManglendeSlettingDato              forced_dissolution… Date 
+#>  6 tvangsopplostPgaMangelfulltStyreDato                forced_dissolution… Date 
+#>  7 tvangsopplostPgaManglendeRegnskapDato               forced_dissolution… Date 
+#>  8 tvangsopplostPgaManglendeRevisorDato                forced_dissolution… Date 
+#>  9 registreringsdatoMerverdiavgiftsregisteret          vat_registration_d… Date 
+#> 10 registreringsdatoFrivilligMerverdiavgiftsregisteret voluntary_vat_reg_… Date 
+#> # ℹ 18 more rows
 ```

@@ -10,8 +10,10 @@ since a given date. Each update carries a monotonically increasing
 brreg_updates(
   since = Sys.Date() - 1,
   size = 100,
+  max_pages = 1L,
   include_changes = FALSE,
-  type = c("enheter", "underenheter", "roller")
+  type = c("enheter", "underenheter", "roller"),
+  verbose = FALSE
 )
 ```
 
@@ -24,33 +26,37 @@ brreg_updates(
 
 - size:
 
-  Integer. Number of updates to fetch (max 10000).
+  Integer. Number of updates per page (max 10000).
+
+- max_pages:
+
+  Integer. Maximum pages to fetch. Default 1. Set higher to paginate
+  through large result sets automatically.
 
 - include_changes:
 
   Logical. If `TRUE`, include field-level change details per update as a
-  list-column of tibbles. The brreg API returns changes in a flat RFC
-  6902-style JSON Patch format.
+  list-column of tibbles.
 
 - type:
 
-  One of `"enheter"` (main entities), `"underenheter"` (sub-entities),
-  or `"roller"` (role assignments). Roller updates use CloudEvents
-  format (`afterTime`/`afterId` pagination) rather than the HAL-based
-  format used by enheter/underenheter. `include_changes` is ignored for
-  roller.
+  One of `"enheter"`, `"underenheter"`, or `"roller"`. Roller uses
+  CloudEvents format; `include_changes` is ignored.
+
+- verbose:
+
+  Logical. Print page-level progress.
 
 ## Value
 
-A tibble with columns: `update_id` (integer), `org_nr` (character),
-`change_type` (character: Ny/Endring/Sletting), `timestamp` (POSIXct).
-If `include_changes = TRUE`, an additional list-column `changes`
-contains tibbles with columns `operation`, `field`, `new_value`.
+A tibble with columns: `update_id`, `org_nr`, `change_type`,
+`timestamp`. If `include_changes = TRUE`, a list-column `changes` with
+tibbles of `operation`, `field`, `new_value`.
 
 ## See also
 
-[`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md)
-to fetch the current state of a changed entity.
+[`brreg_update_fields()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_update_fields.md)
+for a flat alternative.
 
 Other tidybrreg entity functions:
 [`brreg_board_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_summary.md),
@@ -60,7 +66,8 @@ Other tidybrreg entity functions:
 [`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md),
 [`brreg_roles_legal()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles_legal.md),
 [`brreg_search()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_search.md),
-[`brreg_underenheter()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_underenheter.md)
+[`brreg_underenheter()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_underenheter.md),
+[`brreg_update_fields()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_update_fields.md)
 
 ## Examples
 
@@ -68,7 +75,8 @@ Other tidybrreg entity functions:
 if (FALSE) { # interactive() && curl::has_internet()
 brreg_updates(since = Sys.Date() - 1, size = 10)
 
-# With field-level change details
-brreg_updates(since = Sys.Date() - 1, size = 5, include_changes = TRUE)
+# Auto-paginate
+brreg_updates(since = "2026-03-01", size = 10000, max_pages = 50,
+              verbose = TRUE)
 }
 ```

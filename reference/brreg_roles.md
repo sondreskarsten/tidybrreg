@@ -22,8 +22,9 @@ brreg_roles(org_nr)
 A tibble with one row per role assignment. Columns: `org_nr`,
 `role_group`, `role_group_code`, `role`, `role_code`, `first_name`,
 `middle_name`, `last_name`, `birth_date`, `deceased`, `entity_org_nr`,
-`entity_name`, `resigned`, `person_id`. Returns an empty tibble if the
-entity has no registered roles.
+`entity_name`, `resigned`, `deregistered`, `ordering`, `elected_by`,
+`group_modified`, `person_id`. Returns an empty tibble if the entity has
+no registered roles.
 
 ## Details
 
@@ -60,6 +61,7 @@ Other tidybrreg entity functions:
 [`brreg_roles_legal()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles_legal.md),
 [`brreg_search()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_search.md),
 [`brreg_underenheter()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_underenheter.md),
+[`brreg_update_fields()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_update_fields.md),
 [`brreg_updates()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates.md)
 
 ## Examples

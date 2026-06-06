@@ -1,0 +1,35 @@
+# Paginate roller CDC with bounded page count
+
+For `roller_method = "bulk"`, the CDC poll is only used for cursor
+advancement and per-org timestamp enrichment. The bulk totalbestand diff
+covers all changes regardless of CDC events. This function caps
+pagination at `max_pages` to avoid fetching the entire CDC history on
+first bootstrap (cursor_id = 0).
+
+## Usage
+
+``` r
+paginate_cdc_bounded(from_id, size = 10000L, max_pages = 5L, verbose = TRUE)
+```
+
+## Arguments
+
+- from_id:
+
+  Cursor position.
+
+- size:
+
+  Page size.
+
+- max_pages:
+
+  Hard cap on pages (default 5 = 50K events).
+
+- verbose:
+
+  Print progress.
+
+## Value
+
+Tibble of CDC events, or empty tibble.

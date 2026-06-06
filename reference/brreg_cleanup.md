@@ -35,6 +35,11 @@ A tibble of deleted snapshots (invisibly).
 
 ## See also
 
+[`brreg_snapshots()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_snapshots.md)
+to list available snapshots,
+[`brreg_data_dir()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_data_dir.md)
+for storage location.
+
 Other tidybrreg snapshot functions:
 [`brreg_data_dir()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_data_dir.md),
 [`brreg_import()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_import.md),

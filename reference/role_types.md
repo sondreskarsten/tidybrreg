@@ -34,6 +34,7 @@ A tibble with 18 rows and 3 columns:
 [role_groups](https://sondreskarsten.github.io/tidybrreg/reference/role_groups.md).
 
 Other tidybrreg reference data:
+[`annotation_infotypes`](https://sondreskarsten.github.io/tidybrreg/reference/annotation_infotypes.md),
 [`field_dict`](https://sondreskarsten.github.io/tidybrreg/reference/field_dict.md),
 [`legal_forms`](https://sondreskarsten.github.io/tidybrreg/reference/legal_forms.md),
 [`role_groups`](https://sondreskarsten.github.io/tidybrreg/reference/role_groups.md)

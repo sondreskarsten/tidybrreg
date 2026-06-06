@@ -10,6 +10,7 @@ Licence for Open Government Data (NLOD
 ## Installation
 
 ``` r
+
 # Recommended: pak (handles all dependencies)
 # install.packages("pak")
 pak::pak("sondreskarsten/tidybrreg")
@@ -31,6 +32,7 @@ install.packages("arrow")       # full-featured (lazy queries)
 ## Entity lookup
 
 ``` r
+
 library(tidybrreg)
 
 brreg_entity("923609016")
@@ -47,6 +49,7 @@ Codes by default. Translate with `type = "label"` or
 [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md):
 
 ``` r
+
 brreg_entity("923609016", type = "label")
 
 brreg_entity("923609016") |>
@@ -56,6 +59,7 @@ brreg_entity("923609016") |>
 ## Search
 
 ``` r
+
 brreg_search(legal_form = "AS", municipality_code = "0301",
              min_employees = 500, max_results = 10)
 
@@ -66,6 +70,7 @@ brreg_search(name = "Equinor", registry = "underenheter", max_results = 5)
 ## Roles and governance
 
 ``` r
+
 # Who holds roles IN an entity
 brreg_roles("923609016")
 brreg_roles("923609016") |> brreg_board_summary()
@@ -79,11 +84,37 @@ brreg_roles_legal("923609016")
 #> 2 923609016 925461784     EQUINOR DEZASSETE AS             Accountant NA
 ```
 
+## Role change detection
+
+Detect board and management changes at field level. Two approaches:
+
+``` r
+
+# Manual diff between two states
+old <- brreg_roles("810556722")
+new <- brreg_roles("810556722")
+diff_roller_state(old, new)
+#> # A tibble: 12 x 8
+#>   timestamp  org_nr    registry change_type field      value_from value_to
+#>   <chr>      <chr>     <chr>    <chr>       <chr>      <chr>      <chr>
+#> 1 2026-03-25 810556722 roller   entry       role_group NA         Board...
+#> 2 2026-03-25 810556722 roller   exit        first_name Kari       NA
+
+# Automated sync with persistent state + changelog
+brreg_sync(types = "roller", roller_method = "bulk")
+brreg_changes(registry = "roller", change_type = "entry")
+```
+
+See
+[`vignette("roller-cdc")`](https://sondreskarsten.github.io/tidybrreg/articles/roller-cdc.md)
+for the full workflow.
+
 ## Bulk downloads
 
 Three registries available as bulk downloads:
 
 ``` r
+
 # Enheter: ~152 MB CSV or ~196 MB JSON
 entities <- brreg_download(type = "enheter")
 entities <- brreg_download(type = "enheter", format = "json")
@@ -101,6 +132,7 @@ Save dated bulk downloads as Hive-partitioned Parquet. Raw `.gz` files
 are preserved for provenance.
 
 ``` r
+
 brreg_snapshot("enheter")
 brreg_snapshot("underenheter")
 brreg_snapshot("roller")
@@ -118,6 +150,7 @@ brreg_manifest()
 Two paths for building firm-period panels:
 
 ``` r
+
 # Path A: multi-snapshot diff
 panel <- brreg_panel(
   frequency = "year",
@@ -139,6 +172,7 @@ events |> dplyr::count(event_type)
 Aggregate any variable with any summary function, grouped by any column:
 
 ``` r
+
 # Total employees by legal form per year
 brreg_series(.vars = "employees", by = "legal_form")
 
@@ -157,6 +191,7 @@ brreg_series(.vars = "employees") |> as_brreg_tsibble()
 ## Harmonization
 
 ``` r
+
 panel |> brreg_harmonize_kommune(target_date = "2024-01-01")
 panel |> brreg_harmonize_nace(from = "SN2007", to = "SN2025")
 ```
@@ -164,6 +199,7 @@ panel |> brreg_harmonize_nace(from = "SN2007", to = "SN2025")
 ## Governance research
 
 ``` r
+
 net <- brreg_board_network(c("923609016", "984851006"))
 surv <- brreg_search(legal_form = "AS", max_results = 1000) |>
   brreg_survival_data()
@@ -172,7 +208,10 @@ surv <- brreg_search(legal_form = "AS", max_results = 1000) |>
 ## Validate organization numbers
 
 ``` r
+
 library(tidybrreg)
+#> tidybrreg: bulk data not yet downloaded for: enheter, underenheter.
+#> Run brreg_snapshot() for full network/panel support. See ?brreg_status for details.
 brreg_validate(c("923609016", "984851006", "123456789"))
 #> [1]  TRUE  TRUE FALSE
 ```
@@ -208,34 +247,34 @@ for forward reconstruction.
 
 ## Functions
 
-| Function                                                                                                       | Description                                                    |
-|----------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|
-| [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md)                       | Single entity by organization number (enheter or underenheter) |
-| [`brreg_search()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_search.md)                       | Filtered search (enheter or underenheter)                      |
-| [`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md)                         | Board members, officers, auditors for an entity                |
-| [`brreg_roles_legal()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles_legal.md)             | Reverse: roles an entity holds in other entities               |
-| [`brreg_board_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_summary.md)         | Board-level covariates from role data                          |
-| [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md)                   | Full register bulk download (enheter, underenheter, roller)    |
-| [`brreg_updates()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates.md)                     | Incremental change stream (enheter, underenheter, roller)      |
-| [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md)                         | Translate codes to English descriptions                        |
-| [`brreg_validate()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_validate.md)                   | Organization number validation (modulus-11)                    |
-| [`get_brreg_dic()`](https://sondreskarsten.github.io/tidybrreg/reference/get_brreg_dic.md)                     | Fetch/cache NACE or sector dictionaries                        |
-| [`brreg_snapshot()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_snapshot.md)                   | Save dated bulk download as Parquet + raw file                 |
-| [`brreg_import()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_import.md)                       | Import historical CSV as snapshot partition                    |
-| [`brreg_snapshots()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_snapshots.md)                 | List available snapshots                                       |
-| [`brreg_manifest()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_manifest.md)                   | Read download provenance catalog                               |
-| [`brreg_open()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_open.md)                           | Open snapshot store as lazy Arrow Dataset                      |
-| [`brreg_cleanup()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_cleanup.md)                     | Remove old snapshot partitions                                 |
-| [`brreg_panel()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_panel.md)                         | Firm x period panel from snapshots                             |
-| [`brreg_replay()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_replay.md)                       | Reconstruct state from snapshot + CDC updates                  |
-| [`brreg_events()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_events.md)                       | Snapshot diff: entries, exits, field changes                   |
-| [`brreg_series()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_series.md)                       | Aggregate time series (any variable, any function)             |
-| [`as_brreg_tsibble()`](https://sondreskarsten.github.io/tidybrreg/reference/as_brreg_tsibble.md)               | Convert to tsibble for tidyverts ecosystem                     |
-| [`brreg_harmonize_kommune()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_harmonize_kommune.md) | Municipality code harmonization                                |
-| [`brreg_harmonize_nace()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_harmonize_nace.md)       | NACE code harmonization (SN2007/SN2025)                        |
-| [`brreg_board_network()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_network.md)         | Director interlock network (tidygraph)                         |
-| [`brreg_survival_data()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_survival_data.md)         | Firm survival data preparation                                 |
-| [`brreg_data_dir()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_data_dir.md)                   | Snapshot store location                                        |
+| Function | Description |
+|----|----|
+| [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md) | Single entity by organization number (enheter or underenheter) |
+| [`brreg_search()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_search.md) | Filtered search (enheter or underenheter) |
+| [`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md) | Board members, officers, auditors for an entity |
+| [`brreg_roles_legal()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles_legal.md) | Reverse: roles an entity holds in other entities |
+| [`brreg_board_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_summary.md) | Board-level covariates from role data |
+| [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md) | Full register bulk download (enheter, underenheter, roller) |
+| [`brreg_updates()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates.md) | Incremental change stream (enheter, underenheter, roller) |
+| [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md) | Translate codes to English descriptions |
+| [`brreg_validate()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_validate.md) | Organization number validation (modulus-11) |
+| [`get_brreg_dic()`](https://sondreskarsten.github.io/tidybrreg/reference/get_brreg_dic.md) | Fetch/cache NACE or sector dictionaries |
+| [`brreg_snapshot()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_snapshot.md) | Save dated bulk download as Parquet + raw file |
+| [`brreg_import()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_import.md) | Import historical CSV as snapshot partition |
+| [`brreg_snapshots()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_snapshots.md) | List available snapshots |
+| [`brreg_manifest()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_manifest.md) | Read download provenance catalog |
+| [`brreg_open()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_open.md) | Open snapshot store as lazy Arrow Dataset |
+| [`brreg_cleanup()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_cleanup.md) | Remove old snapshot partitions |
+| [`brreg_panel()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_panel.md) | Firm x period panel from snapshots |
+| [`brreg_replay()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_replay.md) | Reconstruct state from snapshot + CDC updates |
+| [`brreg_events()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_events.md) | Snapshot diff: entries, exits, field changes |
+| [`brreg_series()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_series.md) | Aggregate time series (any variable, any function) |
+| [`as_brreg_tsibble()`](https://sondreskarsten.github.io/tidybrreg/reference/as_brreg_tsibble.md) | Convert to tsibble for tidyverts ecosystem |
+| [`brreg_harmonize_kommune()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_harmonize_kommune.md) | Municipality code harmonization |
+| [`brreg_harmonize_nace()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_harmonize_nace.md) | NACE code harmonization (SN2007/SN2025) |
+| [`brreg_board_network()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_network.md) | Director interlock network (tidygraph) |
+| [`brreg_survival_data()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_survival_data.md) | Firm survival data preparation |
+| [`brreg_data_dir()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_data_dir.md) | Snapshot store location |
 
 ## License
 

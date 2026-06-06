@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Tidy Access to Norways Business Registry (Enhetsregisteret') • tidybrreg</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Tidy Access to Norways Business Registry (Enhetsregisteret')">
 <meta name="description" content="A tidy interface to download, search, and analyze data from the Norwegian Central Coordinating Register for Legal Entities (Enhetsregisteret), maintained by the Brønnøysund Register Centre. Provides access to registration data for approximately 1 million legal entities including companies, partnerships, sole proprietorships, associations, and government bodies. Returns tibbles with English column names mapped via a data-driven dictionary; unknown API fields pass through with auto-generated names. Coded values (legal forms, industry codes, roles) can be translated to English on demand using bundled reference data or live lookups from the SSB Klass API. Data is freely available under the Norwegian Licence for Open Government Data (NLOD 2.0).">
@@ -23,7 +23,7 @@
 
     <a class="navbar-brand me-2" href="index.html">tidybrreg</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,7 @@
     <li><a class="dropdown-item" href="articles/business-data.html">Norwegian business data</a></li>
     <li><a class="dropdown-item" href="articles/panels.html">Building firm panels</a></li>
     <li><a class="dropdown-item" href="articles/governance.html">Governance research</a></li>
+    <li><a class="dropdown-item" href="articles/roller-cdc.html">Tracking role changes</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="articles/architecture.html">Architecture</a></li>
   </ul>
@@ -136,10 +137,30 @@
 <span><span class="co">#&gt; 2 923609016 925461784     EQUINOR DEZASSETE AS             Accountant NA</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="role-change-detection">Role change detection<a class="anchor" aria-label="anchor" href="#role-change-detection"></a>
+</h2>
+<p>Detect board and management changes at field level. Two approaches:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Manual diff between two states</span></span>
+<span><span class="va">old</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/brreg_roles.html">brreg_roles</a></span><span class="op">(</span><span class="st">"810556722"</span><span class="op">)</span></span>
+<span><span class="va">new</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/brreg_roles.html">brreg_roles</a></span><span class="op">(</span><span class="st">"810556722"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/diff_roller_state.html">diff_roller_state</a></span><span class="op">(</span><span class="va">old</span>, <span class="va">new</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 12 x 8</span></span>
+<span><span class="co">#&gt;   timestamp  org_nr    registry change_type field      value_from value_to</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;      &lt;chr&gt;     &lt;chr&gt;    &lt;chr&gt;       &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;</span></span>
+<span><span class="co">#&gt; 1 2026-03-25 810556722 roller   entry       role_group NA         Board...</span></span>
+<span><span class="co">#&gt; 2 2026-03-25 810556722 roller   exit        first_name Kari       NA</span></span>
+<span></span>
+<span><span class="co"># Automated sync with persistent state + changelog</span></span>
+<span><span class="fu"><a href="reference/brreg_sync.html">brreg_sync</a></span><span class="op">(</span>types <span class="op">=</span> <span class="st">"roller"</span>, roller_method <span class="op">=</span> <span class="st">"bulk"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/brreg_changes.html">brreg_changes</a></span><span class="op">(</span>registry <span class="op">=</span> <span class="st">"roller"</span>, change_type <span class="op">=</span> <span class="st">"entry"</span><span class="op">)</span></span></code></pre></div>
+<p>See <code><a href="articles/roller-cdc.html">vignette("roller-cdc")</a></code> for the full workflow.</p>
+</div>
+<div class="section level2">
 <h2 id="bulk-downloads">Bulk downloads<a class="anchor" aria-label="anchor" href="#bulk-downloads"></a>
 </h2>
 <p>Three registries available as bulk downloads:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Enheter: ~152 MB CSV or ~196 MB JSON</span></span>
 <span><span class="va">entities</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/brreg_download.html">brreg_download</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"enheter"</span><span class="op">)</span></span>
 <span><span class="va">entities</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/brreg_download.html">brreg_download</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"enheter"</span>, format <span class="op">=</span> <span class="st">"json"</span><span class="op">)</span></span>
@@ -154,7 +175,7 @@
 <h2 id="snapshot-engine">Snapshot engine<a class="anchor" aria-label="anchor" href="#snapshot-engine"></a>
 </h2>
 <p>Save dated bulk downloads as Hive-partitioned Parquet. Raw <code>.gz</code> files are preserved for provenance.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/brreg_snapshot.html">brreg_snapshot</a></span><span class="op">(</span><span class="st">"enheter"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/brreg_snapshot.html">brreg_snapshot</a></span><span class="op">(</span><span class="st">"underenheter"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/brreg_snapshot.html">brreg_snapshot</a></span><span class="op">(</span><span class="st">"roller"</span><span class="op">)</span></span>
@@ -170,7 +191,7 @@
 <h2 id="panel-construction">Panel construction<a class="anchor" aria-label="anchor" href="#panel-construction"></a>
 </h2>
 <p>Two paths for building firm-period panels:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Path A: multi-snapshot diff</span></span>
 <span><span class="va">panel</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/brreg_panel.html">brreg_panel</a></span><span class="op">(</span></span>
 <span>  frequency <span class="op">=</span> <span class="st">"year"</span>,</span>
@@ -190,7 +211,7 @@
 <h2 id="time-series">Time series<a class="anchor" aria-label="anchor" href="#time-series"></a>
 </h2>
 <p>Aggregate any variable with any summary function, grouped by any column:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Total employees by legal form per year</span></span>
 <span><span class="fu"><a href="reference/brreg_series.html">brreg_series</a></span><span class="op">(</span>.vars <span class="op">=</span> <span class="st">"employees"</span>, by <span class="op">=</span> <span class="st">"legal_form"</span><span class="op">)</span></span>
 <span></span>
@@ -208,14 +229,14 @@
 <div class="section level2">
 <h2 id="harmonization">Harmonization<a class="anchor" aria-label="anchor" href="#harmonization"></a>
 </h2>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">panel</span> <span class="op">|&gt;</span> <span class="fu"><a href="reference/brreg_harmonize_kommune.html">brreg_harmonize_kommune</a></span><span class="op">(</span>target_date <span class="op">=</span> <span class="st">"2024-01-01"</span><span class="op">)</span></span>
 <span><span class="va">panel</span> <span class="op">|&gt;</span> <span class="fu"><a href="reference/brreg_harmonize_nace.html">brreg_harmonize_nace</a></span><span class="op">(</span>from <span class="op">=</span> <span class="st">"SN2007"</span>, to <span class="op">=</span> <span class="st">"SN2025"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="governance-research">Governance research<a class="anchor" aria-label="anchor" href="#governance-research"></a>
 </h2>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/brreg_board_network.html">brreg_board_network</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"923609016"</span>, <span class="st">"984851006"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">surv</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/brreg_search.html">brreg_search</a></span><span class="op">(</span>legal_form <span class="op">=</span> <span class="st">"AS"</span>, max_results <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/brreg_survival_data.html">brreg_survival_data</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
@@ -223,8 +244,10 @@
 <div class="section level2">
 <h2 id="validate-organization-numbers">Validate organization numbers<a class="anchor" aria-label="anchor" href="#validate-organization-numbers"></a>
 </h2>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://sondreskarsten.github.io/tidybrreg/">tidybrreg</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; tidybrreg: bulk data not yet downloaded for: enheter, underenheter.</span></span>
+<span><span class="co">#&gt; Run brreg_snapshot() for full network/panel support. See ?brreg_status for details.</span></span>
 <span><span class="fu"><a href="reference/brreg_validate.html">brreg_validate</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"923609016"</span>, <span class="st">"984851006"</span>, <span class="st">"123456789"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1]  TRUE  TRUE FALSE</span></span></code></pre></div>
 </div>
@@ -245,112 +268,112 @@
 <col width="31%">
 <col width="68%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Function</th>
 <th>Description</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/brreg_entity.html">brreg_entity()</a></code></td>
 <td>Single entity by organization number (enheter or underenheter)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/brreg_search.html">brreg_search()</a></code></td>
 <td>Filtered search (enheter or underenheter)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/brreg_roles.html">brreg_roles()</a></code></td>
 <td>Board members, officers, auditors for an entity</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/brreg_roles_legal.html">brreg_roles_legal()</a></code></td>
 <td>Reverse: roles an entity holds in other entities</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/brreg_board_summary.html">brreg_board_summary()</a></code></td>
 <td>Board-level covariates from role data</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/brreg_download.html">brreg_download()</a></code></td>
 <td>Full register bulk download (enheter, underenheter, roller)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/brreg_updates.html">brreg_updates()</a></code></td>
 <td>Incremental change stream (enheter, underenheter, roller)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/brreg_label.html">brreg_label()</a></code></td>
 <td>Translate codes to English descriptions</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/brreg_validate.html">brreg_validate()</a></code></td>
 <td>Organization number validation (modulus-11)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/get_brreg_dic.html">get_brreg_dic()</a></code></td>
 <td>Fetch/cache NACE or sector dictionaries</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/brreg_snapshot.html">brreg_snapshot()</a></code></td>
 <td>Save dated bulk download as Parquet + raw file</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/brreg_import.html">brreg_import()</a></code></td>
 <td>Import historical CSV as snapshot partition</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/brreg_snapshots.html">brreg_snapshots()</a></code></td>
 <td>List available snapshots</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/brreg_manifest.html">brreg_manifest()</a></code></td>
 <td>Read download provenance catalog</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/brreg_open.html">brreg_open()</a></code></td>
 <td>Open snapshot store as lazy Arrow Dataset</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/brreg_cleanup.html">brreg_cleanup()</a></code></td>
 <td>Remove old snapshot partitions</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/brreg_panel.html">brreg_panel()</a></code></td>
 <td>Firm x period panel from snapshots</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/brreg_replay.html">brreg_replay()</a></code></td>
 <td>Reconstruct state from snapshot + CDC updates</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/brreg_events.html">brreg_events()</a></code></td>
 <td>Snapshot diff: entries, exits, field changes</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/brreg_series.html">brreg_series()</a></code></td>
 <td>Aggregate time series (any variable, any function)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/as_brreg_tsibble.html">as_brreg_tsibble()</a></code></td>
 <td>Convert to tsibble for tidyverts ecosystem</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/brreg_harmonize_kommune.html">brreg_harmonize_kommune()</a></code></td>
 <td>Municipality code harmonization</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/brreg_harmonize_nace.html">brreg_harmonize_nace()</a></code></td>
 <td>NACE code harmonization (SN2007/SN2025)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/brreg_board_network.html">brreg_board_network()</a></code></td>
 <td>Director interlock network (tidygraph)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/brreg_survival_data.html">brreg_survival_data()</a></code></td>
 <td>Firm survival data preparation</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/brreg_data_dir.html">brreg_data_dir()</a></code></td>
 <td>Snapshot store location</td>
 </tr>

@@ -28,7 +28,9 @@ criteria. Supports both main entities and sub-entities.
 Board members, officers, auditors, and inter-company role relationships.
 See
 [`vignette("governance")`](https://sondreskarsten.github.io/tidybrreg/articles/governance.md)
-for network analysis.
+for network analysis and
+[`vignette("roller-cdc")`](https://sondreskarsten.github.io/tidybrreg/articles/roller-cdc.md)
+for change detection.
 
 - [`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md)
   : Retrieve board members, officers, and auditors
@@ -42,11 +44,13 @@ for network analysis.
   : Build an entity network graph
 - [`brreg_survival_data()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_survival_data.md)
   : Prepare firm survival data
+- [`diff_roller_state()`](https://sondreskarsten.github.io/tidybrreg/reference/diff_roller_state.md)
+  : Compute field-level diffs between two roller state tibbles
 
 ## Bulk downloads
 
 Download the full register as CSV or JSON. Three registries: enheter
-(~1M entities), underenheter (~950K sub-entities), roller (~5M role
+(~1M entities), underenheter (~950K sub-entities), roller (~3.4M role
 records).
 
 - [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md)
@@ -114,6 +118,8 @@ Supports enheter, underenheter, and roller.
 
 - [`brreg_updates()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates.md)
   : Retrieve incremental entity updates
+- [`brreg_update_fields()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_update_fields.md)
+  : Retrieve field-level CDC changes as a flat tibble
 
 ## Labels and translation
 
@@ -147,3 +153,5 @@ Bundled datasets mapping Norwegian codes to English names.
   : Role type codes with English translations
 - [`role_groups`](https://sondreskarsten.github.io/tidybrreg/reference/role_groups.md)
   : Role group codes with English translations
+- [`annotation_infotypes`](https://sondreskarsten.github.io/tidybrreg/reference/annotation_infotypes.md)
+  : Annotation infotype codes with English descriptions

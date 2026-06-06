@@ -19,8 +19,9 @@ brreg_board_summary(roles)
 ## Value
 
 A 1-row tibble with columns: `org_nr`, `board_size`, `n_chair`,
-`n_deputy_chair`, `n_members`, `n_alternates`, `n_observers`, `has_ceo`,
-`has_auditor`, `auditor_org_nr`.
+`n_deputy_chair`, `n_members`, `n_alternates`, `n_observers`,
+`n_employee_elected`, `has_ceo`, `has_auditor`, `auditor_org_nr`. Counts
+exclude resigned and deregistered roles.
 
 ## See also
 
@@ -35,6 +36,7 @@ Other tidybrreg entity functions:
 [`brreg_roles_legal()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles_legal.md),
 [`brreg_search()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_search.md),
 [`brreg_underenheter()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_underenheter.md),
+[`brreg_update_fields()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_update_fields.md),
 [`brreg_updates()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates.md)
 
 ## Examples

@@ -15,10 +15,18 @@ A list with status components (invisibly).
 
 ## See also
 
+[`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md)
+to run a sync,
+[`brreg_changes()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_changes.md)
+to query the changelog.
+
 Other tidybrreg data management functions:
-[`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md),
+[`brreg_annotation_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotation_summary.md),
 [`brreg_annotations()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotations.md),
-[`brreg_status()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_status.md)
+[`brreg_status()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_status.md),
+[`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md),
+[`diff_roller_state()`](https://sondreskarsten.github.io/tidybrreg/reference/diff_roller_state.md),
+[`read_changelog()`](https://sondreskarsten.github.io/tidybrreg/reference/read_changelog.md)
 
 ## Examples
 

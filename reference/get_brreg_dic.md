@@ -27,6 +27,9 @@ A tibble with columns `code`, `name_en`, `level`.
 
 ## See also
 
+[`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md)
+for translating columns in place.
+
 Other tidybrreg utilities:
 [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md),
 [`brreg_validate()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_validate.md)

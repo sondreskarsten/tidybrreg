@@ -1,7 +1,9 @@
 # Query the change log for field-level mutations
 
 Returns a filtered view of all recorded changes across the four sync
-streams: enheter, underenheter, roller, and påtegninger.
+streams: enheter, underenheter, roller, and påtegninger. Every call to
+[`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md)
+appends events to the changelog; this function reads and filters them.
 
 ## Usage
 
@@ -26,12 +28,12 @@ brreg_changes(
 
 - registry:
 
-  Character vector of streams to include.
+  Character vector of streams to include. Default includes all four.
 
 - change_type:
 
-  Character vector of event types. Options: `"entry"`, `"exit"`,
-  `"change"`, `"annotation_added"`, `"annotation_cleared"`.
+  Character vector of event types to include. Options: `"entry"`,
+  `"exit"`, `"change"`, `"annotation_added"`, `"annotation_cleared"`.
 
 - from, to:
 
@@ -54,9 +56,12 @@ to populate the changelog,
 for aggregated entry/exit counts.
 
 Other tidybrreg panel functions:
+[`as_brreg_tsibble()`](https://sondreskarsten.github.io/tidybrreg/reference/as_brreg_tsibble.md),
+[`brreg_change_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_change_summary.md),
 [`brreg_events()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_events.md),
 [`brreg_flows()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_flows.md),
 [`brreg_panel()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_panel.md),
+[`brreg_replay()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_replay.md),
 [`brreg_series()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_series.md)
 
 ## Examples
@@ -65,8 +70,18 @@ Other tidybrreg panel functions:
 if (FALSE) { # interactive()
 # \donttest{
 brreg_sync()
+
+# All changes this month
 brreg_changes(from = Sys.Date() - 30)
+
+# NACE reclassifications only
 brreg_changes(track = "nace_1", change_type = "change")
+
+# Entries and exits for a specific entity
+brreg_changes(org_nr = "923609016", change_type = c("entry", "exit"))
+
+# All annotation events
+brreg_changes(registry = "paategninger")
 # }
 }
 ```
