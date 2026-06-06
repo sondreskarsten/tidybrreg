@@ -104,6 +104,7 @@ reference:
     stream. Supports enheter, underenheter, and roller.
   contents:
   - brreg_updates
+  - brreg_update_fields
 
 - title: Labels and translation
   desc: >
