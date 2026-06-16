@@ -1,11 +1,11 @@
-# Build an httr2 request to the brreg API
+# Build an httr2 request to a brreg API service
 
-Build an httr2 request to the brreg API
+Build an httr2 request to a brreg API service
 
 ## Usage
 
 ``` r
-brreg_req(path, query = list())
+brreg_req(path, query = list(), service = c("enhetsregisteret", "fullmakt"))
 ```
 
 ## Arguments
@@ -17,3 +17,7 @@ brreg_req(path, query = list())
 - query:
 
   Named list of query parameters.
+
+- service:
+
+  One of `"enhetsregisteret"` or `"fullmakt"`.

@@ -29,6 +29,7 @@
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/bootstrap_state.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotation_summary.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotations.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_base_url.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_network.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_summary.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_change_summary.html</loc></url>
@@ -43,18 +44,21 @@
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_flows.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_harmonize_kommune.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_harmonize_nace.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_http_req.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_import.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_manifest.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_network.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_open.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_panel.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_prokura.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_replay.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_req.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles_legal.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_search.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_series.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_signatur.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_snapshot.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_snapshots.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_status.html</loc></url>
@@ -95,6 +99,7 @@
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/flatten_page_patches.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/flatten_roles.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/flatten_roles_bulk_fast.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/flatten_signatur.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/flatten_value_into.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/flows_from_changelog.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/format_period.html</loc></url>
@@ -107,6 +112,7 @@
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/has_state.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/identical_or_both_na.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/index.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/klass_req.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/label_df.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/label_vec.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/legal_forms.html</loc></url>

@@ -319,6 +319,10 @@ for change detection.
   : Retrieve board members, officers, and auditors
 - [`brreg_roles_legal()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles_legal.md)
   : Retrieve roles an entity holds in other entities
+- [`brreg_signatur()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_signatur.md)
+  : Retrieve signature authority (signaturrett)
+- [`brreg_prokura()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_prokura.md)
+  : Retrieve procuration authority (prokura)
 - [`brreg_board_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_summary.md)
   : Derive board-level summary covariates from role data
 - [`brreg_board_network()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_network.md)
