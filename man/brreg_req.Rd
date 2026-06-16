@@ -2,16 +2,18 @@
 % Please edit documentation in R/request.R
 \name{brreg_req}
 \alias{brreg_req}
-\title{Build an httr2 request to the brreg API}
+\title{Build an httr2 request to a brreg API service}
 \usage{
-brreg_req(path, query = list())
+brreg_req(path, query = list(), service = c("enhetsregisteret", "fullmakt"))
 }
 \arguments{
 \item{path}{URL path appended to the base URL.}
 
 \item{query}{Named list of query parameters.}
+
+\item{service}{One of \code{"enhetsregisteret"} or \code{"fullmakt"}.}
 }
 \description{
-Build an httr2 request to the brreg API
+Build an httr2 request to a brreg API service
 }
 \keyword{internal}

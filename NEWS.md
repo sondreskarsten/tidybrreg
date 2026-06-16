@@ -1,3 +1,26 @@
+# tidybrreg 0.4.0
+
+## New features
+
+* New `brreg_signatur()` and `brreg_prokura()` retrieve signature
+  (signaturrett) and procuration (prokura) authority from the
+  Brønnøysund Fullmakt service (`data.brreg.no/fullmakt`). Signing
+  authority — who may bind the entity, and under which combination rule
+  — is held in a separate service from the roles in `brreg_roles()`,
+  which report only who holds a seat. Each returns one row per person
+  per registered combination, with the rule text, role code, and birth
+  date.
+
+## Minor improvements and fixes
+
+* Request construction is consolidated behind a single internal factory
+  (`brreg_http_req()`). The SSB KLASS request in `fetch_klass()` now
+  flows through it — gaining the shared user agent, transient retry, and
+  a `data.ssb.no`-scoped throttle — instead of being hand-built, and
+  `brreg_req()` gains a `service` argument so the Enhetsregisteret and
+  Fullmakt path roots share one configured request. No change to the
+  Enhetsregisteret-facing API.
+
 # tidybrreg 0.3.8
 
 ## Bug fixes

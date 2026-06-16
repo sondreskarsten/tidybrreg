@@ -178,11 +178,10 @@ get_brreg_dic <- function(dictname = c("nace", "sector"), lang = "en") {
 #' @returns A tibble with columns `code`, `name_en`, `level`.
 #' @keywords internal
 fetch_klass <- function(classification_id, lang = "en", date = Sys.Date()) {
-  resp <- httr2::request("https://data.ssb.no/api/klass/v1") |>
-    httr2::req_url_path_append("classifications", classification_id, "codesAt") |>
-    httr2::req_url_query(date = format(date, "%Y-%m-%d"), language = lang) |>
-    httr2::req_headers(Accept = "application/json") |>
-    httr2::req_user_agent("tidybrreg (R package)") |>
+  resp <- klass_req(
+    path  = paste0("classifications/", classification_id, "/codesAt"),
+    query = list(date = format(date, "%Y-%m-%d"), language = lang)
+  ) |>
     httr2::req_perform()
   body <- httr2::resp_body_json(resp)
   dplyr::bind_rows(lapply(body$codes, \(c) tibble::tibble(

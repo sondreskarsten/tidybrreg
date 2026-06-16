@@ -50,6 +50,8 @@ reference:
   contents:
   - brreg_roles
   - brreg_roles_legal
+  - brreg_signatur
+  - brreg_prokura
   - brreg_board_summary
   - brreg_board_network
   - brreg_network
