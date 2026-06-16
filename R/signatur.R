@@ -16,9 +16,11 @@
 #' `name`; it does not split it into given and family names, so no
 #' synthetic `person_id` is constructed. Join to [brreg_roles()] on
 #' `birth_date` together with `name` at query time if cross-referencing
-#' to the role network is required. `role_code` carries the registry's
-#' role code (joinable to [role_types]); `role` is the registry's own
-#' Norwegian description.
+#' to the role network is required. Role designations are returned as
+#' English labels looked up from [role_types], with the original
+#' Norwegian code preserved in `role_code`; the signing-mode designations
+#' (`SIGN`, `SIFE`, `SIHV`, `PROK`, `POFE`, `POHV`) are included in
+#' [role_types] alongside the board roles.
 #'
 #' @section Standardised vs registered rule:
 #' `rule` and `combination_code` come from the registry's structured
@@ -32,10 +34,10 @@
 #' @param org_nr Character. 9-digit organization number.
 #'
 #' @returns A tibble with one row per person per signing combination.
-#'   Columns: `org_nr`, `entity_name`, `signature_type`, `rule_status`,
-#'   `rule_text`, `combination_id`, `combination_code`, `rule`, `name`,
-#'   `birth_date`, `role_code`, `role`. Returns an empty tibble if the
-#'   entity has no registered signing combination.
+#'   Columns: `org_nr`, `entity_name`, `signature_type` (`"signature"`),
+#'   `rule_status`, `rule_text`, `combination_id`, `combination_code`,
+#'   `rule`, `name`, `birth_date`, `role_code`, `role`. Returns an empty
+#'   tibble if the entity has no registered signing combination.
 #'
 #' @family tidybrreg entity functions
 #' @seealso [brreg_prokura()] for procuration, [brreg_roles()] for the
@@ -51,10 +53,10 @@ brreg_signatur <- function(org_nr) {
     httr2::req_error(is_error = \(resp) FALSE) |>
     httr2::req_perform()
   if (httr2::resp_status(resp) >= 400L) {
-    cli::cli_warn("No signature data for {.val {org_nr}} (HTTP {httr2::resp_status(resp)}).")
+    cli::cli_warn("No signatur found for {.val {org_nr}} (HTTP {httr2::resp_status(resp)}).")
     return(tibble::tibble())
   }
-  flatten_signatur(httr2::resp_body_json(resp), org_nr, "signatur")
+  flatten_signatur(httr2::resp_body_json(resp), org_nr, "signature")
 }
 
 
@@ -75,8 +77,8 @@ brreg_signatur <- function(org_nr) {
 #' @param org_nr Character. 9-digit organization number.
 #'
 #' @returns A tibble with the same columns as [brreg_signatur()], with
-#'   `signature_type` set to `"prokura"`. Returns an empty tibble if no
-#'   procuration is registered.
+#'   `signature_type` set to `"procuration"`. Returns an empty tibble if
+#'   no procuration is registered.
 #'
 #' @family tidybrreg entity functions
 #' @seealso [brreg_signatur()] for general signing authority.
@@ -91,10 +93,10 @@ brreg_prokura <- function(org_nr) {
     httr2::req_error(is_error = \(resp) FALSE) |>
     httr2::req_perform()
   if (httr2::resp_status(resp) >= 400L) {
-    cli::cli_warn("No procuration data for {.val {org_nr}} (HTTP {httr2::resp_status(resp)}).")
+    cli::cli_warn("No prokura found for {.val {org_nr}} (HTTP {httr2::resp_status(resp)}).")
     return(tibble::tibble())
   }
-  flatten_signatur(httr2::resp_body_json(resp), org_nr, "prokura")
+  flatten_signatur(httr2::resp_body_json(resp), org_nr, "procuration")
 }
 
 
@@ -148,7 +150,7 @@ flatten_signatur <- function(raw, org_nr, signature_type) {
         name             = p$navn %||% NA_character_,
         birth_date       = p$fodselsdato %||% NA_character_,
         role_code        = p$rolle$kode %||% NA_character_,
-        role             = p$rolle$tekstforklaring %||% NA_character_
+        role             = lookup_role(p$rolle$kode)
       )
     }
   }

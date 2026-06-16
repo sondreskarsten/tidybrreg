@@ -60,7 +60,7 @@ NULL
 #' automatic role labelling and by [brreg_label()] for post-hoc
 #' translation.
 #'
-#' @format A tibble with 18 rows and 3 columns:
+#' @format A tibble with 24 rows and 3 columns:
 #' \describe{
 #'   \item{code}{Role code (e.g. `"LEDE"`, `"MEDL"`, `"DAGL"`).}
 #'   \item{name_en}{English translation (e.g. `"Chair of the Board"`).}

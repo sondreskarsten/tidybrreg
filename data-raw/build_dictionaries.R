@@ -186,7 +186,13 @@ role_types <- tribble(
   "KOMP", "General Partner (KS)",           "Komplementar",
   "REPR", "Norwegian Representative",       "Norsk representant",
   "FF\u00d8R", "Bookkeeper",                     "Forretningsf\u00f8rer",
-  "SAM",  "Co-owner",                       "Sameier"
+  "SAM",  "Co-owner",                       "Sameier",
+  "SIGN", "Signature Right",                "Signatur",
+  "SIFE", "Signature Right (Jointly)",      "Signatur i fellesskap",
+  "SIHV", "Signature Right (Separately)",   "Signatur hver for seg",
+  "PROK", "Power of Procuration",           "Prokura",
+  "POFE", "Power of Procuration (Jointly)", "Prokura i fellesskap",
+  "POHV", "Power of Procuration (Separately)", "Prokura hver for seg"
 )
 
 role_groups <- tribble(

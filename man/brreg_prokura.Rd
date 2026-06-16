@@ -11,8 +11,8 @@ brreg_prokura(org_nr)
 }
 \value{
 A tibble with the same columns as \code{\link[=brreg_signatur]{brreg_signatur()}}, with
-\code{signature_type} set to \code{"prokura"}. Returns an empty tibble if no
-procuration is registered.
+\code{signature_type} set to \code{"procuration"}. Returns an empty tibble if
+no procuration is registered.
 }
 \description{
 Fetch the registered procuration combinations for a Norwegian legal
@@ -32,9 +32,11 @@ The Fullmakt service returns each person's name as a single string in
 \code{name}; it does not split it into given and family names, so no
 synthetic \code{person_id} is constructed. Join to \code{\link[=brreg_roles]{brreg_roles()}} on
 \code{birth_date} together with \code{name} at query time if cross-referencing
-to the role network is required. \code{role_code} carries the registry's
-role code (joinable to \link{role_types}); \code{role} is the registry's own
-Norwegian description.
+to the role network is required. Role designations are returned as
+English labels looked up from \link{role_types}, with the original
+Norwegian code preserved in \code{role_code}; the signing-mode designations
+(\code{SIGN}, \code{SIFE}, \code{SIHV}, \code{PROK}, \code{POFE}, \code{POHV}) are included in
+\link{role_types} alongside the board roles.
 }
 
 \examples{

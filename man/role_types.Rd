@@ -5,7 +5,7 @@
 \alias{role_types}
 \title{Role type codes with English translations}
 \format{
-A tibble with 18 rows and 3 columns:
+A tibble with 24 rows and 3 columns:
 \describe{
 \item{code}{Role code (e.g. \code{"LEDE"}, \code{"MEDL"}, \code{"DAGL"}).}
 \item{name_en}{English translation (e.g. \code{"Chair of the Board"}).}
@@ -26,7 +26,7 @@ role_types
 \seealso{
 \code{\link[=brreg_roles]{brreg_roles()}}, \link{role_groups}.
 
-Other tidybrreg reference data: 
+Other tidybrreg reference data:
 \code{\link{annotation_infotypes}},
 \code{\link{field_dict}},
 \code{\link{legal_forms}},

@@ -8,8 +8,10 @@
   authority — who may bind the entity, and under which combination rule
   — is held in a separate service from the roles in `brreg_roles()`,
   which report only who holds a seat. Each returns one row per person
-  per registered combination, with the rule text, role code, and birth
-  date.
+  per registered combination, with `rule_status`/`rule_text`, birth
+  date, and an English `role` looked up from `role_types` (which gains
+  the six signing-mode codes `SIGN`, `SIFE`, `SIHV`, `PROK`, `POFE`,
+  `POHV`).
 
 ## Minor improvements and fixes
 
