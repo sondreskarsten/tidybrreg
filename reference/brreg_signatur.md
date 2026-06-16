@@ -23,10 +23,10 @@ brreg_signatur(org_nr)
 ## Value
 
 A tibble with one row per person per signing combination. Columns:
-`org_nr`, `entity_name`, `signature_type`, `rule_status`, `rule_text`,
-`combination_id`, `combination_code`, `rule`, `name`, `birth_date`,
-`role_code`, `role`. Returns an empty tibble if the entity has no
-registered signing combination.
+`org_nr`, `entity_name`, `signature_type` (`"signature"`),
+`rule_status`, `rule_text`, `combination_id`, `combination_code`,
+`rule`, `name`, `birth_date`, `role_code`, `role`. Returns an empty
+tibble if the entity has no registered signing combination.
 
 ## Details
 
@@ -41,10 +41,14 @@ The Fullmakt service returns each person's name as a single string in
 synthetic `person_id` is constructed. Join to
 [`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md)
 on `birth_date` together with `name` at query time if cross-referencing
-to the role network is required. `role_code` carries the registry's role
-code (joinable to
-[role_types](https://sondreskarsten.github.io/tidybrreg/reference/role_types.md));
-`role` is the registry's own Norwegian description.
+to the role network is required. Role designations are returned as
+English labels looked up from
+[role_types](https://sondreskarsten.github.io/tidybrreg/reference/role_types.md),
+with the original Norwegian code preserved in `role_code`; the
+signing-mode designations (`SIGN`, `SIFE`, `SIHV`, `PROK`, `POFE`,
+`POHV`) are included in
+[role_types](https://sondreskarsten.github.io/tidybrreg/reference/role_types.md)
+alongside the board roles.
 
 ## Standardised vs registered rule
 

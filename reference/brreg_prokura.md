@@ -25,8 +25,8 @@ brreg_prokura(org_nr)
 
 A tibble with the same columns as
 [`brreg_signatur()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_signatur.md),
-with `signature_type` set to `"prokura"`. Returns an empty tibble if no
-procuration is registered.
+with `signature_type` set to `"procuration"`. Returns an empty tibble if
+no procuration is registered.
 
 ## Details
 
@@ -39,10 +39,14 @@ The Fullmakt service returns each person's name as a single string in
 synthetic `person_id` is constructed. Join to
 [`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md)
 on `birth_date` together with `name` at query time if cross-referencing
-to the role network is required. `role_code` carries the registry's role
-code (joinable to
-[role_types](https://sondreskarsten.github.io/tidybrreg/reference/role_types.md));
-`role` is the registry's own Norwegian description.
+to the role network is required. Role designations are returned as
+English labels looked up from
+[role_types](https://sondreskarsten.github.io/tidybrreg/reference/role_types.md),
+with the original Norwegian code preserved in `role_code`; the
+signing-mode designations (`SIGN`, `SIFE`, `SIHV`, `PROK`, `POFE`,
+`POHV`) are included in
+[role_types](https://sondreskarsten.github.io/tidybrreg/reference/role_types.md)
+alongside the board roles.
 
 ## See also
 

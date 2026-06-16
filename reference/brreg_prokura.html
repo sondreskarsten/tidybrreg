@@ -81,8 +81,8 @@ signing authority returned by <code><a href="brreg_signatur.html">brreg_signatur
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A tibble with the same columns as <code><a href="brreg_signatur.html">brreg_signatur()</a></code>, with
-<code>signature_type</code> set to <code>"prokura"</code>. Returns an empty tibble if no
-procuration is registered.</p>
+<code>signature_type</code> set to <code>"procuration"</code>. Returns an empty tibble if
+no procuration is registered.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -96,9 +96,11 @@ procuration is registered.</p>
 <code>name</code>; it does not split it into given and family names, so no
 synthetic <code>person_id</code> is constructed. Join to <code><a href="brreg_roles.html">brreg_roles()</a></code> on
 <code>birth_date</code> together with <code>name</code> at query time if cross-referencing
-to the role network is required. <code>role_code</code> carries the registry's
-role code (joinable to <a href="role_types.html">role_types</a>); <code>role</code> is the registry's own
-Norwegian description.</p>
+to the role network is required. Role designations are returned as
+English labels looked up from <a href="role_types.html">role_types</a>, with the original
+Norwegian code preserved in <code>role_code</code>; the signing-mode designations
+(<code>SIGN</code>, <code>SIFE</code>, <code>SIHV</code>, <code>PROK</code>, <code>POFE</code>, <code>POHV</code>) are included in
+<a href="role_types.html">role_types</a> alongside the board roles.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
