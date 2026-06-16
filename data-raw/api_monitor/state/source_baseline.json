@@ -1,0 +1,160 @@
+{
+  "collected_at": "2026-06-16 23:32:55 UTC",
+  "openapi": {
+    "enhetsregisteret": {
+      "version": "1.0.0",
+      "hash": "779a90e94d2d99b5",
+      "changelog": [
+        {
+          "versjon": "1.1.0",
+          "dato": "14. august 2018",
+          "endring": "Ny tjeneste /oppdateringer/enheter og /oppdateringer/underenheter"
+        },
+        {
+          "versjon": "1.0.0",
+          "dato": "6. april 2018",
+          "endring": "Produksjonssetting av ny åpne data tjeneste for Enhetsregisteret"
+        }
+      ]
+    }
+  },
+  "commits": [
+    {
+      "commit_id": "tag:github.com,2008:Grit::Commit/97fccebaafc4f870028d7bc4748629b16b9d54af",
+      "title": "Merge pull request #9 from brreg/itu-utt-oppdatering",
+      "updated": "2025-01-17T11:59:29Z"
+    },
+    {
+      "commit_id": "tag:github.com,2008:Grit::Commit/356b6ea6570422ef28dc4a8614f51ad9e98b6b6a",
+      "title": "Oppdater spec for ITU/UTT",
+      "updated": "2025-01-17T11:54:43Z"
+    },
+    {
+      "commit_id": "tag:github.com,2008:Grit::Commit/69411d3dec6aafd6c5f5bdabde0d5fb426c38042",
+      "title": "Fjern spec for reelle-partner-api og eksempel på totalbestand-fil",
+      "updated": "2023-11-20T12:05:42Z"
+    },
+    {
+      "commit_id": "tag:github.com,2008:Grit::Commit/22f2575e0c8fedbb0f98b28e88d2e0a9db4a191f",
+      "title": "Fjern reelle-opendata-api spec",
+      "updated": "2023-05-22T14:05:21Z"
+    },
+    {
+      "commit_id": "tag:github.com,2008:Grit::Commit/0591c5bb08d4ae55e149a5acbaba7066c6b2c425",
+      "title": "Oppdater eksempel for totalbestand på JSON-format",
+      "updated": "2023-04-26T08:24:56Z"
+    },
+    {
+      "commit_id": "tag:github.com,2008:Grit::Commit/03a2a4d89303c2aa21659a536b83fded8d0cc874",
+      "title": "Fjern eksempelfil for totalbestand på CSV-format",
+      "updated": "2023-04-26T08:23:40Z"
+    },
+    {
+      "commit_id": "tag:github.com,2008:Grit::Commit/b053a102864e043917cc01d10f8d6e20d461b934",
+      "title": "Formater reelle Partner API totalbestand respons",
+      "updated": "2022-12-16T15:25:34Z"
+    },
+    {
+      "commit_id": "tag:github.com,2008:Grit::Commit/5ef60c96e1dfa8e70a8018d61143372eba4eed20",
+      "title": "Legg til eksempelresponser for RRH totalbestand",
+      "updated": "2022-12-16T15:15:51Z"
+    },
+    {
+      "commit_id": "tag:github.com,2008:Grit::Commit/90e4c58541e431fa9026109a7c0abda47e5b4ef2",
+      "title": "Oppdater OpenAPI-spec for reelle-partner-api",
+      "updated": "2022-12-09T09:27:27Z"
+    },
+    {
+      "commit_id": "tag:github.com,2008:Grit::Commit/b6e91f7f8ed422714f65bf82622a3616788933db",
+      "title": "Legg til ny spec for reelle-opendata-api",
+      "updated": "2022-12-09T09:25:57Z"
+    },
+    {
+      "commit_id": "tag:github.com,2008:Grit::Commit/de2104c600093aea72071e01c439553c533eceae",
+      "title": "Oppdater spec for reelle-partner-api",
+      "updated": "2022-11-15T09:35:30Z"
+    },
+    {
+      "commit_id": "tag:github.com,2008:Grit::Commit/ee9d9dad7ee559a9308514348f38658a8e19b2ea",
+      "title": "Ny spec for reelle-opendata-api",
+      "updated": "2022-11-15T08:57:39Z"
+    },
+    {
+      "commit_id": "tag:github.com,2008:Grit::Commit/ebfa3186f069ed4c24bd094432c543702fe0159e",
+      "title": "Legg til OpenAPI-spec for reelle-opendata-api",
+      "updated": "2022-11-08T11:07:56Z"
+    },
+    {
+      "commit_id": "tag:github.com,2008:Grit::Commit/625f88aa7ec5781af93b1f36cf24c2cecaa14917",
+      "title": "Add files via upload",
+      "updated": "2022-09-05T09:40:24Z"
+    },
+    {
+      "commit_id": "tag:github.com,2008:Grit::Commit/0c563b3c4a1cd83aec3c5c2e691d425f7effa612",
+      "title": "La til spec for LR rettsstiftelse API",
+      "updated": "2021-08-13T08:08:06Z"
+    }
+  ],
+  "rss": [
+    {
+      "feed": "nyheter",
+      "item_id": "https://www.brreg.no/nyhet/nye-og-enklere-tjenester-for-foreninger-og-sameier/",
+      "title": "Nye og enklere tjenester for foreninger og sameier",
+      "pubdate": "Mon, 08 Jun 2026 07:02:22 +0000"
+    },
+    {
+      "feed": "nyheter",
+      "item_id": "https://www.brreg.no/nyhet/bronnoysundregistrene-starter-utsending-av-tvangsmulkt/",
+      "title": "Brønnøysundregistrene starter utsending av tvangsmulkt",
+      "pubdate": "Tue, 02 Jun 2026 07:24:14 +0000"
+    },
+    {
+      "feed": "nyheter",
+      "item_id": "https://www.brreg.no/nyhet/orientering-ved-endring-av-roller-i-virksomheter/",
+      "title": "Orientering ved endring av roller i virksomheter",
+      "pubdate": "Mon, 11 May 2026 12:38:43 +0000"
+    },
+    {
+      "feed": "nyheter",
+      "item_id": "https://www.brreg.no/nyhet/tjenester-og-produkter-fjernes-fra-altinn/",
+      "title": "Tjenester og produkter fjernes fra Altinn",
+      "pubdate": "Fri, 24 Apr 2026 07:30:23 +0000"
+    },
+    {
+      "feed": "nyheter",
+      "item_id": "https://www.brreg.no/nyhet/2-837-virksomheter-har-ikke-levert-arsregnskap-og-kan-bli-tvangsopplost/",
+      "title": "2 837 virksomheter har ikke levert årsregnskap og kan bli tvangsoppløst",
+      "pubdate": "Fri, 20 Mar 2026 07:17:28 +0000"
+    },
+    {
+      "feed": "nyheter",
+      "item_id": "https://www.brreg.no/nyhet/na-lanseres-nytt-vapenregister/",
+      "title": "Nå lanseres nytt våpenregister",
+      "pubdate": "Mon, 09 Feb 2026 11:44:26 +0000"
+    },
+    {
+      "feed": "nyheter",
+      "item_id": "https://www.brreg.no/nyhet/medlemskap-i-tros-og-livssynssamfunn-tilgjengelig-pa-min-side/",
+      "title": "Medlemskap i tros- og livssynssamfunn tilgjengelig på Min side",
+      "pubdate": "Thu, 18 Dec 2025 09:16:29 +0000"
+    },
+    {
+      "feed": "nyheter",
+      "item_id": "https://www.brreg.no/nyhet/nestledere-skal-ikke-lenger-registreres-i-enhetsregisteret-og-foretaksregisteret/",
+      "title": "Nestledere skal ikke lenger registreres i Enhetsregisteret og Foretaksregisteret",
+      "pubdate": "Tue, 09 Dec 2025 09:00:41 +0000"
+    },
+    {
+      "feed": "nyheter",
+      "item_id": "https://www.brreg.no/nyhet/vi-har-gjort-opplysningar-om-kapital-lettare-tilgjengeleg/",
+      "title": "Vi har gjort opplysningar om kapital lettare tilgjengeleg",
+      "pubdate": "Fri, 05 Dec 2025 08:16:41 +0000"
+    },
+    {
+      "feed": "nyheter",
+      "item_id": "https://www.brreg.no/nyhet/registrering-i-foretaksregisteret-innan-utgangen-av-2025/",
+      "title": "Registrering i Føretaksregisteret innan utgangen av 2025",
+      "pubdate": "Thu, 04 Sep 2025 06:30:14 +0000"
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+name: brreg API monitor
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      update_baseline:
+        description: 'Update the committed baseline and open a PR'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install dependencies
+        run: Rscript -e 'install.packages(c("httr2","jsonlite","xml2","rvest","dplyr","tibble","readr","purrr","rlang"))'
+
+      - name: Run monitor and update baseline
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.update_baseline }}
+        run: Rscript data-raw/api_monitor/run.R --update
+
+      - name: Open PR with updated baseline
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.update_baseline }}
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: 'chore(api-monitor): update brreg API baseline'
+          title: 'brreg API baseline update'
+          body-path: data-raw/api_monitor/news_snippet.md
+          branch: api-monitor/baseline-update
+          add-paths: |
+            data-raw/api_monitor/state/
+
+      - name: Run monitor and detect drift
+        id: monitor
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.update_baseline) }}
+        continue-on-error: true
+        run: Rscript data-raw/api_monitor/run.R
+
+      - name: Upload report
+        if: ${{ steps.monitor.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-monitor-report
+          path: |
+            data-raw/api_monitor/last_report.md
+            data-raw/api_monitor/news_snippet.md
+
+      - name: Open issue on drift
+        if: ${{ steps.monitor.outcome == 'failure' }}
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: 'brreg API drift detected'
+          content-filepath: data-raw/api_monitor/last_report.md
+          labels: api-monitor
