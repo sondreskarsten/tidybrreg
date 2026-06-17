@@ -65,18 +65,18 @@ build_cond_report <- function(seg_cov, slices, drivers, new_fields, removed, per
     }
     lines <- c(lines, "")
   }
-  lines <- c(lines, "## Field drivers: conditional prevalence \u03b8(field | segment)",
-    "Top segment per field, ranked by concentration (conditional \u2212 marginal).",
-    "Census over-samples rare strata: conditional \u03b8 is unbiased; sample marginal is inflated; population marginal = pop-share \u00d7 \u03b8.")
+  lines <- c(lines, "## Field drivers: conditional prevalence theta(field | segment)",
+    "Top segment per field, ranked by concentration (conditional - marginal).",
+    "Census over-samples rare strata: conditional theta is unbiased; sample marginal is inflated; population marginal = pop-share x theta.")
   d <- head(drivers, 18)
-  lines <- c(lines, paste0("- `", d$endpoint, ".", d$path, "` \u2192 `", d$segment,
-    "` \u03b8=", fmt(d$theta_cond), " (n=", d$N_seg, "), marginal=", fmt(d$theta_marg)), "")
+  lines <- c(lines, paste0("- `", d$endpoint, ".", d$path, "` -> `", d$segment,
+    "` theta=", fmt(d$theta_cond), " (n=", d$N_seg, "), marginal=", fmt(d$theta_marg)), "")
   lines <- c(lines, "## New fields this period",
     if (nrow(new_fields)) paste0("- `", new_fields$endpoint, ".", new_fields$path,
       "` first seen in `", new_fields$segment, "`") else "- none", "")
   lines <- c(lines, "## Conditional removals (deterministic field absent where segment was sampled)",
     if (nrow(removed)) paste0("- `", removed$endpoint, ".", removed$path, "` in `", removed$segment,
-      "` prior \u03b8=", fmt(removed$theta_prior), ", absent across n=", removed$n_now,
+      "` prior theta=", fmt(removed$theta_prior), ", absent across n=", removed$n_now,
       " sampled this period") else "- none")
   paste(lines, collapse = "\n")
 }
