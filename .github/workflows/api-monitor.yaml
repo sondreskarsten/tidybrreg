@@ -15,6 +15,9 @@ permissions:
   issues: write
   pull-requests: write
 
+env:
+  SCHEMA_OUT: /tmp/tidybrreg_schema_current.tsv
+
 jobs:
   monitor:
     runs-on: ubuntu-latest
@@ -25,12 +28,21 @@ jobs:
         with:
           use-public-rspm: true
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Install dependencies
-        run: Rscript -e 'install.packages(c("httr2","jsonlite","xml2","rvest","dplyr","tibble","readr","purrr","rlang"))'
+        run: |
+          Rscript -e 'install.packages(c("httr2","jsonlite","xml2","rvest","dplyr","tibble","readr","purrr","rlang"))'
+          python3 -m pip install --quiet genson ijson requests
+
+      - name: Extract empirical schema (full population)
+        run: python3 data-raw/api_monitor/schema_probe.py --out "$SCHEMA_OUT"
 
       - name: Run monitor and update baseline
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.update_baseline }}
-        run: Rscript data-raw/api_monitor/run.R --update
+        run: Rscript data-raw/api_monitor/run.R "$SCHEMA_OUT" --update
 
       - name: Open PR with updated baseline
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.update_baseline }}
@@ -47,7 +59,7 @@ jobs:
         id: monitor
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.update_baseline) }}
         continue-on-error: true
-        run: Rscript data-raw/api_monitor/run.R
+        run: Rscript data-raw/api_monitor/run.R "$SCHEMA_OUT"
 
       - name: Upload report
         if: ${{ steps.monitor.outcome != 'skipped' }}

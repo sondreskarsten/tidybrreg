@@ -17,28 +17,6 @@ mon_user_agent <- function() {
 
 mon_realm <- function(url) sub("^https?://([^/]+)/.*$", "\\1", url)
 
-mon_endpoints <- function() {
-  tibble::tribble(
-    ~endpoint,    ~url_template,
-    "enhet",      "https://data.brreg.no/enhetsregisteret/api/enheter/%s",
-    "underenhet", "https://data.brreg.no/enhetsregisteret/api/underenheter/%s",
-    "roller",     "https://data.brreg.no/enhetsregisteret/api/enheter/%s/roller",
-    "signatur",   "https://data.brreg.no/fullmakt/enheter/%s/signatur",
-    "prokura",    "https://data.brreg.no/fullmakt/enheter/%s/prokura"
-  )
-}
-
-mon_samples <- function() {
-  hoved <- c("923609016", "989061593", "995849364", "933365573")
-  list(
-    enhet      = hoved,
-    roller     = hoved,
-    signatur   = hoved,
-    prokura    = hoved,
-    underenhet = c("933489272", "934551524")
-  )
-}
-
 mon_openapi_specs <- function() {
   c(enhetsregisteret = "https://raw.githubusercontent.com/brreg/openAPI/master/specs/enhetsregisteret.json")
 }
@@ -54,49 +32,6 @@ mon_rss_feeds <- function() {
 
 mon_pkg_version <- function(path = "DESCRIPTION") {
   unname(read.dcf(path, fields = "Version")[1, 1])
-}
-
-mon_get_json <- function(url, user_agent = mon_user_agent()) {
-  resp <- httr2::request(url) |>
-    httr2::req_user_agent(user_agent) |>
-    httr2::req_headers(Accept = "application/json") |>
-    httr2::req_retry(max_tries = 3, is_transient = \(r) httr2::resp_status(r) %in% c(429, 503)) |>
-    httr2::req_throttle(rate = 4, realm = mon_realm(url)) |>
-    httr2::req_perform()
-  httr2::resp_body_json(resp, simplifyVector = FALSE)
-}
-
-json_field_paths <- function(x, prefix = "") {
-  if (is.null(x)) return(tibble::tibble(path = prefix, type = "null"))
-  if (!is.list(x)) return(tibble::tibble(path = prefix, type = paste(class(x), collapse = "/")))
-  if (length(x) == 0) return(tibble::tibble(path = prefix, type = "empty"))
-  nms <- names(x)
-  if (is.null(nms) || all(nms == "")) {
-    return(dplyr::distinct(purrr::map_dfr(x, json_field_paths, prefix = paste0(prefix, "[]"))))
-  }
-  purrr::imap_dfr(x, function(v, nm) {
-    json_field_paths(v, if (nzchar(prefix)) paste0(prefix, ".", nm) else nm)
-  })
-}
-
-probe_endpoint <- function(url_template, orgnrs, user_agent = mon_user_agent()) {
-  reps <- purrr::map(orgnrs, function(o) json_field_paths(mon_get_json(sprintf(url_template, o), user_agent)))
-  n <- length(reps)
-  dplyr::bind_rows(reps, .id = "rep") |>
-    dplyr::group_by(path) |>
-    dplyr::summarise(
-      type = paste(sort(unique(type)), collapse = "|"),
-      seen_frac = round(dplyr::n_distinct(rep) / n, 2),
-      .groups = "drop"
-    )
-}
-
-probe_all_schemas <- function(endpoints = mon_endpoints(), samples = mon_samples()) {
-  purrr::pmap_dfr(endpoints, function(endpoint, url_template) {
-    probe_endpoint(url_template, samples[[endpoint]]) |>
-      dplyr::mutate(endpoint = endpoint, .before = 1)
-  }) |>
-    dplyr::arrange(endpoint, path)
 }
 
 extract_changelog <- function(description) {
@@ -280,8 +215,12 @@ build_news <- function(schema_diff, source_diff, sources, base, version = mon_pk
   ), collapse = "\n")
 }
 
-api_monitor_run <- function(state_dir = "data-raw/api_monitor/state", update_baseline = FALSE) {
-  schemas <- probe_all_schemas()
+read_schema_tsv <- function(path) {
+  readr::read_tsv(path, show_col_types = FALSE)
+}
+
+api_monitor_run <- function(schema_path, state_dir = "data-raw/api_monitor/state", update_baseline = FALSE) {
+  schemas <- read_schema_tsv(schema_path)
   sources <- collect_sources()
   base <- read_baseline(state_dir)
   if (is.null(base)) {
