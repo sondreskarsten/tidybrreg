@@ -39,10 +39,13 @@ enhet	naeringskode1.beskrivelse	string	TRUE
 enhet	naeringskode1.kode	string	TRUE
 enhet	naeringskode2.beskrivelse	string	TRUE
 enhet	naeringskode2.kode	string	TRUE
+enhet	naeringskode3.beskrivelse	string	TRUE
+enhet	naeringskode3.kode	string	TRUE
 enhet	navn	string	TRUE
 enhet	organisasjonsform.beskrivelse	string	TRUE
 enhet	organisasjonsform.kode	string	TRUE
 enhet	organisasjonsnummer	string	TRUE
+enhet	overordnetEnhet	string	FALSE
 enhet	paategninger[].infotype	string	TRUE
 enhet	paategninger[].innfoertDato	string	TRUE
 enhet	paategninger[].tekst	string	TRUE
@@ -69,6 +72,7 @@ enhet	registrertIPartiregisteret	boolean	TRUE
 enhet	registrertIStiftelsesregisteret	boolean	TRUE
 enhet	respons_klasse	string	TRUE
 enhet	sisteInnsendteAarsregnskap	string	FALSE
+enhet	slettedato	string	FALSE
 enhet	stiftelsesdato	string	FALSE
 enhet	telefon	string	FALSE
 enhet	underAvvikling	boolean	TRUE
