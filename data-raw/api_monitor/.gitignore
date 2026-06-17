@@ -1,2 +1,4 @@
 last_report.md
 news_snippet.md
+__pycache__/
+*.pyc
