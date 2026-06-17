@@ -65,7 +65,7 @@ build_cond_report <- function(seg_cov, slices, drivers, new_fields, removed, per
     }
     lines <- c(lines, "")
   }
-  lines <- c(lines, "## Field drivers — conditional prevalence \u03b8(field | segment)",
+  lines <- c(lines, "## Field drivers: conditional prevalence \u03b8(field | segment)",
     "Top segment per field, ranked by concentration (conditional \u2212 marginal).",
     "Census over-samples rare strata: conditional \u03b8 is unbiased; sample marginal is inflated; population marginal = pop-share \u00d7 \u03b8.")
   d <- head(drivers, 18)

@@ -30,10 +30,6 @@ mon_rss_feeds <- function() {
   )
 }
 
-mon_pkg_version <- function(path = "DESCRIPTION") {
-  unname(read.dcf(path, fields = "Version")[1, 1])
-}
-
 extract_changelog <- function(description) {
   if (is.null(description) || !nzchar(description) || !grepl("Endringslogg", description)) {
     return(tibble::tibble(versjon = character(), dato = character(), endring = character()))
@@ -104,42 +100,6 @@ collect_sources <- function() {
   )
 }
 
-mon_paths <- function(state_dir) {
-  list(
-    schemas = file.path(state_dir, "schema_baseline.tsv"),
-    sources = file.path(state_dir, "source_baseline.json")
-  )
-}
-
-read_baseline <- function(state_dir) {
-  p <- mon_paths(state_dir)
-  if (!file.exists(p$schemas) || !file.exists(p$sources)) return(NULL)
-  list(
-    schemas = readr::read_tsv(p$schemas, show_col_types = FALSE),
-    sources = jsonlite::read_json(p$sources, simplifyVector = FALSE)
-  )
-}
-
-write_baseline <- function(state_dir, schemas, sources) {
-  dir.create(state_dir, showWarnings = FALSE, recursive = TRUE)
-  p <- mon_paths(state_dir)
-  readr::write_tsv(dplyr::arrange(schemas, endpoint, path), p$schemas)
-  jsonlite::write_json(sources, p$sources, pretty = TRUE, auto_unbox = TRUE)
-  invisible(p)
-}
-
-diff_schema <- function(old, new) {
-  ok <- old |> dplyr::mutate(key = paste(endpoint, path))
-  nk <- new |> dplyr::mutate(key = paste(endpoint, path))
-  added <- nk |> dplyr::anti_join(ok, by = "key") |>
-    dplyr::transmute(endpoint, path, change = "added", detail = type)
-  changed <- nk |> dplyr::inner_join(ok, by = "key", suffix = c("_new", "_old")) |>
-    dplyr::filter(type_new != type_old) |>
-    dplyr::transmute(endpoint = endpoint_new, path = path_new, change = "type_changed",
-                     detail = paste0(type_old, " -> ", type_new))
-  dplyr::bind_rows(added, changed) |> dplyr::arrange(endpoint, path)
-}
-
 diff_sources <- function(old, new) {
   old_commit_ids <- purrr::map_chr(old$commits, ~ .x$commit_id %||% NA_character_)
   new_commits <- dplyr::filter(new$commits, !commit_id %in% old_commit_ids)
@@ -163,85 +123,6 @@ diff_sources <- function(old, new) {
   })
 
   list(new_commits = new_commits, new_rss = new_rss, openapi_changes = openapi_changes)
-}
-
-build_report <- function(schema_diff, source_diff, sources, base) {
-  baseline_at <- if (is.null(base)) "none (first run)" else base$sources$collected_at %||% "unknown"
-  lines <- c(
-    "# tidybrreg API monitor report",
-    paste0("Checked: ", sources$collected_at),
-    paste0("Baseline: ", baseline_at),
-    ""
-  )
-  if (is.null(base)) {
-    return(paste(c(lines, "First run — baseline written, no diff."), collapse = "\n"))
-  }
-  oc <- source_diff$openapi_changes
-  lines <- c(lines, "## OpenAPI specs",
-             if (nrow(oc)) paste0("- ", oc$api, ": ", oc$change, " — ", oc$detail) else "- no change")
-  lines <- c(lines, "", "## New brreg notices (driftsmeldinger / nyheter)",
-             if (nrow(source_diff$new_rss)) paste0("- [", source_diff$new_rss$feed, "] ", source_diff$new_rss$title) else "- none")
-  lines <- c(lines, "", "## New openAPI repo commits",
-             if (nrow(source_diff$new_commits)) paste0("- ", source_diff$new_commits$title) else "- none")
-  lines <- c(lines, "", "## Empirical JSON schema drift",
-             if (nrow(schema_diff)) paste0("- ", schema_diff$change, ": `", schema_diff$endpoint, ".", schema_diff$path, "` (", schema_diff$detail, ")") else "- no change")
-  paste(lines, collapse = "\n")
-}
-
-build_news <- function(schema_diff, source_diff, sources, base, version = mon_pkg_version()) {
-  baseline_at <- if (is.null(base)) "first run" else base$sources$collected_at %||% "unknown"
-  has_change <- !is.null(base) &&
-    (nrow(schema_diff) > 0 || nrow(source_diff$openapi_changes) > 0 ||
-       nrow(source_diff$new_rss) > 0 || nrow(source_diff$new_commits) > 0)
-  if (!has_change) {
-    return(paste0("## Brønnøysund API changes\n\nNo API changes detected since baseline (", baseline_at, ")."))
-  }
-  detected <- c(
-    if (nrow(source_diff$openapi_changes)) paste0("* ", source_diff$openapi_changes$api, " spec: ", source_diff$openapi_changes$detail, "."),
-    if (nrow(schema_diff)) paste0("* JSON ", schema_diff$change, ": `", schema_diff$endpoint, ".", schema_diff$path, "`."),
-    if (nrow(source_diff$new_rss)) paste0("* Notice (", source_diff$new_rss$feed, "): ", source_diff$new_rss$title, ".")
-  )
-  paste(c(
-    "## Brønnøysund API changes",
-    "",
-    paste0("Detected since last release (baseline ", baseline_at, "):"),
-    "",
-    detected,
-    "",
-    paste0("### Addressed in tidybrreg ", version),
-    "* [ ] (describe how the package handles each change above, or note no action needed)"
-  ), collapse = "\n")
-}
-
-read_schema_tsv <- function(path) {
-  readr::read_tsv(path, show_col_types = FALSE)
-}
-
-api_monitor_run <- function(schema_path, state_dir = "data-raw/api_monitor/state", update_baseline = FALSE) {
-  schemas <- read_schema_tsv(schema_path)
-  sources <- collect_sources()
-  base <- read_baseline(state_dir)
-  if (is.null(base)) {
-    schema_diff <- tibble::tibble(endpoint = character(), path = character(), change = character(), detail = character())
-    source_diff <- list(new_commits = sources$commits[0, ], new_rss = sources$rss[0, ], openapi_changes = tibble::tibble())
-  } else {
-    schema_diff <- diff_schema(base$schemas, schemas)
-    source_diff <- diff_sources(base$sources, sources)
-  }
-  report <- build_report(schema_diff, source_diff, sources, base)
-  news <- build_news(schema_diff, source_diff, sources, base)
-  if (update_baseline || is.null(base)) {
-    accumulated <- if (is.null(base)) {
-      schemas
-    } else {
-      new_paths <- dplyr::anti_join(schemas, base$schemas, by = c("endpoint", "path"))
-      dplyr::arrange(dplyr::bind_rows(base$schemas, new_paths), endpoint, path)
-    }
-    write_baseline(state_dir, accumulated, sources)
-  }
-  list(report = report, news = news, schema_diff = schema_diff, source_diff = source_diff,
-       schemas = schemas, sources = sources, drift = nrow(schema_diff) > 0 ||
-         nrow(source_diff$openapi_changes) > 0 || nrow(source_diff$new_rss) > 0 || nrow(source_diff$new_commits) > 0)
 }
 
 build_sources_report <- function(diff, sources, base) {

@@ -65,7 +65,7 @@ jobs:
         with:
           commit-message: 'chore(api-monitor): update brreg API baseline'
           title: 'brreg API baseline update'
-          body-path: data-raw/api_monitor/news_snippet.md
+          body-path: data-raw/api_monitor/last_report.md
           branch: api-monitor/baseline-update
           add-paths: |
             data-raw/api_monitor/state/
