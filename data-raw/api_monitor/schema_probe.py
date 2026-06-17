@@ -1,10 +1,10 @@
 import argparse
+import collections
 import datetime
 import math
 import sys
 
 import requests
-from genson import SchemaBuilder
 
 UA = "tidybrreg-api-monitor (https://github.com/sondreskarsten/tidybrreg)"
 
@@ -13,6 +13,7 @@ OPPDATERINGER = {
     "underenhet": "https://data.brreg.no/enhetsregisteret/api/oppdateringer/underenheter",
 }
 ENTITY_LINK = {"enhet": "enhet", "underenhet": "underenhet"}
+TYPEMAP = {"NoneType": "null", "str": "string", "bool": "boolean", "int": "integer", "float": "number"}
 
 
 def iso_z(ts):
@@ -63,63 +64,57 @@ def collect(name, since_iso, n_buckets, max_entities):
     return list(hrefs.items())[:max_entities]
 
 
-def probe_oppdateringer(name, since_iso, n_buckets=40, max_entities=1500):
+def entity_paths(x, prefix="", out=None):
+    if out is None:
+        out = {}
+    if isinstance(x, dict):
+        for k, v in x.items():
+            if k == "_links":
+                continue
+            child = f"{prefix}.{k}" if prefix else k
+            entity_paths(v, child, out)
+    elif isinstance(x, list):
+        if x:
+            for item in x:
+                entity_paths(item, prefix + "[]", out)
+    else:
+        out[prefix] = TYPEMAP.get(type(x).__name__, type(x).__name__)
+    return out
+
+
+def probe_period(name, since_iso, n_buckets, max_entities):
     changed = collect(name, since_iso, n_buckets, max_entities)
-    builder = SchemaBuilder()
     sess = requests.Session()
-    seen = 0
+    counts = collections.Counter()
+    types = collections.defaultdict(set)
+    n = 0
     for org, href in changed:
         resp = sess.get(href, headers={"Accept": "application/json", "User-Agent": UA}, timeout=60)
         if resp.status_code >= 400:
             continue
-        builder.add_object(resp.json())
-        seen += 1
-    print(f"{name}: {len(changed)} entities sampled since {since_iso}, {seen} fetched", file=sys.stderr)
-    return builder.to_schema()
+        for path, ty in entity_paths(resp.json()).items():
+            counts[path] += 1
+            types[path].add(ty)
+        n += 1
+    print(f"{name}: {len(changed)} entities sampled since {since_iso}, {n} fetched, {len(counts)} fields", file=sys.stderr)
+    return counts, types, n
 
 
-def flatten_schema(schema, prefix="", required=None, rows=None):
-    if rows is None:
-        rows = []
-    if "anyOf" in schema:
-        for sub in schema["anyOf"]:
-            flatten_schema(sub, prefix, required, rows)
-        return rows
-    t = schema.get("type")
-    types = t if isinstance(t, list) else ([t] if t is not None else [])
-    if "object" in types:
-        props = schema.get("properties", {})
-        req = set(schema.get("required", []))
-        for k, v in props.items():
-            if k == "_links":
-                continue
-            child = f"{prefix}.{k}" if prefix else k
-            flatten_schema(v, child, k in req, rows)
-        return rows
-    if "array" in types:
-        items = schema.get("items")
-        if items:
-            flatten_schema(items, prefix + "[]", required, rows)
-        return rows
-    rows.append((prefix, "|".join(sorted(types)) if types else "null", required))
-    return rows
-
-
-def write_tsv(rows, out):
-    ordered = sorted(set(rows))
+def write_counts(rows, out):
     with open(out, "w", encoding="utf-8") as f:
-        f.write("endpoint\tpath\ttype\trequired\n")
-        for ep, path, ty, rq in ordered:
-            f.write(f"{ep}\t{path}\t{ty}\t{'' if rq is None else str(bool(rq)).upper()}\n")
+        f.write("endpoint\tpath\ttype\tk\tn\n")
+        for ep, path, ty, k, n in sorted(rows):
+            f.write(f"{ep}\t{path}\t{ty}\t{k}\t{n}\n")
 
 
 def run(out, since_iso, n_buckets=40, max_entities=1500):
     rows = []
     for name in ("enhet", "underenhet"):
-        schema = probe_oppdateringer(name, since_iso, n_buckets, max_entities)
-        rows.extend((name, p, ty, rq) for p, ty, rq in flatten_schema(schema))
-    write_tsv(rows, out)
-    print(f"wrote {len(set(rows))} rows to {out}", file=sys.stderr)
+        counts, types, n = probe_period(name, since_iso, n_buckets, max_entities)
+        for path, k in counts.items():
+            rows.append((name, path, "|".join(sorted(types[path])), k, n))
+    write_counts(rows, out)
+    print(f"wrote {len(rows)} rows to {out}", file=sys.stderr)
 
 
 if __name__ == "__main__":

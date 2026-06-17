@@ -243,3 +243,37 @@ api_monitor_run <- function(schema_path, state_dir = "data-raw/api_monitor/state
        schemas = schemas, sources = sources, drift = nrow(schema_diff) > 0 ||
          nrow(source_diff$openapi_changes) > 0 || nrow(source_diff$new_rss) > 0 || nrow(source_diff$new_commits) > 0)
 }
+
+build_sources_report <- function(diff, sources, base) {
+  if (is.null(base)) return("## API changelog and notices\nFirst run — source baseline written.")
+  oc <- diff$openapi_changes
+  rss <- diff$new_rss
+  com <- diff$new_commits
+  paste(c(
+    "## OpenAPI changelog",
+    if (nrow(oc)) paste0("- ", oc$api, ": ", oc$change, " — ", oc$detail) else "- no change",
+    "",
+    "## Notices (driftsmeldinger / nyheter)",
+    if (nrow(rss)) paste0("- [", rss$feed, "] ", rss$title) else "- none",
+    "",
+    "## openAPI repo commits",
+    if (nrow(com)) paste0("- ", com$title) else "- none"
+  ), collapse = "\n")
+}
+
+sources_run <- function(state_dir = "data-raw/api_monitor/state", update_baseline = FALSE) {
+  sources <- collect_sources()
+  p <- file.path(state_dir, "source_baseline.json")
+  base <- if (file.exists(p)) jsonlite::read_json(p, simplifyVector = FALSE) else NULL
+  diff <- if (is.null(base)) {
+    list(new_commits = sources$commits[0, ], new_rss = sources$rss[0, ], openapi_changes = tibble::tibble())
+  } else {
+    diff_sources(base, sources)
+  }
+  if (update_baseline || is.null(base)) {
+    dir.create(state_dir, showWarnings = FALSE, recursive = TRUE)
+    jsonlite::write_json(sources, p, pretty = TRUE, auto_unbox = TRUE)
+  }
+  drift <- !is.null(base) && (nrow(diff$new_commits) > 0 || nrow(diff$new_rss) > 0 || nrow(diff$openapi_changes) > 0)
+  list(report = build_sources_report(diff, sources, base), drift = drift)
+}
