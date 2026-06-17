@@ -1,129 +1,930 @@
-endpoint	path	type	k_cum	periods_seen	last_period
-enhet	aktivitet[]	string	686	1	2026-06-17T14:06:41Z
-enhet	antallAnsatte	integer	46	1	2026-06-17T14:06:41Z
-enhet	epostadresse	string	202	1	2026-06-17T14:06:41Z
-enhet	erIKonsern	boolean	686	1	2026-06-17T14:06:41Z
-enhet	foretaksformIHjemlandet.beskrivelse	string	8	1	2026-06-17T14:06:41Z
-enhet	foretaksformIHjemlandet.beskrivelseBokmaal	string	8	1	2026-06-17T14:06:41Z
-enhet	foretaksformIHjemlandet.kode	string	8	1	2026-06-17T14:06:41Z
-enhet	forretningsadresse.adresse[]	string	670	1	2026-06-17T14:06:41Z
-enhet	forretningsadresse.kommune	string	660	1	2026-06-17T14:06:41Z
-enhet	forretningsadresse.kommunenummer	string	660	1	2026-06-17T14:06:41Z
-enhet	forretningsadresse.land	string	674	1	2026-06-17T14:06:41Z
-enhet	forretningsadresse.landkode	string	674	1	2026-06-17T14:06:41Z
-enhet	forretningsadresse.postnummer	string	660	1	2026-06-17T14:06:41Z
-enhet	forretningsadresse.poststed	string	674	1	2026-06-17T14:06:41Z
-enhet	fravalgRevisjonBeslutningsDato	string	188	1	2026-06-17T14:06:41Z
-enhet	fravalgRevisjonDato	string	217	1	2026-06-17T14:06:41Z
-enhet	frivilligMvaRegistrertBeskrivelser[]	string	23	1	2026-06-17T14:06:41Z
-enhet	harRegistrertAntallAnsatte	boolean	686	1	2026-06-17T14:06:41Z
-enhet	historiskeNavn[].fraDato	string	144	1	2026-06-17T14:06:41Z
-enhet	historiskeNavn[].navn	string	144	1	2026-06-17T14:06:41Z
-enhet	historiskeNavn[].tilDato	string	144	1	2026-06-17T14:06:41Z
-enhet	hjelpeenhetskode.beskrivelse	string	17	1	2026-06-17T14:06:41Z
-enhet	hjelpeenhetskode.kode	string	17	1	2026-06-17T14:06:41Z
-enhet	hjemmeside	string	79	1	2026-06-17T14:06:41Z
-enhet	institusjonellSektorkode.beskrivelse	string	653	1	2026-06-17T14:06:41Z
-enhet	institusjonellSektorkode.kode	string	653	1	2026-06-17T14:06:41Z
-enhet	kapital.antallAksjer	integer	297	1	2026-06-17T14:06:41Z
-enhet	kapital.belop	number	303	1	2026-06-17T14:06:41Z
-enhet	kapital.fulltInnbetalt	boolean	3	1	2026-06-17T14:06:41Z
-enhet	kapital.innbetalt	number	4	1	2026-06-17T14:06:41Z
-enhet	kapital.innfortDato	string	303	1	2026-06-17T14:06:41Z
-enhet	kapital.type	string	303	1	2026-06-17T14:06:41Z
-enhet	kapital.valuta	string	303	1	2026-06-17T14:06:41Z
-enhet	konkurs	boolean	686	1	2026-06-17T14:06:41Z
-enhet	maalform	string	686	1	2026-06-17T14:06:41Z
-enhet	mobil	string	163	1	2026-06-17T14:06:41Z
-enhet	naeringskode1.beskrivelse	string	647	1	2026-06-17T14:06:41Z
-enhet	naeringskode1.kode	string	647	1	2026-06-17T14:06:41Z
-enhet	naeringskode2.beskrivelse	string	3	1	2026-06-17T14:06:41Z
-enhet	naeringskode2.kode	string	3	1	2026-06-17T14:06:41Z
-enhet	navn	string	700	1	2026-06-17T14:06:41Z
-enhet	organisasjonsform.beskrivelse	string	700	1	2026-06-17T14:06:41Z
-enhet	organisasjonsform.kode	string	700	1	2026-06-17T14:06:41Z
-enhet	organisasjonsnummer	string	700	1	2026-06-17T14:06:41Z
-enhet	overordnetEnhet	string	6	1	2026-06-17T14:06:41Z
-enhet	paategninger[].infotype	string	1	1	2026-06-17T14:06:41Z
-enhet	paategninger[].innfoertDato	string	1	1	2026-06-17T14:06:41Z
-enhet	paategninger[].tekst	string	1	1	2026-06-17T14:06:41Z
-enhet	postadresse.adresse[]	string	135	1	2026-06-17T14:06:41Z
-enhet	postadresse.kommune	string	135	1	2026-06-17T14:06:41Z
-enhet	postadresse.kommunenummer	string	135	1	2026-06-17T14:06:41Z
-enhet	postadresse.land	string	136	1	2026-06-17T14:06:41Z
-enhet	postadresse.landkode	string	136	1	2026-06-17T14:06:41Z
-enhet	postadresse.postnummer	string	135	1	2026-06-17T14:06:41Z
-enhet	postadresse.poststed	string	136	1	2026-06-17T14:06:41Z
-enhet	registreringsdatoAntallAnsatteEnhetsregisteret	string	107	1	2026-06-17T14:06:41Z
-enhet	registreringsdatoAntallAnsatteNAVAaregisteret	string	107	1	2026-06-17T14:06:41Z
-enhet	registreringsdatoEnhetsregisteret	string	686	1	2026-06-17T14:06:41Z
-enhet	registreringsdatoForetaksregisteret	string	397	1	2026-06-17T14:06:41Z
-enhet	registreringsdatoFrivilligMerverdiavgiftsregisteret	string	23	1	2026-06-17T14:06:41Z
-enhet	registreringsdatoFrivillighetsregisteret	string	44	1	2026-06-17T14:06:41Z
-enhet	registreringsdatoMerverdiavgiftsregisteret	string	202	1	2026-06-17T14:06:41Z
-enhet	registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret	string	202	1	2026-06-17T14:06:41Z
-enhet	registreringsnummerIHjemlandet	string	8	1	2026-06-17T14:06:41Z
-enhet	registrertIForetaksregisteret	boolean	686	1	2026-06-17T14:06:41Z
-enhet	registrertIFrivillighetsregisteret	boolean	686	1	2026-06-17T14:06:41Z
-enhet	registrertIMvaregisteret	boolean	686	1	2026-06-17T14:06:41Z
-enhet	registrertIPartiregisteret	boolean	686	1	2026-06-17T14:06:41Z
-enhet	registrertIStiftelsesregisteret	boolean	686	1	2026-06-17T14:06:41Z
-enhet	respons_klasse	string	700	1	2026-06-17T14:06:41Z
-enhet	sisteInnsendteAarsregnskap	string	241	1	2026-06-17T14:06:41Z
-enhet	slettedato	string	14	1	2026-06-17T14:06:41Z
-enhet	stiftelsesdato	string	410	1	2026-06-17T14:06:41Z
-enhet	telefon	string	84	1	2026-06-17T14:06:41Z
-enhet	underAvvikling	boolean	686	1	2026-06-17T14:06:41Z
-enhet	underAvviklingDato	string	4	1	2026-06-17T14:06:41Z
-enhet	underTvangsavviklingEllerTvangsopplosning	boolean	686	1	2026-06-17T14:06:41Z
-enhet	underlagtLovgivningLand	string	8	1	2026-06-17T14:06:41Z
-enhet	underlagtLovgivningLandKode	string	8	1	2026-06-17T14:06:41Z
-enhet	utenlandskRegisterAdresse.adresse[]	string	8	1	2026-06-17T14:06:41Z
-enhet	utenlandskRegisterAdresse.land	string	8	1	2026-06-17T14:06:41Z
-enhet	utenlandskRegisterAdresse.poststed	string	8	1	2026-06-17T14:06:41Z
-enhet	utenlandskRegisterNavn	string	8	1	2026-06-17T14:06:41Z
-enhet	vedtektsdato	string	328	1	2026-06-17T14:06:41Z
-enhet	vedtektsfestetFormaal[]	string	327	1	2026-06-17T14:06:41Z
-underenhet	antallAnsatte	integer	26	1	2026-06-17T14:06:41Z
-underenhet	beliggenhetsadresse.adresse[]	string	685	1	2026-06-17T14:06:41Z
-underenhet	beliggenhetsadresse.kommune	string	683	1	2026-06-17T14:06:41Z
-underenhet	beliggenhetsadresse.kommunenummer	string	683	1	2026-06-17T14:06:41Z
-underenhet	beliggenhetsadresse.land	string	688	1	2026-06-17T14:06:41Z
-underenhet	beliggenhetsadresse.landkode	string	688	1	2026-06-17T14:06:41Z
-underenhet	beliggenhetsadresse.postnummer	string	683	1	2026-06-17T14:06:41Z
-underenhet	beliggenhetsadresse.poststed	string	688	1	2026-06-17T14:06:41Z
-underenhet	datoEierskifte	string	27	1	2026-06-17T14:06:41Z
-underenhet	epostadresse	string	166	1	2026-06-17T14:06:41Z
-underenhet	harRegistrertAntallAnsatte	boolean	698	1	2026-06-17T14:06:41Z
-underenhet	historiskeNavn[].fraDato	string	143	1	2026-06-17T14:06:41Z
-underenhet	historiskeNavn[].navn	string	143	1	2026-06-17T14:06:41Z
-underenhet	historiskeNavn[].tilDato	string	143	1	2026-06-17T14:06:41Z
-underenhet	hjelpeenhetskode.beskrivelse	string	10	1	2026-06-17T14:06:41Z
-underenhet	hjelpeenhetskode.kode	string	10	1	2026-06-17T14:06:41Z
-underenhet	hjemmeside	string	63	1	2026-06-17T14:06:41Z
-underenhet	mobil	string	130	1	2026-06-17T14:06:41Z
-underenhet	naeringskode1.beskrivelse	string	693	1	2026-06-17T14:06:41Z
-underenhet	naeringskode1.kode	string	693	1	2026-06-17T14:06:41Z
-underenhet	naeringskode2.beskrivelse	string	2	1	2026-06-17T14:06:41Z
-underenhet	naeringskode2.kode	string	2	1	2026-06-17T14:06:41Z
-underenhet	navn	string	700	1	2026-06-17T14:06:41Z
-underenhet	nedleggelsesdato	string	2	1	2026-06-17T14:06:41Z
-underenhet	oppstartsdato	string	638	1	2026-06-17T14:06:41Z
-underenhet	organisasjonsform.beskrivelse	string	700	1	2026-06-17T14:06:41Z
-underenhet	organisasjonsform.kode	string	700	1	2026-06-17T14:06:41Z
-underenhet	organisasjonsnummer	string	700	1	2026-06-17T14:06:41Z
-underenhet	overordnetEnhet	string	698	1	2026-06-17T14:06:41Z
-underenhet	postadresse.adresse[]	string	143	1	2026-06-17T14:06:41Z
-underenhet	postadresse.kommune	string	142	1	2026-06-17T14:06:41Z
-underenhet	postadresse.kommunenummer	string	142	1	2026-06-17T14:06:41Z
-underenhet	postadresse.land	string	143	1	2026-06-17T14:06:41Z
-underenhet	postadresse.landkode	string	143	1	2026-06-17T14:06:41Z
-underenhet	postadresse.postnummer	string	142	1	2026-06-17T14:06:41Z
-underenhet	postadresse.poststed	string	143	1	2026-06-17T14:06:41Z
-underenhet	registreringsdatoAntallAnsatteEnhetsregisteret	string	104	1	2026-06-17T14:06:41Z
-underenhet	registreringsdatoAntallAnsatteNAVAaregisteret	string	104	1	2026-06-17T14:06:41Z
-underenhet	registreringsdatoEnhetsregisteret	string	698	1	2026-06-17T14:06:41Z
-underenhet	registrertIMvaregisteret	boolean	698	1	2026-06-17T14:06:41Z
-underenhet	respons_klasse	string	700	1	2026-06-17T14:06:41Z
-underenhet	slettedato	string	2	1	2026-06-17T14:06:41Z
-underenhet	telefon	string	44	1	2026-06-17T14:06:41Z
+endpoint	segment	path	type	k_cum	periods_seen	last_period
+enhet	ANS|avvikling	aktivitet[]	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	erIKonsern	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	forretningsadresse.adresse[]	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	forretningsadresse.kommune	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	forretningsadresse.kommunenummer	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	forretningsadresse.land	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	forretningsadresse.landkode	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	forretningsadresse.postnummer	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	forretningsadresse.poststed	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	harRegistrertAntallAnsatte	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	historiskeNavn[].fraDato	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	historiskeNavn[].navn	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	historiskeNavn[].tilDato	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	institusjonellSektorkode.beskrivelse	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	institusjonellSektorkode.kode	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	konkurs	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	maalform	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	naeringskode1.beskrivelse	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	naeringskode1.kode	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	navn	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	organisasjonsform.beskrivelse	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	organisasjonsform.kode	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	organisasjonsnummer	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	registreringsdatoEnhetsregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	registreringsdatoForetaksregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	registrertIForetaksregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	registrertIFrivillighetsregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	registrertIMvaregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	registrertIPartiregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	registrertIStiftelsesregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	respons_klasse	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	stiftelsesdato	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	telefon	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	underAvvikling	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	underAvviklingDato	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	underTvangsavviklingEllerTvangsopplosning	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	vedtektsdato	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|avvikling	vedtektsfestetFormaal[]	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	aktivitet[]	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	erIKonsern	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	forretningsadresse.adresse[]	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	forretningsadresse.kommune	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	forretningsadresse.kommunenummer	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	forretningsadresse.land	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	forretningsadresse.landkode	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	forretningsadresse.postnummer	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	forretningsadresse.poststed	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	harRegistrertAntallAnsatte	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	institusjonellSektorkode.beskrivelse	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	institusjonellSektorkode.kode	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	konkurs	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	maalform	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	naeringskode1.beskrivelse	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	naeringskode1.kode	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	navn	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	organisasjonsform.beskrivelse	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	organisasjonsform.kode	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	organisasjonsnummer	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	registreringsdatoEnhetsregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	registreringsdatoForetaksregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	registrertIForetaksregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	registrertIFrivillighetsregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	registrertIMvaregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	registrertIPartiregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	registrertIStiftelsesregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	respons_klasse	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	stiftelsesdato	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	underAvvikling	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	underTvangsavviklingEllerTvangsopplosning	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	vedtektsdato	string	1	1	2026-06-17T14:59:33Z
+enhet	ANS|ordinary	vedtektsfestetFormaal[]	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	aktivitet[]	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	antallAnsatte	integer	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	erIKonsern	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	forretningsadresse.adresse[]	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	forretningsadresse.kommune	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	forretningsadresse.kommunenummer	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	forretningsadresse.land	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	forretningsadresse.landkode	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	forretningsadresse.postnummer	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	forretningsadresse.poststed	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	harRegistrertAntallAnsatte	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	historiskeNavn[].fraDato	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	historiskeNavn[].navn	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	historiskeNavn[].tilDato	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	institusjonellSektorkode.beskrivelse	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	institusjonellSektorkode.kode	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	kapital.antallAksjer	integer	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	kapital.belop	number	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	kapital.innfortDato	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	kapital.type	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	kapital.valuta	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	konkurs	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	maalform	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	naeringskode1.beskrivelse	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	naeringskode1.kode	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	navn	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	organisasjonsform.beskrivelse	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	organisasjonsform.kode	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	organisasjonsnummer	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	registreringsdatoAntallAnsatteEnhetsregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	registreringsdatoAntallAnsatteNAVAaregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	registreringsdatoEnhetsregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	registreringsdatoForetaksregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	registrertIForetaksregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	registrertIFrivillighetsregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	registrertIMvaregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	registrertIPartiregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	registrertIStiftelsesregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	respons_klasse	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	sisteInnsendteAarsregnskap	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	stiftelsesdato	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	underAvvikling	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	underTvangsavviklingEllerTvangsopplosning	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	vedtektsdato	string	1	1	2026-06-17T14:59:33Z
+enhet	ASA|ordinary	vedtektsfestetFormaal[]	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	aktivitet[]	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	epostadresse	string	5	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	erIKonsern	boolean	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	forretningsadresse.adresse[]	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	forretningsadresse.kommune	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	forretningsadresse.kommunenummer	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	forretningsadresse.land	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	forretningsadresse.landkode	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	forretningsadresse.postnummer	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	forretningsadresse.poststed	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	fravalgRevisjonBeslutningsDato	string	13	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	fravalgRevisjonDato	string	16	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	harRegistrertAntallAnsatte	boolean	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	hjelpeenhetskode.beskrivelse	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	hjelpeenhetskode.kode	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	hjemmeside	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	institusjonellSektorkode.beskrivelse	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	institusjonellSektorkode.kode	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	kapital.antallAksjer	integer	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	kapital.belop	number	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	kapital.innfortDato	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	kapital.type	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	kapital.valuta	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	konkurs	boolean	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	maalform	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	mobil	string	4	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	naeringskode1.beskrivelse	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	naeringskode1.kode	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	navn	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	organisasjonsform.beskrivelse	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	organisasjonsform.kode	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	organisasjonsnummer	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	postadresse.adresse[]	string	2	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	postadresse.kommune	string	2	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	postadresse.kommunenummer	string	2	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	postadresse.land	string	2	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	postadresse.landkode	string	2	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	postadresse.postnummer	string	2	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	postadresse.poststed	string	2	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	registreringsdatoAntallAnsatteEnhetsregisteret	string	2	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	registreringsdatoAntallAnsatteNAVAaregisteret	string	2	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	registreringsdatoEnhetsregisteret	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	registreringsdatoForetaksregisteret	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	registreringsdatoMerverdiavgiftsregisteret	string	5	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret	string	5	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	registrertIForetaksregisteret	boolean	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	registrertIFrivillighetsregisteret	boolean	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	registrertIMvaregisteret	boolean	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	registrertIPartiregisteret	boolean	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	registrertIStiftelsesregisteret	boolean	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	respons_klasse	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	sisteInnsendteAarsregnskap	string	16	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	stiftelsesdato	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	telefon	string	2	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	underAvvikling	boolean	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	underAvviklingDato	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	underTvangsavviklingEllerTvangsopplosning	boolean	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	vedtektsdato	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|avvikling	vedtektsfestetFormaal[]	string	18	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	aktivitet[]	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	epostadresse	string	6	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	erIKonsern	boolean	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	forretningsadresse.adresse[]	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	forretningsadresse.kommune	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	forretningsadresse.kommunenummer	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	forretningsadresse.land	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	forretningsadresse.landkode	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	forretningsadresse.postnummer	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	forretningsadresse.poststed	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	fravalgRevisjonBeslutningsDato	string	7	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	fravalgRevisjonDato	string	7	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	harRegistrertAntallAnsatte	boolean	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	historiskeNavn[].fraDato	string	6	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	historiskeNavn[].navn	string	6	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	historiskeNavn[].tilDato	string	6	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	hjemmeside	string	3	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	institusjonellSektorkode.beskrivelse	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	institusjonellSektorkode.kode	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	kapital.antallAksjer	integer	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	kapital.belop	number	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	kapital.innfortDato	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	kapital.type	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	kapital.valuta	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	konkurs	boolean	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	konkursdato	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	maalform	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	mobil	string	4	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	naeringskode1.beskrivelse	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	naeringskode1.kode	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	navn	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	organisasjonsform.beskrivelse	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	organisasjonsform.kode	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	organisasjonsnummer	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	postadresse.adresse[]	string	2	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	postadresse.kommune	string	2	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	postadresse.kommunenummer	string	2	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	postadresse.land	string	2	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	postadresse.landkode	string	2	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	postadresse.postnummer	string	2	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	postadresse.poststed	string	2	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	registreringsdatoEnhetsregisteret	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	registreringsdatoForetaksregisteret	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	registrertIForetaksregisteret	boolean	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	registrertIFrivillighetsregisteret	boolean	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	registrertIMvaregisteret	boolean	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	registrertIPartiregisteret	boolean	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	registrertIStiftelsesregisteret	boolean	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	respons_klasse	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	sisteInnsendteAarsregnskap	string	9	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	stiftelsesdato	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	telefon	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	underAvvikling	boolean	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	underTvangsavviklingEllerTvangsopplosning	boolean	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	vedtektsdato	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|konkurs	vedtektsfestetFormaal[]	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	aktivitet[]	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	antallAnsatte	integer	19	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	epostadresse	string	45	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	erIKonsern	boolean	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	forretningsadresse.adresse[]	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	forretningsadresse.kommune	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	forretningsadresse.kommunenummer	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	forretningsadresse.land	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	forretningsadresse.landkode	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	forretningsadresse.postnummer	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	forretningsadresse.poststed	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	fravalgRevisjonBeslutningsDato	string	123	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	fravalgRevisjonDato	string	151	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	frivilligMvaRegistrertBeskrivelser[]	string	7	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	harRegistrertAntallAnsatte	boolean	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	historiskeNavn[].fraDato	string	50	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	historiskeNavn[].navn	string	50	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	historiskeNavn[].tilDato	string	50	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	hjelpeenhetskode.beskrivelse	string	9	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	hjelpeenhetskode.kode	string	9	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	hjemmeside	string	13	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	institusjonellSektorkode.beskrivelse	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	institusjonellSektorkode.kode	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	kapital.antallAksjer	integer	186	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	kapital.belop	number	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	kapital.innfortDato	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	kapital.type	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	kapital.valuta	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	konkurs	boolean	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	maalform	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	mobil	string	41	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	naeringskode1.beskrivelse	string	184	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	naeringskode1.kode	string	184	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	navn	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	organisasjonsform.beskrivelse	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	organisasjonsform.kode	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	organisasjonsnummer	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	postadresse.adresse[]	string	35	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	postadresse.kommune	string	34	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	postadresse.kommunenummer	string	34	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	postadresse.land	string	35	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	postadresse.landkode	string	35	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	postadresse.postnummer	string	34	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	postadresse.poststed	string	35	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	registreringsdatoAntallAnsatteEnhetsregisteret	string	59	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	registreringsdatoAntallAnsatteNAVAaregisteret	string	59	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	registreringsdatoEnhetsregisteret	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	registreringsdatoForetaksregisteret	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	registreringsdatoFrivilligMerverdiavgiftsregisteret	string	7	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	registreringsdatoMerverdiavgiftsregisteret	string	84	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret	string	84	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	registrertIForetaksregisteret	boolean	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	registrertIFrivillighetsregisteret	boolean	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	registrertIMvaregisteret	boolean	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	registrertIPartiregisteret	boolean	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	registrertIStiftelsesregisteret	boolean	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	respons_klasse	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	sisteInnsendteAarsregnskap	string	140	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	stiftelsesdato	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	telefon	string	17	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	underAvvikling	boolean	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	underTvangsavviklingEllerTvangsopplosning	boolean	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	vedtektsdato	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|ordinary	vedtektsfestetFormaal[]	string	187	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	aktivitet[]	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	epostadresse	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	erIKonsern	boolean	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	forretningsadresse.adresse[]	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	forretningsadresse.kommune	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	forretningsadresse.kommunenummer	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	forretningsadresse.land	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	forretningsadresse.landkode	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	forretningsadresse.postnummer	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	forretningsadresse.poststed	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	fravalgRevisjonBeslutningsDato	string	10	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	fravalgRevisjonDato	string	11	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	harRegistrertAntallAnsatte	boolean	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	historiskeNavn[].fraDato	string	4	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	historiskeNavn[].navn	string	4	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	historiskeNavn[].tilDato	string	4	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	institusjonellSektorkode.beskrivelse	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	institusjonellSektorkode.kode	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	kapital.antallAksjer	integer	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	kapital.belop	number	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	kapital.innfortDato	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	kapital.type	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	kapital.valuta	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	konkurs	boolean	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	maalform	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	mobil	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	naeringskode1.beskrivelse	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	naeringskode1.kode	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	navn	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	organisasjonsform.beskrivelse	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	organisasjonsform.kode	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	organisasjonsnummer	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	paategninger[].infotype	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	paategninger[].innfoertDato	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	paategninger[].tekst	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	postadresse.adresse[]	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	postadresse.kommune	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	postadresse.kommunenummer	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	postadresse.land	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	postadresse.landkode	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	postadresse.postnummer	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	postadresse.poststed	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	registreringsdatoAntallAnsatteEnhetsregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	registreringsdatoAntallAnsatteNAVAaregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	registreringsdatoEnhetsregisteret	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	registreringsdatoForetaksregisteret	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	registrertIForetaksregisteret	boolean	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	registrertIFrivillighetsregisteret	boolean	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	registrertIMvaregisteret	boolean	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	registrertIPartiregisteret	boolean	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	registrertIStiftelsesregisteret	boolean	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	respons_klasse	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	sisteInnsendteAarsregnskap	string	8	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	stiftelsesdato	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	tvangsavvikletPgaManglendeSlettingDato	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	tvangsopplostPgaMangelfulltStyreDato	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	tvangsopplostPgaManglendeRegnskapDato	string	9	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	tvangsopplostPgaManglendeRevisorDato	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	underAvvikling	boolean	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	underAvviklingDato	string	1	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	underTvangsavviklingEllerTvangsopplosning	boolean	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	vedtektsdato	string	12	1	2026-06-17T14:59:33Z
+enhet	AS|tvangsavvikling	vedtektsfestetFormaal[]	string	12	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	aktivitet[]	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	epostadresse	string	1	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	erIKonsern	boolean	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	forretningsadresse.adresse[]	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	forretningsadresse.kommune	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	forretningsadresse.kommunenummer	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	forretningsadresse.land	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	forretningsadresse.landkode	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	forretningsadresse.postnummer	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	forretningsadresse.poststed	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	harRegistrertAntallAnsatte	boolean	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	institusjonellSektorkode.beskrivelse	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	institusjonellSektorkode.kode	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	konkurs	boolean	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	maalform	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	naeringskode1.beskrivelse	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	naeringskode1.kode	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	navn	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	organisasjonsform.beskrivelse	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	organisasjonsform.kode	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	organisasjonsnummer	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	postadresse.adresse[]	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	postadresse.kommune	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	postadresse.kommunenummer	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	postadresse.land	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	postadresse.landkode	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	postadresse.postnummer	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	postadresse.poststed	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	registreringsdatoAntallAnsatteEnhetsregisteret	string	2	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	registreringsdatoAntallAnsatteNAVAaregisteret	string	2	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	registreringsdatoEnhetsregisteret	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	registreringsdatoForetaksregisteret	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	registrertIForetaksregisteret	boolean	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	registrertIFrivillighetsregisteret	boolean	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	registrertIMvaregisteret	boolean	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	registrertIPartiregisteret	boolean	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	registrertIStiftelsesregisteret	boolean	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	respons_klasse	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	sisteInnsendteAarsregnskap	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	stiftelsesdato	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	telefon	string	1	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	underAvvikling	boolean	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	underTvangsavviklingEllerTvangsopplosning	boolean	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	vedtektsdato	string	5	1	2026-06-17T14:59:33Z
+enhet	BRL|ordinary	vedtektsfestetFormaal[]	string	5	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	aktivitet[]	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	epostadresse	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	erIKonsern	boolean	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	forretningsadresse.adresse[]	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	forretningsadresse.kommune	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	forretningsadresse.kommunenummer	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	forretningsadresse.land	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	forretningsadresse.landkode	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	forretningsadresse.postnummer	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	forretningsadresse.poststed	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	harRegistrertAntallAnsatte	boolean	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	historiskeNavn[].fraDato	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	historiskeNavn[].navn	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	historiskeNavn[].tilDato	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	hjemmeside	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	institusjonellSektorkode.beskrivelse	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	institusjonellSektorkode.kode	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	konkurs	boolean	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	maalform	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	mobil	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	naeringskode1.beskrivelse	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	naeringskode1.kode	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	navn	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	organisasjonsform.beskrivelse	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	organisasjonsform.kode	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	organisasjonsnummer	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	postadresse.adresse[]	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	postadresse.kommune	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	postadresse.kommunenummer	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	postadresse.land	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	postadresse.landkode	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	postadresse.postnummer	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	postadresse.poststed	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	registreringsdatoEnhetsregisteret	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	registreringsdatoForetaksregisteret	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	registreringsdatoMerverdiavgiftsregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	registrertIForetaksregisteret	boolean	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	registrertIFrivillighetsregisteret	boolean	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	registrertIMvaregisteret	boolean	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	registrertIPartiregisteret	boolean	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	registrertIStiftelsesregisteret	boolean	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	respons_klasse	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	sisteInnsendteAarsregnskap	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	stiftelsesdato	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	telefon	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	underAvvikling	boolean	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	underAvviklingDato	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	underTvangsavviklingEllerTvangsopplosning	boolean	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	vedtektsdato	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|avvikling	vedtektsfestetFormaal[]	string	7	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	aktivitet[]	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	epostadresse	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	erIKonsern	boolean	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	forretningsadresse.adresse[]	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	forretningsadresse.kommune	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	forretningsadresse.kommunenummer	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	forretningsadresse.land	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	forretningsadresse.landkode	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	forretningsadresse.postnummer	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	forretningsadresse.poststed	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	harRegistrertAntallAnsatte	boolean	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	historiskeNavn[].fraDato	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	historiskeNavn[].navn	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	historiskeNavn[].tilDato	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	institusjonellSektorkode.beskrivelse	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	institusjonellSektorkode.kode	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	konkurs	boolean	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	maalform	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	mobil	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	naeringskode1.beskrivelse	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	naeringskode1.kode	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	navn	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	organisasjonsform.beskrivelse	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	organisasjonsform.kode	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	organisasjonsnummer	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	postadresse.adresse[]	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	postadresse.kommune	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	postadresse.kommunenummer	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	postadresse.land	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	postadresse.landkode	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	postadresse.postnummer	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	postadresse.poststed	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	registreringsdatoEnhetsregisteret	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	registreringsdatoForetaksregisteret	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	registreringsdatoMerverdiavgiftsregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	registrertIForetaksregisteret	boolean	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	registrertIFrivillighetsregisteret	boolean	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	registrertIMvaregisteret	boolean	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	registrertIPartiregisteret	boolean	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	registrertIStiftelsesregisteret	boolean	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	respons_klasse	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	sisteInnsendteAarsregnskap	string	1	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	stiftelsesdato	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	underAvvikling	boolean	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	underTvangsavviklingEllerTvangsopplosning	boolean	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	vedtektsdato	string	2	1	2026-06-17T14:59:33Z
+enhet	DA|ordinary	vedtektsfestetFormaal[]	string	2	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	aktivitet[]	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	erIKonsern	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	forretningsadresse.adresse[]	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	forretningsadresse.kommune	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	forretningsadresse.kommunenummer	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	forretningsadresse.land	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	forretningsadresse.landkode	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	forretningsadresse.postnummer	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	forretningsadresse.poststed	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	harRegistrertAntallAnsatte	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	institusjonellSektorkode.beskrivelse	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	institusjonellSektorkode.kode	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	konkurs	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	konkursdato	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	maalform	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	naeringskode1.beskrivelse	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	naeringskode1.kode	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	navn	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	organisasjonsform.beskrivelse	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	organisasjonsform.kode	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	organisasjonsnummer	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	registreringsdatoEnhetsregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	registrertIForetaksregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	registrertIFrivillighetsregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	registrertIMvaregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	registrertIPartiregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	registrertIStiftelsesregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	respons_klasse	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	underAvvikling	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ENK|konkurs	underTvangsavviklingEllerTvangsopplosning	boolean	1	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	aktivitet[]	string	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	epostadresse	string	33	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	erIKonsern	boolean	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	forretningsadresse.adresse[]	string	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	forretningsadresse.kommune	string	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	forretningsadresse.kommunenummer	string	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	forretningsadresse.land	string	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	forretningsadresse.landkode	string	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	forretningsadresse.postnummer	string	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	forretningsadresse.poststed	string	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	harRegistrertAntallAnsatte	boolean	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	historiskeNavn[].fraDato	string	29	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	historiskeNavn[].navn	string	29	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	historiskeNavn[].tilDato	string	29	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	hjemmeside	string	8	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	institusjonellSektorkode.beskrivelse	string	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	institusjonellSektorkode.kode	string	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	konkurs	boolean	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	maalform	string	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	mobil	string	34	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	naeringskode1.beskrivelse	string	134	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	naeringskode1.kode	string	134	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	naeringskode2.beskrivelse	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	naeringskode2.kode	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	navn	string	151	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	organisasjonsform.beskrivelse	string	151	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	organisasjonsform.kode	string	151	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	organisasjonsnummer	string	151	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	postadresse.adresse[]	string	7	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	postadresse.kommune	string	8	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	postadresse.kommunenummer	string	8	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	postadresse.land	string	8	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	postadresse.landkode	string	8	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	postadresse.postnummer	string	8	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	postadresse.poststed	string	8	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	registreringsdatoAntallAnsatteEnhetsregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	registreringsdatoAntallAnsatteNAVAaregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	registreringsdatoEnhetsregisteret	string	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	registreringsdatoForetaksregisteret	string	37	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	registreringsdatoMerverdiavgiftsregisteret	string	25	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret	string	25	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	registrertIForetaksregisteret	boolean	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	registrertIFrivillighetsregisteret	boolean	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	registrertIMvaregisteret	boolean	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	registrertIPartiregisteret	boolean	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	registrertIStiftelsesregisteret	boolean	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	respons_klasse	string	151	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	sisteInnsendteAarsregnskap	string	1	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	slettedato	string	6	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	telefon	string	8	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	underAvvikling	boolean	145	1	2026-06-17T14:59:33Z
+enhet	ENK|ordinary	underTvangsavviklingEllerTvangsopplosning	boolean	145	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	aktivitet[]	string	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	epostadresse	string	3	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	erIKonsern	boolean	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	forretningsadresse.adresse[]	string	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	forretningsadresse.kommune	string	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	forretningsadresse.kommunenummer	string	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	forretningsadresse.land	string	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	forretningsadresse.landkode	string	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	forretningsadresse.postnummer	string	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	forretningsadresse.poststed	string	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	harRegistrertAntallAnsatte	boolean	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	hjemmeside	string	1	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	konkurs	boolean	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	maalform	string	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	mobil	string	1	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	naeringskode1.beskrivelse	string	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	naeringskode1.kode	string	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	navn	string	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	organisasjonsform.beskrivelse	string	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	organisasjonsform.kode	string	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	organisasjonsnummer	string	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	postadresse.adresse[]	string	1	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	postadresse.kommune	string	1	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	postadresse.kommunenummer	string	1	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	postadresse.land	string	1	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	postadresse.landkode	string	1	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	postadresse.postnummer	string	1	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	postadresse.poststed	string	1	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	registreringsdatoEnhetsregisteret	string	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	registreringsdatoForetaksregisteret	string	2	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	registrertIForetaksregisteret	boolean	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	registrertIFrivillighetsregisteret	boolean	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	registrertIMvaregisteret	boolean	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	registrertIPartiregisteret	boolean	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	registrertIStiftelsesregisteret	boolean	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	respons_klasse	string	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	sisteInnsendteAarsregnskap	string	2	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	stiftelsesdato	string	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	underAvvikling	boolean	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	underTvangsavviklingEllerTvangsopplosning	boolean	4	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	vedtektsdato	string	2	1	2026-06-17T14:59:33Z
+enhet	ESEK|ordinary	vedtektsfestetFormaal[]	string	2	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	aktivitet[]	string	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	epostadresse	string	14	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	erIKonsern	boolean	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	forretningsadresse.adresse[]	string	18	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	forretningsadresse.kommune	string	19	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	forretningsadresse.kommunenummer	string	19	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	forretningsadresse.land	string	19	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	forretningsadresse.landkode	string	19	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	forretningsadresse.postnummer	string	19	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	forretningsadresse.poststed	string	19	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	harRegistrertAntallAnsatte	boolean	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	historiskeNavn[].fraDato	string	7	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	historiskeNavn[].navn	string	7	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	historiskeNavn[].tilDato	string	7	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	hjemmeside	string	7	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	institusjonellSektorkode.beskrivelse	string	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	institusjonellSektorkode.kode	string	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	konkurs	boolean	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	maalform	string	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	mobil	string	12	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	naeringskode1.beskrivelse	string	21	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	naeringskode1.kode	string	21	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	navn	string	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	organisasjonsform.beskrivelse	string	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	organisasjonsform.kode	string	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	organisasjonsnummer	string	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	postadresse.adresse[]	string	7	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	postadresse.kommune	string	7	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	postadresse.kommunenummer	string	7	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	postadresse.land	string	7	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	postadresse.landkode	string	7	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	postadresse.postnummer	string	7	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	postadresse.poststed	string	7	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	registreringsdatoEnhetsregisteret	string	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	registreringsdatoForetaksregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	registreringsdatoFrivillighetsregisteret	string	11	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	registreringsdatoMerverdiavgiftsregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	registrertIForetaksregisteret	boolean	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	registrertIFrivillighetsregisteret	boolean	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	registrertIMvaregisteret	boolean	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	registrertIPartiregisteret	boolean	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	registrertIStiftelsesregisteret	boolean	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	respons_klasse	string	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	sisteInnsendteAarsregnskap	string	2	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	stiftelsesdato	string	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	telefon	string	4	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	underAvvikling	boolean	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	underTvangsavviklingEllerTvangsopplosning	boolean	22	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	vedtektsdato	string	1	1	2026-06-17T14:59:33Z
+enhet	FLI|ordinary	vedtektsfestetFormaal[]	string	1	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	aktivitet[]	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	erIKonsern	boolean	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	forretningsadresse.adresse[]	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	forretningsadresse.kommune	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	forretningsadresse.kommunenummer	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	forretningsadresse.land	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	forretningsadresse.landkode	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	forretningsadresse.postnummer	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	forretningsadresse.poststed	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	harRegistrertAntallAnsatte	boolean	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	konkurs	boolean	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	maalform	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	naeringskode1.beskrivelse	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	naeringskode1.kode	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	navn	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	organisasjonsform.beskrivelse	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	organisasjonsform.kode	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	organisasjonsnummer	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	postadresse.adresse[]	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	postadresse.kommune	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	postadresse.kommunenummer	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	postadresse.land	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	postadresse.landkode	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	postadresse.postnummer	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	postadresse.poststed	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	registreringsdatoEnhetsregisteret	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	registreringsdatoMerverdiavgiftsregisteret	string	2	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret	string	2	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	registrertIForetaksregisteret	boolean	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	registrertIFrivillighetsregisteret	boolean	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	registrertIMvaregisteret	boolean	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	registrertIPartiregisteret	boolean	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	registrertIStiftelsesregisteret	boolean	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	respons_klasse	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	stiftelsesdato	string	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	underAvvikling	boolean	7	1	2026-06-17T14:59:33Z
+enhet	KBO|ordinary	underTvangsavviklingEllerTvangsopplosning	boolean	7	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	aktivitet[]	string	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	epostadresse	string	4	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	erIKonsern	boolean	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	forretningsadresse.adresse[]	string	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	forretningsadresse.kommune	string	4	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	forretningsadresse.kommunenummer	string	4	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	forretningsadresse.land	string	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	forretningsadresse.landkode	string	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	forretningsadresse.postnummer	string	4	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	forretningsadresse.poststed	string	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	harRegistrertAntallAnsatte	boolean	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	institusjonellSektorkode.beskrivelse	string	6	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	institusjonellSektorkode.kode	string	6	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	konkurs	boolean	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	maalform	string	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	naeringskode1.beskrivelse	string	12	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	naeringskode1.kode	string	12	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	navn	string	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	organisasjonsform.beskrivelse	string	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	organisasjonsform.kode	string	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	organisasjonsnummer	string	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	postadresse.adresse[]	string	5	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	postadresse.kommune	string	3	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	postadresse.kommunenummer	string	3	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	postadresse.land	string	5	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	postadresse.landkode	string	5	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	postadresse.postnummer	string	3	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	postadresse.poststed	string	5	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	registreringsdatoEnhetsregisteret	string	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	registreringsdatoForetaksregisteret	string	6	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	registreringsdatoMerverdiavgiftsregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	registrertIForetaksregisteret	boolean	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	registrertIFrivillighetsregisteret	boolean	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	registrertIMvaregisteret	boolean	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	registrertIPartiregisteret	boolean	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	registrertIStiftelsesregisteret	boolean	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	respons_klasse	string	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	sisteInnsendteAarsregnskap	string	1	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	underAvvikling	boolean	13	1	2026-06-17T14:59:33Z
+enhet	NUF|ordinary	underTvangsavviklingEllerTvangsopplosning	boolean	13	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	aktivitet[]	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	antallAnsatte	integer	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	erIKonsern	boolean	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	forretningsadresse.adresse[]	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	forretningsadresse.kommune	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	forretningsadresse.kommunenummer	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	forretningsadresse.land	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	forretningsadresse.landkode	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	forretningsadresse.postnummer	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	forretningsadresse.poststed	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	harRegistrertAntallAnsatte	boolean	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	historiskeNavn[].fraDato	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	historiskeNavn[].navn	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	historiskeNavn[].tilDato	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	hjemmeside	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	institusjonellSektorkode.beskrivelse	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	institusjonellSektorkode.kode	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	kapital.belop	number	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	kapital.innbetalt	number	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	kapital.innfortDato	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	kapital.type	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	kapital.valuta	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	konkurs	boolean	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	maalform	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	mobil	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	naeringskode1.beskrivelse	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	naeringskode1.kode	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	navn	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	organisasjonsform.beskrivelse	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	organisasjonsform.kode	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	organisasjonsnummer	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	postadresse.adresse[]	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	postadresse.kommune	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	postadresse.kommunenummer	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	postadresse.land	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	postadresse.landkode	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	postadresse.postnummer	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	postadresse.poststed	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	registreringsdatoAntallAnsatteEnhetsregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	registreringsdatoAntallAnsatteNAVAaregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	registreringsdatoEnhetsregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	registreringsdatoFrivillighetsregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	registrertIForetaksregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	registrertIFrivillighetsregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	registrertIMvaregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	registrertIPartiregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	registrertIStiftelsesregisteret	boolean	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	respons_klasse	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	sisteInnsendteAarsregnskap	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	stiftelsesdato	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	telefon	string	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	underAvvikling	boolean	1	1	2026-06-17T14:59:33Z
+enhet	STI|ordinary	underTvangsavviklingEllerTvangsopplosning	boolean	1	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	aktivitet[]	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	epostadresse	string	1	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	erIKonsern	boolean	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	foretaksformIHjemlandet.beskrivelse	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	foretaksformIHjemlandet.beskrivelseBokmaal	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	foretaksformIHjemlandet.kode	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	forretningsadresse.adresse[]	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	forretningsadresse.land	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	forretningsadresse.landkode	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	forretningsadresse.poststed	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	harRegistrertAntallAnsatte	boolean	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	hjemmeside	string	1	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	konkurs	boolean	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	maalform	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	mobil	string	1	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	navn	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	organisasjonsform.beskrivelse	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	organisasjonsform.kode	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	organisasjonsnummer	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	postadresse.adresse[]	string	1	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	postadresse.kommune	string	1	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	postadresse.kommunenummer	string	1	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	postadresse.land	string	1	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	postadresse.landkode	string	1	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	postadresse.postnummer	string	1	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	postadresse.poststed	string	1	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	registreringsdatoEnhetsregisteret	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	registreringsdatoForetaksregisteret	string	1	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	registreringsnummerIHjemlandet	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	registrertIForetaksregisteret	boolean	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	registrertIFrivillighetsregisteret	boolean	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	registrertIMvaregisteret	boolean	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	registrertIPartiregisteret	boolean	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	registrertIStiftelsesregisteret	boolean	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	respons_klasse	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	stiftelsesdato	string	3	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	underAvvikling	boolean	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	underTvangsavviklingEllerTvangsopplosning	boolean	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	underlagtLovgivningLand	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	underlagtLovgivningLandKode	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	utenlandskRegisterAdresse.adresse[]	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	utenlandskRegisterAdresse.land	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	utenlandskRegisterAdresse.poststed	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	utenlandskRegisterNavn	string	4	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	vedtektsdato	string	1	1	2026-06-17T14:59:33Z
+enhet	UTLA|ordinary	vedtektsfestetFormaal[]	string	1	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	antallAnsatte	integer	1	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	beliggenhetsadresse.adresse[]	string	72	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	beliggenhetsadresse.kommune	string	73	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	beliggenhetsadresse.kommunenummer	string	73	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	beliggenhetsadresse.land	string	73	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	beliggenhetsadresse.landkode	string	73	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	beliggenhetsadresse.postnummer	string	73	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	beliggenhetsadresse.poststed	string	73	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	epostadresse	string	29	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	harRegistrertAntallAnsatte	boolean	77	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	historiskeNavn[].fraDato	string	7	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	historiskeNavn[].navn	string	7	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	historiskeNavn[].tilDato	string	7	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	hjemmeside	string	12	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	mobil	string	16	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	naeringskode1.beskrivelse	string	77	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	naeringskode1.kode	string	77	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	navn	string	77	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	oppstartsdato	string	41	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	organisasjonsform.beskrivelse	string	77	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	organisasjonsform.kode	string	77	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	organisasjonsnummer	string	77	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	overordnetEnhet	string	77	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	postadresse.adresse[]	string	56	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	postadresse.kommune	string	56	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	postadresse.kommunenummer	string	56	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	postadresse.land	string	56	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	postadresse.landkode	string	56	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	postadresse.postnummer	string	56	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	postadresse.poststed	string	56	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	registreringsdatoAntallAnsatteEnhetsregisteret	string	4	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	registreringsdatoAntallAnsatteNAVAaregisteret	string	4	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	registreringsdatoEnhetsregisteret	string	77	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	registrertIMvaregisteret	boolean	77	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	respons_klasse	string	77	1	2026-06-17T14:59:33Z
+underenhet	AAFY|ordinary	telefon	string	7	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	antallAnsatte	integer	17	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	beliggenhetsadresse.adresse[]	string	320	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	beliggenhetsadresse.kommune	string	322	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	beliggenhetsadresse.kommunenummer	string	322	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	beliggenhetsadresse.land	string	322	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	beliggenhetsadresse.landkode	string	322	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	beliggenhetsadresse.postnummer	string	322	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	beliggenhetsadresse.poststed	string	322	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	datoEierskifte	string	14	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	epostadresse	string	67	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	harRegistrertAntallAnsatte	boolean	323	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	historiskeNavn[].fraDato	string	75	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	historiskeNavn[].navn	string	75	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	historiskeNavn[].tilDato	string	75	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	hjelpeenhetskode.beskrivelse	string	8	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	hjelpeenhetskode.kode	string	8	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	hjemmeside	string	21	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	mobil	string	60	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	naeringskode1.beskrivelse	string	322	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	naeringskode1.kode	string	322	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	navn	string	323	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	oppstartsdato	string	321	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	organisasjonsform.beskrivelse	string	323	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	organisasjonsform.kode	string	323	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	organisasjonsnummer	string	323	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	overordnetEnhet	string	323	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	postadresse.adresse[]	string	32	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	postadresse.kommune	string	32	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	postadresse.kommunenummer	string	32	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	postadresse.land	string	32	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	postadresse.landkode	string	32	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	postadresse.postnummer	string	32	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	postadresse.poststed	string	32	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	registreringsdatoAntallAnsatteEnhetsregisteret	string	71	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	registreringsdatoAntallAnsatteNAVAaregisteret	string	71	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	registreringsdatoEnhetsregisteret	string	323	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	registrertIMvaregisteret	boolean	323	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	respons_klasse	string	323	1	2026-06-17T14:59:33Z
+underenhet	BEDR|ordinary	telefon	string	18	1	2026-06-17T14:59:33Z

@@ -4,7 +4,7 @@ cd "$(git rev-parse --show-toplevel)"
 out="${TMPDIR:-/tmp}/tidybrreg_counts.tsv"
 f=data-raw/api_monitor/state/periods.tsv
 if [ -s "$f" ]; then
-  since=$(awk -F'\t' 'NR>1{print $4}' "$f" | sort | tail -1)
+  since=$(awk -F'\t' 'NR>1{print $5}' "$f" | sort | tail -1)
 else
   prev_ver=$(grep -E '^# tidybrreg' NEWS.md | sed -n 2p | awk '{print $3}')
   since=$(git log -S"Version: ${prev_ver}" --reverse --format='%aI' -- DESCRIPTION | head -1)

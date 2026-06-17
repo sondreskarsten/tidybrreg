@@ -13,6 +13,13 @@ OPPDATERINGER = {
     "underenhet": "https://data.brreg.no/enhetsregisteret/api/oppdateringer/underenheter",
 }
 ENTITY_LINK = {"enhet": "enhet", "underenhet": "underenhet"}
+ENHETER = "https://data.brreg.no/enhetsregisteret/api/enheter"
+CENSUS = {
+    "konkurs": "konkurs=true",
+    "tvangsavvikling": "underTvangsavviklingEllerTvangsopplosning=true",
+    "avvikling": "underAvvikling=true",
+    "NUF": "organisasjonsform=NUF",
+}
 TYPEMAP = {"NoneType": "null", "str": "string", "bool": "boolean", "int": "integer", "float": "number"}
 
 
@@ -64,6 +71,49 @@ def collect(name, since_iso, n_buckets, max_entities):
     return list(hrefs.items())[:max_entities]
 
 
+def fetch_entities(name, since_iso, n_buckets, max_entities):
+    sess = requests.Session()
+    ents = []
+    for org, href in collect(name, since_iso, n_buckets, max_entities):
+        resp = sess.get(href, headers={"Accept": "application/json", "User-Agent": UA}, timeout=60)
+        if resp.status_code >= 400:
+            continue
+        ents.append(resp.json())
+    return ents
+
+
+def census_enheter(per):
+    sess = requests.Session()
+    ents = []
+    pops = {}
+    tot = sess.get(f"{ENHETER}?size=1", headers={"Accept": "application/json", "User-Agent": UA}, timeout=60)
+    if tot.status_code < 400:
+        pops["_total"] = tot.json().get("page", {}).get("totalElements")
+    for label, q in CENSUS.items():
+        r = sess.get(f"{ENHETER}?{q}&size={per}", headers={"Accept": "application/json", "User-Agent": UA}, timeout=60)
+        if r.status_code >= 400:
+            continue
+        d = r.json()
+        pops[label] = d.get("page", {}).get("totalElements")
+        ents.extend(d.get("_embedded", {}).get("enheter", []))
+    return ents, pops
+
+
+def lifecycle_state(e):
+    if e.get("konkurs"):
+        return "konkurs"
+    if e.get("underTvangsavviklingEllerTvangsopplosning"):
+        return "tvangsavvikling"
+    if e.get("underAvvikling"):
+        return "avvikling"
+    return "ordinary"
+
+
+def segment(e):
+    form = (e.get("organisasjonsform") or {}).get("kode") or "UKJENT"
+    return f"{form}|{lifecycle_state(e)}"
+
+
 def entity_paths(x, prefix="", out=None):
     if out is None:
         out = {}
@@ -82,39 +132,48 @@ def entity_paths(x, prefix="", out=None):
     return out
 
 
-def probe_period(name, since_iso, n_buckets, max_entities):
-    changed = collect(name, since_iso, n_buckets, max_entities)
-    sess = requests.Session()
+def tally(entities):
     counts = collections.Counter()
     types = collections.defaultdict(set)
-    n = 0
-    for org, href in changed:
-        resp = sess.get(href, headers={"Accept": "application/json", "User-Agent": UA}, timeout=60)
-        if resp.status_code >= 400:
-            continue
-        for path, ty in entity_paths(resp.json()).items():
-            counts[path] += 1
-            types[path].add(ty)
-        n += 1
-    print(f"{name}: {len(changed)} entities sampled since {since_iso}, {n} fetched, {len(counts)} fields", file=sys.stderr)
-    return counts, types, n
+    seg_n = collections.Counter()
+    for e in entities:
+        seg = segment(e)
+        seg_n[seg] += 1
+        for path, ty in entity_paths(e).items():
+            counts[(seg, path)] += 1
+            types[(seg, path)].add(ty)
+    return counts, types, seg_n
 
 
 def write_counts(rows, out):
     with open(out, "w", encoding="utf-8") as f:
-        f.write("endpoint\tpath\ttype\tk\tn\n")
-        for ep, path, ty, k, n in sorted(rows):
-            f.write(f"{ep}\t{path}\t{ty}\t{k}\t{n}\n")
+        f.write("endpoint\tsegment\tpath\ttype\tk\tn\n")
+        for ep, seg, path, ty, k, n in sorted(rows):
+            f.write(f"{ep}\t{seg}\t{path}\t{ty}\t{k}\t{n}\n")
 
 
-def run(out, since_iso, n_buckets=40, max_entities=1500):
+def write_pops(pops, out):
+    with open(out, "w", encoding="utf-8") as f:
+        f.write("state\tpopulation\n")
+        for k, v in sorted(pops.items()):
+            f.write(f"{k}\t{v}\n")
+
+
+def run(out, since_iso, n_buckets=40, max_entities=1500, census_per=12):
     rows = []
+    pops = {}
     for name in ("enhet", "underenhet"):
-        counts, types, n = probe_period(name, since_iso, n_buckets, max_entities)
-        for path, k in counts.items():
-            rows.append((name, path, "|".join(sorted(types[path])), k, n))
+        ents = fetch_entities(name, since_iso, n_buckets, max_entities)
+        if name == "enhet":
+            cents, pops = census_enheter(census_per)
+            ents = ents + cents
+        counts, types, seg_n = tally(ents)
+        for (seg, path), k in counts.items():
+            rows.append((name, seg, path, "|".join(sorted(types[(seg, path)])), k, seg_n[seg]))
+        print(f"{name}: {len(ents)} entities, {len(seg_n)} segments, {len(counts)} cells", file=sys.stderr)
     write_counts(rows, out)
-    print(f"wrote {len(rows)} rows to {out}", file=sys.stderr)
+    write_pops(pops, out + ".pop")
+    print(f"wrote {len(rows)} cells to {out}", file=sys.stderr)
 
 
 if __name__ == "__main__":
@@ -123,5 +182,6 @@ if __name__ == "__main__":
     ap.add_argument("--since", required=True)
     ap.add_argument("--buckets", type=int, default=40)
     ap.add_argument("--max-entities", type=int, default=1500)
+    ap.add_argument("--census-per", type=int, default=12)
     a = ap.parse_args()
-    run(a.out, a.since, n_buckets=a.buckets, max_entities=a.max_entities)
+    run(a.out, a.since, n_buckets=a.buckets, max_entities=a.max_entities, census_per=a.census_per)

@@ -14,157 +14,171 @@ prev_paths <- function(state_dir) {
 read_prev_state <- function(state_dir = "data-raw/api_monitor/state") {
   p <- prev_paths(state_dir)
   fields <- if (file.exists(p$fields)) {
-    readr::read_tsv(p$fields, col_types = "cccdic")
+    readr::read_tsv(p$fields, col_types = "ccccdic")
   } else {
-    tibble::tibble(endpoint = character(), path = character(), type = character(),
-                   k_cum = numeric(), periods_seen = integer(), last_period = character())
+    tibble::tibble(endpoint = character(), segment = character(), path = character(),
+                   type = character(), k_cum = numeric(), periods_seen = integer(),
+                   last_period = character())
   }
   periods <- if (file.exists(p$periods)) {
-    readr::read_tsv(p$periods, col_types = "ccdc")
+    readr::read_tsv(p$periods, col_types = "cccdc")
   } else {
-    tibble::tibble(period = character(), endpoint = character(), n = numeric(), date = character())
+    tibble::tibble(period = character(), endpoint = character(), segment = character(),
+                   n = numeric(), date = character())
   }
   list(fields = fields, periods = periods)
+}
+
+read_pops <- function(counts_path) {
+  pp <- paste0(counts_path, ".pop")
+  if (!file.exists(pp)) return(tibble::tibble(state = character(), population = numeric()))
+  readr::read_tsv(pp, col_types = "cd")
 }
 
 write_prev_state <- function(state_dir, fields, periods) {
   dir.create(state_dir, showWarnings = FALSE, recursive = TRUE)
   p <- prev_paths(state_dir)
-  readr::write_tsv(dplyr::arrange(fields, endpoint, path), p$fields)
-  readr::write_tsv(dplyr::arrange(periods, date, endpoint), p$periods)
+  readr::write_tsv(dplyr::arrange(fields, endpoint, segment, path), p$fields)
+  readr::write_tsv(dplyr::arrange(periods, date, endpoint, segment), p$periods)
 }
 
-eb_beta <- function(prevalence, n_total) {
-  prevalence <- prevalence[is.finite(prevalence)]
-  if (length(prevalence) < 3) return(c(alpha = 0.5, beta = 0.5))
-  m <- mean(prevalence)
-  v <- stats::var(prevalence)
-  if (v <= 0 || m <= 0 || m >= 1 || v >= m * (1 - m)) return(c(alpha = 0.5, beta = 0.5))
-  k <- m * (1 - m) / v - 1
-  c(alpha = max(m * k, 1e-3), beta = max((1 - m) * k, 1e-3))
-}
+cond_prevalence <- function(k, n) (k + 0.5) / (n + 1)
 
-encounter_prob <- function(alpha, beta, m) 1 - exp(lbeta(alpha, beta + m) - lbeta(alpha, beta))
+seg_form <- function(segment) sub("\\|.*", "", segment)
+seg_state <- function(segment) sub(".*\\|", "", segment)
 
-prob_miss <- function(alpha, beta, n) exp(lbeta(alpha, beta + n) - lbeta(alpha, beta))
-
-sample_for_coverage <- function(alpha, beta, target) {
-  m <- 1
-  while (encounter_prob(alpha, beta, m) < target && m < 1e7) m <- m * 2L
-  m
-}
-
-build_prev_report <- function(coverage, new_fields, suspected_removed, model, period_id, target_m) {
+build_cond_report <- function(seg_cov, slices, drivers, new_fields, removed, period_id) {
   fmt <- function(x) formatC(x, format = "f", digits = 3)
-  lines <- c(paste0("# Bayesian schema-prevalence report (", period_id, ")"), "")
-  for (ep in coverage$endpoint) {
-    c1 <- dplyr::filter(coverage, endpoint == ep)
-    lines <- c(lines,
-      paste0("## ", ep),
-      paste0("- learned prior Beta(", fmt(c1$prior_alpha), ", ", fmt(c1$prior_beta),
-             "); N=", c1$N, " entities over ", c1$n_periods, " period(s)"),
-      paste0("- observed ", c1$observed, " fields; Chao1 richness ", round(c1$chao1, 1),
-             " (~", round(c1$est_unseen, 1), " unseen); coverage ", fmt(c1$coverage)),
-      paste0("- P(next entity reveals an unseen field) = ", fmt(c1$p_next_new)),
-      "")
+  pint <- function(x) ifelse(is.na(x), "?", formatC(x, format = "d", big.mark = ""))
+  lines <- c(paste0("# Conditional schema-presence report (", period_id, ")"), "")
+  for (ep in unique(seg_cov$endpoint)) {
+    s <- dplyr::filter(seg_cov, endpoint == ep) |> dplyr::arrange(dplyr::desc(N_seg))
+    lines <- c(lines, paste0("## ", ep),
+      paste0("- ", nrow(s), " segments observed; N=", sum(s$N_seg), " entities over ",
+             max(s$n_periods), " period(s)"))
+    top <- head(s, 12)
+    lines <- c(lines, paste0("  - `", top$segment, "`  N=", top$N_seg, " fields=", top$n_fields))
+    sl <- dplyr::filter(slices, endpoint == ep)
+    if (nrow(sl)) {
+      lines <- c(lines, "- rare slices censused (observed / population):",
+        paste0("  - ", sl$slice, ": ", sl$observed, " / ", pint(sl$population)))
+    }
+    lines <- c(lines, "")
   }
-  if (nrow(new_fields)) {
-    lines <- c(lines, "## New fields this period",
-      paste0("- `", new_fields$endpoint, ".", new_fields$path, "` (posterior prevalence ",
-             fmt(new_fields$prevalence), ")"), "")
-  }
-  lines <- c(lines, "## Suspected removed (high prevalence, absent this period)",
-    if (nrow(suspected_removed)) {
-      paste0("- `", suspected_removed$endpoint, ".", suspected_removed$path,
-             "` prevalence ", fmt(suspected_removed$prevalence),
-             ", P(miss|posterior)=", fmt(suspected_removed$p_miss_period),
-             " over ", suspected_removed$absent_periods, " absent period(s)")
-    } else "- none", "")
-  rare <- dplyr::arrange(model, p_encounter_m) |> head(8)
-  lines <- c(lines, paste0("## Rarest known fields (P(encounter) in an ", target_m, "-entity sample)"),
-    paste0("- `", rare$endpoint, ".", rare$path, "` prevalence ", fmt(rare$prevalence),
-           ", P(encounter)=", fmt(rare$p_encounter_m)))
+  lines <- c(lines, "## Field drivers — conditional prevalence \u03b8(field | segment)",
+    "Top segment per field, ranked by concentration (conditional \u2212 marginal).",
+    "Census over-samples rare strata: conditional \u03b8 is unbiased; sample marginal is inflated; population marginal = pop-share \u00d7 \u03b8.")
+  d <- head(drivers, 18)
+  lines <- c(lines, paste0("- `", d$endpoint, ".", d$path, "` \u2192 `", d$segment,
+    "` \u03b8=", fmt(d$theta_cond), " (n=", d$N_seg, "), marginal=", fmt(d$theta_marg)), "")
+  lines <- c(lines, "## New fields this period",
+    if (nrow(new_fields)) paste0("- `", new_fields$endpoint, ".", new_fields$path,
+      "` first seen in `", new_fields$segment, "`") else "- none", "")
+  lines <- c(lines, "## Conditional removals (deterministic field absent where segment was sampled)",
+    if (nrow(removed)) paste0("- `", removed$endpoint, ".", removed$path, "` in `", removed$segment,
+      "` prior \u03b8=", fmt(removed$theta_prior), ", absent across n=", removed$n_now,
+      " sampled this period") else "- none")
   paste(lines, collapse = "\n")
 }
 
 bayes_period <- function(counts_path, state_dir = "data-raw/api_monitor/state",
-                         target_m = 5000, remove_thresh = 0.02, remove_prev = 0.2,
-                         update_baseline = FALSE) {
+                         remove_prev = 0.8, update_baseline = FALSE) {
   cur <- readr::read_tsv(counts_path, show_col_types = FALSE)
+  pops <- read_pops(counts_path)
   st <- read_prev_state(state_dir)
   period_id <- format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
-  n_period <- cur |> dplyr::distinct(endpoint, n) |> dplyr::rename(n_period = n)
 
-  prior_last <- st$fields |> dplyr::select(endpoint, path, prev_last = last_period)
+  n_period_seg <- cur |> dplyr::distinct(endpoint, segment, n) |> dplyr::rename(n_now = n)
+
+  prior <- st$fields |> dplyr::select(endpoint, segment, path, k_prior = k_cum)
+  prior_field <- st$fields |> dplyr::filter(k_cum > 0) |> dplyr::distinct(endpoint, path) |>
+    dplyr::mutate(known = TRUE)
+
   fields <- dplyr::full_join(
-    st$fields |> dplyr::select(endpoint, path, type, k_cum, periods_seen, last_period),
-    cur |> dplyr::transmute(endpoint, path, type_new = type, k_new = k),
-    by = c("endpoint", "path")
+    st$fields |> dplyr::select(endpoint, segment, path, type, k_cum, periods_seen, last_period),
+    cur |> dplyr::transmute(endpoint, segment, path, type_new = type, k_new = k),
+    by = c("endpoint", "segment", "path")
   ) |>
     dplyr::mutate(
       type = dplyr::coalesce(type_new, type),
       seen_now = !is.na(k_new) & k_new > 0,
-      is_new = (is.na(k_cum) | k_cum == 0) & seen_now,
-      prev_last_period = last_period,
       k_cum = dplyr::coalesce(k_cum, 0) + dplyr::coalesce(k_new, 0),
       periods_seen = dplyr::coalesce(periods_seen, 0L) + as.integer(seen_now),
       last_period = ifelse(seen_now, period_id, last_period)
     )
 
-  periods_new <- n_period |> dplyr::transmute(period = period_id, endpoint, n = n_period, date = period_id)
+  periods_new <- n_period_seg |>
+    dplyr::transmute(period = period_id, endpoint, segment, n = n_now, date = period_id)
   periods_all <- dplyr::bind_rows(st$periods, periods_new)
-  Ntab <- periods_all |> dplyr::group_by(endpoint) |>
-    dplyr::summarise(N = sum(n), n_periods = dplyr::n(), .groups = "drop")
+  Nseg <- periods_all |> dplyr::group_by(endpoint, segment) |>
+    dplyr::summarise(N_seg = sum(n), n_periods = dplyr::n(), .groups = "drop")
 
   model <- fields |>
-    dplyr::left_join(Ntab, by = "endpoint") |>
-    dplyr::left_join(n_period, by = "endpoint") |>
-    dplyr::group_by(endpoint) |>
-    dplyr::group_modify(function(df, key) {
-      pr <- eb_beta(df$k_cum / df$N, df$N)
-      df |>
-        dplyr::mutate(
-          prior_alpha = unname(pr["alpha"]), prior_beta = unname(pr["beta"]),
-          a_post = pr["alpha"] + k_cum,
-          b_post = pr["beta"] + N - k_cum,
-          prevalence = a_post / (a_post + b_post),
-          lo = stats::qbeta(0.025, a_post, b_post),
-          hi = stats::qbeta(0.975, a_post, b_post),
-          p_encounter_m = encounter_prob(a_post, b_post, target_m),
-          p_miss_period = prob_miss(a_post, b_post, n_period)
-        )
-    }) |>
-    dplyr::ungroup()
-
-  suspected_removed <- model |>
-    dplyr::filter(!seen_now, prevalence >= remove_prev, p_miss_period < remove_thresh) |>
-    dplyr::mutate(absent_periods = n_periods - periods_seen) |>
-    dplyr::arrange(p_miss_period)
-
-  new_fields <- dplyr::filter(model, is_new)
-
-  coverage <- model |>
-    dplyr::group_by(endpoint) |>
-    dplyr::summarise(
-      observed = dplyr::n(),
-      f1 = sum(k_cum == 1), f2 = sum(k_cum == 2),
-      N = dplyr::first(N), n_periods = dplyr::first(n_periods),
-      prior_alpha = dplyr::first(prior_alpha), prior_beta = dplyr::first(prior_beta),
-      .groups = "drop"
-    ) |>
+    dplyr::left_join(Nseg, by = c("endpoint", "segment")) |>
     dplyr::mutate(
-      chao1 = observed + ifelse(f2 > 0, f1^2 / (2 * f2), f1 * (f1 - 1) / 2),
-      est_unseen = pmax(chao1 - observed, 0),
-      p_next_new = f1 / N,
-      coverage = observed / chao1
+      theta_cond = cond_prevalence(k_cum, N_seg),
+      lo = stats::qbeta(0.025, 0.5 + k_cum, 0.5 + N_seg - k_cum),
+      hi = stats::qbeta(0.975, 0.5 + k_cum, 0.5 + N_seg - k_cum)
     )
 
-  report <- build_prev_report(coverage, new_fields, suspected_removed, model, period_id, target_m)
-  out_fields <- model |> dplyr::select(endpoint, path, type, k_cum, periods_seen, last_period)
+  Ntot <- Nseg |> dplyr::group_by(endpoint) |> dplyr::summarise(N_tot = sum(N_seg), .groups = "drop")
+  marg <- model |> dplyr::group_by(endpoint, path) |>
+    dplyr::summarise(k_tot = sum(k_cum), .groups = "drop") |>
+    dplyr::left_join(Ntot, by = "endpoint") |>
+    dplyr::mutate(theta_marg = k_tot / N_tot)
+
+  drivers <- model |>
+    dplyr::group_by(endpoint, path) |>
+    dplyr::slice_max(theta_cond, n = 1, with_ties = FALSE) |>
+    dplyr::ungroup() |>
+    dplyr::left_join(marg |> dplyr::select(endpoint, path, theta_marg), by = c("endpoint", "path")) |>
+    dplyr::mutate(concentration = theta_cond - theta_marg) |>
+    dplyr::arrange(dplyr::desc(concentration), dplyr::desc(theta_cond))
+
+  new_fields <- fields |>
+    dplyr::filter(seen_now) |>
+    dplyr::left_join(prior_field, by = c("endpoint", "path")) |>
+    dplyr::filter(is.na(known)) |>
+    dplyr::group_by(endpoint, path) |>
+    dplyr::slice_max(k_new, n = 1, with_ties = FALSE) |>
+    dplyr::ungroup() |>
+    dplyr::select(endpoint, segment, path)
+
+  removed <- fields |>
+    dplyr::filter(!seen_now) |>
+    dplyr::inner_join(prior, by = c("endpoint", "segment", "path")) |>
+    dplyr::inner_join(Nseg |> dplyr::select(endpoint, segment, N_prior = N_seg), by = c("endpoint", "segment")) |>
+    dplyr::inner_join(n_period_seg, by = c("endpoint", "segment")) |>
+    dplyr::mutate(theta_prior = cond_prevalence(k_prior, N_prior - n_now)) |>
+    dplyr::filter(k_prior > 0, theta_prior >= remove_prev, n_now > 0) |>
+    dplyr::select(endpoint, segment, path, theta_prior, n_now) |>
+    dplyr::arrange(dplyr::desc(theta_prior))
+
+  seg_cov <- model |>
+    dplyr::group_by(endpoint, segment) |>
+    dplyr::summarise(N_seg = dplyr::first(N_seg), n_periods = dplyr::first(n_periods),
+                     n_fields = sum(k_cum > 0), .groups = "drop")
+
+  ptot <- pops |> dplyr::filter(state == "_total") |> dplyr::pull(population)
+  slice_obs <- function(ep, pred, lbl, key) {
+    segs <- seg_cov |> dplyr::filter(endpoint == ep, pred(segment))
+    pop <- pops |> dplyr::filter(state == key) |> dplyr::pull(population)
+    tibble::tibble(endpoint = ep, slice = lbl, observed = sum(segs$N_seg),
+                   population = if (length(pop)) pop[1] else NA_real_)
+  }
+  slices <- dplyr::bind_rows(
+    slice_obs("enhet", function(s) seg_state(s) == "konkurs", "konkurs", "konkurs"),
+    slice_obs("enhet", function(s) seg_state(s) == "tvangsavvikling", "tvangsavvikling", "tvangsavvikling"),
+    slice_obs("enhet", function(s) seg_state(s) == "avvikling", "avvikling", "avvikling"),
+    slice_obs("enhet", function(s) seg_form(s) == "NUF", "NUF (foreign)", "NUF")
+  ) |> dplyr::filter(observed > 0)
+
+  report <- build_cond_report(seg_cov, slices, drivers, new_fields, removed, period_id)
+  out_fields <- model |> dplyr::select(endpoint, segment, path, type, k_cum, periods_seen, last_period)
   if (update_baseline || nrow(st$fields) == 0) write_prev_state(state_dir, out_fields, periods_all)
 
-  list(report = report, model = model, coverage = coverage,
-       new_fields = new_fields, suspected_removed = suspected_removed,
-       fields = out_fields, periods = periods_all,
-       drift = nrow(new_fields) > 0 || nrow(suspected_removed) > 0)
+  list(report = report, model = model, drivers = drivers, seg_cov = seg_cov, slices = slices,
+       new_fields = new_fields, removed = removed, fields = out_fields, periods = periods_all,
+       total_population = if (length(ptot)) ptot[1] else NA_real_,
+       drift = nrow(new_fields) > 0 || nrow(removed) > 0)
 }

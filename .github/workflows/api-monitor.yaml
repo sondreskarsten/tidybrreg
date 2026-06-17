@@ -37,14 +37,14 @@ jobs:
       - name: Install dependencies
         run: |
           Rscript -e 'install.packages(c("httr2","jsonlite","xml2","rvest","dplyr","tibble","readr","purrr","rlang"))'
-          python3 -m pip install --quiet genson requests
+          python3 -m pip install --quiet requests
 
       - name: Compute sampling window start
         id: since
         run: |
           f=data-raw/api_monitor/state/periods.tsv
           if [ -s "$f" ]; then
-            since=$(awk -F'\t' 'NR>1{print $4}' "$f" | sort | tail -1)
+            since=$(awk -F'\t' 'NR>1{print $5}' "$f" | sort | tail -1)
           else
             prev_ver=$(grep -E '^# tidybrreg' NEWS.md | sed -n 2p | awk '{print $3}')
             since=$(git log -S"Version: ${prev_ver}" --reverse --format='%aI' -- DESCRIPTION | head -1)
