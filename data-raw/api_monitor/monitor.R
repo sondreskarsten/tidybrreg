@@ -133,13 +133,11 @@ diff_schema <- function(old, new) {
   nk <- new |> dplyr::mutate(key = paste(endpoint, path))
   added <- nk |> dplyr::anti_join(ok, by = "key") |>
     dplyr::transmute(endpoint, path, change = "added", detail = type)
-  removed <- ok |> dplyr::anti_join(nk, by = "key") |>
-    dplyr::transmute(endpoint, path, change = "removed", detail = type)
   changed <- nk |> dplyr::inner_join(ok, by = "key", suffix = c("_new", "_old")) |>
     dplyr::filter(type_new != type_old) |>
     dplyr::transmute(endpoint = endpoint_new, path = path_new, change = "type_changed",
                      detail = paste0(type_old, " -> ", type_new))
-  dplyr::bind_rows(added, removed, changed) |> dplyr::arrange(endpoint, path)
+  dplyr::bind_rows(added, changed) |> dplyr::arrange(endpoint, path)
 }
 
 diff_sources <- function(old, new) {
@@ -232,7 +230,15 @@ api_monitor_run <- function(schema_path, state_dir = "data-raw/api_monitor/state
   }
   report <- build_report(schema_diff, source_diff, sources, base)
   news <- build_news(schema_diff, source_diff, sources, base)
-  if (update_baseline || is.null(base)) write_baseline(state_dir, schemas, sources)
+  if (update_baseline || is.null(base)) {
+    accumulated <- if (is.null(base)) {
+      schemas
+    } else {
+      new_paths <- dplyr::anti_join(schemas, base$schemas, by = c("endpoint", "path"))
+      dplyr::arrange(dplyr::bind_rows(base$schemas, new_paths), endpoint, path)
+    }
+    write_baseline(state_dir, accumulated, sources)
+  }
   list(report = report, news = news, schema_diff = schema_diff, source_diff = source_diff,
        schemas = schemas, sources = sources, drift = nrow(schema_diff) > 0 ||
          nrow(source_diff$openapi_changes) > 0 || nrow(source_diff$new_rss) > 0 || nrow(source_diff$new_commits) > 0)

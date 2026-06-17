@@ -35,9 +35,9 @@ jobs:
       - name: Install dependencies
         run: |
           Rscript -e 'install.packages(c("httr2","jsonlite","xml2","rvest","dplyr","tibble","readr","purrr","rlang"))'
-          python3 -m pip install --quiet genson ijson requests
+          python3 -m pip install --quiet genson requests
 
-      - name: Extract empirical schema (full population)
+      - name: Extract observed schema (oppdateringer window)
         run: python3 data-raw/api_monitor/schema_probe.py --out "$SCHEMA_OUT"
 
       - name: Run monitor and update baseline
