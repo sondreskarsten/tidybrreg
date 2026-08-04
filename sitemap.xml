@@ -48,6 +48,7 @@
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_historical_names.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_http_req.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_import.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_konsern.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_manifest.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/brreg_network.html</loc></url>
@@ -99,6 +100,7 @@
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/find_state_column.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/flatten_cell.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/flatten_json.html</loc></url>
+<url><loc>https://sondreskarsten.github.io/tidybrreg/reference/flatten_konsern.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/flatten_list_columns.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/flatten_page_patches.html</loc></url>
 <url><loc>https://sondreskarsten.github.io/tidybrreg/reference/flatten_roles.html</loc></url>

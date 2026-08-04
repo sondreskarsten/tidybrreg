@@ -12,6 +12,8 @@ for a complete walkthrough.
   : Get all sub-units (underenheter) belonging to an entity
 - [`brreg_children()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_children.md)
   : Get child entities in the organisational hierarchy
+- [`brreg_konsern()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_konsern.md)
+  : Retrieve the corporate group structure (konsernstruktur)
 - [`brreg_validate()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_validate.md)
   : Validate Norwegian organization numbers
 

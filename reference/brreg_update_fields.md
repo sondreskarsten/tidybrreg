@@ -67,6 +67,7 @@ Other tidybrreg entity functions:
 [`brreg_children()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_children.md),
 [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md),
 [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md),
+[`brreg_konsern()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_konsern.md),
 [`brreg_prokura()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_prokura.md),
 [`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md),
 [`brreg_roles_legal()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles_legal.md),
