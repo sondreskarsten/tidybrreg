@@ -9,7 +9,7 @@ calls; full-register parse requires 32 GiB RAM.
 ## Usage
 
 ``` r
-bootstrap_state(types, roller_method = "bulk", verbose = TRUE)
+bootstrap_state(types, roller_method = "bulk", format = "csv", verbose = TRUE)
 ```
 
 ## Arguments
@@ -22,6 +22,14 @@ bootstrap_state(types, roller_method = "bulk", verbose = TRUE)
 
   Passed from
   [`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md).
+
+- format:
+
+  Bulk download format passed to
+  [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md)
+  for enheter/underenheter. `"json"` additionally backfills the
+  `historiske_navn` state from the inline `historiskeNavn` arrays; the
+  CSV bulk carries no name history.
 
 - verbose:
 

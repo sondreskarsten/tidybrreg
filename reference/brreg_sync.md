@@ -12,6 +12,7 @@ brreg_sync(
   types = c("enheter", "underenheter", "roller"),
   size = 10000L,
   roller_method = c("bulk", "cdc"),
+  format = c("csv", "json"),
   verbose = TRUE
 )
 ```
@@ -34,6 +35,15 @@ brreg_sync(
   fetches current roles per-org via the API for each CDC event — slower
   but provides sub-daily attribution when syncing multiple times per
   day.
+
+- format:
+
+  Bulk download format used only when bootstrapping missing state:
+  `"csv"` (default) or `"json"`. The JSON bulk is the only source
+  carrying `historiskeNavn`; bootstrapping with `format = "json"`
+  backfills name history predating the first sync into the
+  `historiske_navn` state. With `"csv"` that state starts empty and
+  accrues from the CDC feed. Roller is always JSON regardless.
 
 - verbose:
 

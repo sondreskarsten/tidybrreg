@@ -65,6 +65,7 @@ position and apply mutations.</p>
 <span>  types <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"enheter"</span>, <span class="st">"underenheter"</span>, <span class="st">"roller"</span><span class="op">)</span>,</span>
 <span>  size <span class="op">=</span> <span class="fl">10000L</span>,</span>
 <span>  roller_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bulk"</span>, <span class="st">"cdc"</span><span class="op">)</span>,</span>
+<span>  format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"csv"</span>, <span class="st">"json"</span><span class="op">)</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -90,6 +91,16 @@ and produces granular changelogs. <code>"cdc"</code> fetches current
 roles per-org via the API for each CDC event — slower but
 provides sub-daily attribution when syncing multiple times
 per day.</p></dd>
+
+
+<dt id="arg-format">format<a class="anchor" aria-label="anchor" href="#arg-format"></a></dt>
+<dd><p>Bulk download format used only when bootstrapping
+missing state: <code>"csv"</code> (default) or <code>"json"</code>. The JSON bulk is
+the only source carrying <code>historiskeNavn</code>; bootstrapping with
+<code>format = "json"</code> backfills name history predating the first
+sync into the <code>historiske_navn</code> state. With <code>"csv"</code> that state
+starts empty and accrues from the CDC feed. Roller is always
+JSON regardless.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
