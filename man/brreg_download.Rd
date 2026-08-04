@@ -19,8 +19,9 @@ brreg_download(
 available as JSON via \verb{/roller/totalbestand} (~131 MB).}
 
 \item{format}{Download format: \code{"csv"} (default for enheter/underenheter,
-semicolon-delimited) or \code{"json"} (JSON array). Roller bulk download
-is always JSON regardless of this parameter.}
+comma-delimited) or \code{"json"} (JSON array). Only the JSON bulk
+carries \code{historiskeNavn}; the CSV has no such column. Roller bulk
+download is always JSON regardless of this parameter.}
 
 \item{refresh}{\code{FALSE} (default): use cached file if available.
 \code{TRUE}: force re-download. \code{"auto"}: check ETag and re-download

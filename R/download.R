@@ -32,8 +32,9 @@
 #'   `"roller"` (all roles for all entities). Roller data is only
 #'   available as JSON via `/roller/totalbestand` (~131 MB).
 #' @param format Download format: `"csv"` (default for enheter/underenheter,
-#'   semicolon-delimited) or `"json"` (JSON array). Roller bulk download
-#'   is always JSON regardless of this parameter.
+#'   comma-delimited) or `"json"` (JSON array). Only the JSON bulk
+#'   carries `historiskeNavn`; the CSV has no such column. Roller bulk
+#'   download is always JSON regardless of this parameter.
 #' @param refresh `FALSE` (default): use cached file if available.
 #'   `TRUE`: force re-download. `"auto"`: check ETag and re-download
 #'   only if server has a newer version.

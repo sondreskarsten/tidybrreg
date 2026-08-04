@@ -13,8 +13,12 @@
 #'   `/roller/totalbestand`). Roller snapshots parse the nested
 #'   JSON into a flat tibble matching [brreg_roles()] output.
 #' @param format Download format: `"csv"` (default for enheter/underenheter)
-#'   or `"json"`. JSON captures additional fields not present in CSV
-#'   (e.g. `kapital`, `vedtektsfestetFormaal`, `paategninger`).
+#'   or `"json"`. `historiskeNavn` is absent from the CSV entirely and
+#'   only the JSON bulk carries it; `paategninger` is present in CSV
+#'   but degraded to a `true`/`false` presence flag, while JSON
+#'   carries the full annotation array inline. Array-valued text
+#'   fields (addresses, `vedtektsfestetFormaal`, `aktivitet`) differ
+#'   in join separator between the two formats.
 #'   Roller is always JSON regardless of this parameter.
 #' @param date Date for this snapshot (default: today). Used as the
 #'   partition key, not as an API parameter — the brreg bulk endpoint

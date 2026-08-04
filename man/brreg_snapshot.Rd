@@ -20,8 +20,12 @@ brreg_snapshot(
 JSON into a flat tibble matching \code{\link[=brreg_roles]{brreg_roles()}} output.}
 
 \item{format}{Download format: \code{"csv"} (default for enheter/underenheter)
-or \code{"json"}. JSON captures additional fields not present in CSV
-(e.g. \code{kapital}, \code{vedtektsfestetFormaal}, \code{paategninger}).
+or \code{"json"}. \code{historiskeNavn} is absent from the CSV entirely and
+only the JSON bulk carries it; \code{paategninger} is present in CSV
+but degraded to a \code{true}/\code{false} presence flag, while JSON
+carries the full annotation array inline. Array-valued text
+fields (addresses, \code{vedtektsfestetFormaal}, \code{aktivitet}) differ
+in join separator between the two formats.
 Roller is always JSON regardless of this parameter.}
 
 \item{date}{Date for this snapshot (default: today). Used as the

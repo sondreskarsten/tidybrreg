@@ -1,3 +1,63 @@
+# tidybrreg 0.5.0
+
+## Breaking changes
+
+* `brreg_roles()`, `brreg_roles_legal()`, and the roller bulk parser no
+  longer fabricate a `resigned` column. BRREG removed the underlying
+  `fratraadt` field from the roles REST endpoint, `juridiskeroller`,
+  and the totalbestand bulk on 2026-06-16, which had left `resigned`
+  constant `FALSE` for every role. The column now appears only when a
+  payload actually carries `fratraadt` (replays of pre-June data),
+  with within-payload absence keeping the old `FALSE` semantics.
+  `diff_roller_state()` already intersects its comparison set with the
+  columns present on both sides, so mixed old/new states diff cleanly.
+  `brreg_board_summary()` gains a column-tolerant active filter; the
+  previous pre-guard collapsed to a scalar when `resigned` was absent
+  and silently disabled the deregistered filter.
+
+## New features
+
+* New `brreg_konsern()` retrieves the hierarchical corporate group
+  structure from the konsernstruktur endpoint BRREG added 2026-06-24.
+  One row per node at any depth (live ASA groups nest six levels),
+  root synthesized at level 0 as `KKKK` "Øverste mor" to match the
+  endpoint's CSV variant, children carrying observed `knytningsform`,
+  `grunnlag`, and relation dates. The endpoint returns 404 both for
+  nonexistent organization numbers and for live entities in no group;
+  `in_corporate_group` from `brreg_entity()` disambiguates.
+
+* Name history (`historiskeNavn`, added by BRREG 2026-06-16/18) is
+  captured. `brreg_sync()` ingests the `add /historiskeNavn/-` CDC
+  patches for both enheter and underenheter into a `historiske_navn`
+  state table, read by the new `brreg_historical_names()`. Rename
+  events land in the changelog as `registry = "historiske_navn"`,
+  `change_type = "name_history_added"`, carrying the superseded name
+  and its validity interval.
+
+* `brreg_sync()` gains a `format` argument (default `"csv"`,
+  behaviour-preserving) forwarded to the bootstrap bulk download.
+  `historiskeNavn` has no CSV column and no presence flag, so history
+  predating the first sync exists only in the JSON bulk;
+  `format = "json"` backfills it at bootstrap.
+
+## Minor improvements and fixes
+
+* `extract_paategninger()` parses inline annotation arrays on the JSON
+  bulk path. Previously the boolean-flag matcher never fired on the
+  serialized arrays, so a JSON-format bootstrap silently produced an
+  empty påtegninger state; the CSV flag-then-fetch path is unchanged.
+
+* Documentation corrected against the live bulk files: the enheter and
+  underenheter CSVs are comma-delimited (not semicolon), and
+  `kapital`, `vedtektsfestetFormaal`, and `paategninger` all have CSV
+  columns today. `historiskeNavn` is the JSON-only field, and CSV
+  carries påtegninger only as a `true`/`false` presence flag.
+
+* The API monitor's schema probe also samples the per-entity roles
+  endpoint and the konsernstruktur endpoint (ASA census guarantees
+  group members in the sample), so roller field removals like
+  `fratraadt` and new endpoints are visible to drift detection.
+
 # tidybrreg 0.4.0
 
 ## New features

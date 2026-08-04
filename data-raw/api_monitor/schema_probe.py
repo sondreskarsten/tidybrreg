@@ -19,6 +19,7 @@ CENSUS = {
     "tvangsavvikling": "underTvangsavviklingEllerTvangsopplosning=true",
     "avvikling": "underAvvikling=true",
     "NUF": "organisasjonsform=NUF",
+    "ASA": "organisasjonsform=ASA",
 }
 TYPEMAP = {"NoneType": "null", "str": "string", "bool": "boolean", "int": "integer", "float": "number"}
 
@@ -132,17 +133,20 @@ def entity_paths(x, prefix="", out=None):
     return out
 
 
-def tally(entities):
+def tally_with_segments(bodies, segs):
     counts = collections.Counter()
     types = collections.defaultdict(set)
     seg_n = collections.Counter()
-    for e in entities:
-        seg = segment(e)
+    for e, seg in zip(bodies, segs):
         seg_n[seg] += 1
         for path, ty in entity_paths(e).items():
             counts[(seg, path)] += 1
             types[(seg, path)].add(ty)
     return counts, types, seg_n
+
+
+def tally(entities):
+    return tally_with_segments(entities, [segment(e) for e in entities])
 
 
 def write_counts(rows, out):
@@ -159,7 +163,36 @@ def write_pops(pops, out):
             f.write(f"{k}\t{v}\n")
 
 
-def run(out, since_iso, n_buckets=40, max_entities=1500, census_per=12):
+def aux_probe(ents, cap=120):
+    sess = requests.Session()
+    base = "https://data.brreg.no/enhetsregisteret/api"
+    seen = []
+    for e in ents:
+        org = e.get("organisasjonsnummer")
+        if org and not any(o == org for o, _ in seen):
+            seen.append((org, e))
+    konsern_first = sorted(seen, key=lambda p: not p[1].get("erIKonsern"))
+    roller_bodies, roller_segs = [], []
+    konsern_bodies, konsern_segs = [], []
+    for org, e in seen[:cap]:
+        r = sess.get(f"{base}/enheter/{org}/roller",
+                     headers={"Accept": "application/json", "User-Agent": UA},
+                     timeout=60)
+        if r.status_code < 400:
+            roller_bodies.append(r.json())
+            roller_segs.append(segment(e))
+    for org, e in konsern_first[:cap]:
+        r = sess.get(f"{base}/konsernstruktur/{org}",
+                     headers={"Accept": "application/json", "User-Agent": UA},
+                     timeout=60)
+        if r.status_code < 400:
+            konsern_bodies.append(r.json())
+            konsern_segs.append(segment(e))
+    return (roller_bodies, roller_segs), (konsern_bodies, konsern_segs)
+
+
+def run(out, since_iso, n_buckets=40, max_entities=1500, census_per=12,
+        aux_cap=120):
     rows = []
     pops = {}
     for name in ("enhet", "underenhet"):
@@ -167,6 +200,14 @@ def run(out, since_iso, n_buckets=40, max_entities=1500, census_per=12):
         if name == "enhet":
             cents, pops = census_enheter(census_per)
             ents = ents + cents
+            aux = aux_probe(ents, cap=aux_cap)
+            for aux_name, (bodies, segs) in zip(("roller", "konsernstruktur"), aux):
+                counts, types, seg_n = tally_with_segments(bodies, segs)
+                for (seg, path), k in counts.items():
+                    rows.append((aux_name, seg, path,
+                                 "|".join(sorted(types[(seg, path)])), k,
+                                 seg_n[seg]))
+                print(f"{aux_name}: {len(bodies)} responses, {len(seg_n)} segments, {len(counts)} cells", file=sys.stderr)
         counts, types, seg_n = tally(ents)
         for (seg, path), k in counts.items():
             rows.append((name, seg, path, "|".join(sorted(types[(seg, path)])), k, seg_n[seg]))
@@ -183,5 +224,6 @@ if __name__ == "__main__":
     ap.add_argument("--buckets", type=int, default=40)
     ap.add_argument("--max-entities", type=int, default=1500)
     ap.add_argument("--census-per", type=int, default=12)
+    ap.add_argument("--aux-cap", type=int, default=120)
     a = ap.parse_args()
-    run(a.out, a.since, n_buckets=a.buckets, max_entities=a.max_entities, census_per=a.census_per)
+    run(a.out, a.since, n_buckets=a.buckets, max_entities=a.max_entities, census_per=a.census_per, aux_cap=a.aux_cap)
