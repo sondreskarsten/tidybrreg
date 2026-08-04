@@ -38,12 +38,12 @@ brreg_import("enheter_2024-12-31.csv.gz", snapshot_date = "2024-12-31")
 \seealso{
 \code{\link[=brreg_snapshot]{brreg_snapshot()}} to download and save today's register.
 
-Other tidybrreg snapshot functions: 
-\code{\link{brreg_cleanup}()},
-\code{\link{brreg_data_dir}()},
-\code{\link{brreg_manifest}()},
-\code{\link{brreg_open}()},
-\code{\link{brreg_snapshot}()},
-\code{\link{brreg_snapshots}()}
+Other tidybrreg snapshot functions:
+\code{\link[=brreg_cleanup]{brreg_cleanup()}},
+\code{\link[=brreg_data_dir]{brreg_data_dir()}},
+\code{\link[=brreg_manifest]{brreg_manifest()}},
+\code{\link[=brreg_open]{brreg_open()}},
+\code{\link[=brreg_snapshot]{brreg_snapshot()}},
+\code{\link[=brreg_snapshots]{brreg_snapshots()}}
 }
 \concept{tidybrreg snapshot functions}

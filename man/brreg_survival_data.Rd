@@ -45,8 +45,8 @@ surv[, c("org_nr", "entry_date", "exit_date", "duration_years", "event")]
 \seealso{
 \code{\link[=brreg_download]{brreg_download()}} for full register data.
 
-Other tidybrreg governance functions: 
-\code{\link{brreg_board_network}()},
-\code{\link{brreg_network}()}
+Other tidybrreg governance functions:
+\code{\link[=brreg_board_network]{brreg_board_network()}},
+\code{\link[=brreg_network]{brreg_network()}}
 }
 \concept{tidybrreg governance functions}

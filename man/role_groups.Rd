@@ -24,7 +24,7 @@ role_groups
 \seealso{
 \code{\link[=brreg_roles]{brreg_roles()}}, \link{role_types}.
 
-Other tidybrreg reference data: 
+Other tidybrreg reference data:
 \code{\link{annotation_infotypes}},
 \code{\link{field_dict}},
 \code{\link{legal_forms}},

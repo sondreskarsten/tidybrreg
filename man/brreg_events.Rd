@@ -49,13 +49,13 @@ if (nrow(snaps) >= 2) {
 \code{\link[=brreg_updates]{brreg_updates()}} for the CDC stream (API-level changes),
 \code{\link[=brreg_panel]{brreg_panel()}} for full panel construction.
 
-Other tidybrreg panel functions: 
-\code{\link{as_brreg_tsibble}()},
-\code{\link{brreg_change_summary}()},
-\code{\link{brreg_changes}()},
-\code{\link{brreg_flows}()},
-\code{\link{brreg_panel}()},
-\code{\link{brreg_replay}()},
-\code{\link{brreg_series}()}
+Other tidybrreg panel functions:
+\code{\link[=as_brreg_tsibble]{as_brreg_tsibble()}},
+\code{\link[=brreg_change_summary]{brreg_change_summary()}},
+\code{\link[=brreg_changes]{brreg_changes()}},
+\code{\link[=brreg_flows]{brreg_flows()}},
+\code{\link[=brreg_panel]{brreg_panel()}},
+\code{\link[=brreg_replay]{brreg_replay()}},
+\code{\link[=brreg_series]{brreg_series()}}
 }
 \concept{tidybrreg panel functions}

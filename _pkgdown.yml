@@ -99,6 +99,7 @@ reference:
   - as_brreg_tsibble
   - brreg_annotations
   - brreg_annotation_summary
+  - brreg_historical_names
 
 - title: Incremental updates (CDC)
   desc: >

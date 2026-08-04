@@ -31,8 +31,8 @@ get_brreg_dic("sector")
 \seealso{
 \code{\link[=brreg_label]{brreg_label()}} for translating columns in place.
 
-Other tidybrreg utilities: 
-\code{\link{brreg_label}()},
-\code{\link{brreg_validate}()}
+Other tidybrreg utilities:
+\code{\link[=brreg_label]{brreg_label()}},
+\code{\link[=brreg_validate]{brreg_validate()}}
 }
 \concept{tidybrreg utilities}

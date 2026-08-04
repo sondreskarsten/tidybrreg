@@ -58,12 +58,13 @@ brreg_annotations(translate = TRUE)
 \code{\link[=brreg_changes]{brreg_changes()}} to track annotation events over time,
 \link{annotation_infotypes} for the English \code{infotype} lookup table.
 
-Other tidybrreg data management functions: 
-\code{\link{brreg_annotation_summary}()},
-\code{\link{brreg_status}()},
-\code{\link{brreg_sync}()},
-\code{\link{brreg_sync_status}()},
-\code{\link{diff_roller_state}()},
-\code{\link{read_changelog}()}
+Other tidybrreg data management functions:
+\code{\link[=brreg_annotation_summary]{brreg_annotation_summary()}},
+\code{\link[=brreg_historical_names]{brreg_historical_names()}},
+\code{\link[=brreg_status]{brreg_status()}},
+\code{\link[=brreg_sync]{brreg_sync()}},
+\code{\link[=brreg_sync_status]{brreg_sync_status()}},
+\code{\link[=diff_roller_state]{diff_roller_state()}},
+\code{\link[=read_changelog]{read_changelog()}}
 }
 \concept{tidybrreg data management functions}

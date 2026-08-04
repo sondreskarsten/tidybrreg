@@ -29,13 +29,13 @@ brreg_change_summary(from = Sys.Date() - 7)
 \code{\link[=brreg_changes]{brreg_changes()}} for raw changelog rows,
 \code{\link[=brreg_sync]{brreg_sync()}} to populate the changelog.
 
-Other tidybrreg panel functions: 
-\code{\link{as_brreg_tsibble}()},
-\code{\link{brreg_changes}()},
-\code{\link{brreg_events}()},
-\code{\link{brreg_flows}()},
-\code{\link{brreg_panel}()},
-\code{\link{brreg_replay}()},
-\code{\link{brreg_series}()}
+Other tidybrreg panel functions:
+\code{\link[=as_brreg_tsibble]{as_brreg_tsibble()}},
+\code{\link[=brreg_changes]{brreg_changes()}},
+\code{\link[=brreg_events]{brreg_events()}},
+\code{\link[=brreg_flows]{brreg_flows()}},
+\code{\link[=brreg_panel]{brreg_panel()}},
+\code{\link[=brreg_replay]{brreg_replay()}},
+\code{\link[=brreg_series]{brreg_series()}}
 }
 \concept{tidybrreg panel functions}

@@ -29,7 +29,7 @@ annotation_infotypes
 \seealso{
 \code{\link[=brreg_annotations]{brreg_annotations()}} for the function that uses this table.
 
-Other tidybrreg reference data: 
+Other tidybrreg reference data:
 \code{\link{field_dict}},
 \code{\link{legal_forms}},
 \code{\link{role_groups}},

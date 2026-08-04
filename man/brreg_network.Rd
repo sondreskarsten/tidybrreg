@@ -73,8 +73,8 @@ tidygraph::as_tibble(net, "edges")
 \code{\link[=brreg_board_network]{brreg_board_network()}} for the roles-only subgraph,
 \code{\link[=brreg_status]{brreg_status()}} to check bulk data availability.
 
-Other tidybrreg governance functions: 
-\code{\link{brreg_board_network}()},
-\code{\link{brreg_survival_data}()}
+Other tidybrreg governance functions:
+\code{\link[=brreg_board_network]{brreg_board_network()}},
+\code{\link[=brreg_survival_data]{brreg_survival_data()}}
 }
 \concept{tidybrreg governance functions}

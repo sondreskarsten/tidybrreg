@@ -10,7 +10,7 @@ read_changelog(from = NULL, to = NULL, registry = NULL, change_type = NULL)
 \item{from, to}{Optional date bounds.}
 
 \item{registry}{Optional filter: \code{"enheter"}, \code{"underenheter"},
-\code{"roller"}, \code{"paategninger"}.}
+\code{"roller"}, \code{"paategninger"}, \code{"historiske_navn"}.}
 
 \item{change_type}{Optional filter: \code{"entry"}, \code{"exit"},
 \code{"change"}, \code{"annotation"}.}
@@ -24,13 +24,14 @@ Reads all or filtered changelog partitions. Uses
 falls back to reading individual parquet files.
 }
 \seealso{
-Other tidybrreg data management functions: 
-\code{\link{brreg_annotation_summary}()},
-\code{\link{brreg_annotations}()},
-\code{\link{brreg_status}()},
-\code{\link{brreg_sync}()},
-\code{\link{brreg_sync_status}()},
-\code{\link{diff_roller_state}()}
+Other tidybrreg data management functions:
+\code{\link[=brreg_annotation_summary]{brreg_annotation_summary()}},
+\code{\link[=brreg_annotations]{brreg_annotations()}},
+\code{\link[=brreg_historical_names]{brreg_historical_names()}},
+\code{\link[=brreg_status]{brreg_status()}},
+\code{\link[=brreg_sync]{brreg_sync()}},
+\code{\link[=brreg_sync_status]{brreg_sync_status()}},
+\code{\link[=diff_roller_state]{diff_roller_state()}}
 }
 \concept{tidybrreg data management functions}
 \keyword{internal}

@@ -26,8 +26,8 @@ brreg_validate(c("923609016", "984851006", "123456789", "999999999"))
 \seealso{
 \code{\link[=brreg_entity]{brreg_entity()}} which validates before querying the API.
 
-Other tidybrreg utilities: 
-\code{\link{brreg_label}()},
-\code{\link{get_brreg_dic}()}
+Other tidybrreg utilities:
+\code{\link[=brreg_label]{brreg_label()}},
+\code{\link[=get_brreg_dic]{get_brreg_dic()}}
 }
 \concept{tidybrreg utilities}

@@ -28,7 +28,7 @@ legal_forms[legal_forms$code == "AS", ]
 \seealso{
 \code{\link[=brreg_label]{brreg_label()}} to translate legal form codes in entity data.
 
-Other tidybrreg reference data: 
+Other tidybrreg reference data:
 \code{\link{annotation_infotypes}},
 \code{\link{field_dict}},
 \code{\link{role_groups}},

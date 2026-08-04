@@ -63,13 +63,13 @@ brreg_changes(registry = "paategninger")
 \code{\link[=brreg_sync]{brreg_sync()}} to populate the changelog,
 \code{\link[=brreg_flows]{brreg_flows()}} for aggregated entry/exit counts.
 
-Other tidybrreg panel functions: 
-\code{\link{as_brreg_tsibble}()},
-\code{\link{brreg_change_summary}()},
-\code{\link{brreg_events}()},
-\code{\link{brreg_flows}()},
-\code{\link{brreg_panel}()},
-\code{\link{brreg_replay}()},
-\code{\link{brreg_series}()}
+Other tidybrreg panel functions:
+\code{\link[=as_brreg_tsibble]{as_brreg_tsibble()}},
+\code{\link[=brreg_change_summary]{brreg_change_summary()}},
+\code{\link[=brreg_events]{brreg_events()}},
+\code{\link[=brreg_flows]{brreg_flows()}},
+\code{\link[=brreg_panel]{brreg_panel()}},
+\code{\link[=brreg_replay]{brreg_replay()}},
+\code{\link[=brreg_series]{brreg_series()}}
 }
 \concept{tidybrreg panel functions}

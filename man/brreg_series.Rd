@@ -63,13 +63,13 @@ brreg_series(.vars = "employees",
 \code{\link[=brreg_panel]{brreg_panel()}} for entity-level panels,
 \code{\link[=as_brreg_tsibble]{as_brreg_tsibble()}} for tsibble conversion.
 
-Other tidybrreg panel functions: 
-\code{\link{as_brreg_tsibble}()},
-\code{\link{brreg_change_summary}()},
-\code{\link{brreg_changes}()},
-\code{\link{brreg_events}()},
-\code{\link{brreg_flows}()},
-\code{\link{brreg_panel}()},
-\code{\link{brreg_replay}()}
+Other tidybrreg panel functions:
+\code{\link[=as_brreg_tsibble]{as_brreg_tsibble()}},
+\code{\link[=brreg_change_summary]{brreg_change_summary()}},
+\code{\link[=brreg_changes]{brreg_changes()}},
+\code{\link[=brreg_events]{brreg_events()}},
+\code{\link[=brreg_flows]{brreg_flows()}},
+\code{\link[=brreg_panel]{brreg_panel()}},
+\code{\link[=brreg_replay]{brreg_replay()}}
 }
 \concept{tidybrreg panel functions}

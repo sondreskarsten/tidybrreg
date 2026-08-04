@@ -41,8 +41,8 @@ net
 \code{\link[=brreg_roles]{brreg_roles()}} to fetch role data,
 \code{\link[=brreg_board_summary]{brreg_board_summary()}} for board-level covariates.
 
-Other tidybrreg governance functions: 
-\code{\link{brreg_network}()},
-\code{\link{brreg_survival_data}()}
+Other tidybrreg governance functions:
+\code{\link[=brreg_network]{brreg_network()}},
+\code{\link[=brreg_survival_data]{brreg_survival_data()}}
 }
 \concept{tidybrreg governance functions}

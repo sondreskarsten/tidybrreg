@@ -58,12 +58,12 @@ brreg_snapshots()
 \code{\link[=brreg_snapshots]{brreg_snapshots()}} to list available snapshots,
 \code{\link[=brreg_panel]{brreg_panel()}} to construct panels from accumulated snapshots.
 
-Other tidybrreg snapshot functions: 
-\code{\link{brreg_cleanup}()},
-\code{\link{brreg_data_dir}()},
-\code{\link{brreg_import}()},
-\code{\link{brreg_manifest}()},
-\code{\link{brreg_open}()},
-\code{\link{brreg_snapshots}()}
+Other tidybrreg snapshot functions:
+\code{\link[=brreg_cleanup]{brreg_cleanup()}},
+\code{\link[=brreg_data_dir]{brreg_data_dir()}},
+\code{\link[=brreg_import]{brreg_import()}},
+\code{\link[=brreg_manifest]{brreg_manifest()}},
+\code{\link[=brreg_open]{brreg_open()}},
+\code{\link[=brreg_snapshots]{brreg_snapshots()}}
 }
 \concept{tidybrreg snapshot functions}

@@ -4,7 +4,7 @@
 \alias{apply_slett_events}
 \title{Apply Sletting/Fjernet events to state}
 \usage{
-apply_slett_events(state, paat_state, slett_events, type)
+apply_slett_events(state, paat_state, hist_state, slett_events, type)
 }
 \description{
 Apply Sletting/Fjernet events to state

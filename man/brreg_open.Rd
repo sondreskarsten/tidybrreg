@@ -26,12 +26,12 @@ ds
 \seealso{
 \code{\link[=brreg_panel]{brreg_panel()}} for the higher-level panel constructor.
 
-Other tidybrreg snapshot functions: 
-\code{\link{brreg_cleanup}()},
-\code{\link{brreg_data_dir}()},
-\code{\link{brreg_import}()},
-\code{\link{brreg_manifest}()},
-\code{\link{brreg_snapshot}()},
-\code{\link{brreg_snapshots}()}
+Other tidybrreg snapshot functions:
+\code{\link[=brreg_cleanup]{brreg_cleanup()}},
+\code{\link[=brreg_data_dir]{brreg_data_dir()}},
+\code{\link[=brreg_import]{brreg_import()}},
+\code{\link[=brreg_manifest]{brreg_manifest()}},
+\code{\link[=brreg_snapshot]{brreg_snapshot()}},
+\code{\link[=brreg_snapshots]{brreg_snapshots()}}
 }
 \concept{tidybrreg snapshot functions}

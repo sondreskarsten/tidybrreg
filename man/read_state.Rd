@@ -8,7 +8,7 @@ read_state(type, use_cache = TRUE)
 }
 \arguments{
 \item{type}{One of \code{"enheter"}, \code{"underenheter"}, \code{"roller"},
-\code{"paategninger"}.}
+\code{"paategninger"}, \code{"historiske_navn"}.}
 
 \item{use_cache}{Logical. Use session cache if available.}
 }

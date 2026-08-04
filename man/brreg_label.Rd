@@ -51,8 +51,8 @@ brreg_label(c("AS", "ASA", "ENK"), dic = "legal_form")
 \link{legal_forms}, \link{role_types}, \link{role_groups} for bundled
 reference data, \code{\link[=get_brreg_dic]{get_brreg_dic()}} for fetching fresh dictionaries.
 
-Other tidybrreg utilities: 
-\code{\link{brreg_validate}()},
-\code{\link{get_brreg_dic}()}
+Other tidybrreg utilities:
+\code{\link[=brreg_validate]{brreg_validate()}},
+\code{\link[=get_brreg_dic]{get_brreg_dic()}}
 }
 \concept{tidybrreg utilities}

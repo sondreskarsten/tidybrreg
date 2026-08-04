@@ -4,7 +4,7 @@
 \alias{apply_endring_events}
 \title{Apply Endring (change) events to state}
 \usage{
-apply_endring_events(state, paat_state, endring_events, type)
+apply_endring_events(state, paat_state, hist_state, endring_events, type)
 }
 \description{
 Apply Endring (change) events to state

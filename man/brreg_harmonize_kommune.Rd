@@ -43,7 +43,7 @@ brreg_harmonize_kommune(df)
 \seealso{
 \code{\link[=brreg_harmonize_nace]{brreg_harmonize_nace()}} for NACE code harmonization.
 
-Other tidybrreg harmonization functions: 
-\code{\link{brreg_harmonize_nace}()}
+Other tidybrreg harmonization functions:
+\code{\link[=brreg_harmonize_nace]{brreg_harmonize_nace()}}
 }
 \concept{tidybrreg harmonization functions}

@@ -55,13 +55,13 @@ state <- brreg_replay(base, updates, target_date = Sys.Date())
 \code{\link[=brreg_panel]{brreg_panel()}} for multi-snapshot panels,
 \code{\link[=brreg_updates]{brreg_updates()}} to fetch the CDC stream.
 
-Other tidybrreg panel functions: 
-\code{\link{as_brreg_tsibble}()},
-\code{\link{brreg_change_summary}()},
-\code{\link{brreg_changes}()},
-\code{\link{brreg_events}()},
-\code{\link{brreg_flows}()},
-\code{\link{brreg_panel}()},
-\code{\link{brreg_series}()}
+Other tidybrreg panel functions:
+\code{\link[=as_brreg_tsibble]{as_brreg_tsibble()}},
+\code{\link[=brreg_change_summary]{brreg_change_summary()}},
+\code{\link[=brreg_changes]{brreg_changes()}},
+\code{\link[=brreg_events]{brreg_events()}},
+\code{\link[=brreg_flows]{brreg_flows()}},
+\code{\link[=brreg_panel]{brreg_panel()}},
+\code{\link[=brreg_series]{brreg_series()}}
 }
 \concept{tidybrreg panel functions}

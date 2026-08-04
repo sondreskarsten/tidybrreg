@@ -31,7 +31,7 @@ field_dict[field_dict$type == "Date", ]
 \seealso{
 \code{\link[=brreg_entity]{brreg_entity()}} for the function that uses this dictionary.
 
-Other tidybrreg reference data: 
+Other tidybrreg reference data:
 \code{\link{annotation_infotypes}},
 \code{\link{legal_forms}},
 \code{\link{role_groups}},

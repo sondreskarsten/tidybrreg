@@ -75,12 +75,13 @@ diff_roller_state(NULL, roles)
 \code{\link[=brreg_roles]{brreg_roles()}} for fetching current roles,
 \code{\link[=brreg_changes]{brreg_changes()}} for querying stored changelogs.
 
-Other tidybrreg data management functions: 
-\code{\link{brreg_annotation_summary}()},
-\code{\link{brreg_annotations}()},
-\code{\link{brreg_status}()},
-\code{\link{brreg_sync}()},
-\code{\link{brreg_sync_status}()},
-\code{\link{read_changelog}()}
+Other tidybrreg data management functions:
+\code{\link[=brreg_annotation_summary]{brreg_annotation_summary()}},
+\code{\link[=brreg_annotations]{brreg_annotations()}},
+\code{\link[=brreg_historical_names]{brreg_historical_names()}},
+\code{\link[=brreg_status]{brreg_status()}},
+\code{\link[=brreg_sync]{brreg_sync()}},
+\code{\link[=brreg_sync_status]{brreg_sync_status()}},
+\code{\link[=read_changelog]{read_changelog()}}
 }
 \concept{tidybrreg data management functions}

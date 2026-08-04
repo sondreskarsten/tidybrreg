@@ -38,7 +38,7 @@ brreg_harmonize_nace(df, from = "SN2007", to = "SN2025")
 \seealso{
 \code{\link[=brreg_harmonize_kommune]{brreg_harmonize_kommune()}} for municipality harmonization.
 
-Other tidybrreg harmonization functions: 
-\code{\link{brreg_harmonize_kommune}()}
+Other tidybrreg harmonization functions:
+\code{\link[=brreg_harmonize_kommune]{brreg_harmonize_kommune()}}
 }
 \concept{tidybrreg harmonization functions}

@@ -20,12 +20,12 @@ Scan the local snapshot store and return metadata for each partition.
 brreg_snapshots()
 }
 \seealso{
-Other tidybrreg snapshot functions: 
-\code{\link{brreg_cleanup}()},
-\code{\link{brreg_data_dir}()},
-\code{\link{brreg_import}()},
-\code{\link{brreg_manifest}()},
-\code{\link{brreg_open}()},
-\code{\link{brreg_snapshot}()}
+Other tidybrreg snapshot functions:
+\code{\link[=brreg_cleanup]{brreg_cleanup()}},
+\code{\link[=brreg_data_dir]{brreg_data_dir()}},
+\code{\link[=brreg_import]{brreg_import()}},
+\code{\link[=brreg_manifest]{brreg_manifest()}},
+\code{\link[=brreg_open]{brreg_open()}},
+\code{\link[=brreg_snapshot]{brreg_snapshot()}}
 }
 \concept{tidybrreg snapshot functions}

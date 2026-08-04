@@ -33,15 +33,17 @@ brreg_underenheter("923609016")
 \code{\link[=brreg_entity]{brreg_entity()}} for the parent entity,
 \code{\link[=brreg_children]{brreg_children()}} for child enheter in the ORGL hierarchy.
 
-Other tidybrreg entity functions: 
-\code{\link{brreg_board_summary}()},
-\code{\link{brreg_children}()},
-\code{\link{brreg_download}()},
-\code{\link{brreg_entity}()},
-\code{\link{brreg_roles}()},
-\code{\link{brreg_roles_legal}()},
-\code{\link{brreg_search}()},
-\code{\link{brreg_update_fields}()},
-\code{\link{brreg_updates}()}
+Other tidybrreg entity functions:
+\code{\link[=brreg_board_summary]{brreg_board_summary()}},
+\code{\link[=brreg_children]{brreg_children()}},
+\code{\link[=brreg_download]{brreg_download()}},
+\code{\link[=brreg_entity]{brreg_entity()}},
+\code{\link[=brreg_prokura]{brreg_prokura()}},
+\code{\link[=brreg_roles]{brreg_roles()}},
+\code{\link[=brreg_roles_legal]{brreg_roles_legal()}},
+\code{\link[=brreg_search]{brreg_search()}},
+\code{\link[=brreg_signatur]{brreg_signatur()}},
+\code{\link[=brreg_update_fields]{brreg_update_fields()}},
+\code{\link[=brreg_updates]{brreg_updates()}}
 }
 \concept{tidybrreg entity functions}
