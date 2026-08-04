@@ -23,8 +23,11 @@ A tibble with one row per role assignment. Columns: `org_nr`,
 `role_group`, `role_group_code`, `role`, `role_code`, `first_name`,
 `middle_name`, `last_name`, `birth_date`, `deceased`, `entity_org_nr`,
 `entity_name`, `resigned`, `deregistered`, `ordering`, `elected_by`,
-`group_modified`, `person_id`. Returns an empty tibble if the entity has
-no registered roles.
+`group_modified`, `person_id`. `resigned` is present only when the
+payload carries the `fratraadt` field, which BRREG removed on
+2026-06-16; live responses no longer include the column, while replays
+of older data retain it. Returns an empty tibble if the entity has no
+registered roles.
 
 ## Details
 

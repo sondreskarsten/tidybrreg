@@ -74,7 +74,9 @@ IN the given entity.</p>
     <p>A tibble with one row per role held. Columns: <code>org_nr</code>
 (queried entity), <code>target_org_nr</code> (entity where role is held),
 <code>target_name</code>, <code>role_code</code>, <code>role</code>, <code>share</code> (ownership share
-if applicable), <code>resigned</code>, <code>deregistered</code>.</p>
+if applicable), <code>resigned</code>, <code>deregistered</code>. <code>resigned</code> is present
+only when the payload carries the <code>fratraadt</code> field, removed by
+BRREG on 2026-06-16; live responses no longer include it.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

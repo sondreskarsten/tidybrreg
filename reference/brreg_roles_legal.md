@@ -23,7 +23,9 @@ brreg_roles_legal(org_nr)
 A tibble with one row per role held. Columns: `org_nr` (queried entity),
 `target_org_nr` (entity where role is held), `target_name`, `role_code`,
 `role`, `share` (ownership share if applicable), `resigned`,
-`deregistered`.
+`deregistered`. `resigned` is present only when the payload carries the
+`fratraadt` field, removed by BRREG on 2026-06-16; live responses no
+longer include it.
 
 ## See also
 
