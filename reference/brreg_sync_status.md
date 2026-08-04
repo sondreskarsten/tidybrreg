@@ -41,5 +41,6 @@ brreg_sync_status()
 #> ! underenheter: not initialized
 #> ! roller: not initialized
 #> ! paategninger: not initialized
+#> ! historiske_navn: not initialized
 #> Changelog: 0 partition(s), 0 file(s)
 ```
