@@ -27,7 +27,7 @@ changelog_dir <- function() {
 #' Returns `NULL` if no state file exists.
 #'
 #' @param type One of `"enheter"`, `"underenheter"`, `"roller"`,
-#'   `"paategninger"`.
+#'   `"paategninger"`, `"historiske_navn"`.
 #' @param use_cache Logical. Use session cache if available.
 #' @returns A tibble or `NULL`.
 #' @keywords internal
@@ -129,7 +129,7 @@ write_changelog <- function(changes, sync_date = Sys.Date()) {
 #'
 #' @param from,to Optional date bounds.
 #' @param registry Optional filter: `"enheter"`, `"underenheter"`,
-#'   `"roller"`, `"paategninger"`.
+#'   `"roller"`, `"paategninger"`, `"historiske_navn"`.
 #' @param change_type Optional filter: `"entry"`, `"exit"`,
 #'   `"change"`, `"annotation"`.
 #' @returns A tibble of changelog rows.
@@ -204,7 +204,7 @@ empty_changelog <- function() {
 #' brreg_sync_status()
 brreg_sync_status <- function() {
   cursor <- read_cursor()
-  types <- c("enheter", "underenheter", "roller", "paategninger")
+  types <- c("enheter", "underenheter", "roller", "paategninger", "historiske_navn")
   state_info <- lapply(types, function(t) {
     path <- file.path(state_dir(), paste0(t, ".parquet"))
     if (file.exists(path)) {

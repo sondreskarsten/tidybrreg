@@ -92,6 +92,9 @@ brreg_sync <- function(types = c("enheter", "underenheter", "roller"),
     if (!is.null(summary[[type]]$paategninger_state)) {
       write_state(summary[[type]]$paategninger_state, "paategninger")
     }
+    if (!is.null(summary[[type]]$historiske_navn_state)) {
+      write_state(summary[[type]]$historiske_navn_state, "historiske_navn")
+    }
   }
 
   write_cursor(cursor)
@@ -189,7 +192,8 @@ sync_one_type <- function(type, cursor, size = 10000L,
       new_cursor_id = cursor_id,
       summary = list(n_events = 0L, n_ny = 0L, n_slett = 0L,
                       n_endring = 0L, state = NULL,
-                      paategninger_state = NULL),
+                      paategninger_state = NULL,
+                      historiske_navn_state = NULL),
       changelog = NULL
     ))
   }
@@ -199,6 +203,7 @@ sync_one_type <- function(type, cursor, size = 10000L,
 
   state <- read_state(type, use_cache = FALSE)
   paat_state <- if (type == "enheter") read_state("paategninger", use_cache = FALSE) else NULL
+  hist_state <- read_state("historiske_navn", use_cache = FALSE)
 
   changelog <- list()
 
@@ -222,16 +227,18 @@ sync_one_type <- function(type, cursor, size = 10000L,
     }
 
     if (nrow(endring) > 0) {
-      result <- apply_endring_events(state, paat_state, endring, type)
+      result <- apply_endring_events(state, paat_state, hist_state, endring, type)
       state <- result$state
       paat_state <- result$paat_state
+      hist_state <- result$hist_state
       changelog <- c(changelog, list(result$changelog))
     }
 
     if (nrow(slett) > 0) {
-      result <- apply_slett_events(state, paat_state, slett, type)
+      result <- apply_slett_events(state, paat_state, hist_state, slett, type)
       state <- result$state
       paat_state <- result$paat_state
+      hist_state <- result$hist_state
       changelog <- c(changelog, list(result$changelog))
     }
   }
@@ -248,7 +255,8 @@ sync_one_type <- function(type, cursor, size = 10000L,
       n_slett = n_slett,
       n_endring = n_endring,
       state = state,
-      paategninger_state = paat_state
+      paategninger_state = paat_state,
+      historiske_navn_state = hist_state
     ),
     changelog = dplyr::bind_rows(changelog)
   )
@@ -528,7 +536,7 @@ apply_ny_events <- function(state, ny_events, type) {
 
 #' Apply Endring (change) events to state
 #' @keywords internal
-apply_endring_events <- function(state, paat_state, endring_events, type) {
+apply_endring_events <- function(state, paat_state, hist_state, endring_events, type) {
   cl_ts <- character(nrow(endring_events) * 10L)
   cl_org <- character(length(cl_ts))
   cl_reg <- character(length(cl_ts))
@@ -573,7 +581,23 @@ apply_endring_events <- function(state, paat_state, endring_events, type) {
     if (nrow(parsed) == 0) next
 
     paat_patches <- parsed[grepl("^paategninger", parsed$field), ]
-    field_patches <- parsed[!grepl("^paategninger", parsed$field), ]
+    hist_patches <- parsed[grepl("^historiskeNavn", parsed$field), ]
+    field_patches <- parsed[!grepl("^paategninger|^historiskeNavn", parsed$field), ]
+
+    if (nrow(hist_patches) > 0) {
+      if (is.null(hist_state)) hist_state <- empty_historiske_navn()
+      result <- apply_historiske_navn_patches(hist_state, row$org_nr,
+                                               hist_patches, row$timestamp,
+                                               row$update_id)
+      hist_state <- result$state
+      if (nrow(result$changelog) > 0) {
+        for (j in seq_len(nrow(result$changelog))) {
+          r <- result$changelog[j, ]
+          emit_cl(r$timestamp, r$org_nr, r$registry, r$change_type,
+                  r$field, r$value_from, r$value_to, r$update_id)
+        }
+      }
+    }
 
     if (nrow(paat_patches) > 0 && !is.null(paat_state) && type == "enheter") {
       result <- apply_paategning_patches(paat_state, row$org_nr,
@@ -647,13 +671,14 @@ apply_endring_events <- function(state, paat_state, endring_events, type) {
     )
   }
 
-  list(state = state, paat_state = paat_state, changelog = changelog)
+  list(state = state, paat_state = paat_state, hist_state = hist_state,
+       changelog = changelog)
 }
 
 
 #' Apply Sletting/Fjernet events to state
 #' @keywords internal
-apply_slett_events <- function(state, paat_state, slett_events, type) {
+apply_slett_events <- function(state, paat_state, hist_state, slett_events, type) {
   changelog <- dplyr::bind_rows(lapply(seq_len(nrow(slett_events)), function(i) {
     row <- slett_events[i, ]
     tibble::tibble(
@@ -671,7 +696,12 @@ apply_slett_events <- function(state, paat_state, slett_events, type) {
     paat_state <- paat_state[!paat_state$org_nr %in% deleted_orgs, ]
   }
 
-  list(state = state, paat_state = paat_state, changelog = changelog)
+  if (!is.null(hist_state)) {
+    hist_state <- hist_state[!hist_state$org_nr %in% deleted_orgs, ]
+  }
+
+  list(state = state, paat_state = paat_state, hist_state = hist_state,
+       changelog = changelog)
 }
 
 
@@ -982,6 +1012,72 @@ apply_paategning_patches <- function(paat_state, org_nr, patches,
   }
 
   list(state = paat_state, changelog = dplyr::bind_rows(changelog))
+}
+
+
+#' Apply historiskeNavn JSON Patch operations to the name-history state
+#'
+#' The oppdateringer feed emits `add /historiskeNavn/-` patches whose
+#' value object carries the superseded name and its validity interval
+#' (`navn`, `fraDato`, `tilDato`). [parse_patch()] flattens these to
+#' `historiskeNavn_-_navn` etc. Name history only ever appends — there
+#' is no clear semantics as with påtegninger — so this applier handles
+#' appends only. Emitted for both enheter and underenheter.
+#'
+#' @param hist_state Current historiske_navn state tibble.
+#' @param org_nr Organization number the patches apply to.
+#' @param patches Parsed patch tibble subset (fields starting
+#'   `historiskeNavn`).
+#' @param timestamp Event timestamp (passed to changelog).
+#' @param update_id CDC update id (passed to changelog).
+#' @returns List with `state` (updated tibble) and `changelog`.
+#' @keywords internal
+apply_historiske_navn_patches <- function(hist_state, org_nr, patches,
+                                           timestamp, update_id) {
+  changelog <- list()
+
+  append_rows <- patches[grepl("^historiskeNavn_-_", patches$field), ]
+  if (nrow(append_rows) > 0) {
+    navn <- append_rows$new_value[append_rows$field == "historiskeNavn_-_navn"]
+    fra  <- append_rows$new_value[append_rows$field == "historiskeNavn_-_fraDato"]
+    til  <- append_rows$new_value[append_rows$field == "historiskeNavn_-_tilDato"]
+
+    for (i in seq_along(navn)) {
+      existing_n <- sum(hist_state$org_nr == org_nr)
+      new_row <- tibble::tibble(
+        org_nr    = org_nr,
+        position  = existing_n,
+        name      = navn[i],
+        from_date = if (i <= length(fra)) fra[i] else NA_character_,
+        to_date   = if (i <= length(til)) til[i] else NA_character_
+      )
+      hist_state <- dplyr::bind_rows(hist_state, new_row)
+
+      changelog <- c(changelog, list(tibble::tibble(
+        timestamp = timestamp, org_nr = org_nr,
+        registry = "historiske_navn", change_type = "name_history_added",
+        field = navn[i],
+        value_from = if (i <= length(fra)) fra[i] else NA_character_,
+        value_to = if (i <= length(til)) til[i] else NA_character_,
+        update_id = update_id
+      )))
+    }
+  }
+
+  list(state = hist_state, changelog = dplyr::bind_rows(changelog))
+}
+
+
+#' Empty historiske_navn tibble
+#' @keywords internal
+empty_historiske_navn <- function() {
+  tibble::tibble(
+    org_nr    = character(),
+    position  = integer(),
+    name      = character(),
+    from_date = character(),
+    to_date   = character()
+  )
 }
 
 
