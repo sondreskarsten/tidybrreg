@@ -32,6 +32,13 @@
 #'   roles per-org via the API for each CDC event — slower but
 #'   provides sub-daily attribution when syncing multiple times
 #'   per day.
+#' @param format Bulk download format used only when bootstrapping
+#'   missing state: `"csv"` (default) or `"json"`. The JSON bulk is
+#'   the only source carrying `historiskeNavn`; bootstrapping with
+#'   `format = "json"` backfills name history predating the first
+#'   sync into the `historiske_navn` state. With `"csv"` that state
+#'   starts empty and accrues from the CDC feed. Roller is always
+#'   JSON regardless.
 #' @param verbose Logical. Print progress messages.
 #'
 #' @returns A list with sync summary: events processed per type,
@@ -51,17 +58,20 @@
 brreg_sync <- function(types = c("enheter", "underenheter", "roller"),
                         size = 10000L,
                         roller_method = c("bulk", "cdc"),
+                        format = c("csv", "json"),
                         verbose = TRUE) {
   types <- match.arg(types, c("enheter", "underenheter", "roller"),
                       several.ok = TRUE)
   roller_method <- match.arg(roller_method)
+  format <- match.arg(format)
   check_parquet_available()
   t0 <- Sys.time()
 
   needs_bootstrap <- !all(vapply(types, has_state, logical(1)))
   if (needs_bootstrap) {
     if (verbose) cli::cli_h2("Bootstrapping state from bulk download")
-    bootstrap_state(types, roller_method = roller_method, verbose = verbose)
+    bootstrap_state(types, roller_method = roller_method, format = format,
+                    verbose = verbose)
   }
 
   cursor <- read_cursor()
@@ -126,9 +136,14 @@ brreg_sync <- function(types = c("enheter", "underenheter", "roller"),
 #'
 #' @param types Character vector of streams to bootstrap.
 #' @param roller_method Passed from [brreg_sync()].
+#' @param format Bulk download format passed to [brreg_download()]
+#'   for enheter/underenheter. `"json"` additionally backfills the
+#'   `historiske_navn` state from the inline `historiskeNavn` arrays;
+#'   the CSV bulk carries no name history.
 #' @param verbose Logical.
 #' @keywords internal
-bootstrap_state <- function(types, roller_method = "bulk", verbose = TRUE) {
+bootstrap_state <- function(types, roller_method = "bulk", format = "csv",
+                             verbose = TRUE) {
   for (type in types) {
     if (has_state(type)) next
 
@@ -143,7 +158,8 @@ bootstrap_state <- function(types, roller_method = "bulk", verbose = TRUE) {
     }
 
     if (verbose) cli::cli_alert_info("Downloading {type} bulk data...")
-    df <- brreg_download(type = type, type_output = "tibble")
+    df <- brreg_download(type = type, format = format,
+                          type_output = "tibble")
 
     if (type == "enheter") {
       paat <- extract_paategninger(df)
@@ -151,6 +167,18 @@ bootstrap_state <- function(types, roller_method = "bulk", verbose = TRUE) {
         write_state(paat, "paategninger")
       } else {
         write_state(empty_paategninger(), "paategninger")
+      }
+    }
+
+    if (type %in% c("enheter", "underenheter")) {
+      hist <- extract_historiske_navn(df)
+      cur_hist <- read_state("historiske_navn", use_cache = FALSE)
+      if (is.null(cur_hist)) cur_hist <- empty_historiske_navn()
+      if (nrow(hist) > 0) {
+        write_state(dplyr::distinct(dplyr::bind_rows(cur_hist, hist)),
+                    "historiske_navn")
+      } else if (!has_state("historiske_navn")) {
+        write_state(cur_hist, "historiske_navn")
       }
     }
 
@@ -1081,20 +1109,91 @@ empty_historiske_navn <- function() {
 }
 
 
-#' Extract påtegninger for flagged entities into a separate table
+#' Extract historiskeNavn from JSON bulk entity data
 #'
-#' The enheter bulk download exposes påtegninger only as a boolean
-#' presence flag (column `annotations` after [field_dict] renaming).
-#' Annotation content is fetched per entity from the enheter endpoint
-#' for the entities whose flag is true.
+#' The JSON bulk carries `historiskeNavn` inline as an array of
+#' `{navn, fraDato, tilDato}` objects, serialized to a JSON string by
+#' [flatten_cell()] under the auto-snake column `historiske_navn`.
+#' The CSV bulk has no such column, so extraction there yields an
+#' empty table and history accrues from the CDC feed instead.
+#' @param entities A tibble of bulk entity data with `org_nr`.
+#' @keywords internal
+extract_historiske_navn <- function(entities) {
+  hist_col <- intersect(c("historiske_navn", "historiskeNavn"),
+                        names(entities))
+  if (length(hist_col) == 0 || !"org_nr" %in% names(entities)) {
+    return(empty_historiske_navn())
+  }
+
+  vals <- as.character(entities[[hist_col[1]]])
+  has_hist <- !is.na(vals) & startsWith(trimws(vals), "[")
+  if (!any(has_hist)) return(empty_historiske_navn())
+
+  orgs <- entities$org_nr[has_hist]
+  parsed <- lapply(vals[has_hist], jsonlite::fromJSON)
+  n_each <- vapply(parsed, function(d) if (is.data.frame(d)) nrow(d) else 0L,
+                   integer(1))
+  field_chr <- function(nm) {
+    unlist(lapply(parsed, function(d) {
+      if (!is.data.frame(d)) return(character(0))
+      if (is.null(d[[nm]])) rep(NA_character_, nrow(d)) else as.character(d[[nm]])
+    }), use.names = FALSE)
+  }
+  result <- tibble::tibble(
+    org_nr    = rep(orgs, n_each),
+    position  = unlist(lapply(n_each, function(n) seq_len(n) - 1L),
+                        use.names = FALSE),
+    name      = field_chr("navn"),
+    from_date = field_chr("fraDato"),
+    to_date   = field_chr("tilDato")
+  )
+  if (nrow(result) == 0) return(empty_historiske_navn())
+  result
+}
+
+
+#' Extract påtegninger from bulk entity data into a separate table
+#'
+#' The CSV bulk exposes påtegninger only as a boolean presence flag
+#' (column `annotations` after [field_dict] renaming); annotation
+#' content is then fetched per entity from the enheter endpoint for
+#' the entities whose flag is true. The JSON bulk carries the full
+#' påtegning array inline, serialized to a JSON string by
+#' [flatten_cell()] — detected by a leading `[` — and is parsed
+#' directly with no per-entity fetches.
 #' @param entities A tibble of bulk entity data with `org_nr` and the
-#'   `annotations` presence flag.
+#'   `annotations` flag or serialized array.
 #' @keywords internal
 extract_paategninger <- function(entities) {
   flag_col <- intersect(c("annotations", "paategninger"), names(entities))
   if (length(flag_col) == 0 || !"org_nr" %in% names(entities)) return(empty_paategninger())
 
-  flag <- tolower(trimws(as.character(entities[[flag_col[1]]])))
+  vals <- as.character(entities[[flag_col[1]]])
+  inline <- !is.na(vals) & startsWith(trimws(vals), "[")
+  if (any(inline)) {
+    orgs <- entities$org_nr[inline]
+    parsed <- lapply(vals[inline], jsonlite::fromJSON)
+    n_each <- vapply(parsed, function(d) if (is.data.frame(d)) nrow(d) else 0L,
+                     integer(1))
+    field_chr <- function(nm) {
+      unlist(lapply(parsed, function(d) {
+        if (!is.data.frame(d)) return(character(0))
+        if (is.null(d[[nm]])) rep(NA_character_, nrow(d)) else as.character(d[[nm]])
+      }), use.names = FALSE)
+    }
+    result <- tibble::tibble(
+      org_nr        = rep(orgs, n_each),
+      position      = unlist(lapply(n_each, function(n) seq_len(n) - 1L),
+                              use.names = FALSE),
+      infotype      = field_chr("infotype"),
+      tekst         = field_chr("tekst"),
+      innfoert_dato = field_chr("innfoertDato")
+    )
+    if (nrow(result) == 0) return(empty_paategninger())
+    return(result)
+  }
+
+  flag <- tolower(trimws(vals))
   has_paat <- !is.na(flag) & flag %in% c("true", "t", "1")
   if (!any(has_paat)) return(empty_paategninger())
 

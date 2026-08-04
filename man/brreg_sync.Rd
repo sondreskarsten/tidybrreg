@@ -8,6 +8,7 @@ brreg_sync(
   types = c("enheter", "underenheter", "roller"),
   size = 10000L,
   roller_method = c("bulk", "cdc"),
+  format = c("csv", "json"),
   verbose = TRUE
 )
 }
@@ -24,6 +25,14 @@ and produces granular changelogs. \code{"cdc"} fetches current
 roles per-org via the API for each CDC event — slower but
 provides sub-daily attribution when syncing multiple times
 per day.}
+
+\item{format}{Bulk download format used only when bootstrapping
+missing state: \code{"csv"} (default) or \code{"json"}. The JSON bulk is
+the only source carrying \code{historiskeNavn}; bootstrapping with
+\code{format = "json"} backfills name history predating the first
+sync into the \code{historiske_navn} state. With \code{"csv"} that state
+starts empty and accrues from the CDC feed. Roller is always
+JSON regardless.}
 
 \item{verbose}{Logical. Print progress messages.}
 }

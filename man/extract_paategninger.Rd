@@ -2,18 +2,21 @@
 % Please edit documentation in R/sync.R
 \name{extract_paategninger}
 \alias{extract_paategninger}
-\title{Extract påtegninger for flagged entities into a separate table}
+\title{Extract påtegninger from bulk entity data into a separate table}
 \usage{
 extract_paategninger(entities)
 }
 \arguments{
 \item{entities}{A tibble of bulk entity data with \code{org_nr} and the
-\code{annotations} presence flag.}
+\code{annotations} flag or serialized array.}
 }
 \description{
-The enheter bulk download exposes påtegninger only as a boolean
-presence flag (column \code{annotations} after \link{field_dict} renaming).
-Annotation content is fetched per entity from the enheter endpoint
-for the entities whose flag is true.
+The CSV bulk exposes påtegninger only as a boolean presence flag
+(column \code{annotations} after \link{field_dict} renaming); annotation
+content is then fetched per entity from the enheter endpoint for
+the entities whose flag is true. The JSON bulk carries the full
+påtegning array inline, serialized to a JSON string by
+\code{\link[=flatten_cell]{flatten_cell()}} — detected by a leading \code{[} — and is parsed
+directly with no per-entity fetches.
 }
 \keyword{internal}
