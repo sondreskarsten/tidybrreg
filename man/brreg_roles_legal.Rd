@@ -13,7 +13,9 @@ brreg_roles_legal(org_nr)
 A tibble with one row per role held. Columns: \code{org_nr}
 (queried entity), \code{target_org_nr} (entity where role is held),
 \code{target_name}, \code{role_code}, \code{role}, \code{share} (ownership share
-if applicable), \code{resigned}, \code{deregistered}.
+if applicable), \code{resigned}, \code{deregistered}. \code{resigned} is present
+only when the payload carries the \code{fratraadt} field, removed by
+BRREG on 2026-06-16; live responses no longer include it.
 }
 \description{
 Reverse role lookup: find all entities where the given entity holds

@@ -273,10 +273,12 @@ test_that("brreg_roles: Equinor has expected role groups", {
  # Column schema
  expected_cols <- c("org_nr", "role_group", "role_group_code", "role",
                     "role_code", "first_name", "last_name", "person_id",
-                    "birth_date", "deceased", "resigned")
+                    "birth_date", "deceased")
  for (col in expected_cols) {
    expect_true(col %in% names(roles), label = paste("Column", col, "exists"))
  }
+ # fratraadt removed by BRREG 2026-06-16: live roles carry no resigned col
+ expect_false("resigned" %in% names(roles))
 
  # Equinor must have board (STYR), CEO (DAGL), and auditor (REVI)
  expect_true("STYR" %in% roles$role_group_code)

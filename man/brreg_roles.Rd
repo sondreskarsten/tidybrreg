@@ -15,7 +15,11 @@ A tibble with one row per role assignment. Columns:
 \code{first_name}, \code{middle_name}, \code{last_name}, \code{birth_date}, \code{deceased},
 \code{entity_org_nr}, \code{entity_name}, \code{resigned}, \code{deregistered},
 \code{ordering}, \code{elected_by}, \code{group_modified}, \code{person_id}.
-Returns an empty tibble if the entity has no registered roles.
+\code{resigned} is present only when the payload carries the
+\code{fratraadt} field, which BRREG removed on 2026-06-16; live
+responses no longer include the column, while replays of older
+data retain it. Returns an empty tibble if the entity has no
+registered roles.
 }
 \description{
 Fetch all registered roles for a Norwegian legal entity. Returns one

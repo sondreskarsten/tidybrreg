@@ -426,6 +426,7 @@ flatten_roles_bulk_fast <- function(entities) {
 
   # --- Pass 2: fill by index ---
   k <- 0L
+  any_fratraadt <- FALSE
   for (e in entities) {
     org <- e$organisasjonsnummer %||% NA_character_
     for (g in (e$rollegrupper %||% list())) {
@@ -443,7 +444,8 @@ flatten_roles_bulk_fast <- function(entities) {
         v_deceased[k]        <- r$person$erDoed %||% NA
         v_entity_org_nr[k]   <- r$enhet$organisasjonsnummer %||% NA_character_
         v_entity_name[k]     <- extract_entity_name(r$enhet$navn)
-        v_resigned[k]        <- r$fratraadt %||% FALSE
+        if (!is.null(r$fratraadt)) any_fratraadt <- TRUE
+        v_resigned[k]        <- r$fratraadt %||% NA
         v_deregistered[k]    <- r$avregistrert %||% NA
         v_ordering[k]        <- r$rekkefolge %||% NA_integer_
         v_elected_by[k]      <- r$valgtAv$kode %||% NA_character_
@@ -481,5 +483,10 @@ flatten_roles_bulk_fast <- function(entities) {
           sep = "_"),
     NA_character_
   )
+  if (any_fratraadt) {
+    result$resigned[is.na(result$resigned)] <- FALSE
+  } else {
+    result$resigned <- NULL
+  }
   result
 }

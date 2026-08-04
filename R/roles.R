@@ -24,7 +24,11 @@
 #'   `first_name`, `middle_name`, `last_name`, `birth_date`, `deceased`,
 #'   `entity_org_nr`, `entity_name`, `resigned`, `deregistered`,
 #'   `ordering`, `elected_by`, `group_modified`, `person_id`.
-#'   Returns an empty tibble if the entity has no registered roles.
+#'   `resigned` is present only when the payload carries the
+#'   `fratraadt` field, which BRREG removed on 2026-06-16; live
+#'   responses no longer include the column, while replays of older
+#'   data retain it. Returns an empty tibble if the entity has no
+#'   registered roles.
 #'
 #' @family tidybrreg entity functions
 #' @seealso [brreg_board_summary()] for derived board covariates,
@@ -74,7 +78,7 @@ flatten_roles <- function(raw, org_nr) {
         deceased        = r$person$erDoed %||% NA,
         entity_org_nr   = r$enhet$organisasjonsnummer %||% NA_character_,
         entity_name     = extract_entity_name(r$enhet$navn),
-        resigned        = r$fratraadt %||% FALSE,
+        resigned        = r$fratraadt %||% NA,
         deregistered    = r$avregistrert %||% NA,
         ordering        = r$rekkefolge %||% NA_integer_,
         elected_by      = r$valgtAv$kode %||% NA_character_,
@@ -84,6 +88,11 @@ flatten_roles <- function(raw, org_nr) {
   }
   if (k == 0L) return(tibble::tibble())
   result <- dplyr::bind_rows(lapply(rows[seq_len(k)], tibble::as_tibble))
+  if (all(is.na(result$resigned))) {
+    result$resigned <- NULL
+  } else {
+    result$resigned[is.na(result$resigned)] <- FALSE
+  }
   result$birth_date <- as.Date(result$birth_date)
   result$group_modified <- as.Date(result$group_modified)
   result$person_id <- ifelse(
@@ -179,10 +188,8 @@ lookup_role_group_vec <- function(codes) {
 #' @examplesIf interactive() && curl::has_internet()
 #' brreg_roles("923609016") |> brreg_board_summary()
 brreg_board_summary <- function(roles) {
-  active_filter <- !isTRUE(roles$resigned) & !isTRUE(roles$deregistered)
-  if ("resigned" %in% names(roles)) {
-    active_filter <- !(roles$resigned %in% TRUE) & !(roles$deregistered %in% TRUE)
-  }
+  resigned_flag <- if ("resigned" %in% names(roles)) roles$resigned %in% TRUE else FALSE
+  active_filter <- !resigned_flag & !(roles$deregistered %in% TRUE)
   board <- roles[roles$role_group_code == "STYR" & !is.na(roles$person_id) & active_filter, ]
   tibble::tibble(
     org_nr         = roles$org_nr[1],
@@ -215,7 +222,9 @@ brreg_board_summary <- function(roles) {
 #' @returns A tibble with one row per role held. Columns: `org_nr`
 #'   (queried entity), `target_org_nr` (entity where role is held),
 #'   `target_name`, `role_code`, `role`, `share` (ownership share
-#'   if applicable), `resigned`, `deregistered`.
+#'   if applicable), `resigned`, `deregistered`. `resigned` is present
+#'   only when the payload carries the `fratraadt` field, removed by
+#'   BRREG on 2026-06-16; live responses no longer include it.
 #'
 #' @family tidybrreg entity functions
 #' @seealso [brreg_roles()] for who holds roles in an entity.
@@ -245,11 +254,17 @@ brreg_roles_legal <- function(org_nr) {
         role_code       = r$type$kode %||% NA_character_,
         role            = lookup_role(r$type$kode),
         share           = r$ansvarsandel %||% NA_character_,
-        resigned        = r$fratraadt %||% FALSE,
+        resigned        = r$fratraadt %||% NA,
         deregistered    = r$avregistrert %||% FALSE
       )
     }
   }
   if (k == 0L) return(tibble::tibble())
-  dplyr::bind_rows(rows[seq_len(k)])
+  result <- dplyr::bind_rows(rows[seq_len(k)])
+  if (all(is.na(result$resigned))) {
+    result$resigned <- NULL
+  } else {
+    result$resigned[is.na(result$resigned)] <- FALSE
+  }
+  result
 }

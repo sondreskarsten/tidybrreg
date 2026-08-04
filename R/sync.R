@@ -1258,7 +1258,6 @@ empty_roller_state <- function() {
     deceased        = logical(),
     entity_org_nr   = character(),
     entity_name     = character(),
-    resigned        = logical(),
     deregistered    = logical(),
     ordering        = integer(),
     elected_by      = character(),
