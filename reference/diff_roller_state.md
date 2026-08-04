@@ -81,6 +81,7 @@ for querying stored changelogs.
 Other tidybrreg data management functions:
 [`brreg_annotation_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotation_summary.md),
 [`brreg_annotations()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotations.md),
+[`brreg_historical_names()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_historical_names.md),
 [`brreg_status()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_status.md),
 [`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md),
 [`brreg_sync_status()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync_status.md),

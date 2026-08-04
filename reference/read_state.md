@@ -13,7 +13,8 @@ read_state(type, use_cache = TRUE)
 
 - type:
 
-  One of `"enheter"`, `"underenheter"`, `"roller"`, `"paategninger"`.
+  One of `"enheter"`, `"underenheter"`, `"roller"`, `"paategninger"`,
+  `"historiske_navn"`.
 
 - use_cache:
 

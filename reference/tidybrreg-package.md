@@ -26,3 +26,7 @@ Useful links:
 ## Author
 
 **Maintainer**: Sondre Skarsten <sondre.skarsten@example.com>
+
+Authors:
+
+- Sondre Skarsten <sondre.skarsten@example.com>

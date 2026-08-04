@@ -7,7 +7,3 @@ Session-level dictionary cache (eurostat pattern)
 ``` r
 .brregEnv
 ```
-
-## Format
-
-An object of class `environment` of length 0.

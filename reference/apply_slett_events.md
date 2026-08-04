@@ -5,5 +5,5 @@ Apply Sletting/Fjernet events to state
 ## Usage
 
 ``` r
-apply_slett_events(state, paat_state, slett_events, type)
+apply_slett_events(state, paat_state, hist_state, slett_events, type)
 ```
