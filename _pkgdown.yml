@@ -33,6 +33,7 @@ reference:
   - brreg_entity
   - brreg_underenheter
   - brreg_children
+  - brreg_konsern
   - brreg_validate
 
 - title: Search

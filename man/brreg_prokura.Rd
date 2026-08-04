@@ -52,6 +52,7 @@ Other tidybrreg entity functions:
 \code{\link[=brreg_children]{brreg_children()}},
 \code{\link[=brreg_download]{brreg_download()}},
 \code{\link[=brreg_entity]{brreg_entity()}},
+\code{\link[=brreg_konsern]{brreg_konsern()}},
 \code{\link[=brreg_roles]{brreg_roles()}},
 \code{\link[=brreg_roles_legal]{brreg_roles_legal()}},
 \code{\link[=brreg_search]{brreg_search()}},
