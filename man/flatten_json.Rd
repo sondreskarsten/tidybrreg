@@ -6,7 +6,16 @@
 \usage{
 flatten_json(x, prefix = "")
 }
+\arguments{
+\item{x}{A parsed JSON list.}
+
+\item{prefix}{Key prefix used during recursion.}
+}
+\value{
+A flat named list.
+}
 \description{
-Recursively flatten nested JSON into dot-notation keys
+Nested objects recurse into \code{parent.child} keys. Arrays are
+collapsed by \code{\link[=collapse_observed]{collapse_observed()}}.
 }
 \keyword{internal}

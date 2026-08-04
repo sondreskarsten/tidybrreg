@@ -243,10 +243,7 @@ flatten_cell <- function(x) {
   if (is.list(x) && !is.null(names(x))) {
     return(jsonlite::toJSON(x, auto_unbox = TRUE))
   }
-  if (is.atomic(x)) {
-    return(paste(as.character(x), collapse = "; "))
-  }
-  paste(as.character(unlist(x)), collapse = "; ")
+  collapse_observed(x)
 }
 
 #' Drop HAL _links columns (metadata, not data)
@@ -283,13 +280,6 @@ rename_and_coerce <- function(dat) {
     col <- field_dict$col_name[i]
     target <- field_dict$type[i]
     if (!col %in% names(dat)) {
-      dat[[col]] <- switch(target,
-        Date      = as.Date(NA_character_),
-        integer   = NA_integer_,
-        logical   = NA,
-        character = NA_character_,
-        NA
-      )
       next
     }
     if (target == "integer") {

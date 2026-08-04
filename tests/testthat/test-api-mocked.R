@@ -13,14 +13,18 @@ test_that("entity fixture parses to correct structure", {
   expect_type(result$employees, "integer")
 })
 
-test_that("entity fixture has all field_dict columns", {
+test_that("entity fixture emits observed field_dict columns only", {
   json <- jsonlite::fromJSON(test_path("fixtures/mock/entity_923609016.json"),
                               simplifyVector = TRUE)
   result <- tidybrreg:::parse_entity(json)
-  dict_cols <- field_dict$col_name
-  missing <- setdiff(dict_cols, names(result))
+  flat <- tidybrreg:::flatten_json(json)
+  observed <- field_dict$col_name[field_dict$api_path %in% names(flat)]
+  missing <- setdiff(observed, names(result))
   expect_equal(length(missing), 0,
-    info = paste("Missing:", paste(missing, collapse = ", ")))
+    info = paste("Observed but dropped:", paste(missing, collapse = ", ")))
+  expect_true(all(names(result) %in%
+                    c(field_dict$col_name, vapply(names(flat),
+                      tidybrreg:::to_snake, character(1)))))
 })
 
 test_that("entity fixture label translation works", {

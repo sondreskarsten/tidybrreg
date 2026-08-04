@@ -42,42 +42,50 @@ test_that("rename_and_coerce has no problems attribute when all parses succeed",
 # Previously: columns absent from all entities silently disappeared.
 # Fix: all 49 field_dict columns present as typed NA.
 
-test_that("rename_and_coerce guarantees all 49 field_dict columns", {
+# Contract reversed: rename_and_coerce() previously guaranteed every
+# field_dict column, materializing absent ones as typed NA. That made a
+# field the register had stopped emitting indistinguishable from one
+# present and null, which is how a removal like fratraadt goes unseen.
+# Emission is now batch-scoped: observed fields only.
+
+test_that("rename_and_coerce emits only observed field_dict columns", {
   dat <- tibble::tibble(organisasjonsnummer = "923609016")
   result <- tidybrreg:::rename_and_coerce(dat)
 
-  for (i in seq_len(nrow(field_dict))) {
-    col <- field_dict$col_name[i]
-    expect_true(col %in% names(result),
-      info = paste("Missing field_dict column:", col))
-  }
-  expect_equal(length(intersect(field_dict$col_name, names(result))),
-               length(unique(field_dict$col_name)))
+  expect_equal(names(result), "org_nr")
+  absent <- setdiff(field_dict$col_name, "org_nr")
+  expect_false(any(absent %in% names(result)))
 })
 
-test_that("guaranteed columns have correct types", {
-  dat <- tibble::tibble(organisasjonsnummer = "923609016")
+test_that("observed columns are coerced to their declared types", {
+  typed <- field_dict[!duplicated(field_dict$col_name), ]
+  samples <- list(Date = "1995-02-19", integer = "42",
+                  character = "x", logical = "true", numeric = "1.5")
+  keep <- typed[typed$type %in% names(samples) &
+                  !grepl("\\[\\]|\\.", typed$api_path), ]
+  dat <- tibble::as_tibble(stats::setNames(
+    lapply(keep$type, function(ty) samples[[ty]]), keep$api_path
+  ))
   result <- tidybrreg:::rename_and_coerce(dat)
 
-  date_cols <- field_dict$col_name[field_dict$type == "Date"]
-  int_cols <- field_dict$col_name[field_dict$type == "integer"]
-  chr_cols <- field_dict$col_name[field_dict$type == "character"]
-
-  for (col in date_cols) {
-    expect_s3_class(result[[col]], "Date")
-  }
-  for (col in int_cols) {
-    expect_type(result[[col]], "integer")
-  }
-  for (col in chr_cols) {
-    expect_type(result[[col]], "character")
+  for (i in seq_len(nrow(keep))) {
+    col <- keep$col_name[i]
+    if (!col %in% names(result)) next
+    switch(keep$type[i],
+      Date      = expect_s3_class(result[[col]], "Date"),
+      integer   = expect_type(result[[col]], "integer"),
+      numeric   = expect_type(result[[col]], "double"),
+      logical   = expect_type(result[[col]], "logical"),
+      character = expect_type(result[[col]], "character")
+    )
   }
 })
 
 # --- Pipeline 1 multi-value field collapse (found via fixtures) ---
 # Previously: rename_from_dict() passed length > 1 vectors to
 # tibble::as_tibble() which rejected incompatible sizes.
-# Fix: collapse with paste("; ").
+# Fix: collapse to a scalar via collapse_observed(), which joins on
+# "\n" so the observed elements can be recovered by splitting.
 
 test_that("rename_from_dict collapses multi-value fields to scalar", {
   flat <- list(
@@ -88,8 +96,10 @@ test_that("rename_from_dict collapses multi-value fields to scalar", {
   result <- tidybrreg:::rename_from_dict(flat)
   expect_s3_class(result, "tbl_df")
   expect_equal(nrow(result), 1)
-  expect_true(grepl("; ", result$purpose))
-  expect_true(grepl("; ", result$activity))
+  expect_equal(strsplit(result$purpose, "\n")[[1]],
+               c("Purpose line 1", "Purpose line 2", "Purpose line 3"))
+  expect_equal(strsplit(result$activity, "\n")[[1]],
+               c("Activity 1", "Activity 2"))
 })
 
 test_that("rename_from_dict handles single-value fields unchanged", {
@@ -101,15 +111,14 @@ test_that("rename_from_dict handles single-value fields unchanged", {
   expect_equal(result$name, "EQUINOR ASA")
 })
 
-test_that("rename_from_dict fills missing fields with typed NA", {
+test_that("rename_from_dict omits fields the response did not carry", {
   flat <- list(
     organisasjonsnummer = "923609016"
   )
   result <- tidybrreg:::rename_from_dict(flat)
-  expect_true(is.na(result$purpose))
-  expect_true(is.na(result$activity))
-  expect_type(result$purpose, "character")
-  expect_type(result$activity, "character")
+  expect_false("purpose" %in% names(result))
+  expect_false("activity" %in% names(result))
+  expect_equal(names(result), "org_nr")
 })
 
 # --- LOCF max_gap enforcement (Gap 5.1) ---

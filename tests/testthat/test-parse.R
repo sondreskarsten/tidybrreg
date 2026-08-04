@@ -14,7 +14,7 @@ test_that("flatten_json handles nested JSON", {
   expect_true("organisasjonsform.kode" %in% names(flat))
   expect_true("forretningsadresse.postnummer" %in% names(flat))
   expect_equal(flat[["organisasjonsform.kode"]], "AS")
-  expect_equal(flat[["forretningsadresse.adresse"]], "Street 1, Floor 2")
+  expect_equal(flat[["forretningsadresse.adresse"]], "Street 1\nFloor 2")
 })
 
 test_that("to_snake converts correctly", {
@@ -44,32 +44,22 @@ test_that("parse_entity maps known fields and passes through unknown", {
   expect_true("unknown_new_field" %in% names(result))
 })
 
-test_that("rename_and_coerce guarantees all field_dict columns", {
+test_that("rename_and_coerce emits observed columns and drops the rest", {
   dat <- tibble::tibble(
     organisasjonsnummer = "923609016",
-    navn = "TEST"
+    navn = "EQUINOR ASA",
+    antallAnsatte = "21408"
   )
   result <- tidybrreg:::rename_and_coerce(dat)
 
-  expect_true("org_nr" %in% names(result))
-  expect_true("name" %in% names(result))
-  expect_true("founding_date" %in% names(result))
-  expect_true("employees" %in% names(result))
-  expect_true("purpose" %in% names(result))
-  expect_true("activity" %in% names(result))
-  expect_true("bankrupt" %in% names(result))
-
-  expect_true(is.na(result$founding_date))
-  expect_true(is.na(result$employees))
-  expect_true(is.na(result$purpose))
-  expect_true(is.na(result$activity))
-
-  expect_s3_class(result$founding_date, "Date")
+  expect_setequal(names(result), c("org_nr", "name", "employees"))
   expect_type(result$employees, "integer")
-  expect_type(result$purpose, "character")
+  expect_false("purpose" %in% names(result))
+  expect_false("activity" %in% names(result))
+  expect_false("founding_date" %in% names(result))
 })
 
-test_that("parse_bulk_json produces all field_dict columns even when absent from data", {
+test_that("parse_bulk_json emits only columns the data carried", {
   json_data <- jsonlite::toJSON(list(
     list(organisasjonsnummer = "923609016", navn = "EQUINOR ASA",
          organisasjonsform = list(kode = "ASA"),
@@ -83,13 +73,11 @@ test_that("parse_bulk_json produces all field_dict columns even when absent from
 
   dat <- tidybrreg:::parse_bulk_json(tmp)
 
-  expect_true("purpose" %in% names(dat))
-  expect_true("activity" %in% names(dat))
-  expect_true("founding_date" %in% names(dat))
-  expect_true("bankrupt" %in% names(dat))
+  expect_false("purpose" %in% names(dat))
+  expect_false("activity" %in% names(dat))
+  expect_false("founding_date" %in% names(dat))
+  expect_false("bankrupt" %in% names(dat))
 
-  expect_true(is.na(dat$purpose))
-  expect_true(is.na(dat$activity))
   expect_equal(dat$employees, 21408L)
   expect_equal(dat$org_nr, "923609016")
   unlink(tmp)
