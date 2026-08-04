@@ -4,6 +4,42 @@
 
 ### Breaking changes
 
+- Parsers no longer fabricate `field_dict` columns that the payload did
+  not carry.
+  [`rename_and_coerce()`](https://sondreskarsten.github.io/tidybrreg/reference/rename_and_coerce.md)
+  and
+  [`rename_from_dict()`](https://sondreskarsten.github.io/tidybrreg/reference/rename_from_dict.md)
+  previously materialized every dictionary column as typed `NA` when
+  absent, asserting the full schema regardless of what the register
+  emitted and making a removed upstream field indistinguishable from a
+  present-null one. Emission is now batch-scoped, matching the
+  `resigned` rule: a column appears when the field is observed anywhere
+  in the batch, `NA` for records in that batch lacking it, absent
+  entirely when unobserved.
+  [`parse_entities()`](https://sondreskarsten.github.io/tidybrreg/reference/parse_entities.md)
+  unions across the batch via
+  [`bind_rows()`](https://dplyr.tidyverse.org/reference/bind_rows.html),
+  so multi-entity results are unchanged except that never-observed
+  columns are gone. Single-entity
+  [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md)
+  now returns roughly 61-63 columns instead of a fixed 104. This also
+  stops the enheter bulk parse from stamping twelve underenheter-only
+  columns (`beliggenhetsadresse.*`, `oppstartsdato`, `datoEierskifte`,
+  `nedleggelsesdato`) onto every enhet row.
+
+- Array-valued fields now join on `"\n"` instead of `"; "` (bulk JSON)
+  or `", "` (live JSON). Element text routinely contains commas and
+  semicolons but never newlines, so only `"\n"` can be split back into
+  the observed elements. Arrays of objects are serialized to JSON rather
+  than pasted, which fixes `historiskeNavn` arriving as unusable text
+  from
+  [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md)
+  on the ~18% of enheter that have name history. The two JSON paths now
+  agree with each other and with BRREG’s own CSV rendering of addresses;
+  note that the CSV joins wrapped-text fields such as
+  `vedtektsfestetFormaal` with a space, so those remain non-identical
+  across formats and cannot be reconciled without a per-field rule.
+
 - [`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md),
   [`brreg_roles_legal()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles_legal.md),
   and the roller bulk parser no longer fabricate a `resigned` column.
