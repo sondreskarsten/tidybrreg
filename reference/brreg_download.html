@@ -15,7 +15,7 @@ download the full register here and filter locally."><meta property="og:image" c
 
     <a class="navbar-brand me-2" href="../index.html">tidybrreg</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,8 +83,9 @@ available as JSON via <code>/roller/totalbestand</code> (~131 MB).</p></dd>
 
 <dt id="arg-format">format<a class="anchor" aria-label="anchor" href="#arg-format"></a></dt>
 <dd><p>Download format: <code>"csv"</code> (default for enheter/underenheter,
-semicolon-delimited) or <code>"json"</code> (JSON array). Roller bulk download
-is always JSON regardless of this parameter.</p></dd>
+comma-delimited) or <code>"json"</code> (JSON array). Only the JSON bulk
+carries <code>historiskeNavn</code>; the CSV has no such column. Roller bulk
+download is always JSON regardless of this parameter.</p></dd>
 
 
 <dt id="arg-refresh">refresh<a class="anchor" aria-label="anchor" href="#arg-refresh"></a></dt>

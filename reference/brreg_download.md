@@ -32,7 +32,8 @@ brreg_download(
 - format:
 
   Download format: `"csv"` (default for enheter/underenheter,
-  semicolon-delimited) or `"json"` (JSON array). Roller bulk download is
+  comma-delimited) or `"json"` (JSON array). Only the JSON bulk carries
+  `historiskeNavn`; the CSV has no such column. Roller bulk download is
   always JSON regardless of this parameter.
 
 - refresh:

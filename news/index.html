@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">tidybrreg</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +42,26 @@
       <small>Source: <a href="https://github.com/sondreskarsten/tidybrreg/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.5.0" id="tidybrreg-050">tidybrreg 0.5.0<a class="anchor" aria-label="anchor" href="#tidybrreg-050"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-0-5-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-5-0"></a></h3>
+<ul><li>
+<code><a href="../reference/brreg_roles.html">brreg_roles()</a></code>, <code><a href="../reference/brreg_roles_legal.html">brreg_roles_legal()</a></code>, and the roller bulk parser no longer fabricate a <code>resigned</code> column. BRREG removed the underlying <code>fratraadt</code> field from the roles REST endpoint, <code>juridiskeroller</code>, and the totalbestand bulk on 2026-06-16, which had left <code>resigned</code> constant <code>FALSE</code> for every role. The column now appears only when a payload actually carries <code>fratraadt</code> (replays of pre-June data), with within-payload absence keeping the old <code>FALSE</code> semantics. <code><a href="../reference/diff_roller_state.html">diff_roller_state()</a></code> already intersects its comparison set with the columns present on both sides, so mixed old/new states diff cleanly. <code><a href="../reference/brreg_board_summary.html">brreg_board_summary()</a></code> gains a column-tolerant active filter; the previous pre-guard collapsed to a scalar when <code>resigned</code> was absent and silently disabled the deregistered filter.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-features-0-5-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-5-0"></a></h3>
+<ul><li><p>New <code><a href="../reference/brreg_konsern.html">brreg_konsern()</a></code> retrieves the hierarchical corporate group structure from the konsernstruktur endpoint BRREG added 2026-06-24. One row per node at any depth (live ASA groups nest six levels), root synthesized at level 0 as <code>KKKK</code> “Øverste mor” to match the endpoint’s CSV variant, children carrying observed <code>knytningsform</code>, <code>grunnlag</code>, and relation dates. The endpoint returns 404 both for nonexistent organization numbers and for live entities in no group; <code>in_corporate_group</code> from <code><a href="../reference/brreg_entity.html">brreg_entity()</a></code> disambiguates.</p></li>
+<li><p>Name history (<code>historiskeNavn</code>, added by BRREG 2026-06-16/18) is captured. <code><a href="../reference/brreg_sync.html">brreg_sync()</a></code> ingests the <code>add /historiskeNavn/-</code> CDC patches for both enheter and underenheter into a <code>historiske_navn</code> state table, read by the new <code><a href="../reference/brreg_historical_names.html">brreg_historical_names()</a></code>. Rename events land in the changelog as <code>registry = "historiske_navn"</code>, <code>change_type = "name_history_added"</code>, carrying the superseded name and its validity interval.</p></li>
+<li><p><code><a href="../reference/brreg_sync.html">brreg_sync()</a></code> gains a <code>format</code> argument (default <code>"csv"</code>, behaviour-preserving) forwarded to the bootstrap bulk download. <code>historiskeNavn</code> has no CSV column and no presence flag, so history predating the first sync exists only in the JSON bulk; <code>format = "json"</code> backfills it at bootstrap.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="minor-improvements-and-fixes-0-5-0">Minor improvements and fixes<a class="anchor" aria-label="anchor" href="#minor-improvements-and-fixes-0-5-0"></a></h3>
+<ul><li><p><code><a href="../reference/extract_paategninger.html">extract_paategninger()</a></code> parses inline annotation arrays on the JSON bulk path. Previously the boolean-flag matcher never fired on the serialized arrays, so a JSON-format bootstrap silently produced an empty påtegninger state; the CSV flag-then-fetch path is unchanged.</p></li>
+<li><p>Documentation corrected against the live bulk files: the enheter and underenheter CSVs are comma-delimited (not semicolon), and <code>kapital</code>, <code>vedtektsfestetFormaal</code>, and <code>paategninger</code> all have CSV columns today. <code>historiskeNavn</code> is the JSON-only field, and CSV carries påtegninger only as a <code>true</code>/<code>false</code> presence flag.</p></li>
+<li><p>The API monitor’s schema probe also samples the per-entity roles endpoint and the konsernstruktur endpoint (ASA census guarantees group members in the sample), so roller field removals like <code>fratraadt</code> and new endpoints are visible to drift detection.</p></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0" id="tidybrreg-040">tidybrreg 0.4.0<a class="anchor" aria-label="anchor" href="#tidybrreg-040"></a></h2>
 <div class="section level3">

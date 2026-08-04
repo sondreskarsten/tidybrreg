@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">tidybrreg</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -95,7 +95,9 @@ covariates:</p>
 <span><span class="co">#&gt;         &lt;int&gt; &lt;lgl&gt;   &lt;lgl&gt;      &lt;chr&gt;</span></span>
 <span><span class="co">#&gt;             0 TRUE    TRUE       980573984</span></span></code></pre></div>
 <p>The role data includes person names, birth dates (not national
-identity numbers), role codes, and whether the person has resigned.
+identity numbers), and role codes. A <code>resigned</code> column
+appears only when replaying data collected before 2026-06-16, when BRREG
+removed the underlying <code>fratraadt</code> field from the roles API.
 Entity-held roles (auditor firms, accountants) include the entity’s
 organization number.</p>
 <div class="section level3">

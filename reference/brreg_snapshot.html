@@ -17,7 +17,7 @@ partitioned dataset lazily via arrow::open_dataset()."><meta property="og:image"
 
     <a class="navbar-brand me-2" href="../index.html">tidybrreg</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -87,8 +87,12 @@ JSON into a flat tibble matching <code><a href="brreg_roles.html">brreg_roles()<
 
 <dt id="arg-format">format<a class="anchor" aria-label="anchor" href="#arg-format"></a></dt>
 <dd><p>Download format: <code>"csv"</code> (default for enheter/underenheter)
-or <code>"json"</code>. JSON captures additional fields not present in CSV
-(e.g. <code>kapital</code>, <code>vedtektsfestetFormaal</code>, <code>paategninger</code>).
+or <code>"json"</code>. <code>historiskeNavn</code> is absent from the CSV entirely and
+only the JSON bulk carries it; <code>paategninger</code> is present in CSV
+but degraded to a <code>true</code>/<code>false</code> presence flag, while JSON
+carries the full annotation array inline. Array-valued text
+fields (addresses, <code>vedtektsfestetFormaal</code>, <code>aktivitet</code>) differ
+in join separator between the two formats.
 Roller is always JSON regardless of this parameter.</p></dd>
 
 

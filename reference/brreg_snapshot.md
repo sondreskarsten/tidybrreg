@@ -37,9 +37,12 @@ brreg_snapshot(
 - format:
 
   Download format: `"csv"` (default for enheter/underenheter) or
-  `"json"`. JSON captures additional fields not present in CSV (e.g.
-  `kapital`, `vedtektsfestetFormaal`, `paategninger`). Roller is always
-  JSON regardless of this parameter.
+  `"json"`. `historiskeNavn` is absent from the CSV entirely and only
+  the JSON bulk carries it; `paategninger` is present in CSV but
+  degraded to a `true`/`false` presence flag, while JSON carries the
+  full annotation array inline. Array-valued text fields (addresses,
+  `vedtektsfestetFormaal`, `aktivitet`) differ in join separator between
+  the two formats. Roller is always JSON regardless of this parameter.
 
 - date:
 

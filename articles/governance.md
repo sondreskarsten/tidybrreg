@@ -28,9 +28,10 @@ brreg_board_summary(roles)
 ```
 
 The role data includes person names, birth dates (not national identity
-numbers), role codes, and whether the person has resigned. Entity-held
-roles (auditor firms, accountants) include the entity’s organization
-number.
+numbers), and role codes. A `resigned` column appears only when
+replaying data collected before 2026-06-16, when BRREG removed the
+underlying `fratraadt` field from the roles API. Entity-held roles
+(auditor firms, accountants) include the entity’s organization number.
 
 ### Person identification
 
