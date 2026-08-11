@@ -70,6 +70,11 @@
 
 ## Minor improvements and fixes
 
+* `brreg_changes(from, to)` and `brreg_change_summary(from, to)` now
+  apply inclusive date bounds to each event's `timestamp`. Previously
+  they filtered the changelog's `sync_date` partition, so late-arriving
+  events were silently assigned to the day the sync ran.
+
 * `extract_paategninger()` parses inline annotation arrays on the JSON
   bulk path. Previously the boolean-flag matcher never fired on the
   serialized arrays, so a JSON-format bootstrap silently produced an
