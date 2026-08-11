@@ -146,19 +146,13 @@ read_changelog <- function(from = NULL, to = NULL,
       requireNamespace("arrow", quietly = TRUE)) {
     ds <- arrow::open_dataset(cl_dir, partitioning = "sync_date")
     q <- ds
-    if (!is.null(from)) q <- dplyr::filter(q, .data$sync_date >= from)
-    if (!is.null(to)) q <- dplyr::filter(q, .data$sync_date <= to)
     if (!is.null(registry)) q <- dplyr::filter(q, .data$registry %in% .env$registry)
     if (!is.null(change_type)) q <- dplyr::filter(q, .data$change_type %in% .env$change_type)
     result <- dplyr::collect(q)
-    return(tibble::as_tibble(result))
+    result <- tibble::as_tibble(result)
+    result$sync_date <- NULL
+    return(filter_changelog_dates(result, from = from, to = to))
   }
-
-  dates <- sub("^sync_date=", "", basename(partitions))
-  keep <- rep(TRUE, length(dates))
-  if (!is.null(from)) keep <- keep & dates >= as.character(from)
-  if (!is.null(to)) keep <- keep & dates <= as.character(to)
-  partitions <- partitions[keep]
 
   all_files <- unlist(lapply(partitions, function(p) {
     list.files(p, pattern = "\\.parquet$", full.names = TRUE)
@@ -168,7 +162,23 @@ read_changelog <- function(from = NULL, to = NULL,
   result <- dplyr::bind_rows(lapply(all_files, read_parquet_safe))
   if (!is.null(registry)) result <- result[result$registry %in% registry, ]
   if (!is.null(change_type)) result <- result[result$change_type %in% change_type, ]
-  result
+  filter_changelog_dates(result, from = from, to = to)
+}
+
+
+#' Filter changelog rows by their event date
+#' @param result A changelog data frame.
+#' @param from,to Optional inclusive date bounds.
+#' @returns The filtered changelog data frame.
+#' @noRd
+filter_changelog_dates <- function(result, from = NULL, to = NULL) {
+  if (nrow(result) == 0 || (is.null(from) && is.null(to))) return(result)
+
+  event_date <- as.Date(substr(as.character(result$timestamp), 1, 10))
+  keep <- !is.na(event_date)
+  if (!is.null(from)) keep <- keep & event_date >= as.Date(from)
+  if (!is.null(to)) keep <- keep & event_date <= as.Date(to)
+  result[keep, , drop = FALSE]
 }
 
 
