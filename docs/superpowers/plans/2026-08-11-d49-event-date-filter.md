@@ -67,6 +67,6 @@ Add an internal helper in `R/state.R` that derives `event_date` from the first t
 
 Run the focused test, `devtools::test()`, `devtools::document()`, and `devtools::check(error_on = "warning")`. Expected: focused test passes; full package verification has no errors or warnings.
 
-- [ ] **Step 5: Record and remotely validate the fix**
+- [x] **Step 5: Record and remotely validate the fix**
 
-Add a concise `NEWS.md` bug-fix entry, commit the isolated branch, push it, and run the stress-test changelog surface against that package ref. Expected: CL-14 passes without introducing unexplained regressions.
+Add a concise `NEWS.md` bug-fix entry, commit the isolated branch, push it, and run the stress-test changelog surface against that package ref. The real-data CL-14 gate was blocked by pre-existing stress-harness bootstrap failures, so validate the same late-arriving-event regression directly on remote Ubuntu/Arrow. Expected: the remote assertion returns only the in-range event without introducing unexplained regressions.
