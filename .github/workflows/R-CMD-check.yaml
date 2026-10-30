@@ -63,7 +63,7 @@ jobs:
       - name: Assert the exact export surface and version alignment
         run: |
           expected <- c("brreg_entity","brreg_search","brreg_underenheter","brreg_children",
-            "brreg_roles","brreg_roles_legal","brreg_konsern","brreg_signatur","brreg_prokura",
+            "brreg_roles","brreg_roles_legal","brreg_konsern","brreg_signatur","brreg_prokura","brreg_regnskap",
             "brreg_updates","brreg_update_fields","brreg_download","brreg_label","get_brreg_dic",
             "brreg_validate")
           ns <- readLines("NAMESPACE")
