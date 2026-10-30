@@ -31,8 +31,10 @@ Imports:
     rlang,
     tibble
 Suggests:
+    callr,
     curl,
     knitr,
+    pkgload,
     rmarkdown,
     testthat (>= 3.0.0),
     withr,
