@@ -10,22 +10,25 @@ brreg_children(org_nr, max_results = 200, type = c("code", "label"))
 \item{org_nr}{Character. 9-digit organization number of the
 parent entity (hovedenhet).}
 
-\item{max_results}{Integer. Maximum sub-units to return (default 200).}
+\item{max_results}{Integer. Maximum sub-units to return (default 200).
+When the parent has more, the result carries \code{complete = FALSE}
+and a \code{tidybrreg_warning_truncated} is signalled.}
 
 \item{type}{One of \code{"code"} (default) or \code{"label"}.}
 }
 \value{
 A tibble with one row per child entity. Same column schema
-as \code{\link[=brreg_search]{brreg_search()}} with \code{registry = "enheter"}.
+and attributes as \code{\link[=brreg_search]{brreg_search()}} with \code{registry = "enheter"}.
 }
 \description{
 Query the enheter registry for entities whose \code{overordnetEnhet}
 matches the given org number. This traverses the ORGL parent-child
 hierarchy (e.g. Stortinget to Riksrevisjonen), which is distinct
-from the enhet-to-underenhet relationship.
+from the enhet-to-underenhet relationship and from the konsern
+ownership tree returned by \code{\link[=brreg_konsern]{brreg_konsern()}}.
 }
 \examples{
-\dontshow{if (interactive() && curl::has_internet()) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive() && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 brreg_children("971524960")
 \dontshow{\}) # examplesIf}
 }
@@ -33,18 +36,17 @@ brreg_children("971524960")
 \code{\link[=brreg_underenheter]{brreg_underenheter()}} for sub-units (BEDR/AAFY),
 \code{\link[=brreg_entity]{brreg_entity()}} for single lookups.
 
-Other tidybrreg entity functions:
-\code{\link[=brreg_board_summary]{brreg_board_summary()}},
-\code{\link[=brreg_download]{brreg_download()}},
-\code{\link[=brreg_entity]{brreg_entity()}},
-\code{\link[=brreg_konsern]{brreg_konsern()}},
-\code{\link[=brreg_prokura]{brreg_prokura()}},
-\code{\link[=brreg_roles]{brreg_roles()}},
-\code{\link[=brreg_roles_legal]{brreg_roles_legal()}},
-\code{\link[=brreg_search]{brreg_search()}},
-\code{\link[=brreg_signatur]{brreg_signatur()}},
-\code{\link[=brreg_underenheter]{brreg_underenheter()}},
-\code{\link[=brreg_update_fields]{brreg_update_fields()}},
-\code{\link[=brreg_updates]{brreg_updates()}}
+Other tidybrreg entity functions: 
+\code{\link{brreg_download}()},
+\code{\link{brreg_entity}()},
+\code{\link{brreg_konsern}()},
+\code{\link{brreg_prokura}()},
+\code{\link{brreg_roles}()},
+\code{\link{brreg_roles_legal}()},
+\code{\link{brreg_search}()},
+\code{\link{brreg_signatur}()},
+\code{\link{brreg_underenheter}()},
+\code{\link{brreg_update_fields}()},
+\code{\link{brreg_updates}()}
 }
 \concept{tidybrreg entity functions}

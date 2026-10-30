@@ -7,15 +7,16 @@
 brreg_roles_legal(org_nr)
 }
 \arguments{
-\item{org_nr}{Character. 9-digit organization number.}
+\item{org_nr}{Character. A single 9-digit organization number.}
 }
 \value{
 A tibble with one row per role held. Columns: \code{org_nr}
 (queried entity), \code{target_org_nr} (entity where role is held),
 \code{target_name}, \code{role_code}, \code{role}, \code{share} (ownership share
-if applicable), \code{resigned}, \code{deregistered}. \code{resigned} is present
+if applicable), \code{deregistered}. A \code{resigned} column is present
 only when the payload carries the \code{fratraadt} field, removed by
-BRREG on 2026-06-16; live responses no longer include it.
+BRREG on 2026-06-16. An entity holding no roles elsewhere yields a
+zero-row tibble with the same typed columns.
 }
 \description{
 Reverse role lookup: find all entities where the given entity holds
@@ -23,26 +24,42 @@ a role (e.g. parent company, shareholder, general partner). This
 is distinct from \code{\link[=brreg_roles]{brreg_roles()}}, which returns who holds roles
 IN the given entity.
 }
+\section{Status handling}{
+
+The per-entity endpoints behind \code{\link[=brreg_roles]{brreg_roles()}}, \code{\link[=brreg_roles_legal]{brreg_roles_legal()}},
+\code{\link[=brreg_konsern]{brreg_konsern()}}, \code{\link[=brreg_signatur]{brreg_signatur()}} and \code{\link[=brreg_prokura]{brreg_prokura()}} share one
+contract. HTTP 404 means the organization number is unknown to that
+endpoint, which for konsern, signatur and prokura is the ordinary case
+of an entity with nothing registered there: the typed zero-row tibble
+is returned with attribute \code{http_status = 404L} and no warning. HTTP
+410 means the entity has been deleted: the typed zero-row tibble is
+returned with \code{http_status = 410L}, \code{deletion_date}, and a
+\code{tidybrreg_warning_deleted}. Any other status of 400 or above aborts
+with a \code{tidybrreg_error_http}. A successful response with nothing
+registered returns the typed zero-row tibble with no attribute. Use
+\code{\link[=brreg_entity]{brreg_entity()}} to distinguish a non-existent organization number
+from a live entity with nothing registered.
+}
+
 \examples{
-\dontshow{if (interactive() && curl::has_internet()) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive() && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 brreg_roles_legal("923609016")  # Equinor's roles in other entities
 \dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=brreg_roles]{brreg_roles()}} for who holds roles in an entity.
 
-Other tidybrreg entity functions:
-\code{\link[=brreg_board_summary]{brreg_board_summary()}},
-\code{\link[=brreg_children]{brreg_children()}},
-\code{\link[=brreg_download]{brreg_download()}},
-\code{\link[=brreg_entity]{brreg_entity()}},
-\code{\link[=brreg_konsern]{brreg_konsern()}},
-\code{\link[=brreg_prokura]{brreg_prokura()}},
-\code{\link[=brreg_roles]{brreg_roles()}},
-\code{\link[=brreg_search]{brreg_search()}},
-\code{\link[=brreg_signatur]{brreg_signatur()}},
-\code{\link[=brreg_underenheter]{brreg_underenheter()}},
-\code{\link[=brreg_update_fields]{brreg_update_fields()}},
-\code{\link[=brreg_updates]{brreg_updates()}}
+Other tidybrreg entity functions: 
+\code{\link{brreg_children}()},
+\code{\link{brreg_download}()},
+\code{\link{brreg_entity}()},
+\code{\link{brreg_konsern}()},
+\code{\link{brreg_prokura}()},
+\code{\link{brreg_roles}()},
+\code{\link{brreg_search}()},
+\code{\link{brreg_signatur}()},
+\code{\link{brreg_underenheter}()},
+\code{\link{brreg_update_fields}()},
+\code{\link{brreg_updates}()}
 }
 \concept{tidybrreg entity functions}

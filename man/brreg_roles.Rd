@@ -7,19 +7,20 @@
 brreg_roles(org_nr)
 }
 \arguments{
-\item{org_nr}{Character. 9-digit organization number.}
+\item{org_nr}{Character. A single 9-digit organization number,
+validated with \code{\link[=brreg_validate]{brreg_validate()}}.}
 }
 \value{
 A tibble with one row per role assignment. Columns:
-\code{org_nr}, \code{role_group}, \code{role_group_code}, \code{role}, \code{role_code},
-\code{first_name}, \code{middle_name}, \code{last_name}, \code{birth_date}, \code{deceased},
-\code{entity_org_nr}, \code{entity_name}, \code{resigned}, \code{deregistered},
-\code{ordering}, \code{elected_by}, \code{group_modified}, \code{person_id}.
-\code{resigned} is present only when the payload carries the
+\code{org_nr}, \code{role_group_code}, \code{role_group}, \code{role_code}, \code{role},
+\code{first_name}, \code{middle_name}, \code{last_name}, \code{birth_date} (Date),
+\code{deceased}, \code{entity_org_nr}, \code{entity_name}, \code{deregistered},
+\code{ordering}, \code{elected_by}, \code{group_modified} (Date), \code{person_id}.
+A \code{resigned} column is present only when the payload carries the
 \code{fratraadt} field, which BRREG removed on 2026-06-16; live
 responses no longer include the column, while replays of older
-data retain it. Returns an empty tibble if the entity has no
-registered roles.
+data retain it. An entity with no registered roles yields a
+zero-row tibble with the same typed columns.
 }
 \description{
 Fetch all registered roles for a Norwegian legal entity. Returns one
@@ -42,27 +43,43 @@ names sharing a birth date. The brreg public API does not expose
 national identity numbers.
 }
 
+\section{Status handling}{
+
+The per-entity endpoints behind \code{\link[=brreg_roles]{brreg_roles()}}, \code{\link[=brreg_roles_legal]{brreg_roles_legal()}},
+\code{\link[=brreg_konsern]{brreg_konsern()}}, \code{\link[=brreg_signatur]{brreg_signatur()}} and \code{\link[=brreg_prokura]{brreg_prokura()}} share one
+contract. HTTP 404 means the organization number is unknown to that
+endpoint, which for konsern, signatur and prokura is the ordinary case
+of an entity with nothing registered there: the typed zero-row tibble
+is returned with attribute \code{http_status = 404L} and no warning. HTTP
+410 means the entity has been deleted: the typed zero-row tibble is
+returned with \code{http_status = 410L}, \code{deletion_date}, and a
+\code{tidybrreg_warning_deleted}. Any other status of 400 or above aborts
+with a \code{tidybrreg_error_http}. A successful response with nothing
+registered returns the typed zero-row tibble with no attribute. Use
+\code{\link[=brreg_entity]{brreg_entity()}} to distinguish a non-existent organization number
+from a live entity with nothing registered.
+}
+
 \examples{
-\dontshow{if (interactive() && curl::has_internet()) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive() && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 brreg_roles("923609016")  # Equinor ASA
 \dontshow{\}) # examplesIf}
 }
 \seealso{
-\code{\link[=brreg_board_summary]{brreg_board_summary()}} for derived board covariates,
-\link{role_types} and \link{role_groups} for the English lookup tables.
+\link{role_types} and \link{role_groups} for the English lookup
+tables, \link{tidybrreg_conditions} for the conditions signalled.
 
-Other tidybrreg entity functions:
-\code{\link[=brreg_board_summary]{brreg_board_summary()}},
-\code{\link[=brreg_children]{brreg_children()}},
-\code{\link[=brreg_download]{brreg_download()}},
-\code{\link[=brreg_entity]{brreg_entity()}},
-\code{\link[=brreg_konsern]{brreg_konsern()}},
-\code{\link[=brreg_prokura]{brreg_prokura()}},
-\code{\link[=brreg_roles_legal]{brreg_roles_legal()}},
-\code{\link[=brreg_search]{brreg_search()}},
-\code{\link[=brreg_signatur]{brreg_signatur()}},
-\code{\link[=brreg_underenheter]{brreg_underenheter()}},
-\code{\link[=brreg_update_fields]{brreg_update_fields()}},
-\code{\link[=brreg_updates]{brreg_updates()}}
+Other tidybrreg entity functions: 
+\code{\link{brreg_children}()},
+\code{\link{brreg_download}()},
+\code{\link{brreg_entity}()},
+\code{\link{brreg_konsern}()},
+\code{\link{brreg_prokura}()},
+\code{\link{brreg_roles_legal}()},
+\code{\link{brreg_search}()},
+\code{\link{brreg_signatur}()},
+\code{\link{brreg_underenheter}()},
+\code{\link{brreg_update_fields}()},
+\code{\link{brreg_updates}()}
 }
 \concept{tidybrreg entity functions}

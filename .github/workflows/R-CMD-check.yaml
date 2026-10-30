@@ -9,11 +9,9 @@ name: R-CMD-check
 permissions: read-all
 
 jobs:
-  R-CMD-check:
+  core:
     runs-on: ${{ matrix.config.os }}
-
-    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
-
+    name: tidybrreg ${{ matrix.config.os }} (${{ matrix.config.r }})
     strategy:
       fail-fast: false
       matrix:
@@ -23,26 +21,67 @@ jobs:
           - {os: ubuntu-latest,  r: 'devel', http-user-agent: 'release'}
           - {os: ubuntu-latest,  r: 'release'}
           - {os: ubuntu-latest,  r: 'oldrel-1'}
-
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
-
     steps:
       - uses: actions/checkout@v4
-
+      - uses: r-lib/actions/setup-pandoc@v2
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
-
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
           needs: check
-
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
+          args: 'c("--no-manual", "--as-cran")'
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+      - name: Assert the exact export surface
+        run: |
+          Rscript -e '
+            expected <- c("brreg_entity","brreg_search","brreg_underenheter","brreg_children",
+              "brreg_roles","brreg_roles_legal","brreg_konsern","brreg_signatur","brreg_prokura",
+              "brreg_updates","brreg_update_fields","brreg_download","brreg_label","get_brreg_dic",
+              "brreg_validate")
+            ns <- readLines("NAMESPACE")
+            actual <- sub("^export\\((.*)\\)$", "\\1", grep("^export\\(", ns, value = TRUE))
+            stopifnot(identical(sort(actual), sort(expected)))
+            cat("15 exports confirmed\n")'
+        shell: bash
+
+  companions:
+    runs-on: ubuntu-latest
+    name: ${{ matrix.pkg }} ubuntu (release)
+    strategy:
+      fail-fast: false
+      matrix:
+        pkg: [tidybrregpanel, tidybrregmcp]
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - name: Install tidybrreg from this checkout
+        run: |
+          Rscript -e 'install.packages("pak"); pak::local_install(".", dependencies = TRUE)'
+        shell: bash
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: ${{ matrix.pkg }}
+          extra-packages: any::rcmdcheck
+          needs: check
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          working-directory: ${{ matrix.pkg }}
+          args: 'c("--no-manual")'
+          build_args: 'c("--no-manual")'
+          error-on: '"error"'

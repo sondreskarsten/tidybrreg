@@ -1,0 +1,41 @@
+Package: tidybrregmcp
+Title: Model Context Protocol Server Derived from 'tidybrreg'
+Version: 0.6.0
+Authors@R:
+    person("Sondre", "Skarsten", role = c("aut", "cre"),
+           email = "sondreskarsten@gmail.com")
+Description: Exposes the exported functions of 'tidybrreg' as Model Context
+    Protocol (MCP) tools. The tool catalogue, every tool's title,
+    description, argument documentation and input schema are derived at
+    run time from the installed 'tidybrreg' namespace and its help pages,
+    so the server changes exactly when 'tidybrreg' changes and adds no
+    interpretation of the register's data of its own: tools return the
+    tibbles 'tidybrreg' returns, with its column names, its codes, its
+    attributes and its typed conditions. Serves over standard streams or
+    streamable HTTP.
+License: MIT + file LICENSE
+URL: https://sondreskarsten.github.io/tidybrreg/,
+    https://github.com/sondreskarsten/tidybrreg
+BugReports: https://github.com/sondreskarsten/tidybrreg/issues
+Depends:
+    R (>= 4.1.0)
+Imports:
+    cli,
+    jsonlite,
+    rlang,
+    tibble,
+    tidybrreg (>= 0.6.0),
+    tools,
+    utils
+Suggests:
+    callr,
+    curl,
+    httpuv,
+    testthat (>= 3.0.0),
+    withr
+Remotes: sondreskarsten/tidybrreg
+Config/testthat/edition: 3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.0.0
+RoxygenNote: 7.3.1

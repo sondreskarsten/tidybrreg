@@ -13,56 +13,91 @@ brreg_update_fields(
 )
 }
 \arguments{
-\item{since}{Date or POSIXct. Return updates after this timestamp.
-Defaults to yesterday.}
+\item{since}{Date, POSIXct, or ISO 8601 string. Return updates at or
+after this instant. Defaults to yesterday (midnight UTC).}
 
 \item{size}{Integer. Number of updates per page (max 10000).}
 
 \item{max_pages}{Integer. Maximum pages to fetch. Default 1.
 Set higher to paginate through large result sets automatically.}
 
-\item{type}{One of \code{"enheter"}, \code{"underenheter"}, or \code{"roller"}.
-Roller uses CloudEvents format; \code{include_changes} is ignored.}
+\item{type}{One of \code{"enheter"} or \code{"underenheter"}.}
 
 \item{verbose}{Logical. Print page-level progress.}
 }
 \value{
 A tibble with columns: \code{update_id}, \code{org_nr}, \code{change_type},
-\code{timestamp}, \code{operation}, \code{field}, \code{new_value}. No list-columns.
-Events without field patches (Ny, Sletting, Fjernet) appear as
-rows with \code{operation}, \code{field}, and \code{new_value} all \code{NA}.
+\code{timestamp} (POSIXct, UTC), \code{operation}, \code{field}, \code{path},
+\code{new_value}. No list-columns. Events without field patches appear
+as rows with \code{operation}, \code{field}, \code{path} and \code{new_value} all \code{NA}.
 }
 \description{
 Returns one row per field-level change, plus one synthetic row for
 each event that carries no field patches (Ny, Sletting, Fjernet).
-Synthetic rows have \code{operation = NA}, \code{field = NA},
+Synthetic rows have \code{operation = NA}, \code{field = NA}, \code{path = NA},
 \code{new_value = NA}, preserving event-level metadata in the output.
 }
 \details{
+Patches are RFC 6902 operations. Nested values are flattened to one
+row per leaf; \code{path} keeps the raw JSON pointer of the leaf (for
+example \verb{/forretningsadresse/adresse/0}) and \code{field} its snake_case
+rendering, so the register's own representation is never lost. A
+\code{move} emits an add at the destination and a \code{remove} at the source.
+
 To retrieve initial field values for newly registered entities
 (change_type \code{"Ny"}), call \code{\link[=brreg_entity]{brreg_entity()}} per org_nr — the CDC
 payload for Ny events contains no field-level patches.
 }
+\section{Time handling}{
+
+\code{since} is sent to the feed as a UTC instant. A \code{POSIXct} keeps its
+full precision; a \code{Date} is midnight UTC of that day; an ISO 8601
+string (\code{"2026-03-01"} or \code{"2026-03-01T14:00:00Z"}) is parsed as UTC.
+Timestamps in the result are \code{POSIXct} in the \code{UTC} time zone,
+whatever the session time zone.
+}
+
+\section{Completeness}{
+
+The feed is read page by page until a page is short, the feed is
+exhausted, or \code{max_pages} is reached. The result carries attributes
+\code{complete} (\code{FALSE} when \code{max_pages} stopped the read while the last
+page was full, or a later page failed), \code{pages_fetched}, and \code{cursor}
+(the last \code{update_id} read; pass \code{update_id + 1} as the next cursor
+to resume). Stopping on \code{max_pages} signals a
+\code{tidybrreg_warning_truncated}; a failure after the first page signals
+a \code{tidybrreg_warning_partial} and returns the pages already read; a
+failure on the first page aborts with a \code{tidybrreg_error_http}.
+}
+
+\section{Unknown members}{
+
+Any member of an update object that the package does not model is
+passed through as a column named by its snake_case key, and the
+result carries attribute \code{unknown_members} plus a single
+\code{tidybrreg_warning_unknown_member}, so an upstream addition cannot
+vanish silently.
+}
+
 \examples{
-\dontshow{if (interactive() && curl::has_internet()) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive() && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 brreg_update_fields(since = Sys.Date() - 1, size = 50)
 \dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=brreg_updates]{brreg_updates()}} for the event-level view.
 
-Other tidybrreg entity functions:
-\code{\link[=brreg_board_summary]{brreg_board_summary()}},
-\code{\link[=brreg_children]{brreg_children()}},
-\code{\link[=brreg_download]{brreg_download()}},
-\code{\link[=brreg_entity]{brreg_entity()}},
-\code{\link[=brreg_konsern]{brreg_konsern()}},
-\code{\link[=brreg_prokura]{brreg_prokura()}},
-\code{\link[=brreg_roles]{brreg_roles()}},
-\code{\link[=brreg_roles_legal]{brreg_roles_legal()}},
-\code{\link[=brreg_search]{brreg_search()}},
-\code{\link[=brreg_signatur]{brreg_signatur()}},
-\code{\link[=brreg_underenheter]{brreg_underenheter()}},
-\code{\link[=brreg_updates]{brreg_updates()}}
+Other tidybrreg entity functions: 
+\code{\link{brreg_children}()},
+\code{\link{brreg_download}()},
+\code{\link{brreg_entity}()},
+\code{\link{brreg_konsern}()},
+\code{\link{brreg_prokura}()},
+\code{\link{brreg_roles}()},
+\code{\link{brreg_roles_legal}()},
+\code{\link{brreg_search}()},
+\code{\link{brreg_signatur}()},
+\code{\link{brreg_underenheter}()},
+\code{\link{brreg_updates}()}
 }
 \concept{tidybrreg entity functions}

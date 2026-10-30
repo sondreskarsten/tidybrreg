@@ -12,8 +12,27 @@
 #' brreg are never silently dropped. Use [brreg_label()] to translate
 #' coded values (legal forms, NACE codes) to English descriptions.
 #'
-#' @param org_nr Character. A 9-digit Norwegian organization number.
-#'   Validated using [brreg_validate()] before the API call.
+#' @section Observed fields only:
+#' The register emits only the fields that apply to an entity: a sole
+#' proprietorship (`ENK`) typically carries no `founding_date` or
+#' `employees`, a foreign branch (`NUF`) no `municipality_code`. The
+#' returned columns are exactly the fields the response carried, so
+#' every column other than `org_nr`, `registry` and `deleted` is
+#' conditionally present. Test for a column with `"x" %in% names(result)`
+#' rather than assuming it.
+#'
+#' @section Deleted entities:
+#' BRREG reports a deleted entity either as HTTP 410 or, for most
+#' deletions, as HTTP 200 with `respons_klasse = "SlettetEnhet"` and a
+#' `slettedato`. Both are modelled the same way: `deleted` is `TRUE`,
+#' `deletion_date` is the parsed date, every other field the response
+#' carried is kept, and a `tidybrreg_warning_deleted` is signalled
+#' (silence it with `suppressWarnings(classes = "tidybrreg_warning_deleted")`).
+#' Live entities carry `deleted = FALSE`.
+#'
+#' @param org_nr Character. A single 9-digit Norwegian organization
+#'   number. Validated using [brreg_validate()] before the API call; a
+#'   vector of several numbers is an error (iterate with [lapply()]).
 #' @param registry One of `"auto"` (default, tries enheter then
 #'   underenheter), `"enheter"` (main entities only), or
 #'   `"underenheter"` (sub-entities only). Sub-entities have
@@ -22,19 +41,20 @@
 #' @param type A type of variables: `"code"` (default) returns raw
 #'   codes, `"label"` returns English labels for coded columns
 #'   (legal form, NACE, sector, etc.), following the eurostat
-#'   package's pattern.
+#'   package's pattern. Labelling NACE and sector codes consults SSB
+#'   KLASS on first use in a session; see [get_brreg_dic()].
 #'
-#' @returns A tibble with one row and one column per API field. Column
-#'   names follow the package field dictionary. Key columns include
+#' @returns A tibble with one row and one column per field the API
+#'   returned, named via [field_dict], plus `registry` (which registry
+#'   answered) and `deleted` (logical). Frequently present columns include
 #'   `org_nr`, `name`, `legal_form`, `employees`, `founding_date`,
 #'   `nace_1`, `municipality_code`, `bankrupt`, and `parent_org_nr`.
-#'   For deleted entities (HTTP 410), returns a tibble with columns
-#'   `org_nr`, `deleted`, and `deletion_date`.
 #'
 #' @family tidybrreg entity functions
 #' @seealso [brreg_search()] for querying multiple entities,
 #'   [brreg_label()] for translating codes to English,
-#'   [field_dict] for the column name mapping.
+#'   [field_dict] for the column name mapping,
+#'   [tidybrreg_conditions] for the errors and warnings signalled.
 #'
 #' @export
 #' @examplesIf interactive() && curl::has_internet()
@@ -50,50 +70,60 @@ brreg_entity <- function(org_nr, registry = c("auto", "enheter", "underenheter")
                           type = c("code", "label")) {
   registry <- match.arg(registry)
   type <- match.arg(type)
-  org_nr <- as.character(org_nr)
-  if (!brreg_validate(org_nr)) {
-    cli::cli_abort(c(
-      "Invalid organization number: {.val {org_nr}}",
-      "i" = "Must be 9 digits starting with 8 or 9, with a modulus-11 check digit.",
-      "i" = "Examples: 923609016 (Equinor), 984851006 (DNB Bank)"
-    ))
-  }
+  org_nr <- check_org_nr(org_nr)
 
   registries <- if (registry == "auto") c("enheter", "underenheter") else registry
 
   resp <- NULL
   matched_registry <- NA_character_
+  endpoint <- NA_character_
   for (reg in registries) {
-    resp <- brreg_req(paste0(reg, "/", org_nr)) |>
-      httr2::req_error(is_error = \(resp) FALSE) |>
-      httr2::req_perform()
+    endpoint <- paste0(reg, "/", org_nr)
+    resp <- brreg_perform(brreg_req(endpoint))
     status <- httr2::resp_status(resp)
-    if (status == 200L) { matched_registry <- reg; break }
-    if (status == 410L) { matched_registry <- reg; break }
+    if (status %in% c(200L, 410L)) { matched_registry <- reg; break }
     if (status != 404L) break
   }
 
   status <- httr2::resp_status(resp)
-  if (status == 410L) {
-    body <- httr2::resp_body_json(resp)
-    cli::cli_warn("Entity {.val {org_nr}} was deleted on {body$slettedato}.")
-    return(tibble::tibble(
-      org_nr = org_nr, registry = matched_registry,
-      deleted = TRUE, deletion_date = as.Date(body$slettedato)
-    ))
-  }
   if (status == 404L) {
-    cli::cli_abort(c(
+    brreg_abort(c(
       "Entity {.val {org_nr}} not found in the Norwegian Business Registry.",
       "i" = "Searched: {.val {registries}}"
-    ))
+    ), class = "not_found", org_nr = org_nr, endpoint = endpoint, status = 404L)
   }
-  if (status >= 400L) {
-    cli::cli_abort("Norwegian Business Registry API error: HTTP {status}")
-  }
-  result <- parse_entity(httr2::resp_body_json(resp))
+  if (status != 200L && status != 410L) abort_http(resp, endpoint)
+
+  body <- httr2::resp_body_json(resp)
+  result <- parse_entity(body)
+  if (!"org_nr" %in% names(result)) result$org_nr <- org_nr
   result$registry <- matched_registry
+  result <- mark_deleted(result, status, body)
   if (identical(type, "label")) result <- brreg_label(result)
+  result
+}
+
+#' Flag deletion on an entity row
+#'
+#' Reads the two signals BRREG uses for a deleted entity (HTTP 410, or
+#' `respons_klasse == "SlettetEnhet"` on a 200) and sets `deleted` and
+#' `deletion_date` consistently.
+#' @keywords internal
+mark_deleted <- function(result, status, body) {
+  deleted <- status == 410L ||
+    identical(body$respons_klasse, "SlettetEnhet") ||
+    !is.null(body$slettedato)
+  result$deleted <- deleted
+  if (deleted) {
+    if (!"deletion_date" %in% names(result)) {
+      result$deletion_date <- parse_brreg_date(body$slettedato %||% NA_character_)
+    }
+    brreg_warn(
+      "Entity {.val {result$org_nr[1]}} was deleted on {format(result$deletion_date[1])}.",
+      class = "deleted", org_nr = result$org_nr[1],
+      deletion_date = result$deletion_date[1]
+    )
+  }
   result
 }
 
@@ -102,7 +132,7 @@ brreg_entity <- function(org_nr, registry = c("auto", "enheter", "underenheter")
 #'
 #' Query the Central Coordinating Register by name, legal form, industry,
 #' geography, and other criteria. Results are paginated automatically up to
-#' `max_results` or the API's 10,000-result ceiling, whichever is lower.
+#' `max_results`.
 #'
 #' @section Norwegian legal forms:
 #' Common codes for the `legal_form` parameter:
@@ -113,6 +143,22 @@ brreg_entity <- function(org_nr, registry = c("auto", "enheter", "underenheter")
 #'
 #' See [legal_forms] for the complete list with English translations.
 #'
+#' @section Result window:
+#' The search endpoints allow a page size of up to 10,000 but reject any
+#' page where `size * (page + 1)` exceeds 10,000 (observed 2026-08-08:
+#' a Bergen municipality query reported 57,954 matches; result 10,001
+#' answered HTTP 400 `size * (page+1) kan ikke overstige 10_000`). A query
+#' matching more entities than that window cannot be retrieved completely
+#' through search. When the register reports more matches than the
+#' window and `max_results` asks for more than the window, the call
+#' aborts with a `tidybrreg_error_result_window` before any page is
+#' returned; narrow the query (for example by `municipality_code`,
+#' `legal_form` or `nace_code`), or use [brreg_download()] for the full
+#' register. When `max_results` is at or below the window the first
+#' `max_results` matches are returned and the result carries
+#' `complete = FALSE` plus a `tidybrreg_warning_truncated` whenever
+#' more matches exist.
+#'
 #' @param name Character. Entity name (partial match, case-insensitive).
 #' @param legal_form Character. Legal form code: `"AS"`, `"ASA"`, `"ENK"`,
 #'   etc. See [legal_forms] for valid codes.
@@ -120,10 +166,12 @@ brreg_entity <- function(org_nr, registry = c("auto", "enheter", "underenheter")
 #' @param nace_code Character. NACE industry code (e.g. `"64.190"`).
 #' @param min_employees,max_employees Integer. Employee count range.
 #' @param bankrupt Logical. If `TRUE`, return only bankrupt entities.
+#'   Only supported for `registry = "enheter"`; supplying it for
+#'   `"underenheter"` is an error.
 #' @param parent_org_nr Character. Filter to subsidiaries of this org.
 #' @param max_results Integer. Maximum entities to return (default 200).
-#'   The API caps search results at 10,000; use `brreg_download()` for
-#'   larger extractions.
+#'   Values above the 10,000 result window are allowed but abort when the
+#'   register reports more matches than the window can deliver.
 #' @param registry One of `"enheter"` (main entities, default) or
 #'   `"underenheter"` (sub-entities / establishments). Sub-entities
 #'   use `beliggenhetsadresse.kommunenummer` instead of `kommunenummer`
@@ -133,12 +181,17 @@ brreg_entity <- function(org_nr, registry = c("auto", "enheter", "underenheter")
 #'   codes, `"label"` returns English labels for coded columns.
 #'
 #' @returns A tibble with one row per entity. Column names follow the
-#'   package field dictionary ([field_dict]). An attribute `total_matches`
-#'   records the total number of matches in the registry.
+#'   package field dictionary ([field_dict]); only observed fields are
+#'   emitted (see [brreg_entity()]). Attributes: `total_matches`, the
+#'   number of matches the register reported, and `complete`, `FALSE`
+#'   when fewer rows were returned than matched. A valid empty result is
+#'   a zero-row tibble with character columns `org_nr`, `name` and
+#'   `legal_form`.
 #'
 #' @family tidybrreg entity functions
 #' @seealso [brreg_entity()] for single lookups,
-#'   [brreg_label()] for translating codes to English.
+#'   [brreg_label()] for translating codes to English,
+#'   [tidybrreg_conditions] for the errors and warnings signalled.
 #'
 #' @export
 #' @examplesIf interactive() && curl::has_internet()
@@ -157,6 +210,24 @@ brreg_search <- function(name = NULL, legal_form = NULL,
                           type = c("code", "label")) {
   registry <- match.arg(registry)
   type <- match.arg(type)
+  max_results <- as.integer(max_results)
+  if (length(max_results) != 1L || is.na(max_results) || max_results < 1L) {
+    brreg_abort("{.arg max_results} must be a single positive integer.",
+                class = "invalid_filter", registry = registry, filter = "max_results")
+  }
+  if (!is.null(bankrupt) && registry == "underenheter") {
+    brreg_abort(c(
+      "{.arg bankrupt} is not supported for {.val underenheter}.",
+      "i" = "The sub-entity search endpoint has no {.code konkurs} filter; query the parent entity instead."
+    ), class = "invalid_filter", registry = registry, filter = "bankrupt")
+  }
+  retrieval_limit <- 10000L
+  filters <- compact(list(
+    name = name, legal_form = legal_form, municipality_code = municipality_code,
+    nace_code = nace_code, min_employees = min_employees,
+    max_employees = max_employees, bankrupt = bankrupt,
+    parent_org_nr = parent_org_nr
+  ))
   query <- list(
     navn = name,
     organisasjonsform = legal_form,
@@ -165,7 +236,7 @@ brreg_search <- function(name = NULL, legal_form = NULL,
     tilAntallAnsatte = max_employees,
     overordnetEnhet = parent_org_nr,
     size = min(100L, max_results),
-    page = 0
+    page = 0L
   )
   if (registry == "enheter") {
     query$kommunenummer <- municipality_code
@@ -176,37 +247,57 @@ brreg_search <- function(name = NULL, legal_form = NULL,
 
   all_items <- list()
   total <- NULL
-
+  pages <- 0L
+  complete <- TRUE
   embed_key <- registry
 
   repeat {
-    resp <- brreg_req(registry) |>
-      httr2::req_url_query(!!!compact(query)) |>
-      httr2::req_error(is_error = \(resp) FALSE) |>
-      httr2::req_perform()
-    if (httr2::resp_status(resp) >= 400L) break
+    resp <- brreg_perform(brreg_req(registry, query = query))
+    status <- httr2::resp_status(resp)
+    if (status >= 400L) {
+      if (pages == 0L) abort_http(resp, registry)
+      brreg_warn(c(
+        "Search failed with HTTP {status} after {pages} page{?s}; returning the {length(all_items)} entities retrieved so far.",
+        "i" = "The result carries {.code attr(x, \"complete\") == FALSE}."
+      ), class = "partial", endpoint = registry, status = status, pages_fetched = pages)
+      complete <- FALSE
+      break
+    }
     body <- httr2::resp_body_json(resp)
-    if (is.null(total)) total <- body$page$totalElements
+    pages <- pages + 1L
+    if (is.null(total)) {
+      total <- as.integer(body$page$totalElements %||% NA_integer_)
+      if (!is.na(total) && total > retrieval_limit && max_results > retrieval_limit) {
+        brreg_abort(c(
+          "The query matches {format(total, big.mark = ',')} entities, more than the {format(retrieval_limit, big.mark = ',')} the search endpoint can return.",
+          "i" = "Narrow the query (e.g. by {.arg municipality_code}, {.arg legal_form}, {.arg nace_code}) and combine the partitions, or set {.arg max_results} at or below {format(retrieval_limit, big.mark = ',')} to accept the first matches only.",
+          "i" = "For the full register use {.fn brreg_download}."
+        ), class = "result_window", endpoint = registry, total_matches = total,
+        retrieval_limit = retrieval_limit, filters = filters)
+      }
+    }
     items <- body[["_embedded"]][[embed_key]]
     if (is.null(items) || length(items) == 0) break
     all_items <- c(all_items, items)
     if (length(all_items) >= max_results) break
     if (is.null(body[["_links"]][["next"]])) break
     query$page <- query$page + 1L
-    if ((query$page + 1L) * query$size > 10000L) {
-      cli::cli_warn("Reached the 10,000-result API limit.")
-      break
-    }
+    if ((query$page + 1L) * query$size > retrieval_limit) break
   }
-  if (length(all_items) == 0) {
-    result <- tibble::tibble()
-    attr(result, "total_matches") <- total %||% 0L
-    return(result)
-  }
+
   n <- min(length(all_items), max_results)
-  result <- parse_entities(all_items[seq_len(n)])
+  result <- if (n == 0L) empty_entities() else parse_entities(all_items[seq_len(n)])
+  total <- total %||% n
+  if (!is.na(total) && total > n) {
+    complete <- FALSE
+    brreg_warn(c(
+      "Returned {n} of {format(total, big.mark = ',')} matching entities.",
+      "i" = "Raise {.arg max_results} (up to 10,000) or narrow the query; the result carries {.code attr(x, \"complete\") == FALSE}."
+    ), class = "truncated", endpoint = registry, returned = n, total_matches = total)
+  }
+  if (identical(type, "label") && n > 0L) result <- brreg_label(result)
   attr(result, "total_matches") <- total
-  if (identical(type, "label")) result <- brreg_label(result)
+  attr(result, "complete") <- complete
   result
 }
 
@@ -221,10 +312,12 @@ brreg_search <- function(name = NULL, legal_form = NULL,
 #' @param org_nr Character. 9-digit organization number of the
 #'   parent entity (hovedenhet).
 #' @param max_results Integer. Maximum sub-units to return (default 200).
+#'   When the parent has more, the result carries `complete = FALSE`
+#'   and a `tidybrreg_warning_truncated` is signalled.
 #' @param type One of `"code"` (default) or `"label"`.
 #'
-#' @returns A tibble with one row per sub-unit. Same column schema as
-#'   [brreg_search()] with `registry = "underenheter"`.
+#' @returns A tibble with one row per sub-unit. Same column schema and
+#'   attributes as [brreg_search()] with `registry = "underenheter"`.
 #'
 #' @family tidybrreg entity functions
 #' @seealso [brreg_entity()] for the parent entity,
@@ -235,8 +328,9 @@ brreg_search <- function(name = NULL, legal_form = NULL,
 #' brreg_underenheter("923609016")
 brreg_underenheter <- function(org_nr, max_results = 200,
                                 type = c("code", "label")) {
+  org_nr <- check_org_nr(org_nr)
   brreg_search(
-    parent_org_nr = as.character(org_nr),
+    parent_org_nr = org_nr,
     registry      = "underenheter",
     max_results   = max_results,
     type          = type
@@ -249,12 +343,13 @@ brreg_underenheter <- function(org_nr, max_results = 200,
 #' Query the enheter registry for entities whose `overordnetEnhet`
 #' matches the given org number. This traverses the ORGL parent-child
 #' hierarchy (e.g. Stortinget to Riksrevisjonen), which is distinct
-#' from the enhet-to-underenhet relationship.
+#' from the enhet-to-underenhet relationship and from the konsern
+#' ownership tree returned by [brreg_konsern()].
 #'
 #' @inheritParams brreg_underenheter
 #'
 #' @returns A tibble with one row per child entity. Same column schema
-#'   as [brreg_search()] with `registry = "enheter"`.
+#'   and attributes as [brreg_search()] with `registry = "enheter"`.
 #'
 #' @family tidybrreg entity functions
 #' @seealso [brreg_underenheter()] for sub-units (BEDR/AAFY),
@@ -265,8 +360,9 @@ brreg_underenheter <- function(org_nr, max_results = 200,
 #' brreg_children("971524960")
 brreg_children <- function(org_nr, max_results = 200,
                             type = c("code", "label")) {
+  org_nr <- check_org_nr(org_nr)
   brreg_search(
-    parent_org_nr = as.character(org_nr),
+    parent_org_nr = org_nr,
     registry      = "enheter",
     max_results   = max_results,
     type          = type

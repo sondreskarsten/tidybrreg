@@ -4,35 +4,68 @@
 \alias{get_brreg_dic}
 \title{Fetch a brreg dictionary}
 \usage{
-get_brreg_dic(dictname = c("nace", "sector"), lang = "en")
+get_brreg_dic(
+  dictname = c("nace", "sector"),
+  lang = c("en", "no"),
+  source = c("auto", "klass", "bundled"),
+  refresh = FALSE
+)
 }
 \arguments{
 \item{dictname}{One of \code{"nace"} or \code{"sector"}.}
 
 \item{lang}{\code{"en"} (default) for English labels or \code{"no"} for
 Norwegian.}
+
+\item{source}{One of \code{"auto"}, \code{"klass"}, or \code{"bundled"}; see the
+section on network access.}
+
+\item{refresh}{Logical. If \code{TRUE}, ignore the session cache and
+fetch again.}
 }
 \value{
-A tibble with columns \code{code}, \code{name_en}, \code{level}.
+A tibble with columns \code{code}, \code{name} (label in the requested
+language), and \code{level}. Attributes \code{source} (\code{"klass"} or
+\code{"bundled"}), \code{lang}, and \code{vintage} (the date the labels were
+retrieved from KLASS) record where the labels came from.
 }
 \description{
 Retrieve English or Norwegian label dictionaries for NACE industry
-codes or institutional sector codes. Dictionaries are cached in a
-session-level environment (following the eurostat package pattern).
-Bundled data is used as fallback when the SSB Klass API is
-unreachable.
+codes (SSB classification 6, SN2007) or institutional sector codes
+(SSB classification 39). Dictionaries are cached in a session-level
+environment (following the eurostat package pattern), so the network
+is consulted at most once per dictionary and language per session.
 }
+\section{Network access and offline use}{
+
+With \code{source = "auto"} (default) the dictionary is requested from the
+SSB KLASS API (\code{data.ssb.no}), which is the only source of Norwegian
+labels and of codes valid today. If the request fails, the bundled
+English dictionary is returned instead and a
+\code{tidybrreg_warning_bundled_fallback} states its vintage; for
+\code{lang = "no"} there is no bundled fallback and the error propagates.
+\code{source = "bundled"} never touches the network and is the mode to use
+offline or in tests; \code{options(tidybrreg.offline = TRUE)} makes it the
+default for the session. \code{source = "klass"} requires the network and
+errors when it is unavailable. The bundled dictionaries were retrieved
+from KLASS on 2026-06-16 (see \link{tidybrreg_provenance}).
+}
+
 \examples{
-\dontshow{if (interactive() && curl::has_internet()) withAutoprint(\{ # examplesIf}
-get_brreg_dic("nace")
-get_brreg_dic("sector")
+get_brreg_dic("nace", source = "bundled")
+attr(get_brreg_dic("sector", source = "bundled"), "vintage")
+\dontshow{if (interactive() && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+get_brreg_dic("nace", lang = "no")
 \dontshow{\}) # examplesIf}
 }
 \seealso{
-\code{\link[=brreg_label]{brreg_label()}} for translating columns in place.
+\code{\link[=brreg_label]{brreg_label()}} for translating columns in place,
+\link{tidybrreg_provenance} for the bundled dictionaries' sources.
 
-Other tidybrreg utilities:
-\code{\link[=brreg_label]{brreg_label()}},
-\code{\link[=brreg_validate]{brreg_validate()}}
+Other tidybrreg utilities: 
+\code{\link{brreg_label}()},
+\code{\link{brreg_validate}()},
+\code{\link{tidybrreg_conditions}},
+\code{\link{tidybrreg_endpoints}}
 }
 \concept{tidybrreg utilities}

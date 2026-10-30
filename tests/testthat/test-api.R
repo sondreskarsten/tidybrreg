@@ -69,16 +69,6 @@ test_that("brreg_roles returns correct structure", {
   expect_s3_class(roles$birth_date, "Date")
 })
 
-test_that("brreg_board_summary computes correctly", {
-  skip_if_offline()
-  roles <- safely(brreg_roles("923609016"))
-  bs <- brreg_board_summary(roles)
-  expect_equal(nrow(bs), 1)
-  expect_gt(bs$board_size, 0)
-  expect_true(is.logical(bs$has_ceo))
-  expect_true(is.logical(bs$has_auditor))
-})
-
 test_that("brreg_updates returns results", {
   skip_if_offline()
   u <- safely(brreg_updates(since = Sys.Date() - 2, size = 10))

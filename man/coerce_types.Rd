@@ -7,6 +7,8 @@
 coerce_types(tbl)
 }
 \description{
-Coerce columns to declared types from field_dict
+Applied to every dictionary column present in \code{tbl}. Failures are
+attached as the \code{brreg_parse_problems} attribute and signalled once
+as a \code{tidybrreg_warning_parse}.
 }
 \keyword{internal}

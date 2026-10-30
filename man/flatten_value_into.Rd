@@ -6,6 +6,10 @@
 \usage{
 flatten_value_into(op, path_prefix, value, emit)
 }
+\arguments{
+\item{emit}{Function of \verb{(op, path, value)} where \code{path} is the raw
+JSON pointer of the leaf.}
+}
 \description{
 Recursively flatten a patch value, calling emit() for each leaf
 }

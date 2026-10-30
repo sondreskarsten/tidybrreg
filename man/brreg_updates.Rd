@@ -14,8 +14,8 @@ brreg_updates(
 )
 }
 \arguments{
-\item{since}{Date or POSIXct. Return updates after this timestamp.
-Defaults to yesterday.}
+\item{since}{Date, POSIXct, or ISO 8601 string. Return updates at or
+after this instant. Defaults to yesterday (midnight UTC).}
 
 \item{size}{Integer. Number of updates per page (max 10000).}
 
@@ -23,27 +23,61 @@ Defaults to yesterday.}
 Set higher to paginate through large result sets automatically.}
 
 \item{include_changes}{Logical. If \code{TRUE}, include field-level change
-details per update as a list-column of tibbles.}
+details per update as a list-column of tibbles. Not available for
+\code{type = "roller"}, whose feed carries no field patches; supplying
+\code{TRUE} there is an error.}
 
 \item{type}{One of \code{"enheter"}, \code{"underenheter"}, or \code{"roller"}.
-Roller uses CloudEvents format; \code{include_changes} is ignored.}
+The roller feed uses the CloudEvents format and reports only which
+entity's roles changed; fetch the new state with \code{\link[=brreg_roles]{brreg_roles()}}.}
 
 \item{verbose}{Logical. Print page-level progress.}
 }
 \value{
-A tibble with columns: \code{update_id}, \code{org_nr},
-\code{change_type}, \code{timestamp}. If \code{include_changes = TRUE}, a
-list-column \code{changes} with tibbles of \code{operation}, \code{field},
-\code{new_value}.
+A tibble with columns: \code{update_id} (integer), \code{org_nr},
+\code{change_type}, \code{timestamp} (POSIXct, UTC). If \code{include_changes = TRUE}, a list-column \code{changes} with tibbles of \code{operation}, \code{field},
+\code{path}, \code{new_value}. An empty feed yields a zero-row tibble with the
+same typed columns.
 }
 \description{
 Query the brreg change data capture (CDC) endpoint for entities
-modified since a given date. Each update carries a monotonically
+modified since a given instant. Each update carries a monotonically
 increasing \code{update_id} suitable for cursor-based pagination and
 deduplication.
 }
+\section{Time handling}{
+
+\code{since} is sent to the feed as a UTC instant. A \code{POSIXct} keeps its
+full precision; a \code{Date} is midnight UTC of that day; an ISO 8601
+string (\code{"2026-03-01"} or \code{"2026-03-01T14:00:00Z"}) is parsed as UTC.
+Timestamps in the result are \code{POSIXct} in the \code{UTC} time zone,
+whatever the session time zone.
+}
+
+\section{Completeness}{
+
+The feed is read page by page until a page is short, the feed is
+exhausted, or \code{max_pages} is reached. The result carries attributes
+\code{complete} (\code{FALSE} when \code{max_pages} stopped the read while the last
+page was full, or a later page failed), \code{pages_fetched}, and \code{cursor}
+(the last \code{update_id} read; pass \code{update_id + 1} as the next cursor
+to resume). Stopping on \code{max_pages} signals a
+\code{tidybrreg_warning_truncated}; a failure after the first page signals
+a \code{tidybrreg_warning_partial} and returns the pages already read; a
+failure on the first page aborts with a \code{tidybrreg_error_http}.
+}
+
+\section{Unknown members}{
+
+Any member of an update object that the package does not model is
+passed through as a column named by its snake_case key, and the
+result carries attribute \code{unknown_members} plus a single
+\code{tidybrreg_warning_unknown_member}, so an upstream addition cannot
+vanish silently.
+}
+
 \examples{
-\dontshow{if (interactive() && curl::has_internet()) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive() && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 brreg_updates(since = Sys.Date() - 1, size = 10)
 
 # Auto-paginate
@@ -52,20 +86,20 @@ brreg_updates(since = "2026-03-01", size = 10000, max_pages = 50,
 \dontshow{\}) # examplesIf}
 }
 \seealso{
-\code{\link[=brreg_update_fields]{brreg_update_fields()}} for a flat alternative.
+\code{\link[=brreg_update_fields]{brreg_update_fields()}} for a flat alternative,
+\link{tidybrreg_conditions} for the conditions signalled.
 
-Other tidybrreg entity functions:
-\code{\link[=brreg_board_summary]{brreg_board_summary()}},
-\code{\link[=brreg_children]{brreg_children()}},
-\code{\link[=brreg_download]{brreg_download()}},
-\code{\link[=brreg_entity]{brreg_entity()}},
-\code{\link[=brreg_konsern]{brreg_konsern()}},
-\code{\link[=brreg_prokura]{brreg_prokura()}},
-\code{\link[=brreg_roles]{brreg_roles()}},
-\code{\link[=brreg_roles_legal]{brreg_roles_legal()}},
-\code{\link[=brreg_search]{brreg_search()}},
-\code{\link[=brreg_signatur]{brreg_signatur()}},
-\code{\link[=brreg_underenheter]{brreg_underenheter()}},
-\code{\link[=brreg_update_fields]{brreg_update_fields()}}
+Other tidybrreg entity functions: 
+\code{\link{brreg_children}()},
+\code{\link{brreg_download}()},
+\code{\link{brreg_entity}()},
+\code{\link{brreg_konsern}()},
+\code{\link{brreg_prokura}()},
+\code{\link{brreg_roles}()},
+\code{\link{brreg_roles_legal}()},
+\code{\link{brreg_search}()},
+\code{\link{brreg_signatur}()},
+\code{\link{brreg_underenheter}()},
+\code{\link{brreg_update_fields}()}
 }
 \concept{tidybrreg entity functions}

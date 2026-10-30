@@ -237,7 +237,14 @@ fetch_klass_en <- function(classification_id, date = Sys.Date()) {
     req_headers(Accept = "application/json") |>
     req_perform()
   body <- resp_body_json(resp)
-  map_dfr(body$codes, \(c) tibble(code = c$code, name_en = c$name, level = c$level))
+  out <- map_dfr(body$codes, \(c) tibble(code = as.character(c$code),
+                                          name = as.character(c$name),
+                                          level = as.character(c$level)))
+  attr(out, "vintage") <- date
+  attr(out, "classification_id") <- as.integer(classification_id)
+  attr(out, "source_url") <- paste0("https://data.ssb.no/api/klass/v1/classifications/",
+                                    classification_id, "/codesAt")
+  out
 }
 
 nace_codes <- fetch_klass_en(6)
@@ -251,19 +258,20 @@ cat("Institutional sector codes:", nrow(sector_codes), "entries\n")
 # 5. SAVE ALL
 # =============================================================================
 
-usethis_available <- requireNamespace("usethis", quietly = TRUE)
-
-save(field_dict, legal_forms, role_types, role_groups, annotation_infotypes,
-     nace_codes, sector_codes,
-     file = "R/sysdata.rda", compress = "xz")
-cat("Saved sysdata.rda:",
-    round(file.size("R/sysdata.rda") / 1024, 1), "KB\n")
-
+## Exported datasets ship in data/ and are duplicated into R/sysdata.rda so
+## package code can reference them when the namespace is loaded but not
+## attached. The KLASS fallbacks are internal only. annotation_infotypes
+## belongs to tidybrregpanel.
+save(field_dict, file = "data/field_dict.rda", compress = "xz")
 save(legal_forms, file = "data/legal_forms.rda", compress = "xz")
 save(role_types, file = "data/role_types.rda", compress = "xz")
 save(role_groups, file = "data/role_groups.rda", compress = "xz")
-save(field_dict, file = "data/field_dict.rda", compress = "xz")
-save(annotation_infotypes, file = "data/annotation_infotypes.rda", compress = "xz")
+save(annotation_infotypes, file = "tidybrregpanel/data/annotation_infotypes.rda", compress = "xz")
+save(field_dict, legal_forms, role_types, role_groups, nace_codes, sector_codes,
+     file = "R/sysdata.rda", compress = "xz")
+cat("Saved sysdata.rda:",
+    round(file.size("R/sysdata.rda") / 1024, 1), "KB\n")
+cat("Record the run date in man/tidybrreg_provenance.Rd (R/tidybrreg-package.R)\n")
 
 cat("\nExported datasets:\n")
 cat("  legal_forms:", nrow(legal_forms), "x", ncol(legal_forms), "\n")

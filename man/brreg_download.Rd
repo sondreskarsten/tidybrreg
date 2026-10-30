@@ -9,7 +9,7 @@ brreg_download(
   format = c("csv", "json"),
   refresh = FALSE,
   cache = TRUE,
-  type_output = c("tibble", "arrow", "path")
+  type_output = c("tibble", "path")
 )
 }
 \arguments{
@@ -24,28 +24,28 @@ carries \code{historiskeNavn}; the CSV has no such column. Roller bulk
 download is always JSON regardless of this parameter.}
 
 \item{refresh}{\code{FALSE} (default): use cached file if available.
-\code{TRUE}: force re-download. \code{"auto"}: check ETag and re-download
-only if server has a newer version.}
+\code{TRUE}: force re-download. \code{"auto"}: revalidate against the server
+and re-download only when the cached copy cannot be shown current.
+Any other value is an error.}
 
-\item{cache}{Logical. If \code{TRUE} (default), cache downloaded file
-persistently.}
+\item{cache}{Logical. If \code{TRUE} (default), keep the downloaded file in
+the persistent cache directory; if \code{FALSE}, use a temporary file.}
 
-\item{type_output}{One of \code{"tibble"} (default), \code{"arrow"} (requires
-the arrow package), or \code{"path"} (returns the file path without
-parsing).}
+\item{type_output}{One of \code{"tibble"} (default) or \code{"path"} (returns
+the file path without parsing).}
 }
 \value{
 Depends on \code{type_output}:
 \itemize{
 \item \code{"tibble"}: A tibble with ~1 million rows. Column names mapped
-via \link{field_dict}.
-\item \code{"arrow"}: An Arrow Table (lazy, not loaded into memory).
-\item \code{"path"}: Character file path to the cached CSV.
+via \link{field_dict}. For \code{type = "roller"}, one row per role
+assignment with the columns of \code{\link[=brreg_roles]{brreg_roles()}}.
+\item \code{"path"}: Character file path to the gzipped download.
 }
 }
 \description{
 Download a complete extract of the Central Coordinating Register for
-Legal Entities (~1 million entities, ~145 MB gzipped). The bulk endpoint
+Legal Entities (~1 million entities, ~150 MB gzipped). The bulk endpoint
 does not support server-side filtering — it always returns all entities.
 Use \code{\link[=brreg_search]{brreg_search()}} for filtered queries up to 10,000 results, or
 download the full register here and filter locally.
@@ -59,27 +59,40 @@ pattern of auto-routing within one function:
 \itemize{
 \item \strong{\code{\link[=brreg_search]{brreg_search()}}}: JSON API with server-side filtering. Fast for
 small result sets, capped at 10,000. Interactive exploration.
-\item \strong{\code{brreg_download()}}: Bulk CSV. Always returns the full register.
-Appropriate for panel construction, spatial joins, or any analysis
-requiring more than 10,000 entities.
+\item \strong{\code{brreg_download()}}: Bulk CSV or JSON. Always returns the full
+register. Appropriate for any analysis requiring more than 10,000
+entities.
 }
 
-Results from both paths use the same column names via \link{field_dict}.
+Results from both paths use the same column names and types via
+\link{field_dict}; only observed columns are emitted (see
+\code{\link[=brreg_entity]{brreg_entity()}}).
 }
 
 \section{Caching}{
 
-Downloaded files are cached in \code{tools::R_user_dir("tidybrreg", "cache")}
-as gzipped CSV. Use \code{refresh = TRUE} to force re-download, or
-\code{refresh = "auto"} to re-download only if the cached file is older
-than the latest nightly bulk export (checked via ETag headers, following
-the cansim \code{refresh = "auto"} pattern).
+With \code{cache = TRUE} (default) the gzipped payload is stored in
+\code{tools::R_user_dir("tidybrreg", "cache")} together with a sidecar
+recording the server's \code{ETag} and \code{Last-Modified} validators, and a
+later call reuses it. \code{refresh = TRUE} forces a new download.
+\code{refresh = "auto"} sends a HEAD request and re-downloads when either
+validator differs from the sidecar; when the sidecar is missing or the
+server sends neither validator, nothing can prove the cache current,
+so it is re-downloaded. With \code{cache = FALSE} the payload goes to a
+temporary file that is deleted after parsing; with
+\code{type_output = "path"} that temporary path is returned and the caller
+owns it. The cache directory is created only by this function, never
+at load time.
+
+Metadata of the most recent download (\code{url}, \code{etag}, \code{last_modified}
+as a UTC \code{POSIXct}, \code{downloaded_at}, \code{path}) is available as
+\code{attr(result, "brreg_download")} on tibble output.
 }
 
 \examples{
-\dontshow{if (interactive() && curl::has_internet()) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive() && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
-# Download full register as tibble (~145MB download, ~1M rows)
+# Download full register as tibble (~150MB download, ~1M rows)
 entities <- brreg_download()
 
 # Just get the file path (no parsing)
@@ -94,18 +107,17 @@ entities <- brreg_download(refresh = TRUE)
 \code{\link[=brreg_search]{brreg_search()}} for filtered API queries,
 \code{\link[=brreg_updates]{brreg_updates()}} for incremental changes since a given date.
 
-Other tidybrreg entity functions:
-\code{\link[=brreg_board_summary]{brreg_board_summary()}},
-\code{\link[=brreg_children]{brreg_children()}},
-\code{\link[=brreg_entity]{brreg_entity()}},
-\code{\link[=brreg_konsern]{brreg_konsern()}},
-\code{\link[=brreg_prokura]{brreg_prokura()}},
-\code{\link[=brreg_roles]{brreg_roles()}},
-\code{\link[=brreg_roles_legal]{brreg_roles_legal()}},
-\code{\link[=brreg_search]{brreg_search()}},
-\code{\link[=brreg_signatur]{brreg_signatur()}},
-\code{\link[=brreg_underenheter]{brreg_underenheter()}},
-\code{\link[=brreg_update_fields]{brreg_update_fields()}},
-\code{\link[=brreg_updates]{brreg_updates()}}
+Other tidybrreg entity functions: 
+\code{\link{brreg_children}()},
+\code{\link{brreg_entity}()},
+\code{\link{brreg_konsern}()},
+\code{\link{brreg_prokura}()},
+\code{\link{brreg_roles}()},
+\code{\link{brreg_roles_legal}()},
+\code{\link{brreg_search}()},
+\code{\link{brreg_signatur}()},
+\code{\link{brreg_underenheter}()},
+\code{\link{brreg_update_fields}()},
+\code{\link{brreg_updates}()}
 }
 \concept{tidybrreg entity functions}

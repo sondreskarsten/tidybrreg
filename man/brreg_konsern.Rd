@@ -7,7 +7,7 @@
 brreg_konsern(org_nr)
 }
 \arguments{
-\item{org_nr}{Character. 9-digit organization number.}
+\item{org_nr}{Character. A single 9-digit organization number.}
 }
 \value{
 A tibble with one row per node in the group tree.
@@ -15,7 +15,8 @@ Columns: \code{org_nr} (the queried entity), \code{node_org_nr},
 \code{node_name}, \code{level} (0 for the root), \code{link_form},
 \code{link_form_desc}, \code{basis}, \code{relation_date} (Date),
 \code{parent_org_nr}, \code{parent_name}, \code{legal_form}, \code{legal_form_desc}.
-Returns an empty tibble if no group structure is registered.
+A zero-row tibble with the same typed columns if no group
+structure is registered.
 }
 \description{
 Fetch the registered group hierarchy for a Norwegian legal entity
@@ -40,14 +41,30 @@ structures, not konsern ownership.
 
 The endpoint returns 404 both for organization numbers that do not
 exist and for live entities that are not part of any registered
-group — the common case for ordinary companies. A warning is issued
-and an empty tibble returned; the \code{in_corporate_group} column from
-\code{\link[=brreg_entity]{brreg_entity()}} disambiguates the two without a second lookup
-here.
+group — the common case for ordinary companies. The
+\code{in_corporate_group} column from \code{\link[=brreg_entity]{brreg_entity()}} disambiguates the
+two without a second lookup here.
+}
+
+\section{Status handling}{
+
+The per-entity endpoints behind \code{\link[=brreg_roles]{brreg_roles()}}, \code{\link[=brreg_roles_legal]{brreg_roles_legal()}},
+\code{\link[=brreg_konsern]{brreg_konsern()}}, \code{\link[=brreg_signatur]{brreg_signatur()}} and \code{\link[=brreg_prokura]{brreg_prokura()}} share one
+contract. HTTP 404 means the organization number is unknown to that
+endpoint, which for konsern, signatur and prokura is the ordinary case
+of an entity with nothing registered there: the typed zero-row tibble
+is returned with attribute \code{http_status = 404L} and no warning. HTTP
+410 means the entity has been deleted: the typed zero-row tibble is
+returned with \code{http_status = 410L}, \code{deletion_date}, and a
+\code{tidybrreg_warning_deleted}. Any other status of 400 or above aborts
+with a \code{tidybrreg_error_http}. A successful response with nothing
+registered returns the typed zero-row tibble with no attribute. Use
+\code{\link[=brreg_entity]{brreg_entity()}} to distinguish a non-existent organization number
+from a live entity with nothing registered.
 }
 
 \examples{
-\dontshow{if (interactive() && curl::has_internet()) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive() && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 brreg_konsern("923609016") # Equinor ASA
 \dontshow{\}) # examplesIf}
 }
@@ -56,18 +73,17 @@ brreg_konsern("923609016") # Equinor ASA
 \code{\link[=brreg_entity]{brreg_entity()}} for the \code{in_corporate_group} flag,
 \code{\link[=brreg_roles_legal]{brreg_roles_legal()}} for roles an entity holds in others.
 
-Other tidybrreg entity functions:
-\code{\link[=brreg_board_summary]{brreg_board_summary()}},
-\code{\link[=brreg_children]{brreg_children()}},
-\code{\link[=brreg_download]{brreg_download()}},
-\code{\link[=brreg_entity]{brreg_entity()}},
-\code{\link[=brreg_prokura]{brreg_prokura()}},
-\code{\link[=brreg_roles]{brreg_roles()}},
-\code{\link[=brreg_roles_legal]{brreg_roles_legal()}},
-\code{\link[=brreg_search]{brreg_search()}},
-\code{\link[=brreg_signatur]{brreg_signatur()}},
-\code{\link[=brreg_underenheter]{brreg_underenheter()}},
-\code{\link[=brreg_update_fields]{brreg_update_fields()}},
-\code{\link[=brreg_updates]{brreg_updates()}}
+Other tidybrreg entity functions: 
+\code{\link{brreg_children}()},
+\code{\link{brreg_download}()},
+\code{\link{brreg_entity}()},
+\code{\link{brreg_prokura}()},
+\code{\link{brreg_roles}()},
+\code{\link{brreg_roles_legal}()},
+\code{\link{brreg_search}()},
+\code{\link{brreg_signatur}()},
+\code{\link{brreg_underenheter}()},
+\code{\link{brreg_update_fields}()},
+\code{\link{brreg_updates}()}
 }
 \concept{tidybrreg entity functions}

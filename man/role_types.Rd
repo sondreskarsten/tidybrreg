@@ -12,6 +12,10 @@ A tibble with 24 rows and 3 columns:
 \item{name_no}{Norwegian description.}
 }
 }
+\source{
+Package-authored from BRREG documentation; see
+\link{tidybrreg_provenance}.
+}
 \usage{
 role_types
 }
@@ -26,11 +30,11 @@ role_types
 \seealso{
 \code{\link[=brreg_roles]{brreg_roles()}}, \link{role_groups}.
 
-Other tidybrreg reference data:
-\code{\link{annotation_infotypes}},
+Other tidybrreg reference data: 
 \code{\link{field_dict}},
 \code{\link{legal_forms}},
-\code{\link{role_groups}}
+\code{\link{role_groups}},
+\code{\link{tidybrreg_provenance}}
 }
 \concept{tidybrreg reference data}
 \keyword{datasets}

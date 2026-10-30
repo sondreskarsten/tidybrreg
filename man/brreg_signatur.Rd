@@ -7,14 +7,15 @@
 brreg_signatur(org_nr)
 }
 \arguments{
-\item{org_nr}{Character. 9-digit organization number.}
+\item{org_nr}{Character. A single 9-digit organization number.}
 }
 \value{
 A tibble with one row per person per signing combination.
 Columns: \code{org_nr}, \code{entity_name}, \code{signature_type} (\code{"signature"}),
 \code{rule_status}, \code{rule_text}, \code{combination_id}, \code{combination_code},
-\code{rule}, \code{name}, \code{birth_date}, \code{role_code}, \code{role}. Returns an empty
-tibble if the entity has no registered signing combination.
+\code{rule}, \code{name}, \code{birth_date} (Date), \code{role_code}, \code{role}. A
+zero-row tibble with the same typed columns if the entity has no
+registered signing combination.
 }
 \description{
 Fetch the registered signing combinations for a Norwegian legal
@@ -39,7 +40,9 @@ to the role network is required. Role designations are returned as
 English labels looked up from \link{role_types}, with the original
 Norwegian code preserved in \code{role_code}; the signing-mode designations
 (\code{SIGN}, \code{SIFE}, \code{SIHV}, \code{PROK}, \code{POFE}, \code{POHV}) are included in
-\link{role_types} alongside the board roles.
+\link{role_types} alongside the board roles. Birth dates arrive as
+\code{DD.MM.YYYY} from this service and as ISO dates from the roles
+endpoint; both are parsed to \code{Date}, so the two join directly.
 }
 
 \section{Standardised vs registered rule}{
@@ -53,8 +56,25 @@ read \code{rule_text} in that case. \code{rule_text} may be \code{NA} when no fr
 text is recorded.
 }
 
+\section{Status handling}{
+
+The per-entity endpoints behind \code{\link[=brreg_roles]{brreg_roles()}}, \code{\link[=brreg_roles_legal]{brreg_roles_legal()}},
+\code{\link[=brreg_konsern]{brreg_konsern()}}, \code{\link[=brreg_signatur]{brreg_signatur()}} and \code{\link[=brreg_prokura]{brreg_prokura()}} share one
+contract. HTTP 404 means the organization number is unknown to that
+endpoint, which for konsern, signatur and prokura is the ordinary case
+of an entity with nothing registered there: the typed zero-row tibble
+is returned with attribute \code{http_status = 404L} and no warning. HTTP
+410 means the entity has been deleted: the typed zero-row tibble is
+returned with \code{http_status = 410L}, \code{deletion_date}, and a
+\code{tidybrreg_warning_deleted}. Any other status of 400 or above aborts
+with a \code{tidybrreg_error_http}. A successful response with nothing
+registered returns the typed zero-row tibble with no attribute. Use
+\code{\link[=brreg_entity]{brreg_entity()}} to distinguish a non-existent organization number
+from a live entity with nothing registered.
+}
+
 \examples{
-\dontshow{if (interactive() && curl::has_internet()) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive() && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 brreg_signatur("923609016") # Equinor ASA
 \dontshow{\}) # examplesIf}
 }
@@ -62,18 +82,17 @@ brreg_signatur("923609016") # Equinor ASA
 \code{\link[=brreg_prokura]{brreg_prokura()}} for procuration, \code{\link[=brreg_roles]{brreg_roles()}} for the
 underlying role assignments.
 
-Other tidybrreg entity functions:
-\code{\link[=brreg_board_summary]{brreg_board_summary()}},
-\code{\link[=brreg_children]{brreg_children()}},
-\code{\link[=brreg_download]{brreg_download()}},
-\code{\link[=brreg_entity]{brreg_entity()}},
-\code{\link[=brreg_konsern]{brreg_konsern()}},
-\code{\link[=brreg_prokura]{brreg_prokura()}},
-\code{\link[=brreg_roles]{brreg_roles()}},
-\code{\link[=brreg_roles_legal]{brreg_roles_legal()}},
-\code{\link[=brreg_search]{brreg_search()}},
-\code{\link[=brreg_underenheter]{brreg_underenheter()}},
-\code{\link[=brreg_update_fields]{brreg_update_fields()}},
-\code{\link[=brreg_updates]{brreg_updates()}}
+Other tidybrreg entity functions: 
+\code{\link{brreg_children}()},
+\code{\link{brreg_download}()},
+\code{\link{brreg_entity}()},
+\code{\link{brreg_konsern}()},
+\code{\link{brreg_prokura}()},
+\code{\link{brreg_roles}()},
+\code{\link{brreg_roles_legal}()},
+\code{\link{brreg_search}()},
+\code{\link{brreg_underenheter}()},
+\code{\link{brreg_update_fields}()},
+\code{\link{brreg_updates}()}
 }
 \concept{tidybrreg entity functions}

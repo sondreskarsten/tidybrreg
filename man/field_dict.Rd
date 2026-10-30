@@ -15,6 +15,9 @@ A tibble with 103 rows and 3 columns:
 \code{"integer"}, \code{"numeric"}, or \code{"logical"}.}
 }
 }
+\source{
+Package-authored; see \link{tidybrreg_provenance}.
+}
 \usage{
 field_dict
 }
@@ -22,7 +25,12 @@ field_dict
 A tibble mapping brreg JSON field paths to English column names and
 R types. Used internally by the parse engine. API fields absent from
 this dictionary pass through with auto-generated snake_case names
-rather than being silently dropped.
+rather than being silently dropped. A few fields appear twice because
+the JSON API and the CSV bulk spell them differently
+(\code{registreringsdatoEnhetsregisteret} /
+\code{registreringsdatoIEnhetsregisteret}); the first observed spelling
+takes the English name and a second one, if ever observed in the same
+payload, keeps its snake_case name.
 }
 \examples{
 field_dict
@@ -31,11 +39,11 @@ field_dict[field_dict$type == "Date", ]
 \seealso{
 \code{\link[=brreg_entity]{brreg_entity()}} for the function that uses this dictionary.
 
-Other tidybrreg reference data:
-\code{\link{annotation_infotypes}},
+Other tidybrreg reference data: 
 \code{\link{legal_forms}},
 \code{\link{role_groups}},
-\code{\link{role_types}}
+\code{\link{role_types}},
+\code{\link{tidybrreg_provenance}}
 }
 \concept{tidybrreg reference data}
 \keyword{datasets}

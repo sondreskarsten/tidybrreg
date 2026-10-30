@@ -1,0 +1,51 @@
+Package: tidybrregpanel
+Title: Snapshots, Synchronisation and Panels for Norway's Business Registry
+Version: 0.6.0
+Authors@R:
+    person("Sondre", "Skarsten", role = c("aut", "cre"),
+           email = "sondreskarsten@gmail.com")
+Description: The managed-state companion to 'tidybrreg'. Saves dated bulk
+    downloads of the Norwegian Central Coordinating Register for Legal
+    Entities (Enhetsregisteret) as Hive-partitioned Parquet snapshots,
+    keeps a local mirror current from the register's change data capture
+    feeds with a persistent changelog, replays updates onto a base
+    extract, and derives firm-period panels, entry and exit flows,
+    aggregate time series, role-change diffs, annotation and name
+    history, director networks and survival data. All retrieval goes
+    through 'tidybrreg'; this package adds persistence and analysis.
+License: MIT + file LICENSE
+URL: https://sondreskarsten.github.io/tidybrreg/,
+    https://github.com/sondreskarsten/tidybrreg
+BugReports: https://github.com/sondreskarsten/tidybrreg/issues
+Depends:
+    R (>= 4.1.0)
+Imports:
+    cli,
+    dplyr,
+    httr2 (>= 1.0.0),
+    jsonlite,
+    rlang,
+    tibble,
+    tidybrreg (>= 0.6.0)
+Suggests:
+    arrow (>= 12.0.0),
+    nanoparquet (>= 0.3.0),
+    curl,
+    duckdb,
+    klassR,
+    knitr,
+    rmarkdown,
+    tidygraph,
+    tidyr,
+    tsibble,
+    yyjsonr,
+    testthat (>= 3.0.0),
+    withr
+Remotes: sondreskarsten/tidybrreg
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.0.0
+RoxygenNote: 7.3.1

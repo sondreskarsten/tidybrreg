@@ -1,3 +1,142 @@
+# tidybrreg 0.6.0
+
+## The split
+
+tidybrreg is now the narrow, typed client to the register: exactly
+fifteen exports, each wrapping one endpoint of Enhetsregisteret, the
+Fullmakt service, or SSB KLASS.
+
+```r
+brreg_entity()  brreg_search()  brreg_underenheter()  brreg_children()
+brreg_roles()   brreg_roles_legal()  brreg_konsern()
+brreg_signatur()  brreg_prokura()
+brreg_updates()  brreg_update_fields()
+brreg_download()
+brreg_label()  get_brreg_dic()  brreg_validate()
+```
+
+The managed-state subsystem (snapshot store, `brreg_sync()`, replay,
+changelog queries, flows, panels, series, tsibble conversion, events,
+annotations, name history, harmonisation, director networks, survival
+data, `brreg_board_summary()`, `diff_roller_state()`, `brreg_status()`)
+has moved, unchanged in behaviour, to the companion package
+**tidybrregpanel** in the `tidybrregpanel/` directory of this
+repository. It depends on tidybrreg and is built alongside it on
+r-universe. The pre-split implementation remains at commit `c9bd992`.
+
+The Model Context Protocol server **tidybrregmcp** (`tidybrregmcp/`)
+exposes the fifteen exports as MCP tools, deriving every tool's
+documentation and schema from this package's help pages.
+
+## Breaking changes
+
+* `brreg_download()` supports `type_output = "tibble"` and `"path"`
+  only. The Arrow backend is withdrawn: BRREG's CSV fails in
+  `arrow::read_csv_arrow()` on embedded newlines in quoted addresses,
+  its JSON bulk is a pretty-printed array rather than NDJSON, and the
+  path bypassed the dictionary. arrow, nanoparquet and duckdb are no
+  longer Suggests.
+
+* `get_brreg_dic()` returns columns `code`, `name`, `level` (`name`
+  replaces `name_en`, which was wrong for `lang = "no"`), with
+  attributes `source`, `lang` and `vintage`, and gains `source =
+  c("auto", "klass", "bundled")` and `refresh`.
+
+* `brreg_update_fields()` and the `changes` column of `brreg_updates()`
+  gain a `path` column holding the raw JSON pointer of each patch leaf.
+
+* Timestamps from the update feeds are `POSIXct` in UTC (previously
+  parsed as local time); `since` keeps the precision of a `POSIXct`
+  and is sent as a UTC instant; a `Date` means midnight UTC.
+
+* `brreg_entity()` always carries `deleted` (logical) and `registry`.
+
+* Valid empty results are typed zero-row tibbles everywhere
+  (previously zero-column `tibble()`): search results carry `org_nr`,
+  `name`, `legal_form`; roles, legal roles, konsern, signatur and
+  prokura carry their full documented column set; update feeds carry
+  their four (or seven) columns.
+
+* The per-entity endpoints (`brreg_roles()`, `brreg_roles_legal()`,
+  `brreg_konsern()`, `brreg_signatur()`, `brreg_prokura()`) no longer
+  warn on HTTP 404; they return the typed empty with attribute
+  `http_status = 404L`. HTTP 410 warns about deletion; other HTTP
+  errors abort.
+
+* Loading or attaching the package performs no filesystem or network
+  access: the startup message about missing bulk data and the
+  undocumented `.onLoad` override of bundled dictionaries from RDS
+  files are gone.
+
+## Typed conditions
+
+Every error and warning now carries a class and fields; see
+`?tidybrreg_conditions`. Errors: `tidybrreg_error_invalid_org_nr`,
+`_invalid_filter`, `_not_found`, `_http`, `_result_window`,
+`_invalid_since`, `_no_bundled_dictionary`. Warnings:
+`tidybrreg_warning_deleted`, `_partial`, `_truncated`,
+`_unknown_member`, `_bundled_fallback`, `_parse`.
+
+## Fixes to the retained core
+
+* `brreg_entity()` models deletion consistently: HTTP 200 with
+  `respons_klasse = "SlettetEnhet"` (the form BRREG uses for nearly all
+  deletions) and HTTP 410 both yield `deleted = TRUE`, a parsed
+  `deletion_date`, every other observed field, and a warning. A
+  vector of several organization numbers is rejected instead of
+  silently querying the first. Nested HAL `_links` blocks
+  (`organisasjonsform._links.self.href`) are stripped at any depth on
+  both the live and bulk paths.
+
+* `brreg_search()` aborts on unsupported filters (`bankrupt` for
+  underenheter), aborts with `tidybrreg_error_result_window` before
+  returning a partial population when a query exceeds BRREG's 10,000
+  result window, reports truncation with `complete = FALSE` and a
+  warning, aborts on a first-page HTTP failure, and warns on a later
+  one instead of returning a silently partial result.
+
+* `brreg_updates()` and `brreg_update_fields()` share one paginator:
+  first-page failures abort, later failures warn and return the pages
+  read with `complete = FALSE`; stopping on `max_pages` with a full
+  last page warns; results carry `complete`, `pages_fetched` and
+  `cursor`. Members of an update object the package does not model
+  pass through as columns with a `tidybrreg_warning_unknown_member`.
+  The roller feed honours `max_pages` and `verbose` (paginating on
+  `afterId`) and rejects `include_changes`. Patch flattening handles
+  any nesting depth identically on the flat and list-column paths.
+
+* `brreg_download()` validates `refresh` (`TRUE`, `FALSE`, `"auto"`)
+  and `cache`; `cache = FALSE` uses a temporary file instead of
+  writing the payload to the cache directory anyway; `refresh = "auto"`
+  revalidates against both `ETag` and `Last-Modified` and re-downloads
+  when nothing can prove the cache current; download metadata
+  (`last_modified` as UTC `POSIXct`) is attached as
+  `attr(x, "brreg_download")` and written to a sidecar.
+
+* Dictionary coercion is one rule on every path: the four numeric
+  `capital_*` fields are numeric on bulk CSV as well as live JSON;
+  parse failures are reported for every type, never abort the parse
+  (the diagnostics table used to break on more than twenty failures),
+  and the `brreg_parse_problems` table carries `n_failed`. A field the
+  dictionary lists under two spellings keeps both observed values; a
+  snake_case collision between unmapped fields is made unique rather
+  than dropping the second.
+
+* Dates and instants: konsern relation dates and Fullmakt birth dates
+  accept both ISO and `DD.MM.YYYY`; `Last-Modified` headers parse in
+  any locale.
+
+* `brreg_label()` honours `lang = "no"` for every dictionary, is
+  idempotent, leaves no stray `names` attribute on labelled columns,
+  and preserves the input's attributes (`total_matches` survives
+  `code =`). `options(tidybrreg.offline = TRUE)` keeps labelling off
+  the network; KLASS failures fall back to the bundled dictionaries
+  with a warning stating their vintage.
+
+* `DESCRIPTION` carries the maintainer's real address. Provenance,
+  licence and vintage of every bundled table are documented in
+  `?tidybrreg_provenance`.
+
 # tidybrreg 0.5.0
 
 ## Breaking changes
@@ -85,7 +224,6 @@
   endpoint and the konsernstruktur endpoint (ASA census guarantees
   group members in the sample), so roller field removals like
   `fratraadt` and new endpoints are visible to drift detection.
-
 # tidybrreg 0.4.0
 
 ## New features

@@ -11,47 +11,62 @@ on:
 
 permissions:
   contents: read
-  packages: read
 
 jobs:
   api-tests:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/sondreskarsten/tidybrreg-ci:r4.4.1
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
     env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       NOT_CRAN: true
       TIDYBRREG_LIVE_API: true
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install package from source
-        run: Rscript -e 'pak::local_install(dependencies = FALSE)'
-        shell: bash
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
 
-      - name: Run full test suite with live API
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::testthat, any::pkgload
+          needs: check
+
+      - name: Record what is under test
         run: |
           Rscript -e '
-            library(testthat)
-            library(tidybrreg)
-            results <- test_dir("tests/testthat", reporter = "summary")
-            df <- as.data.frame(results)
+            cat("commit:", Sys.getenv("GITHUB_SHA"), "\n")
+            cat("tidybrreg:", as.character(read.dcf("DESCRIPTION", "Version")), "\n")
+            cat("R:", R.version.string, "\n")
+            cat("fixture timestamp:", format(file.mtime("tests/testthat/fixtures/mock/entity_923609016.json"), tz = "UTC", usetz = TRUE), "\n")
+            print(Sys.time())'
+        shell: bash
+
+      # The source tests call unexported helpers and local_mocked_bindings(),
+      # so they run against the source package loaded with pkgload, not an
+      # attached installed copy. In live mode (TIDYBRREG_LIVE_API=true) an
+      # unreachable BRREG or SSB endpoint is a failure, not a skip.
+      - name: Run the suite against the live register
+        run: |
+          Rscript -e '
+            res <- testthat::test_local(".", load_package = "source",
+                                        reporter = testthat::MultiReporter$new(list(
+                                          testthat::ProgressReporter$new(),
+                                          testthat::JunitReporter$new(file = "junit.xml"))),
+                                        stop_on_failure = FALSE)
+            df <- as.data.frame(res)
             cat("\n=== Summary ===\n")
             cat("Pass:", sum(df$passed), "\n")
             cat("Fail:", sum(df$failed), "\n")
             cat("Skip:", sum(df$skipped), "\n")
             cat("Warn:", sum(df$warning), "\n")
-            if (sum(df$failed) > 0) quit(status = 1)
-          '
+            if (sum(df$failed) > 0 || sum(df$error) > 0) quit(status = 1)' 2>&1 | tee live-tests.log
         shell: bash
 
-      - name: Upload test output on failure
-        if: failure()
+      - name: Upload test output
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: live-api-test-results
-          path: tests/testthat/
+          path: |
+            live-tests.log
+            junit.xml
