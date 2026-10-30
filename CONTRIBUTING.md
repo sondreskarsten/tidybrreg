@@ -10,7 +10,8 @@ Three packages live here and are versioned and built together:
 |---|---|---|
 | tidybrreg | `/` | One function per register endpoint, parsers, dictionaries. Exactly fifteen exports; CRAN-bound. Nothing that persists state. |
 | tidybrregpanel | `tidybrregpanel/` | Snapshots, sync, replay, changelog, panels, series, networks: everything that keeps state on disk or derives quantities over time. |
-| tidybrregmcp | `tidybrregmcp/` | The MCP server. It derives tools from tidybrreg's namespace and help pages, so per-tool code is almost always the wrong place for a change: fix the help page or the function in tidybrreg instead. |
+| tidybrregmcp | `tidybrregmcp/` | The MCP server. It derives tools from tidybrreg's namespace and help pages, so per-tool code is almost always the wrong place for a change: fix the help page or the function in tidybrreg instead. `mcp_manifest()` writes the manifest the Node server is built from. |
+| tidybrreg-mcp | `tidybrreg-mcp-node/` | The MCP server without R (npm). Its catalogue is `manifest.json`; regenerate it with `Rscript -e 'tidybrregmcp::mcp_manifest("tidybrreg-mcp-node/manifest.json")'` after any change to tidybrreg and commit it, or CI fails. Its TypeScript only ports the parsing rules; the endpoint contract comes from `inst/extdata/endpoints.json`, which tidybrreg's tests hold to the functions. |
 
 A new endpoint wrapper goes in tidybrreg only if it is a thin, typed
 call to one register endpoint; it then appears in the MCP server
@@ -34,7 +35,7 @@ documents every argument. Analytics go in tidybrregpanel.
 3. Install dev dependencies: `pak::pak(".", dependencies = TRUE)` (and the same in the companion directory you touch).
 4. Make changes and add tests in `tests/testthat/`. Network calls are mocked with `local_brreg_responses()` from `tests/testthat/helper-mock.R`; the offline suite never reaches BRREG or SSB.
 5. Run `devtools::check()` — must pass with 0 errors and 0 warnings. For tidybrreg also run `R CMD check --as-cran` on the built tarball.
-6. Update `NEWS.md` with a bullet under the development version. tidybrregmcp's version must equal tidybrreg's.
+6. Update `NEWS.md` with a bullet under the development version. tidybrregmcp's, tidybrregpanel's and tidybrreg-mcp-node's versions must equal tidybrreg's; a `v*` tag on main publishes the npm package and a GitHub release.
 7. Push and open a pull request.
 
 ## Code style

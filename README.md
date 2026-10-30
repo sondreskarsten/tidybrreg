@@ -22,6 +22,7 @@ together:
 | **tidybrreg**      | `/`               | The typed client: fifteen functions, one per register endpoint. CRAN-bound.                                                 |
 | **tidybrregpanel** | `tidybrregpanel/` | Managed state: Parquet snapshots, `brreg_sync()`, replay, changelog, flows, panels, series, networks, survival data.        |
 | **tidybrregmcp**   | `tidybrregmcp/`   | A Model Context Protocol server whose tools, schemas and documentation are derived from tidybrreg’s exports and help pages. |
+| **tidybrreg-mcp**  | `tidybrreg-mcp-node/` | The same server without R: an npm package (`npx tidybrreg-mcp`) built from the manifest tidybrregmcp writes, for Claude, ChatGPT and OpenAI clients. |
 
 ## Installation
 
@@ -169,7 +170,13 @@ changes.
 {"mcpServers": {"tidybrreg": {"command": "Rscript", "args": ["-e", "tidybrregmcp::mcp_serve()"]}}}
 ```
 
-See `tidybrregmcp/README.md`.
+Without R, from npm:
+
+``` json
+{"mcpServers": {"tidybrreg": {"command": "npx", "args": ["-y", "tidybrreg-mcp"]}}}
+```
+
+See `tidybrregmcp/README.md` and `tidybrreg-mcp-node/README.md`.
 
 ## License
 

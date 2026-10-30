@@ -31,6 +31,7 @@ COPY DESCRIPTION NAMESPACE LICENSE NEWS.md README.md ./core/
 COPY R ./core/R
 COPY man ./core/man
 COPY data ./core/data
+COPY inst ./core/inst
 RUN Rscript -e 'need <- setdiff(c("httpuv", "yyjsonr"), rownames(installed.packages())); if (length(need)) install.packages(need, repos = c(CRAN = "https://cloud.r-project.org"))' \
  && R CMD INSTALL --no-docs ./core
 

@@ -6,6 +6,7 @@
 .RData
 docs/
 tidybrregpanel/
+tidybrreg-mcp-node/
 tidybrregmcp/deploy/
 data-raw/
 pkgdown/

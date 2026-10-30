@@ -26,7 +26,12 @@ r-universe. The pre-split implementation remains at commit `c9bd992`.
 
 The Model Context Protocol server **tidybrregmcp** (`tidybrregmcp/`)
 exposes the fifteen exports as MCP tools, deriving every tool's
-documentation and schema from this package's help pages.
+documentation and schema from this package's help pages, and writes a
+manifest (`mcp_manifest()`) from which **tidybrreg-mcp**
+(`tidybrreg-mcp-node/`, on npm) serves the same catalogue without R.
+The package ships `inst/extdata/endpoints.json`, a machine-readable
+contract of every export's endpoint, query mapping and status handling,
+held to the functions by `tests/testthat/test-endpoints.R`.
 
 ## Breaking changes
 

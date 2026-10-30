@@ -1,0 +1,168 @@
+{
+  "$schema_note": "Machine-readable endpoint contract of the fifteen tidybrreg exports. Every entry is asserted against the function it names by tests/testthat/test-endpoints.R (the request each function builds must match `path` and the query map). Consumers that implement the same calls outside R (tidybrregmcp::mcp_manifest(), the Node MCP server) read this file rather than re-deriving it.",
+  "services": {
+    "enhetsregisteret": "https://data.brreg.no/enhetsregisteret/api",
+    "fullmakt": "https://data.brreg.no/fullmakt",
+    "klass": "https://data.ssb.no/api/klass/v1"
+  },
+  "http": {
+    "user_agent": "tidybrreg (https://github.com/sondreskarsten/tidybrreg; R package)",
+    "accept": "application/json;charset=UTF-8",
+    "throttle_per_second_per_host": 5,
+    "retry_statuses": [429, 503],
+    "retry_max_tries": 3
+  },
+  "org_nr": {
+    "pattern": "^[89][0-9]{8}$",
+    "check": "modulus 11 with weights 3,2,7,6,5,4,3,2 over the first eight digits; remainder 0 gives check digit 0, remainder giving check digit 10 is invalid"
+  },
+  "functions": {
+    "brreg_entity": {
+      "service": "enhetsregisteret",
+      "kind": "entity",
+      "routes": [
+        {"registry": "enheter", "method": "GET", "path": "/enheter/{org_nr}"},
+        {"registry": "underenheter", "method": "GET", "path": "/underenheter/{org_nr}"}
+      ],
+      "registry_arg": "registry",
+      "auto_order": ["enheter", "underenheter"],
+      "status": {
+        "200": "parse entity; respons_klasse == 'SlettetEnhet' or a slettedato marks deletion (deleted = TRUE, deletion_date, tidybrreg_warning_deleted)",
+        "404": "try the next registry under auto; otherwise tidybrreg_error_not_found",
+        "410": "deleted: parse the body, deleted = TRUE, deletion_date from slettedato, tidybrreg_warning_deleted",
+        "other>=400": "tidybrreg_error_http"
+      },
+      "result": {"added_columns": ["registry", "deleted"], "emission": "observed fields only, renamed through field_dict, HAL _links removed at any depth"}
+    },
+    "brreg_search": {
+      "service": "enhetsregisteret",
+      "kind": "search",
+      "routes": [
+        {"registry": "enheter", "method": "GET", "path": "/enheter", "embedded_key": "enheter"},
+        {"registry": "underenheter", "method": "GET", "path": "/underenheter", "embedded_key": "underenheter"}
+      ],
+      "query": {
+        "name": "navn",
+        "legal_form": "organisasjonsform",
+        "nace_code": "naeringskode",
+        "min_employees": "fraAntallAnsatte",
+        "max_employees": "tilAntallAnsatte",
+        "parent_org_nr": "overordnetEnhet",
+        "municipality_code": {"enheter": "kommunenummer", "underenheter": "beliggenhetsadresse.kommunenummer"},
+        "bankrupt": {"enheter": "konkurs", "underenheter": null}
+      },
+      "pagination": {
+        "model": "page",
+        "page_param": "page",
+        "size_param": "size",
+        "page_size": 100,
+        "retrieval_limit": 10000,
+        "window_rule": "size * (page + 1) <= 10000, else HTTP 400",
+        "total_path": "page.totalElements",
+        "next_link_path": "_links.next"
+      },
+      "status": {
+        "first_page>=400": "tidybrreg_error_http",
+        "later_page>=400": "tidybrreg_warning_partial, return rows read, complete = FALSE"
+      },
+      "result": {
+        "empty": {"org_nr": "character", "name": "character", "legal_form": "character"},
+        "attributes": ["total_matches", "complete"],
+        "result_window": "abort with tidybrreg_error_result_window when total_matches > retrieval_limit and max_results > retrieval_limit; truncation (rows < total) warns tidybrreg_warning_truncated"
+      }
+    },
+    "brreg_underenheter": {"delegates_to": "brreg_search", "fixed": {"registry": "underenheter"}, "maps": {"org_nr": "parent_org_nr"}},
+    "brreg_children": {"delegates_to": "brreg_search", "fixed": {"registry": "enheter"}, "maps": {"org_nr": "parent_org_nr"}},
+    "brreg_roles": {
+      "service": "enhetsregisteret",
+      "kind": "satellite",
+      "routes": [{"method": "GET", "path": "/enheter/{org_nr}/roller"}],
+      "status": {"404": "typed empty, http_status = 404", "410": "typed empty, http_status = 410, deletion_date, tidybrreg_warning_deleted", "other>=400": "tidybrreg_error_http"},
+      "flatten": "rollegrupper[].roller[] -> one row per role; role_group/role labelled from role_groups/role_types; person_id = birth_date_last_first_middle (lower case); resigned only when fratraadt present",
+      "result": {"empty": ["org_nr", "role_group_code", "role_group", "role_code", "role", "first_name", "middle_name", "last_name", "birth_date", "deceased", "entity_org_nr", "entity_name", "deregistered", "ordering", "elected_by", "group_modified", "person_id"]}
+    },
+    "brreg_roles_legal": {
+      "service": "enhetsregisteret",
+      "kind": "satellite",
+      "routes": [{"method": "GET", "path": "/roller/enheter/{org_nr}/juridiskeroller"}],
+      "status": {"404": "typed empty, http_status = 404", "410": "typed empty, http_status = 410, tidybrreg_warning_deleted", "other>=400": "tidybrreg_error_http"},
+      "flatten": "enheter[].roller[] -> one row per role held elsewhere",
+      "result": {"empty": ["org_nr", "target_org_nr", "target_name", "role_code", "role", "share", "deregistered"]}
+    },
+    "brreg_konsern": {
+      "service": "enhetsregisteret",
+      "kind": "satellite",
+      "routes": [{"method": "GET", "path": "/konsernstruktur/{org_nr}"}],
+      "status": {"404": "typed empty, http_status = 404 (unknown number or not in a group)", "410": "typed empty, http_status = 410, tidybrreg_warning_deleted", "other>=400": "tidybrreg_error_http"},
+      "flatten": "recursive children[] -> one row per node; root synthesized with link_form KKKK / 'Øverste mor'; dato accepted as ISO or DD.MM.YYYY",
+      "result": {"empty": ["org_nr", "node_org_nr", "node_name", "level", "link_form", "link_form_desc", "basis", "relation_date", "parent_org_nr", "parent_name", "legal_form", "legal_form_desc"]}
+    },
+    "brreg_signatur": {
+      "service": "fullmakt",
+      "kind": "satellite",
+      "routes": [{"method": "GET", "path": "/enheter/{org_nr}/signatur"}],
+      "fixed_columns": {"signature_type": "signature"},
+      "status": {"404": "typed empty, http_status = 404", "410": "typed empty, http_status = 410, tidybrreg_warning_deleted", "other>=400": "tidybrreg_error_http"},
+      "flatten": "signeringsKombinasjon.kombinasjon[].personRolleKombinasjon[] -> one row per person per combination (one row with NA person when a combination has none); birth dates DD.MM.YYYY",
+      "result": {"empty": ["org_nr", "entity_name", "signature_type", "rule_status", "rule_text", "combination_id", "combination_code", "rule", "name", "birth_date", "role_code", "role"]}
+    },
+    "brreg_prokura": {
+      "service": "fullmakt",
+      "kind": "satellite",
+      "routes": [{"method": "GET", "path": "/enheter/{org_nr}/prokura"}],
+      "fixed_columns": {"signature_type": "procuration"},
+      "status": {"404": "typed empty, http_status = 404", "410": "typed empty, http_status = 410, tidybrreg_warning_deleted", "other>=400": "tidybrreg_error_http"},
+      "flatten": "as brreg_signatur",
+      "result": {"empty": ["org_nr", "entity_name", "signature_type", "rule_status", "rule_text", "combination_id", "combination_code", "rule", "name", "birth_date", "role_code", "role"]}
+    },
+    "brreg_updates": {
+      "service": "enhetsregisteret",
+      "kind": "feed",
+      "routes": [
+        {"type": "enheter", "method": "GET", "path": "/oppdateringer/enheter", "embedded_key": "oppdaterteEnheter", "format": "hal"},
+        {"type": "underenheter", "method": "GET", "path": "/oppdateringer/underenheter", "embedded_key": "oppdaterteUnderenheter", "format": "hal"},
+        {"type": "roller", "method": "GET", "path": "/oppdateringer/roller", "format": "cloudevents"}
+      ],
+      "pagination": {
+        "hal": {"first_page": {"dato": "since as YYYY-MM-DDTHH:MM:SS.sssZ (UTC)"}, "next_page": {"oppdateringsid": "max(update_id) + 1"}, "size_param": "size", "max_size": 10000, "stop": "page shorter than size, or max_pages"},
+        "cloudevents": {"first_page": {"afterTime": "since as UTC instant"}, "next_page": {"afterId": "max(update_id)"}, "size_param": "size", "max_size": 10000}
+      },
+      "include_changes": {"param": "includeChanges", "value": "true", "roller": "error: feed carries no patches"},
+      "status": {"first_page>=400": "tidybrreg_error_http", "later_page>=400": "tidybrreg_warning_partial, complete = FALSE"},
+      "result": {"columns": ["update_id", "org_nr", "change_type", "timestamp"], "timestamp_tz": "UTC", "attributes": ["complete", "pages_fetched", "cursor", "unknown_members"], "unknown_members": "extra members pass through as snake_case columns with tidybrreg_warning_unknown_member"}
+    },
+    "brreg_update_fields": {
+      "delegates_to": "brreg_updates",
+      "fixed": {"include_changes": true},
+      "types": ["enheter", "underenheter"],
+      "flatten": "one row per RFC 6902 patch leaf (nested values flattened to leaves, arrays indexed from 0); `path` keeps the raw JSON pointer, `field` is the snake_case rendering; move emits add at destination plus remove at source; events without patches emit one row with NA operation/field/path/new_value",
+      "result": {"columns": ["update_id", "org_nr", "change_type", "timestamp", "operation", "field", "path", "new_value"]}
+    },
+    "brreg_download": {
+      "service": "enhetsregisteret",
+      "kind": "bulk",
+      "routes": [
+        {"type": "enheter", "format": "csv", "method": "GET", "path": "/enheter/lastned/csv"},
+        {"type": "enheter", "format": "json", "method": "GET", "path": "/enheter/lastned"},
+        {"type": "underenheter", "format": "csv", "method": "GET", "path": "/underenheter/lastned/csv"},
+        {"type": "underenheter", "format": "json", "method": "GET", "path": "/underenheter/lastned"},
+        {"type": "roller", "format": "json", "method": "GET", "path": "/roller/totalbestand"}
+      ],
+      "cache": {"dir": "tools::R_user_dir('tidybrreg', 'cache')", "file": "{type}_bulk.{format}.gz", "sidecar": "{file}.meta.json with url, etag, last_modified, downloaded_at", "refresh": ["FALSE", "TRUE", "auto (HEAD; re-download unless ETag or Last-Modified matches the sidecar)"]},
+      "output_modes": ["tibble", "path"]
+    },
+    "brreg_label": {"service": null, "kind": "local", "dictionaries": {"legal_form": "legal_forms", "role": "role_types", "role_group": "role_groups", "nace": "get_brreg_dic('nace')", "sector": "get_brreg_dic('sector')"}, "columns": {"legal_form": "legal_form", "nace_1": "nace", "nace_2": "nace", "nace_3": "nace", "sector_code": "sector", "role_code": "role", "role_group_code": "role_group"}},
+    "get_brreg_dic": {
+      "service": "klass",
+      "kind": "dictionary",
+      "routes": [
+        {"dictname": "nace", "method": "GET", "path": "/classifications/6/codesAt"},
+        {"dictname": "sector", "method": "GET", "path": "/classifications/39/codesAt"}
+      ],
+      "query": {"date": "YYYY-MM-DD (today)", "language": "en|no"},
+      "fallback": "bundled English dictionaries (nace_codes, sector_codes) with vintage attribute; source = 'bundled' | 'klass'",
+      "result": {"columns": ["code", "name", "level"], "attributes": ["source", "lang", "vintage"]}
+    },
+    "brreg_validate": {"service": null, "kind": "local", "rule": "org_nr"}
+  }
+}
