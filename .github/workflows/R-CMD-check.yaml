@@ -62,19 +62,18 @@ jobs:
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
       - name: Assert the exact export surface and version alignment
         run: |
-          Rscript -e '
-            expected <- c("brreg_entity","brreg_search","brreg_underenheter","brreg_children",
-              "brreg_roles","brreg_roles_legal","brreg_konsern","brreg_signatur","brreg_prokura",
-              "brreg_updates","brreg_update_fields","brreg_download","brreg_label","get_brreg_dic",
-              "brreg_validate")
-            ns <- readLines("NAMESPACE")
-            actual <- sub("^export\\((.*)\\)$", "\\1", grep("^export\\(", ns, value = TRUE))
-            stopifnot(identical(sort(actual), sort(expected)))
-            v <- read.dcf("DESCRIPTION", "Version"); m <- read.dcf("tidybrregmcp/DESCRIPTION", "Version")
-            p <- read.dcf("tidybrregpanel/DESCRIPTION", "Version")
-            stopifnot(identical(v, m), identical(v, p))
-            cat("15 exports confirmed; tidybrreg, tidybrregpanel and tidybrregmcp all at", v, "\n")'
-        shell: bash
+          expected <- c("brreg_entity","brreg_search","brreg_underenheter","brreg_children",
+            "brreg_roles","brreg_roles_legal","brreg_konsern","brreg_signatur","brreg_prokura",
+            "brreg_updates","brreg_update_fields","brreg_download","brreg_label","get_brreg_dic",
+            "brreg_validate")
+          ns <- readLines("NAMESPACE")
+          actual <- sub("^export\\((.*)\\)$", "\\1", grep("^export\\(", ns, value = TRUE))
+          stopifnot(identical(sort(actual), sort(expected)))
+          v <- read.dcf("DESCRIPTION", "Version"); m <- read.dcf("tidybrregmcp/DESCRIPTION", "Version")
+          p <- read.dcf("tidybrregpanel/DESCRIPTION", "Version")
+          stopifnot(identical(v, m), identical(v, p))
+          cat("15 exports confirmed; tidybrreg, tidybrregpanel and tidybrregmcp all at", v, "\n")
+        shell: Rscript {0}
 
   companions:
     runs-on: ubuntu-latest

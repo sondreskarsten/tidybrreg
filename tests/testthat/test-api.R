@@ -46,8 +46,9 @@ test_that("brreg_search returns results", {
 
 test_that("brreg_search filters work", {
   skip_if_offline()
-  s <- safely(brreg_search(legal_form = "AS", municipality_code = "0301",
-                     min_employees = 1000, max_results = 5))
+  s <- safely(suppressWarnings(brreg_search(legal_form = "AS", municipality_code = "0301",
+                                            min_employees = 1000, max_results = 5),
+                               classes = "tidybrreg_warning_truncated"))
   expect_gt(nrow(s), 0)
   expect_true(all(s$legal_form == "AS"))
 })
