@@ -1,4 +1,7 @@
-# Shared test helpers for tidybrreg
+# Shared test helpers for tidybrregpanel. The core is attached because the
+# tests moved from tidybrreg call its exports unqualified.
+library(tidybrreg)
+
 # testthat automatically sources all helper-*.R files before tests
 
 live_api_mode <- function() {
