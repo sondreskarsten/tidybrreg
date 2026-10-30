@@ -30,7 +30,7 @@ export async function klassDic(ctx: ToolContext, dictname: string, lang: string)
   const spec = fnSpec(ctx.m, "get_brreg_dic");
   const route = spec.routes!.find((r) => r.dictname === dictname)!;
   const date = new Date().toISOString().slice(0, 10);
-  const resp = await ctx.http.get(url(ctx, spec, route, {}, { date, language: lang }), "application/json");
+  const resp = await ctx.http.get(url(ctx, spec, route, {}, { date, language: lang === "no" ? "nb" : lang }), "application/json");
   if (resp.status >= 400) throw new TidybrregError("http", `SSB KLASS API error: HTTP ${resp.status} for ${route.path}.`, { endpoint: route.path, status: resp.status, messages: [] });
   const body = await resp.json();
   const rows = (body?.codes ?? []).map((c: any) => ({ code: String(c.code), name: String(c.name), level: c.level == null ? null : String(c.level) }));

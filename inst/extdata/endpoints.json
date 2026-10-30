@@ -616,7 +616,7 @@
         {"dictname": "nace", "method": "GET", "path": "/classifications/6/codesAt"},
         {"dictname": "sector", "method": "GET", "path": "/classifications/39/codesAt"}
       ],
-      "query": {"date": "YYYY-MM-DD (today)", "language": "en|no"},
+      "query": {"date": "YYYY-MM-DD (today)", "language": "en|nb (lang 'no' is sent as KLASS's 'nb')"},
       "fallback": "bundled English dictionaries (nace_codes, sector_codes) with vintage attribute; source = 'bundled' | 'klass'",
       "result": {"columns": ["code", "name", "level"], "attributes": ["source", "lang", "vintage"]}
     },

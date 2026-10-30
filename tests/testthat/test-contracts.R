@@ -603,3 +603,23 @@ test_that("loading and attaching creates no files and prints nothing", {
   expect_length(out$files, 0L)
   expect_length(out$msgs, 0L)
 })
+
+# ---------------------------------------------------------------------------
+# KLASS language codes
+# ---------------------------------------------------------------------------
+
+test_that("KLASS is asked for Bokmaal (nb) when lang is no", {
+  expect_equal(klass_language("no"), "nb")
+  expect_equal(klass_language("en"), "en")
+  seen <- NULL
+  testthat::local_mocked_bindings(
+    req_perform = function(req, ...) { seen <<- req; structure(list(), class = "tidybrreg_stub_resp") },
+    resp_body_json = function(resp, ...) list(codes = list(list(code = "01", name = "Jordbruk", level = "1"))),
+    .package = "httr2"
+  )
+  d <- fetch_klass(6L, lang = "no")
+  expect_match(seen$url, "[?&]language=nb\\b")
+  expect_equal(d$name, "Jordbruk")
+  fetch_klass(6L, lang = "en")
+  expect_match(seen$url, "[?&]language=en\\b")
+})

@@ -255,17 +255,24 @@ klass_dic <- function(dictname, lang) {
 }
 
 
+#' KLASS language code for a tidybrreg `lang`
+#' @keywords internal
+klass_language <- function(lang) {
+  if (identical(lang, "no")) "nb" else lang
+}
+
 #' Fetch classification labels from SSB Klass API
 #' @param classification_id Integer. SSB Klass classification ID
 #'   (6 = SN2007/NACE, 39 = institutional sector).
-#' @param lang Language code: `"en"` or `"no"`.
+#' @param lang Language code: `"en"` or `"no"`. KLASS names its
+#'   languages `en`, `nb` and `nn`; `"no"` is sent as `nb` (Bokmål).
 #' @param date Date for which codes are valid.
 #' @returns A tibble with columns `code`, `name`, `level`.
 #' @keywords internal
 fetch_klass <- function(classification_id, lang = "en", date = Sys.Date()) {
   resp <- klass_req(
     path  = paste0("classifications/", classification_id, "/codesAt"),
-    query = list(date = format(date, "%Y-%m-%d"), language = lang)
+    query = list(date = format(date, "%Y-%m-%d"), language = klass_language(lang))
   ) |>
     httr2::req_perform()
   body <- httr2::resp_body_json(resp)

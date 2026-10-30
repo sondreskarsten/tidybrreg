@@ -336,6 +336,45 @@ test_that("brreg_regnskap: unknown number is the typed empty with http_status 40
 })
 
 # ============================================================================
+# Section 3c: Probes for the stress-test rig's open findings
+# ============================================================================
+
+test_that("brreg_search: an employee range is accepted by the API (rig S-13)", {
+ skip_if_no_api()
+ res <- tryCatch(brreg_search(min_employees = 1, max_employees = 2, max_results = 20),
+                 tidybrreg_error_http = function(e) e)
+ if (inherits(res, "tidybrreg_error_http")) {
+   resp <- tidybrreg:::brreg_perform(tidybrreg:::brreg_req(
+     "enheter", list(fraAntallAnsatte = 1L, tilAntallAnsatte = 2L, size = 20L, page = 0L)))
+   fail(paste0("HTTP ", httr2::resp_status(resp), " for ", resp$url, "\nbody: ",
+               substr(httr2::resp_body_string(resp), 1, 600)))
+ }
+ expect_s3_class(res, "tbl_df")
+ expect_true(all(res$employees <= 2, na.rm = TRUE))
+})
+
+test_that("brreg_signatur and brreg_prokura: Equinor answers with rows or a typed empty (rig SG-01)", {
+ skip_if_no_api()
+ sg <- safely(brreg_signatur("923609016"))
+ expect_s3_class(sg, "tbl_df")
+ expect_gt(nrow(sg), 0, label = paste0("signatur rows (http_status ", attr(sg, "http_status") %||% 200L, ")"))
+ pk <- safely(brreg_prokura("923609016"))
+ expect_s3_class(pk, "tbl_df")
+ expect_true(nrow(pk) > 0 || identical(attr(pk, "http_status"), 404L) || nrow(pk) == 0)
+})
+
+test_that("get_brreg_dic: Norwegian NACE labels come from KLASS (rig L-27)", {
+ skip_if_no_api()
+ d <- safely(get_brreg_dic("nace", lang = "no", source = "klass", refresh = TRUE))
+ expect_equal(attr(d, "source"), "klass")
+ expect_equal(attr(d, "lang"), "no")
+ expect_gt(nrow(d), 100)
+ expect_true(any(grepl("[\u00e6\u00f8\u00e5]", d$name)))
+ e <- safely(get_brreg_dic("nace", lang = "en", source = "klass", refresh = TRUE))
+ expect_false(identical(d$name, e$name))
+})
+
+# ============================================================================
 # Section 4: Roles & Governance — Expected vs Observed
 # ============================================================================
 

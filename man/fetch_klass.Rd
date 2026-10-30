@@ -10,7 +10,8 @@ fetch_klass(classification_id, lang = "en", date = Sys.Date())
 \item{classification_id}{Integer. SSB Klass classification ID
 (6 = SN2007/NACE, 39 = institutional sector).}
 
-\item{lang}{Language code: \code{"en"} or \code{"no"}.}
+\item{lang}{Language code: \code{"en"} or \code{"no"}. KLASS names its
+languages \code{en}, \code{nb} and \code{nn}; \code{"no"} is sent as \code{nb} (Bokmål).}
 
 \item{date}{Date for which codes are valid.}
 }
