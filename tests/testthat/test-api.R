@@ -36,7 +36,8 @@ test_that("brreg_entity passes through unknown API fields", {
 
 test_that("brreg_search returns results", {
   skip_if_offline()
-  s <- safely(brreg_search(name = "Equinor", max_results = 5))
+  s <- safely(suppressWarnings(brreg_search(name = "Equinor", max_results = 5),
+                               classes = "tidybrreg_warning_truncated"))
   expect_s3_class(s, "tbl_df")
   expect_gt(nrow(s), 0)
   expect_true("org_nr" %in% names(s))
@@ -71,7 +72,8 @@ test_that("brreg_roles returns correct structure", {
 
 test_that("brreg_updates returns results", {
   skip_if_offline()
-  u <- safely(brreg_updates(since = Sys.Date() - 2, size = 10))
+  u <- safely(suppressWarnings(brreg_updates(since = Sys.Date() - 2, size = 10),
+                               classes = "tidybrreg_warning_truncated"))
   expect_s3_class(u, "tbl_df")
   expect_gt(nrow(u), 0)
   expect_true(all(c("update_id", "org_nr", "change_type", "timestamp") %in% names(u)))
@@ -82,7 +84,8 @@ test_that("brreg_updates include_changes works", {
 
   skip_if_offline()
   # Use larger size to ensure we get Endring events (which carry changes)
-  u <- safely(brreg_updates(since = Sys.Date() - 3, size = 100, include_changes = TRUE))
+  u <- safely(suppressWarnings(brreg_updates(since = Sys.Date() - 3, size = 100, include_changes = TRUE),
+                               classes = "tidybrreg_warning_truncated"))
   endring_rows <- u[u$change_type == "Endring", ]
   if (nrow(endring_rows) > 0) {
     expect_true("changes" %in% names(u))
