@@ -24,8 +24,8 @@ function:
 So when tidybrreg gains an export, changes an argument, or rewrites a
 help page, the MCP catalogue changes with it. A test asserts the tool
 list equals `getNamespaceExports("tidybrreg")` and that the two packages
-share a version, and the Docker image is built from the same commit as
-tidybrreg on every push to `main`.
+share a version, and the Docker image is built and smoke-tested from the same commit as
+tidybrreg in every CI run, then pushed and deployed on `main`.
 
 The server adds exactly four optional arguments to every tool, all
 prefixed with a dot so they cannot collide with tidybrreg's: `.limit`
@@ -70,8 +70,8 @@ tidybrregmcp::mcp_serve("http", port = 8080)
 `POST /mcp` carries JSON-RPC; `GET /health` reports versions. Set
 `MCP_BEARER_TOKEN` to require `Authorization: Bearer`. The image in
 `Dockerfile` runs the same server (`MCP_TRANSPORT=http`), and
-`deploy/cloud-run.yaml` is the Cloud Run service definition used by the
-`mcp-image` GitHub workflow.
+`deploy/cloud-run.yaml` is the Cloud Run service definition applied by the
+`R-CMD-check` workflow after every green build on `main`.
 
 Remote client configuration:
 

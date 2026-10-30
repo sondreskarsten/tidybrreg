@@ -11,7 +11,11 @@
 # Run (streamable HTTP on :8080):
 #   docker run -p 8080:8080 -e MCP_TRANSPORT=http tidybrreg-mcp
 
-ARG R_BASE=europe-north1-docker.pkg.dev/sondreskarsten-d7d14/r-images/r-base:latest
+# Base: the repository's own CI image (all dependencies of the three
+# packages pre-installed, rebuilt weekly by docker-image.yaml). Override
+# with --build-arg R_BASE=europe-north1-docker.pkg.dev/sondreskarsten-d7d14/r-images/r-base:latest
+# to build on the project-wide R image instead.
+ARG R_BASE=ghcr.io/sondreskarsten/tidybrreg-ci:r4.4.1
 FROM ${R_BASE}
 
 LABEL org.opencontainers.image.source="https://github.com/sondreskarsten/tidybrreg"
@@ -28,7 +32,7 @@ COPY R ./core/R
 COPY man ./core/man
 COPY data ./core/data
 COPY inst ./core/inst
-RUN Rscript -e 'install.packages(c("httpuv", "yyjsonr"), repos = c(CRAN = "https://cloud.r-project.org"))' \
+RUN Rscript -e 'need <- setdiff(c("httpuv", "yyjsonr"), rownames(installed.packages())); if (length(need)) install.packages(need, repos = c(CRAN = "https://cloud.r-project.org"))' \
  && R CMD INSTALL --no-docs ./core
 
 COPY tidybrregmcp ./mcp
