@@ -2,25 +2,30 @@
 % Please edit documentation in R/parse.R
 \name{collapse_observed}
 \alias{collapse_observed}
-\title{Collapse an observed array value to a single character cell}
+\title{Collapse an observed array value to one tidy cell}
 \usage{
 collapse_observed(val)
 }
 \arguments{
-\item{val}{A list or atomic vector taken from a parsed response.}
+\item{val}{A list, atomic vector or data frame taken from a parsed
+response.}
 }
 \value{
-A length-1 character value.
+A length-1 character value, or a tibble for an array of
+objects.
 }
 \description{
 BRREG returns addresses, \code{vedtektsfestetFormaal}, and \code{aktivitet}
-as arrays of register line-fragments. Element text routinely
-contains commas and semicolons but never newlines, so \code{"\\n"} is the
-only separator that survives a round trip: a consumer can split it
-back into the observed elements, which \code{"; "} and \code{", "} do not
-allow. Arrays whose elements are objects (\code{historiskeNavn},
-\code{paategninger}) have no meaningful text join and are serialized to
-JSON instead, preserving field structure.
+as arrays of register line-fragments of one value. Element text
+routinely contains commas and semicolons but never newlines, so
+\code{"\\n"} is the only separator that survives a round trip: a consumer
+can split it back into the observed elements, which \code{"; "} and
+\code{", "} do not allow. Arrays whose elements are objects
+(\code{historiskeNavn}, \code{paategninger}) are repeated observations of
+another unit and are nested instead: the cell is a tibble with one
+row per element and one column per leaf of the element, named in
+snake_case of the leaf's dot path, so the caller's column is a
+list-column that \code{tidyr::unnest()} expands.
 }
 \details{
 Note that the CSV bulk is BRREG's own flattening and uses

@@ -20,19 +20,21 @@
 #' @section 404 semantics:
 #' The endpoint returns 404 both for organization numbers that do not
 #' exist and for live entities that are not part of any registered
-#' group — the common case for ordinary companies. A warning is issued
-#' and an empty tibble returned; the `in_corporate_group` column from
-#' [brreg_entity()] disambiguates the two without a second lookup
-#' here.
+#' group — the common case for ordinary companies. The
+#' `in_corporate_group` column from [brreg_entity()] disambiguates the
+#' two without a second lookup here.
 #'
-#' @param org_nr Character. 9-digit organization number.
+#' @inheritSection brreg_roles Status handling
+#'
+#' @param org_nr Character. A single 9-digit organization number.
 #'
 #' @returns A tibble with one row per node in the group tree.
 #'   Columns: `org_nr` (the queried entity), `node_org_nr`,
 #'   `node_name`, `level` (0 for the root), `link_form`,
 #'   `link_form_desc`, `basis`, `relation_date` (Date),
 #'   `parent_org_nr`, `parent_name`, `legal_form`, `legal_form_desc`.
-#'   Returns an empty tibble if no group structure is registered.
+#'   A zero-row tibble with the same typed columns if no group
+#'   structure is registered.
 #'
 #' @family tidybrreg entity functions
 #' @seealso [brreg_children()] for the ORGL administrative hierarchy,
@@ -43,17 +45,24 @@
 #' @examplesIf interactive() && curl::has_internet()
 #' brreg_konsern("923609016") # Equinor ASA
 brreg_konsern <- function(org_nr) {
-  org_nr <- as.character(org_nr)
-  resp <- brreg_req(paste0("konsernstruktur/", org_nr)) |>
-    httr2::req_error(is_error = \(resp) FALSE) |>
-    httr2::req_perform()
-  if (httr2::resp_status(resp) >= 400L) {
-    cli::cli_warn(
-      "No konsernstruktur found for {.val {org_nr}} (HTTP {httr2::resp_status(resp)})."
-    )
-    return(tibble::tibble())
-  }
+  org_nr <- check_org_nr(org_nr)
+  endpoint <- paste0("konsernstruktur/", org_nr)
+  resp <- brreg_perform(brreg_req(endpoint))
+  out <- satellite_status(resp, endpoint, org_nr, empty_konsern())
+  if (!is.null(out)) return(out)
   flatten_konsern(httr2::resp_body_json(resp), org_nr)
+}
+
+#' Typed zero-row tibble for konsern results
+#' @keywords internal
+empty_konsern <- function() {
+  tibble::tibble(
+    org_nr = character(), node_org_nr = character(), node_name = character(),
+    level = integer(), link_form = character(), link_form_desc = character(),
+    basis = character(), relation_date = as.Date(character()),
+    parent_org_nr = character(), parent_name = character(),
+    legal_form = character(), legal_form_desc = character()
+  )
 }
 
 
@@ -65,7 +74,8 @@ brreg_konsern <- function(org_nr) {
 #' emit-callback shape of [flatten_value_into()]. Observed values win
 #' over derived ones: `nivaa`, `parentOrganisasjonsnummer`, and
 #' `parentNavn` are taken from the node when present and only filled
-#' from recursion context when absent (the root).
+#' from recursion context when absent (the root). `dato` is accepted in
+#' both ISO and `DD.MM.YYYY` form via [parse_brreg_date()].
 #'
 #' @param raw Parsed JSON list from the konsernstruktur endpoint.
 #' @param org_nr Organization number (passed through to output).
@@ -100,6 +110,6 @@ flatten_konsern <- function(raw, org_nr) {
   }
   emit(raw, 0L, NA_character_, NA_character_)
   result <- dplyr::bind_rows(rows[seq_len(k)])
-  result$relation_date <- as.Date(result$relation_date)
+  result$relation_date <- parse_brreg_date(result$relation_date)
   result
 }

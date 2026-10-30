@@ -11,29 +11,30 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 Tidy R interface to Norway’s [Central Coordinating Register for Legal
 Entities](https://www.brreg.no/en/) (Enhetsregisteret), maintained by
 the Brønnøysund Register Centre. The register contains approximately 1
-million active entities. Data is freely available under the [Norwegian
-Licence for Open Government Data (NLOD
-2.0)](https://data.norge.no/nlod/en/2.0).
+million active entities. Data is published under the [Norwegian Licence
+for Open Government Data (NLOD 2.0)](https://data.norge.no/nlod/en/2.0).
+
+This repository holds three packages that are versioned and built
+together:
+
+| Package            | Directory         | Purpose                                                                                                                     |
+|--------------------|-------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| **tidybrreg**      | `/`               | The typed client: sixteen functions, one per register endpoint. CRAN-bound.                                                 |
+| **tidybrregpanel** | `tidybrregpanel/` | Managed state: Parquet snapshots, `brreg_sync()`, replay, changelog, flows, panels, series, networks, survival data.        |
+| **tidybrregmcp**   | `tidybrregmcp/`   | A Model Context Protocol server whose tools, schemas and documentation are derived from tidybrreg’s exports and help pages. |
+| **tidybrreg-mcp**  | `tidybrreg-mcp-node/` | The same server without R: an npm package (`npx tidybrreg-mcp`) built from the manifest tidybrregmcp writes, for Claude, ChatGPT and OpenAI clients. |
 
 ## Installation
 
 ``` r
-# Recommended: pak (handles all dependencies)
-# install.packages("pak")
-pak::pak("sondreskarsten/tidybrreg")
-
-# Alternative: r-universe (pre-built binaries, no compilation)
-install.packages("tidybrreg",
+install.packages(c("tidybrreg", "tidybrregpanel", "tidybrregmcp"),
   repos = c("https://sondreskarsten.r-universe.dev",
             "https://cloud.r-project.org"))
 
-# Alternative: remotes (requires remotes >= 2.5.0)
-remotes::install_github("sondreskarsten/tidybrreg")
-
-# For snapshot/panel features, also install a parquet backend:
-install.packages("nanoparquet")  # lightweight
-# OR
-install.packages("arrow")       # full-featured (lazy queries)
+# Or from GitHub
+pak::pak("sondreskarsten/tidybrreg")
+pak::pak("sondreskarsten/tidybrreg/tidybrregpanel")
+pak::pak("sondreskarsten/tidybrreg/tidybrregmcp")
 ```
 
 ## Entity lookup
@@ -42,7 +43,7 @@ install.packages("arrow")       # full-featured (lazy queries)
 library(tidybrreg)
 
 brreg_entity("923609016")
-#> # A tibble: 1 x 65
+#> # A tibble: 1 x 63
 #>   org_nr    name        legal_form founding_date employees nace_1
 #>   <chr>     <chr>       <chr>      <date>            <int> <chr>
 #> 1 923609016 EQUINOR ASA ASA        1972-09-18        21408 06.100
@@ -51,13 +52,17 @@ brreg_entity("923609016")
 brreg_entity("974760843", registry = "underenheter")
 ```
 
-Codes by default. Translate with `type = "label"` or `brreg_label()`:
+Only observed fields are emitted; `registry` and `deleted` are always
+present. Codes by default. Translate with `type = "label"` or
+`brreg_label()`:
 
 ``` r
 brreg_entity("923609016", type = "label")
 
 brreg_entity("923609016") |>
   brreg_label(code = c("legal_form", "nace_1"))
+
+brreg_label(c("AS", "ENK"), dic = "legal_form", lang = "no")
 ```
 
 ## Search
@@ -70,140 +75,54 @@ brreg_search(legal_form = "AS", municipality_code = "0301",
 brreg_search(name = "Equinor", registry = "underenheter", max_results = 5)
 ```
 
-## Roles and governance
+A query that matches more than the register’s 10,000-result window
+aborts with `tidybrreg_error_result_window` rather than returning a
+partial population; results carry `total_matches` and `complete`
+attributes.
+
+## Roles, groups and signing authority
 
 ``` r
-# Who holds roles IN an entity
-brreg_roles("923609016")
-brreg_roles("923609016") |> brreg_board_summary()
-
-# What roles does an entity hold in OTHER entities (reverse lookup)
-brreg_roles_legal("923609016")
-#> # A tibble: 70 x 8
-#>   org_nr    target_org_nr target_name                      role       share
-#>   <chr>     <chr>         <chr>                            <chr>      <chr>
-#> 1 923609016 819334552     TECHNOLOGY CENTRE MONGSTAD DA    Partner... 22%
-#> 2 923609016 925461784     EQUINOR DEZASSETE AS             Accountant NA
+brreg_roles("923609016")          # who holds roles IN an entity
+brreg_roles_legal("923609016")    # roles an entity holds in OTHER entities
+brreg_konsern("923609016")        # the corporate group tree
+brreg_signatur("923609016")       # who may sign for the entity
+brreg_prokura("923609016")        # procuration holders
 ```
 
-## Role change detection
+## Annual accounts
 
-Detect board and management changes at field level. Two approaches:
+```r
+acc <- brreg_regnskap("923609016")                    # one row per filing, up to 3 years per type
+acc[c("account_type", "period_end", "currency", "consistent")]
+tidyr::unnest(acc, items)                             # statement, group, item, path, level, is_sum, value
+brreg_regnskap("923609016", account_type = "SELSKAP", year = 2025)
+```
+
+The figures are nested per filing and keep the API's structure, so a group's total and its components are never summed together by accident; `consistent` and `inconsistencies` flag filings whose accounting identities do not hold (the register publishes them as filed). Banks, insurers and pension funds answer with a plan the API does not serve; the result is the typed empty with `unsupported_plan` and a `tidybrreg_warning_unsupported_plan`.
+
+## Incremental updates
 
 ``` r
-# Manual diff between two states
-old <- brreg_roles("810556722")
-new <- brreg_roles("810556722")
-diff_roller_state(old, new)
-#> # A tibble: 12 x 8
-#>   timestamp  org_nr    registry change_type field      value_from value_to
-#>   <chr>      <chr>     <chr>    <chr>       <chr>      <chr>      <chr>
-#> 1 2026-03-25 810556722 roller   entry       role_group NA         Board...
-#> 2 2026-03-25 810556722 roller   exit        first_name Kari       NA
-
-# Automated sync with persistent state + changelog
-brreg_sync(types = "roller", roller_method = "bulk")
-brreg_changes(registry = "roller", change_type = "entry")
+brreg_updates(since = "2026-03-01T00:00:00Z", size = 1000, max_pages = 10)
+brreg_update_fields(since = Sys.Date() - 1)
+brreg_updates(type = "roller", since = Sys.Date() - 1)
 ```
-
-See `vignette("roller-cdc")` for the full workflow.
 
 ## Bulk downloads
 
-Three registries available as bulk downloads:
-
 ``` r
-# Enheter: ~152 MB CSV or ~196 MB JSON
-entities <- brreg_download(type = "enheter")
-entities <- brreg_download(type = "enheter", format = "json")
-
-# Underenheter: ~59 MB CSV
-sub_entities <- brreg_download(type = "underenheter")
-
-# Roller: ~131 MB JSON (all roles for all entities)
-roles <- brreg_download(type = "roller")
-```
-
-## Snapshot engine
-
-Save dated bulk downloads as Hive-partitioned Parquet. Raw `.gz` files
-are preserved for provenance.
-
-``` r
-brreg_snapshot("enheter")
-brreg_snapshot("underenheter")
-brreg_snapshot("roller")
-
-# Import historical CSVs
-brreg_import("enheter_2024-12-31.csv.gz", snapshot_date = "2024-12-31")
-
-# List snapshots and provenance metadata
-brreg_snapshots()
-brreg_manifest()
-```
-
-## Panel construction
-
-Two paths for building firm-period panels:
-
-``` r
-# Path A: multi-snapshot diff
-panel <- brreg_panel(
-  frequency = "year",
-  cols = c("employees", "nace_1", "legal_form", "municipality_code")
-)
-
-# Path B: single snapshot + CDC replay
-base <- brreg_download(type_output = "tibble")
-cdc <- brreg_updates(since = "2025-09-23", size = 10000, include_changes = TRUE)
-state_dec <- brreg_replay(base, cdc, target_date = "2025-12-31")
-
-# Detect entries, exits, field changes between two snapshots
-events <- brreg_events("2024-01-01", "2025-01-01")
-events |> dplyr::count(event_type)
-```
-
-## Time series
-
-Aggregate any variable with any summary function, grouped by any column:
-
-``` r
-# Total employees by legal form per year
-brreg_series(.vars = "employees", by = "legal_form")
-
-# Multiple summaries
-brreg_series(.vars = "employees",
-             .fns = list(avg = mean, total = sum),
-             by = "nace_1")
-
-# Entity counts (default when .vars = NULL)
-brreg_series(by = "legal_form")
-
-# Convert to tsibble for tidyverts ecosystem
-brreg_series(.vars = "employees") |> as_brreg_tsibble()
-```
-
-## Harmonization
-
-``` r
-panel |> brreg_harmonize_kommune(target_date = "2024-01-01")
-panel |> brreg_harmonize_nace(from = "SN2007", to = "SN2025")
-```
-
-## Governance research
-
-``` r
-net <- brreg_board_network(c("923609016", "984851006"))
-surv <- brreg_search(legal_form = "AS", max_results = 1000) |>
-  brreg_survival_data()
+entities     <- brreg_download(type = "enheter")                   # ~152 MB CSV
+entities     <- brreg_download(type = "enheter", format = "json")  # ~196 MB JSON
+sub_entities <- brreg_download(type = "underenheter")              # ~59 MB
+roles        <- brreg_download(type = "roller")                    # ~131 MB JSON
+path         <- brreg_download(type_output = "path")
 ```
 
 ## Validate organization numbers
 
 ``` r
 library(tidybrreg)
-#> tidybrreg: bulk data not yet downloaded for: enheter, underenheter.
-#> Run brreg_snapshot() for full network/panel support. See ?brreg_status for details.
 brreg_validate(c("923609016", "984851006", "123456789"))
 #> [1]  TRUE  TRUE FALSE
 ```
@@ -211,59 +130,69 @@ brreg_validate(c("923609016", "984851006", "123456789"))
 ## Design
 
 **Codes by default, labels on demand.** Functions return Norwegian
-codes. `brreg_label()` translates to English via bundled reference data
-or live SSB Klass API lookups.
+codes. `brreg_label()` translates to English or Norwegian via bundled
+reference data or live SSB KLASS lookups;
+`options(tidybrreg.offline = TRUE)` stays on the bundled dictionaries.
 
-**Algorithmic unnesting.** JSON nested objects and list columns are
-flattened to atomic types. Character vectors are collapsed, data frames
-serialized, HAL links dropped. Both CSV and JSON paths share
-`rename_and_coerce()` — no hardcoded format parity.
+**Observed fields only.** A column is present when the register emitted
+the field; nothing is fabricated as `NA`. Unknown API fields pass
+through with auto-generated snake_case names (zero-drop policy).
 
-**Zero-drop policy.** Unknown API fields pass through with
-auto-generated snake_case names. Schema evolution handled by
-`arrow::open_dataset(unify_schemas = TRUE)`.
+**Typed conditions.** Every error and warning has a class and fields
+(`?tidybrreg_conditions`): deleted entities, partial or truncated
+results, result-window overflow, unknown feed members,
+bundled-dictionary fallback.
 
-**Provenance tracking.** Raw download files preserved alongside
-processed Parquet. JSON manifest records HTTP headers (`Last-Modified`
-for data vintage, ETag for change detection), file hashes, and record
-counts.
+**One coercion rule.** Dictionary types are identical on the live JSON
+path and the bulk CSV/JSON path; parse failures are reported, never
+fatal.
 
-**Two panel construction paths.** Multi-snapshot diff (`brreg_panel()`)
-for historical analysis. Single snapshot + CDC replay (`brreg_replay()`)
-for forward reconstruction.
+**UTC instants.** Feed timestamps and HTTP dates are UTC `POSIXct`
+whatever the session time zone.
 
 ## Functions
 
-| Function                    | Description                                                    |
-|-----------------------------|----------------------------------------------------------------|
-| `brreg_entity()`            | Single entity by organization number (enheter or underenheter) |
-| `brreg_search()`            | Filtered search (enheter or underenheter)                      |
-| `brreg_roles()`             | Board members, officers, auditors for an entity                |
-| `brreg_roles_legal()`       | Reverse: roles an entity holds in other entities               |
-| `brreg_board_summary()`     | Board-level covariates from role data                          |
-| `brreg_download()`          | Full register bulk download (enheter, underenheter, roller)    |
-| `brreg_updates()`           | Incremental change stream (enheter, underenheter, roller)      |
-| `brreg_label()`             | Translate codes to English descriptions                        |
-| `brreg_validate()`          | Organization number validation (modulus-11)                    |
-| `get_brreg_dic()`           | Fetch/cache NACE or sector dictionaries                        |
-| `brreg_snapshot()`          | Save dated bulk download as Parquet + raw file                 |
-| `brreg_import()`            | Import historical CSV as snapshot partition                    |
-| `brreg_snapshots()`         | List available snapshots                                       |
-| `brreg_manifest()`          | Read download provenance catalog                               |
-| `brreg_open()`              | Open snapshot store as lazy Arrow Dataset                      |
-| `brreg_cleanup()`           | Remove old snapshot partitions                                 |
-| `brreg_panel()`             | Firm x period panel from snapshots                             |
-| `brreg_replay()`            | Reconstruct state from snapshot + CDC updates                  |
-| `brreg_events()`            | Snapshot diff: entries, exits, field changes                   |
-| `brreg_series()`            | Aggregate time series (any variable, any function)             |
-| `as_brreg_tsibble()`        | Convert to tsibble for tidyverts ecosystem                     |
-| `brreg_harmonize_kommune()` | Municipality code harmonization                                |
-| `brreg_harmonize_nace()`    | NACE code harmonization (SN2007/SN2025)                        |
-| `brreg_board_network()`     | Director interlock network (tidygraph)                         |
-| `brreg_survival_data()`     | Firm survival data preparation                                 |
-| `brreg_data_dir()`          | Snapshot store location                                        |
+| Function                | Description                                                    |
+|-------------------------|----------------------------------------------------------------|
+| `brreg_entity()`        | Single entity by organization number (enheter or underenheter) |
+| `brreg_search()`        | Filtered search (enheter or underenheter)                      |
+| `brreg_underenheter()`  | Sub-units of an entity                                         |
+| `brreg_children()`      | Children in the ORGL administrative hierarchy                  |
+| `brreg_roles()`         | Board members, officers, auditors for an entity                |
+| `brreg_roles_legal()`   | Reverse: roles an entity holds in other entities               |
+| `brreg_konsern()`       | Corporate group structure                                      |
+| `brreg_signatur()`      | Signature authority                                            |
+| `brreg_prokura()`       | Procuration                                                    |
+| `brreg_regnskap()`      | Annual accounts from Regnskapsregisteret, nested per filing with consistency flags |
+| `brreg_updates()`       | Incremental change stream (enheter, underenheter, roller)      |
+| `brreg_update_fields()` | Flat field-level changes                                       |
+| `brreg_download()`      | Full register bulk download (enheter, underenheter, roller)    |
+| `brreg_label()`         | Translate codes to descriptions                                |
+| `get_brreg_dic()`       | Fetch/cache NACE or sector dictionaries                        |
+| `brreg_validate()`      | Organization number validation (modulus-11)                    |
+
+## MCP server
+
+`tidybrregmcp` serves these sixteen functions to any Model Context
+Protocol client. Tool names are the function names and the descriptions
+are the help pages, so the server changes exactly when this package
+changes.
+
+``` json
+{"mcpServers": {"tidybrreg": {"command": "Rscript", "args": ["-e", "tidybrregmcp::mcp_serve()"]}}}
+```
+
+Without R, from npm:
+
+``` json
+{"mcpServers": {"tidybrreg": {"command": "npx", "args": ["-y", "tidybrreg-mcp"]}}}
+```
+
+See `tidybrregmcp/README.md` and `tidybrreg-mcp-node/README.md`.
 
 ## License
 
 MIT. Data from Enhetsregisteret is available under [NLOD
-2.0](https://data.norge.no/nlod/en/2.0).
+2.0](https://data.norge.no/nlod/en/2.0) and must be attributed to the
+Brønnøysund Register Centre; see `?tidybrreg_provenance` for the sources
+of the bundled tables.

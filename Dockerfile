@@ -24,11 +24,19 @@ RUN Rscript -e 'install.packages("pak", repos = sprintf( \
 
 WORKDIR /tidybrreg
 
-# Copy DESCRIPTION first — this layer caches until deps change
+# Copy the three DESCRIPTIONs first — these layers cache until deps change
 COPY DESCRIPTION .
+COPY tidybrregpanel/DESCRIPTION ./tidybrregpanel/DESCRIPTION
+COPY tidybrregmcp/DESCRIPTION ./tidybrregmcp/DESCRIPTION
 
-# Install ALL dependencies (Imports + Suggests) including heavy ones
-RUN Rscript -e 'pak::local_install_deps(dependencies = TRUE)'
+# Install ALL dependencies (Imports + Suggests) of all three packages,
+# except the in-repo ones, which are installed from source below
+RUN Rscript -e '\
+  deps <- function(p) { d <- pak::pkg_deps(paste0("deps::", p), dependencies = TRUE); d$ref[d$type %in% c("cran", "standard")] }; \
+  pak::local_install_deps(".", dependencies = TRUE); \
+  pkgs <- unique(c(deps("tidybrregpanel"), deps("tidybrregmcp"))); \
+  pkgs <- setdiff(pkgs, c("tidybrreg", "tidybrregpanel", "tidybrregmcp")); \
+  if (length(pkgs)) pak::pkg_install(pkgs)'
 
 # Install CI tooling
 RUN Rscript -e 'pak::pkg_install(c("rcmdcheck", "covr"))'
@@ -36,7 +44,9 @@ RUN Rscript -e 'pak::pkg_install(c("rcmdcheck", "covr"))'
 # Copy full package source
 COPY . .
 
-# Install package itself
-RUN Rscript -e 'pak::local_install(dependencies = FALSE)'
+# Install the core, then the companions against it
+RUN Rscript -e 'pak::local_install(dependencies = FALSE)' \
+ && R CMD INSTALL --no-docs tidybrregpanel \
+ && R CMD INSTALL --no-docs tidybrregmcp
 
 CMD ["Rscript", "-e", "testthat::test_local(reporter = 'summary')"]

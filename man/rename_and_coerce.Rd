@@ -8,8 +8,10 @@ rename_and_coerce(dat)
 }
 \description{
 Shared between CSV and JSON parsing. Known dot-notation paths
-map to English names; unknown paths get auto snake_case.
-Type coercion follows \code{field_dict$type}. Parse failures are
-tracked and attached as a \code{brreg_parse_problems} attribute.
+map to English names; unknown paths get auto snake_case, made unique
+on collision. Type coercion follows \code{field_dict$type} through
+\code{\link[=coerce_column]{coerce_column()}}, the same rule the live path uses, so every
+dictionary type (including \code{numeric}) is invariant across sources.
+Parse failures are attached as a \code{brreg_parse_problems} attribute.
 }
 \keyword{internal}

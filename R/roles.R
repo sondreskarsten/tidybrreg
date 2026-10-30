@@ -17,36 +17,65 @@
 #' names sharing a birth date. The brreg public API does not expose
 #' national identity numbers.
 #'
-#' @param org_nr Character. 9-digit organization number.
+#' @section Status handling:
+#' The per-entity endpoints behind [brreg_roles()], [brreg_roles_legal()],
+#' [brreg_konsern()], [brreg_signatur()], [brreg_prokura()] and
+#' [brreg_regnskap()] share one contract. HTTP 404 means the organization
+#' number is unknown to that endpoint, which for konsern, signatur,
+#' prokura and regnskap is the ordinary case of an entity with nothing
+#' registered there: the typed zero-row tibble
+#' is returned with attribute `http_status = 404L` and no warning. HTTP
+#' 410 means the entity has been deleted: the typed zero-row tibble is
+#' returned with `http_status = 410L`, `deletion_date`, and a
+#' `tidybrreg_warning_deleted`. Any other status of 400 or above aborts
+#' with a `tidybrreg_error_http`. A successful response with nothing
+#' registered returns the typed zero-row tibble with no attribute. Use
+#' [brreg_entity()] to distinguish a non-existent organization number
+#' from a live entity with nothing registered.
+#'
+#' @param org_nr Character. A single 9-digit organization number,
+#'   validated with [brreg_validate()].
 #'
 #' @returns A tibble with one row per role assignment. Columns:
-#'   `org_nr`, `role_group`, `role_group_code`, `role`, `role_code`,
-#'   `first_name`, `middle_name`, `last_name`, `birth_date`, `deceased`,
-#'   `entity_org_nr`, `entity_name`, `resigned`, `deregistered`,
-#'   `ordering`, `elected_by`, `group_modified`, `person_id`.
-#'   `resigned` is present only when the payload carries the
+#'   `org_nr`, `role_group_code`, `role_group`, `role_code`, `role`,
+#'   `first_name`, `middle_name`, `last_name`, `birth_date` (Date),
+#'   `deceased`, `entity_org_nr`, `entity_name`, `deregistered`,
+#'   `ordering`, `elected_by`, `group_modified` (Date), `person_id`.
+#'   A `resigned` column is present only when the payload carries the
 #'   `fratraadt` field, which BRREG removed on 2026-06-16; live
 #'   responses no longer include the column, while replays of older
-#'   data retain it. Returns an empty tibble if the entity has no
-#'   registered roles.
+#'   data retain it. An entity with no registered roles yields a
+#'   zero-row tibble with the same typed columns.
 #'
 #' @family tidybrreg entity functions
-#' @seealso [brreg_board_summary()] for derived board covariates,
-#'   [role_types] and [role_groups] for the English lookup tables.
+#' @seealso [role_types] and [role_groups] for the English lookup
+#'   tables, [tidybrreg_conditions] for the conditions signalled.
 #'
 #' @export
 #' @examplesIf interactive() && curl::has_internet()
 #' brreg_roles("923609016")  # Equinor ASA
 brreg_roles <- function(org_nr) {
-  org_nr <- as.character(org_nr)
-  resp <- brreg_req(paste0("enheter/", org_nr, "/roller")) |>
-    httr2::req_error(is_error = \(resp) FALSE) |>
-    httr2::req_perform()
-  if (httr2::resp_status(resp) >= 400L) {
-    cli::cli_warn("No roles found for {.val {org_nr}} (HTTP {httr2::resp_status(resp)}).")
-    return(tibble::tibble())
-  }
+  org_nr <- check_org_nr(org_nr)
+  endpoint <- paste0("enheter/", org_nr, "/roller")
+  resp <- brreg_perform(brreg_req(endpoint))
+  out <- satellite_status(resp, endpoint, org_nr, empty_roles())
+  if (!is.null(out)) return(out)
   flatten_roles(httr2::resp_body_json(resp), org_nr)
+}
+
+#' Typed zero-row tibble for role results
+#' @keywords internal
+empty_roles <- function() {
+  tibble::tibble(
+    org_nr = character(), role_group_code = character(),
+    role_group = character(), role_code = character(), role = character(),
+    first_name = character(), middle_name = character(),
+    last_name = character(), birth_date = as.Date(character()),
+    deceased = logical(), entity_org_nr = character(),
+    entity_name = character(), deregistered = logical(),
+    ordering = integer(), elected_by = character(),
+    group_modified = as.Date(character()), person_id = character()
+  )
 }
 
 
@@ -56,7 +85,7 @@ brreg_roles <- function(org_nr) {
 #' @keywords internal
 flatten_roles <- function(raw, org_nr) {
   grupper <- raw$rollegrupper
-  if (is.null(grupper) || length(grupper) == 0) return(tibble::tibble())
+  if (is.null(grupper) || length(grupper) == 0) return(empty_roles())
   rows <- vector("list", 200)
   k <- 0L
   for (g in grupper) {
@@ -86,24 +115,33 @@ flatten_roles <- function(raw, org_nr) {
       )
     }
   }
-  if (k == 0L) return(tibble::tibble())
+  if (k == 0L) return(empty_roles())
   result <- dplyr::bind_rows(lapply(rows[seq_len(k)], tibble::as_tibble))
   if (all(is.na(result$resigned))) {
     result$resigned <- NULL
   } else {
     result$resigned[is.na(result$resigned)] <- FALSE
   }
-  result$birth_date <- as.Date(result$birth_date)
-  result$group_modified <- as.Date(result$group_modified)
-  result$person_id <- ifelse(
-    !is.na(result$birth_date) & !is.na(result$last_name),
-    paste(result$birth_date, tolower(result$last_name),
-          tolower(result$first_name),
-          tolower(ifelse(is.na(result$middle_name), "", result$middle_name)),
+  result$birth_date <- parse_brreg_date(result$birth_date)
+  result$group_modified <- parse_brreg_date(result$group_modified)
+  result$deceased <- as.logical(result$deceased)
+  result$deregistered <- as.logical(result$deregistered)
+  result$ordering <- as.integer(result$ordering)
+  result$person_id <- make_person_id(result)
+  result
+}
+
+#' Synthetic person key from birth date and name parts
+#' @keywords internal
+make_person_id <- function(x) {
+  ifelse(
+    !is.na(x$birth_date) & !is.na(x$last_name),
+    paste(x$birth_date, tolower(x$last_name),
+          tolower(x$first_name),
+          tolower(ifelse(is.na(x$middle_name), "", x$middle_name)),
           sep = "_"),
     NA_character_
   )
-  result
 }
 
 
@@ -169,47 +207,6 @@ lookup_role_group_vec <- function(codes) {
 }
 
 
-#' Derive board-level summary covariates from role data
-#'
-#' Compute firm-level variables commonly used in corporate governance
-#' research: board size, composition counts, and officer indicators.
-#'
-#' @param roles A tibble returned by [brreg_roles()].
-#'
-#' @returns A 1-row tibble with columns: `org_nr`, `board_size`,
-#'   `n_chair`, `n_deputy_chair`, `n_members`, `n_alternates`,
-#'   `n_observers`, `n_employee_elected`, `has_ceo`, `has_auditor`,
-#'   `auditor_org_nr`. Counts exclude resigned and deregistered roles.
-#'
-#' @family tidybrreg entity functions
-#' @seealso [brreg_roles()] for the underlying role data.
-#'
-#' @export
-#' @examplesIf interactive() && curl::has_internet()
-#' brreg_roles("923609016") |> brreg_board_summary()
-brreg_board_summary <- function(roles) {
-  resigned_flag <- if ("resigned" %in% names(roles)) roles$resigned %in% TRUE else FALSE
-  active_filter <- !resigned_flag & !(roles$deregistered %in% TRUE)
-  board <- roles[roles$role_group_code == "STYR" & !is.na(roles$person_id) & active_filter, ]
-  tibble::tibble(
-    org_nr         = roles$org_nr[1],
-    board_size     = nrow(board),
-    n_chair        = sum(board$role_code == "LEDE", na.rm = TRUE),
-    n_deputy_chair = sum(board$role_code == "NEST", na.rm = TRUE),
-    n_members      = sum(board$role_code == "MEDL", na.rm = TRUE),
-    n_alternates   = sum(board$role_code == "VARA", na.rm = TRUE),
-    n_observers    = sum(board$role_code == "OBS", na.rm = TRUE),
-    n_employee_elected = sum(!is.na(board$elected_by), na.rm = TRUE),
-    has_ceo        = any(roles$role_group_code == "DAGL" & active_filter, na.rm = TRUE),
-    has_auditor    = any(roles$role_group_code == "REVI" & active_filter, na.rm = TRUE),
-    auditor_org_nr = {
-      revi <- roles[roles$role_group_code == "REVI" & !is.na(roles$entity_org_nr) & active_filter, ]
-      if (nrow(revi) > 0) revi$entity_org_nr[1] else NA_character_
-    }
-  )
-}
-
-
 #' Retrieve roles an entity holds in other entities
 #'
 #' Reverse role lookup: find all entities where the given entity holds
@@ -217,14 +214,17 @@ brreg_board_summary <- function(roles) {
 #' is distinct from [brreg_roles()], which returns who holds roles
 #' IN the given entity.
 #'
-#' @param org_nr Character. 9-digit organization number.
+#' @inheritSection brreg_roles Status handling
+#'
+#' @param org_nr Character. A single 9-digit organization number.
 #'
 #' @returns A tibble with one row per role held. Columns: `org_nr`
 #'   (queried entity), `target_org_nr` (entity where role is held),
 #'   `target_name`, `role_code`, `role`, `share` (ownership share
-#'   if applicable), `resigned`, `deregistered`. `resigned` is present
+#'   if applicable), `deregistered`. A `resigned` column is present
 #'   only when the payload carries the `fratraadt` field, removed by
-#'   BRREG on 2026-06-16; live responses no longer include it.
+#'   BRREG on 2026-06-16. An entity holding no roles elsewhere yields a
+#'   zero-row tibble with the same typed columns.
 #'
 #' @family tidybrreg entity functions
 #' @seealso [brreg_roles()] for who holds roles in an entity.
@@ -233,14 +233,14 @@ brreg_board_summary <- function(roles) {
 #' @examplesIf interactive() && curl::has_internet()
 #' brreg_roles_legal("923609016")  # Equinor's roles in other entities
 brreg_roles_legal <- function(org_nr) {
-  org_nr <- as.character(org_nr)
-  resp <- brreg_req(paste0("roller/enheter/", org_nr, "/juridiskeroller")) |>
-    httr2::req_error(is_error = \(resp) FALSE) |>
-    httr2::req_perform()
-  if (httr2::resp_status(resp) >= 400L) return(tibble::tibble())
+  org_nr <- check_org_nr(org_nr)
+  endpoint <- paste0("roller/enheter/", org_nr, "/juridiskeroller")
+  resp <- brreg_perform(brreg_req(endpoint))
+  out <- satellite_status(resp, endpoint, org_nr, empty_roles_legal())
+  if (!is.null(out)) return(out)
   body <- httr2::resp_body_json(resp)
   enheter <- body$enheter
-  if (is.null(enheter) || length(enheter) == 0) return(tibble::tibble())
+  if (is.null(enheter) || length(enheter) == 0) return(empty_roles_legal())
 
   rows <- vector("list", length(enheter) * 3L)
   k <- 0L
@@ -259,7 +259,7 @@ brreg_roles_legal <- function(org_nr) {
       )
     }
   }
-  if (k == 0L) return(tibble::tibble())
+  if (k == 0L) return(empty_roles_legal())
   result <- dplyr::bind_rows(rows[seq_len(k)])
   if (all(is.na(result$resigned))) {
     result$resigned <- NULL
@@ -267,4 +267,14 @@ brreg_roles_legal <- function(org_nr) {
     result$resigned[is.na(result$resigned)] <- FALSE
   }
   result
+}
+
+#' Typed zero-row tibble for legal-role results
+#' @keywords internal
+empty_roles_legal <- function() {
+  tibble::tibble(
+    org_nr = character(), target_org_nr = character(),
+    target_name = character(), role_code = character(), role = character(),
+    share = character(), deregistered = logical()
+  )
 }

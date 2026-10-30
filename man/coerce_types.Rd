@@ -4,9 +4,17 @@
 \alias{coerce_types}
 \title{Coerce columns to declared types from field_dict}
 \usage{
-coerce_types(tbl)
+coerce_types(tbl, dict = field_dict)
+}
+\arguments{
+\item{tbl}{A tibble from \code{\link[=rename_from_dict]{rename_from_dict()}}.}
+
+\item{dict}{The field map whose types apply: \link{field_dict} (default)
+or \code{regnskap_dict}.}
 }
 \description{
-Coerce columns to declared types from field_dict
+Applied to every dictionary column present in \code{tbl}. Failures are
+attached as the \code{brreg_parse_problems} attribute and signalled once
+as a \code{tidybrreg_warning_parse}.
 }
 \keyword{internal}

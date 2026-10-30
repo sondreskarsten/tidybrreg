@@ -1,0 +1,78 @@
+# Verify brreg_regnskap() against the whole published population: download
+# the newest brreg-json-fetcher data release (every filing the accounts API
+# served that month, ~1.1 million), scan every filing's JSON for its leaf
+# paths, types and accounting identities, and flatten one real filing per
+# distinct structural shape through tidybrreg. Fails when a path the
+# population carries is not captured, a value does not parse, or a filing
+# does not flatten.
+name: regnskap population check
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'brreg-json-fetcher data release tag (default: newest data-*)'
+        required: false
+        default: ''
+  schedule:
+    - cron: '41 5 10 * *'
+
+permissions:
+  contents: read
+
+jobs:
+  population:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::devtools
+          needs: check
+
+      - name: Download the data release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${{ inputs.release_tag }}"
+          if [ -z "$tag" ]; then
+            tag=$(gh release list --repo sondreskarsten/brreg-json-fetcher --limit 50 --json tagName --jq '[.[].tagName | select(startswith("data-"))] | sort | last')
+          fi
+          echo "release $tag"
+          mkdir -p release
+          gh release download "$tag" --repo sondreskarsten/brreg-json-fetcher --dir release --pattern 'accounts*.csv' --pattern 'SHA256SUMS' --pattern 'manifest.json'
+          (cd release && sha256sum -c --ignore-missing SHA256SUMS)
+          echo "RELEASE_TAG=$tag" >> "$GITHUB_ENV"
+
+      - name: Scan every filing
+        run: |
+          mkdir -p scan
+          python3 -I data-raw/regnskap/scan_population.py release scan | tee scan/summary.txt
+
+      - name: Flatten every structural shape through tidybrreg
+        env:
+          TIDYBRREG_REGNSKAP_SCAN: ${{ github.workspace }}/scan
+          NOT_CRAN: true
+        run: Rscript -e 'devtools::test(filter = "regnskap", stop_on_failure = TRUE)'
+
+      - name: Report
+        run: |
+          {
+            echo "## brreg_regnskap population check: $RELEASE_TAG"
+            echo '```'
+            cat scan/summary.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: regnskap-population-${{ github.run_id }}
+          path: |
+            scan/population_paths.json
+            scan/summary.txt
+            release/manifest.json

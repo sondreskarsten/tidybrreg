@@ -16,6 +16,9 @@ A flat named list.
 }
 \description{
 Nested objects recurse into \code{parent.child} keys. Arrays are
-collapsed by \code{\link[=collapse_observed]{collapse_observed()}}.
+collapsed by \code{\link[=collapse_observed]{collapse_observed()}}: arrays of strings to one
+newline-joined cell, arrays of objects to a nested tibble. An empty
+array carries no observation and emits no key, so a batch can bind
+entities with and without the array.
 }
 \keyword{internal}

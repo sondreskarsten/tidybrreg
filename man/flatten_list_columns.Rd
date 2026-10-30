@@ -2,7 +2,7 @@
 % Please edit documentation in R/download.R
 \name{flatten_list_columns}
 \alias{flatten_list_columns}
-\title{Algorithmically flatten all list columns to atomic types}
+\title{Give every list column its tidy shape}
 \usage{
 flatten_list_columns(dat)
 }
@@ -10,11 +10,13 @@ flatten_list_columns(dat)
 \item{dat}{A tibble potentially containing list columns.}
 }
 \value{
-The same tibble with all list columns converted to character.
+The same tibble with list columns converted to character or
+to list-columns of tibbles.
 }
 \description{
 Dispatches on the runtime type of each list column's elements:
-character/numeric vectors are collapsed, data.frames are serialized
-to JSON, NULLs become \code{NA_character_}.
+character/numeric vectors are collapsed, NULLs become
+\code{NA_character_}, and a column whose elements are data frames stays a
+list-column of tibbles (\code{NULL} where the entity has none).
 }
 \keyword{internal}

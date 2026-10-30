@@ -4,9 +4,10 @@
 \alias{brreg_updates_roller}
 \title{Fetch roller updates (CloudEvents format)}
 \usage{
-brreg_updates_roller(since, size)
+brreg_updates_roller(since, size, max_pages = 1L, verbose = FALSE)
 }
 \description{
-Fetch roller updates (CloudEvents format)
+The roller feed is addressed by \code{afterTime} for the first page and by
+\code{afterId} (the last event id read) for later pages.
 }
 \keyword{internal}

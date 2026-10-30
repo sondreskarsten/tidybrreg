@@ -1,0 +1,618 @@
+{
+  "$schema_note": "Machine-readable endpoint contract of the sixteen tidybrreg exports. Every entry is asserted against the function it names by tests/testthat/test-endpoints.R (the request each function builds must match `path` and the query map). Consumers that implement the same calls outside R (tidybrregmcp::mcp_manifest(), the Node MCP server) read this file rather than re-deriving it.",
+  "services": {
+    "enhetsregisteret": "https://data.brreg.no/enhetsregisteret/api",
+    "fullmakt": "https://data.brreg.no/fullmakt",
+    "regnskapsregisteret": "https://data.brreg.no/regnskapsregisteret/regnskap",
+    "klass": "https://data.ssb.no/api/klass/v1"
+  },
+  "http": {
+    "user_agent": "tidybrreg (https://github.com/sondreskarsten/tidybrreg; R package)",
+    "accept": "application/json;charset=UTF-8",
+    "throttle_per_second_per_host": 5,
+    "retry_statuses": [429, 503],
+    "retry_max_tries": 3,
+    "error_body": "messages are read from valideringsfeil[].feilmelding (+ parametere), validationErrors[].errorMessage, feilmelding, error and trace"
+  },
+  "org_nr": {
+    "pattern": "^[89][0-9]{8}$",
+    "check": "modulus 11 with weights 3,2,7,6,5,4,3,2 over the first eight digits; remainder 0 gives check digit 0, remainder giving check digit 10 is invalid"
+  },
+  "tidy": {
+    "note": "Every result is tidy: one observation per row, one variable per column, one observational unit per table; no cell holds more than one value and nothing is serialized to JSON text.",
+    "string_arrays": "line fragments of one value (addresses, vedtektsfestetFormaal, aktivitet): joined with \\n, which no fragment contains",
+    "object_arrays": "observations of another unit (historiskeNavn, paategninger, any array of objects): nested as a list-column of tibbles / JSON arrays of records, one row per element, columns snake_case of the element's leaf paths, no dictionary type applied, NULL (absent) for an entity without them",
+    "empty_arrays": "no observation: the key is not emitted",
+    "nested_results": {"brreg_regnskap": ["items", "inconsistencies"], "brreg_updates": ["changes (include_changes = TRUE)"]}
+  },
+  "functions": {
+    "brreg_entity": {
+      "service": "enhetsregisteret",
+      "kind": "entity",
+      "routes": [
+        {"registry": "enheter", "method": "GET", "path": "/enheter/{org_nr}"},
+        {"registry": "underenheter", "method": "GET", "path": "/underenheter/{org_nr}"}
+      ],
+      "registry_arg": "registry",
+      "auto_order": ["enheter", "underenheter"],
+      "status": {
+        "200": "parse entity; respons_klasse == 'SlettetEnhet' or a slettedato marks deletion (deleted = TRUE, deletion_date, tidybrreg_warning_deleted)",
+        "404": "try the next registry under auto; otherwise tidybrreg_error_not_found",
+        "410": "deleted: parse the body, deleted = TRUE, deletion_date from slettedato, tidybrreg_warning_deleted",
+        "other>=400": "tidybrreg_error_http"
+      },
+      "result": {"added_columns": ["registry", "deleted"], "emission": "observed fields only, renamed through field_dict, HAL _links removed at any depth", "nesting": "arrays of objects are list-columns of tibbles (historiske_navn, annotations); see `tidy`"}
+    },
+    "brreg_search": {
+      "service": "enhetsregisteret",
+      "kind": "search",
+      "routes": [
+        {"registry": "enheter", "method": "GET", "path": "/enheter", "embedded_key": "enheter"},
+        {"registry": "underenheter", "method": "GET", "path": "/underenheter", "embedded_key": "underenheter"}
+      ],
+      "query": {
+        "name": "navn",
+        "legal_form": "organisasjonsform",
+        "nace_code": "naeringskode",
+        "min_employees": "fraAntallAnsatte",
+        "max_employees": "tilAntallAnsatte",
+        "employee_range_note": "a range within 1 to 4 employees is refused for privacy (HTTP 400, valideringsfeil 'kan du ikke gjøre søk mellom en og fire ansatte'); 0 and 5 and above are served",
+        "parent_org_nr": "overordnetEnhet",
+        "municipality_code": {"enheter": "kommunenummer", "underenheter": "beliggenhetsadresse.kommunenummer"},
+        "bankrupt": {"enheter": "konkurs", "underenheter": null}
+      },
+      "pagination": {
+        "model": "page",
+        "page_param": "page",
+        "size_param": "size",
+        "page_size": 100,
+        "retrieval_limit": 10000,
+        "window_rule": "size * (page + 1) <= 10000, else HTTP 400",
+        "total_path": "page.totalElements",
+        "next_link_path": "_links.next"
+      },
+      "status": {
+        "first_page>=400": "tidybrreg_error_http",
+        "later_page>=400": "tidybrreg_warning_partial, return rows read, complete = FALSE"
+      },
+      "result": {
+        "empty": {"org_nr": "character", "name": "character", "legal_form": "character"},
+        "attributes": ["total_matches", "complete"],
+        "result_window": "abort with tidybrreg_error_result_window when total_matches > retrieval_limit and max_results > retrieval_limit; truncation (rows < total) warns tidybrreg_warning_truncated"
+      }
+    },
+    "brreg_underenheter": {"delegates_to": "brreg_search", "fixed": {"registry": "underenheter"}, "maps": {"org_nr": "parent_org_nr"}},
+    "brreg_children": {"delegates_to": "brreg_search", "fixed": {"registry": "enheter"}, "maps": {"org_nr": "parent_org_nr"}},
+    "brreg_roles": {
+      "service": "enhetsregisteret",
+      "kind": "satellite",
+      "routes": [{"method": "GET", "path": "/enheter/{org_nr}/roller"}],
+      "status": {"404": "typed empty, http_status = 404", "410": "typed empty, http_status = 410, deletion_date, tidybrreg_warning_deleted", "other>=400": "tidybrreg_error_http"},
+      "flatten": "rollegrupper[].roller[] -> one row per role; role_group/role labelled from role_groups/role_types; person_id = birth_date_last_first_middle (lower case); resigned only when fratraadt present",
+      "result": {"empty": ["org_nr", "role_group_code", "role_group", "role_code", "role", "first_name", "middle_name", "last_name", "birth_date", "deceased", "entity_org_nr", "entity_name", "deregistered", "ordering", "elected_by", "group_modified", "person_id"]}
+    },
+    "brreg_roles_legal": {
+      "service": "enhetsregisteret",
+      "kind": "satellite",
+      "routes": [{"method": "GET", "path": "/roller/enheter/{org_nr}/juridiskeroller"}],
+      "status": {"404": "typed empty, http_status = 404", "410": "typed empty, http_status = 410, tidybrreg_warning_deleted", "other>=400": "tidybrreg_error_http"},
+      "flatten": "enheter[].roller[] -> one row per role held elsewhere",
+      "result": {"empty": ["org_nr", "target_org_nr", "target_name", "role_code", "role", "share", "deregistered"]}
+    },
+    "brreg_konsern": {
+      "service": "enhetsregisteret",
+      "kind": "satellite",
+      "routes": [{"method": "GET", "path": "/konsernstruktur/{org_nr}"}],
+      "status": {"404": "typed empty, http_status = 404 (unknown number or not in a group)", "410": "typed empty, http_status = 410, tidybrreg_warning_deleted", "other>=400": "tidybrreg_error_http"},
+      "flatten": "recursive children[] -> one row per node; root synthesized with link_form KKKK / 'Øverste mor'; dato accepted as ISO or DD.MM.YYYY",
+      "result": {"empty": ["org_nr", "node_org_nr", "node_name", "level", "link_form", "link_form_desc", "basis", "relation_date", "parent_org_nr", "parent_name", "legal_form", "legal_form_desc"]}
+    },
+    "brreg_signatur": {
+      "service": "fullmakt",
+      "kind": "satellite",
+      "routes": [{"method": "GET", "path": "/enheter/{org_nr}/signatur"}],
+      "fixed_columns": {"signature_type": "signature"},
+      "status": {"404": "typed empty, http_status = 404", "410": "typed empty, http_status = 410, tidybrreg_warning_deleted", "other>=400": "tidybrreg_error_http"},
+      "flatten": "signeringsKombinasjon.kombinasjon[].personRolleKombinasjon[] -> one row per person per combination (one row with NA person when a combination has none); birth dates DD.MM.YYYY. HTTP 200 without combinations but with status.rutineStatus (code NA, 'Generelle unntak, finnes roller som har status det ikke kan foretas maskinelt oppslag mot') is a rule the service declines to resolve: typed empty with http_status = 200, routine_status, routine_text and tidybrreg_warning_unresolved",
+      "result": {"empty": ["org_nr", "entity_name", "signature_type", "rule_status", "rule_text", "combination_id", "combination_code", "rule", "name", "birth_date", "role_code", "role"]}
+    },
+    "brreg_prokura": {
+      "service": "fullmakt",
+      "kind": "satellite",
+      "routes": [{"method": "GET", "path": "/enheter/{org_nr}/prokura"}],
+      "fixed_columns": {"signature_type": "procuration"},
+      "status": {"404": "typed empty, http_status = 404", "410": "typed empty, http_status = 410, tidybrreg_warning_deleted", "other>=400": "tidybrreg_error_http"},
+      "flatten": "as brreg_signatur, including the unresolved-rule case",
+      "result": {"empty": ["org_nr", "entity_name", "signature_type", "rule_status", "rule_text", "combination_id", "combination_code", "rule", "name", "birth_date", "role_code", "role"]}
+    },
+    "brreg_regnskap": {
+      "service": "regnskapsregisteret",
+      "kind": "satellite",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/{org_nr}"
+        }
+      ],
+      "query": {
+        "year": "år",
+        "account_type": "regnskapstype"
+      },
+      "query_note": "the `år` name is sent percent-encoded as %C3%A5r in every locale",
+      "status": {
+        "404": "typed empty, http_status = 404 (no accounts available through the endpoint, or unknown number)",
+        "410": "typed empty, http_status = 410, tidybrreg_warning_deleted",
+        "500 unsupported plan": "error body whose message contains 'oppstillingsplan som ikke er støttet (PLAN)' (also spelled 'stottet'): typed empty, http_status = 500, unsupported_plan = PLAN, tidybrreg_warning_unsupported_plan",
+        "other>=400": "tidybrreg_error_http"
+      },
+      "flatten": "JSON array of filings -> one row per filing. Leaves outside the statement objects are flattened to dot paths and renamed through `fields` (observed fields only, unmapped leaves pass through as snake_case, the entity coercion rule with reported failures). Leaves inside a statement object (`statements`) become rows of the nested `items` table: statement, group (English name of the enclosing object from `groups`, else snake_case), item (from `fields`, else snake_case of the leaf), path (raw dot path), level (dots in the path), is_sum (leaf name starts with `sum`, the API's own marking of totals), value (numeric). The API's grouping is structural, not an additive partition: siblings inside a group mix totals and components, so sums over items must go through `is_sum` and `group`. A present-but-empty object ({}) contributes no items. A valid empty array is the typed empty with no attribute. Since 2026-10-01 the default response carries up to three fiscal years per regnskapstype, KONSERN before SELSKAP; explicit year or type requests reveal no further years",
+      "fields": [
+        {
+          "api_path": "id",
+          "col_name": "filing_id",
+          "type": "integer"
+        },
+        {
+          "api_path": "journalnr",
+          "col_name": "journal_nr",
+          "type": "character"
+        },
+        {
+          "api_path": "regnskapstype",
+          "col_name": "account_type",
+          "type": "character"
+        },
+        {
+          "api_path": "virksomhet.organisasjonsnummer",
+          "col_name": "org_nr",
+          "type": "character"
+        },
+        {
+          "api_path": "virksomhet.organisasjonsform",
+          "col_name": "legal_form",
+          "type": "character"
+        },
+        {
+          "api_path": "virksomhet.morselskap",
+          "col_name": "parent_company",
+          "type": "logical"
+        },
+        {
+          "api_path": "regnskapsperiode.fraDato",
+          "col_name": "period_start",
+          "type": "Date"
+        },
+        {
+          "api_path": "regnskapsperiode.tilDato",
+          "col_name": "period_end",
+          "type": "Date"
+        },
+        {
+          "api_path": "valuta",
+          "col_name": "currency",
+          "type": "character"
+        },
+        {
+          "api_path": "avviklingsregnskap",
+          "col_name": "liquidation_accounts",
+          "type": "logical"
+        },
+        {
+          "api_path": "oppstillingsplan",
+          "col_name": "presentation_plan",
+          "type": "character"
+        },
+        {
+          "api_path": "revisjon.ikkeRevidertAarsregnskap",
+          "col_name": "not_audited",
+          "type": "logical"
+        },
+        {
+          "api_path": "revisjon.fravalgRevisjon",
+          "col_name": "audit_waived",
+          "type": "logical"
+        },
+        {
+          "api_path": "regnkapsprinsipper.smaaForetak",
+          "col_name": "small_enterprise",
+          "type": "logical"
+        },
+        {
+          "api_path": "regnkapsprinsipper.regnskapsregler",
+          "col_name": "accounting_rules",
+          "type": "character"
+        },
+        {
+          "api_path": "egenkapitalGjeld.sumEgenkapitalGjeld",
+          "col_name": "total_equity_liabilities",
+          "type": "numeric"
+        },
+        {
+          "api_path": "egenkapitalGjeld.egenkapital.sumEgenkapital",
+          "col_name": "total_equity",
+          "type": "numeric"
+        },
+        {
+          "api_path": "egenkapitalGjeld.egenkapital.innskuttEgenkapital.sumInnskuttEgenkaptial",
+          "col_name": "paid_in_equity",
+          "type": "numeric"
+        },
+        {
+          "api_path": "egenkapitalGjeld.egenkapital.opptjentEgenkapital.sumOpptjentEgenkapital",
+          "col_name": "retained_equity",
+          "type": "numeric"
+        },
+        {
+          "api_path": "egenkapitalGjeld.gjeldOversikt.sumGjeld",
+          "col_name": "total_liabilities",
+          "type": "numeric"
+        },
+        {
+          "api_path": "egenkapitalGjeld.gjeldOversikt.kortsiktigGjeld.sumKortsiktigGjeld",
+          "col_name": "current_liabilities",
+          "type": "numeric"
+        },
+        {
+          "api_path": "egenkapitalGjeld.gjeldOversikt.langsiktigGjeld.sumLangsiktigGjeld",
+          "col_name": "long_term_liabilities",
+          "type": "numeric"
+        },
+        {
+          "api_path": "eiendeler.sumEiendeler",
+          "col_name": "total_assets",
+          "type": "numeric"
+        },
+        {
+          "api_path": "eiendeler.omloepsmidler.sumOmloepsmidler",
+          "col_name": "current_assets",
+          "type": "numeric"
+        },
+        {
+          "api_path": "eiendeler.anleggsmidler.sumAnleggsmidler",
+          "col_name": "fixed_assets",
+          "type": "numeric"
+        },
+        {
+          "api_path": "eiendeler.sumBankinnskuddOgKontanter",
+          "col_name": "cash_and_bank",
+          "type": "numeric"
+        },
+        {
+          "api_path": "eiendeler.sumFordringer",
+          "col_name": "receivables",
+          "type": "numeric"
+        },
+        {
+          "api_path": "eiendeler.sumInvesteringer",
+          "col_name": "investments",
+          "type": "numeric"
+        },
+        {
+          "api_path": "eiendeler.sumVarer",
+          "col_name": "inventory",
+          "type": "numeric"
+        },
+        {
+          "api_path": "eiendeler.goodwill",
+          "col_name": "goodwill",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.aarsresultat",
+          "col_name": "net_income",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.ordinaertResultatFoerSkattekostnad",
+          "col_name": "pre_tax_income",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.totalresultat",
+          "col_name": "comprehensive_income",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.ordinaertResultatSkattekostnad",
+          "col_name": "tax_expense",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.ekstraordinaerePoster",
+          "col_name": "extraordinary_items",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.skattekostnadEkstraordinaertResultat",
+          "col_name": "extraordinary_tax",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.driftsresultat.driftsresultat",
+          "col_name": "operating_income",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.driftsresultat.driftsinntekter.sumDriftsinntekter",
+          "col_name": "operating_revenue",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.driftsresultat.driftsinntekter.salgsinntekter",
+          "col_name": "sales_revenue",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.driftsresultat.driftskostnad.sumDriftskostnad",
+          "col_name": "operating_expenses",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.driftsresultat.driftskostnad.loennskostnad",
+          "col_name": "payroll_expenses",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.finansresultat.nettoFinans",
+          "col_name": "net_financial_items",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.finansresultat.finansinntekt.sumFinansinntekter",
+          "col_name": "financial_income",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.finansresultat.finanskostnad.sumFinanskostnad",
+          "col_name": "financial_expenses",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.finansresultat.finanskostnad.annenRentekostnad",
+          "col_name": "other_interest_expenses",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.finansresultat.finanskostnad.rentekostnadSammeKonsern",
+          "col_name": "intra_group_interest_expenses",
+          "type": "numeric"
+        }
+      ],
+      "statements": {
+        "eiendeler": "assets",
+        "egenkapitalGjeld": "equity_liabilities",
+        "resultatregnskapResultat": "income_statement"
+      },
+      "dictionaries": {"fields": "regnskap_dict", "groups": "regnskap_groups", "items": "regnskap_items"},
+      "labels": "type = 'label' (or brreg_label) translates item (regnskap_items), group and statement (regnskap_groups) inside items, and legal_form (legal_forms), in en or no",
+      "groups": [
+        {"path": "eiendeler", "code": "assets", "name_en": "Assets", "name_no": "Eiendeler"},
+        {"path": "eiendeler.omloepsmidler", "code": "current_assets", "name_en": "Current assets", "name_no": "Omløpsmidler"},
+        {"path": "eiendeler.anleggsmidler", "code": "fixed_assets", "name_en": "Fixed assets", "name_no": "Anleggsmidler"},
+        {"path": "egenkapitalGjeld", "code": "equity_liabilities", "name_en": "Equity and liabilities", "name_no": "Egenkapital og gjeld"},
+        {"path": "egenkapitalGjeld.egenkapital", "code": "equity", "name_en": "Equity", "name_no": "Egenkapital"},
+        {"path": "egenkapitalGjeld.egenkapital.innskuttEgenkapital", "code": "paid_in_equity", "name_en": "Paid-in equity", "name_no": "Innskutt egenkapital"},
+        {"path": "egenkapitalGjeld.egenkapital.opptjentEgenkapital", "code": "retained_equity", "name_en": "Retained earnings", "name_no": "Opptjent egenkapital"},
+        {"path": "egenkapitalGjeld.gjeldOversikt", "code": "liabilities", "name_en": "Liabilities", "name_no": "Gjeld"},
+        {"path": "egenkapitalGjeld.gjeldOversikt.kortsiktigGjeld", "code": "current_liabilities", "name_en": "Current liabilities", "name_no": "Kortsiktig gjeld"},
+        {"path": "egenkapitalGjeld.gjeldOversikt.langsiktigGjeld", "code": "long_term_liabilities", "name_en": "Long-term liabilities", "name_no": "Langsiktig gjeld"},
+        {"path": "resultatregnskapResultat", "code": "income_statement", "name_en": "Income statement", "name_no": "Resultatregnskap"},
+        {"path": "resultatregnskapResultat.driftsresultat", "code": "operating", "name_en": "Operating result", "name_no": "Driftsresultat"},
+        {"path": "resultatregnskapResultat.driftsresultat.driftsinntekter", "code": "operating_revenue", "name_en": "Operating revenue", "name_no": "Driftsinntekter"},
+        {"path": "resultatregnskapResultat.driftsresultat.driftskostnad", "code": "operating_expenses", "name_en": "Operating expenses", "name_no": "Driftskostnader"},
+        {"path": "resultatregnskapResultat.finansresultat", "code": "financial", "name_en": "Financial result", "name_no": "Finansresultat"},
+        {"path": "resultatregnskapResultat.finansresultat.finansinntekt", "code": "financial_income", "name_en": "Financial income", "name_no": "Finansinntekter"},
+        {"path": "resultatregnskapResultat.finansresultat.finanskostnad", "code": "financial_expenses", "name_en": "Financial expenses", "name_no": "Finanskostnader"}
+      ],
+      "items": [
+        {"code": "total_equity_liabilities", "name_en": "Total equity and liabilities", "name_no": "Sum egenkapital og gjeld"},
+        {"code": "total_equity", "name_en": "Total equity", "name_no": "Sum egenkapital"},
+        {"code": "paid_in_equity", "name_en": "Paid-in equity", "name_no": "Sum innskutt egenkapital"},
+        {"code": "retained_equity", "name_en": "Retained earnings", "name_no": "Sum opptjent egenkapital"},
+        {"code": "total_liabilities", "name_en": "Total liabilities", "name_no": "Sum gjeld"},
+        {"code": "current_liabilities", "name_en": "Current liabilities", "name_no": "Sum kortsiktig gjeld"},
+        {"code": "long_term_liabilities", "name_en": "Long-term liabilities", "name_no": "Sum langsiktig gjeld"},
+        {"code": "total_assets", "name_en": "Total assets", "name_no": "Sum eiendeler"},
+        {"code": "current_assets", "name_en": "Current assets", "name_no": "Sum omløpsmidler"},
+        {"code": "fixed_assets", "name_en": "Fixed assets", "name_no": "Sum anleggsmidler"},
+        {"code": "cash_and_bank", "name_en": "Cash and bank deposits", "name_no": "Sum bankinnskudd og kontanter"},
+        {"code": "receivables", "name_en": "Receivables", "name_no": "Sum fordringer"},
+        {"code": "investments", "name_en": "Investments", "name_no": "Sum investeringer"},
+        {"code": "inventory", "name_en": "Inventories", "name_no": "Sum varer"},
+        {"code": "goodwill", "name_en": "Goodwill", "name_no": "Goodwill"},
+        {"code": "net_income", "name_en": "Net income", "name_no": "Årsresultat"},
+        {"code": "pre_tax_income", "name_en": "Ordinary income before tax", "name_no": "Ordinært resultat før skattekostnad"},
+        {"code": "comprehensive_income", "name_en": "Total comprehensive income", "name_no": "Totalresultat"},
+        {"code": "tax_expense", "name_en": "Tax on ordinary income", "name_no": "Skattekostnad på ordinært resultat"},
+        {"code": "extraordinary_items", "name_en": "Extraordinary items", "name_no": "Ekstraordinære poster"},
+        {"code": "extraordinary_tax", "name_en": "Tax on extraordinary items", "name_no": "Skattekostnad på ekstraordinært resultat"},
+        {"code": "operating_income", "name_en": "Operating income", "name_no": "Driftsresultat"},
+        {"code": "operating_revenue", "name_en": "Total operating revenue", "name_no": "Sum driftsinntekter"},
+        {"code": "sales_revenue", "name_en": "Sales revenue", "name_no": "Salgsinntekter"},
+        {"code": "operating_expenses", "name_en": "Total operating expenses", "name_no": "Sum driftskostnader"},
+        {"code": "payroll_expenses", "name_en": "Payroll expenses", "name_no": "Lønnskostnad"},
+        {"code": "net_financial_items", "name_en": "Net financial items", "name_no": "Netto finans"},
+        {"code": "financial_income", "name_en": "Total financial income", "name_no": "Sum finansinntekter"},
+        {"code": "financial_expenses", "name_en": "Total financial expenses", "name_no": "Sum finanskostnader"},
+        {"code": "other_interest_expenses", "name_en": "Other interest expenses", "name_no": "Annen rentekostnad"},
+        {"code": "intra_group_interest_expenses", "name_en": "Interest expenses to group companies", "name_no": "Rentekostnad til foretak i samme konsern"}
+      ],
+      "identities": {
+        "note": "Accounting identities checked per filing on the items, by item name; an identity is checkable when lhs and every non-optional term are present (optional terms absent count as 0); it fails when |lhs - (sum of plus - sum of minus)| > tolerance. `consistent` is TRUE when every checkable identity holds, FALSE when any fails, NA when none is checkable; `inconsistencies` is a list-column of the failing names (zero-length when none). Filings are published as filed: a failure is flagged, never corrected. Tolerance 1 absorbs the rounding observed in the register (data-2026-10 release: 6-16% of filings fail at tolerance 0, 0.1-2.5% at tolerance 1).",
+        "tolerance": 1,
+        "rules": [
+          {
+            "name": "balance",
+            "lhs": "total_equity_liabilities",
+            "plus": [
+              "total_assets"
+            ],
+            "minus": [],
+            "optional": []
+          },
+          {
+            "name": "equity_liabilities",
+            "lhs": "total_equity_liabilities",
+            "plus": [
+              "total_equity",
+              "total_liabilities"
+            ],
+            "minus": [],
+            "optional": []
+          },
+          {
+            "name": "equity",
+            "lhs": "total_equity",
+            "plus": [
+              "paid_in_equity",
+              "retained_equity"
+            ],
+            "minus": [],
+            "optional": []
+          },
+          {
+            "name": "liabilities",
+            "lhs": "total_liabilities",
+            "plus": [
+              "current_liabilities",
+              "long_term_liabilities"
+            ],
+            "minus": [],
+            "optional": []
+          },
+          {
+            "name": "assets",
+            "lhs": "total_assets",
+            "plus": [
+              "current_assets",
+              "fixed_assets"
+            ],
+            "minus": [],
+            "optional": []
+          },
+          {
+            "name": "operating",
+            "lhs": "operating_income",
+            "plus": [
+              "operating_revenue"
+            ],
+            "minus": [
+              "operating_expenses"
+            ],
+            "optional": []
+          },
+          {
+            "name": "financial",
+            "lhs": "net_financial_items",
+            "plus": [
+              "financial_income"
+            ],
+            "minus": [
+              "financial_expenses"
+            ],
+            "optional": []
+          },
+          {
+            "name": "pre_tax",
+            "lhs": "pre_tax_income",
+            "plus": [
+              "operating_income",
+              "net_financial_items"
+            ],
+            "minus": [],
+            "optional": []
+          },
+          {
+            "name": "net_income",
+            "lhs": "net_income",
+            "plus": [
+              "pre_tax_income",
+              "extraordinary_items"
+            ],
+            "minus": [
+              "tax_expense",
+              "extraordinary_tax"
+            ],
+            "optional": [
+              "extraordinary_items",
+              "extraordinary_tax"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "empty": [
+          "org_nr",
+          "filing_id",
+          "journal_nr",
+          "account_type",
+          "period_start",
+          "period_end",
+          "currency",
+          "items",
+          "consistent",
+          "inconsistencies"
+        ],
+        "items_columns": [
+          "statement",
+          "group",
+          "item",
+          "path",
+          "level",
+          "is_sum",
+          "value"
+        ],
+        "key": "org_nr, account_type, year(period_end) is the logical account key; filing_id is the filing identity; journal_nr can be shared by SELSKAP and KONSERN"
+      }
+    },
+    "brreg_updates": {
+      "service": "enhetsregisteret",
+      "kind": "feed",
+      "routes": [
+        {"type": "enheter", "method": "GET", "path": "/oppdateringer/enheter", "embedded_key": "oppdaterteEnheter", "format": "hal"},
+        {"type": "underenheter", "method": "GET", "path": "/oppdateringer/underenheter", "embedded_key": "oppdaterteUnderenheter", "format": "hal"},
+        {"type": "roller", "method": "GET", "path": "/oppdateringer/roller", "format": "cloudevents"}
+      ],
+      "pagination": {
+        "hal": {"first_page": {"dato": "since as YYYY-MM-DDTHH:MM:SS.sssZ (UTC)"}, "next_page": {"oppdateringsid": "max(update_id) + 1"}, "size_param": "size", "max_size": 10000, "stop": "page shorter than size, or max_pages"},
+        "cloudevents": {"first_page": {"afterTime": "since as UTC instant"}, "next_page": {"afterId": "max(update_id)"}, "size_param": "size", "max_size": 10000}
+      },
+      "include_changes": {"param": "includeChanges", "value": "true", "roller": "error: feed carries no patches"},
+      "status": {"first_page>=400": "tidybrreg_error_http", "later_page>=400": "tidybrreg_warning_partial, complete = FALSE"},
+      "result": {"columns": ["update_id", "org_nr", "change_type", "timestamp"], "timestamp_tz": "UTC", "attributes": ["complete", "pages_fetched", "cursor", "unknown_members"], "unknown_members": "extra members pass through as snake_case columns with tidybrreg_warning_unknown_member"}
+    },
+    "brreg_update_fields": {
+      "delegates_to": "brreg_updates",
+      "fixed": {"include_changes": true},
+      "types": ["enheter", "underenheter"],
+      "flatten": "one row per RFC 6902 patch leaf (nested values flattened to leaves, arrays indexed from 0); `path` keeps the raw JSON pointer, `field` is the snake_case rendering; move emits add at destination plus remove at source; events without patches emit one row with NA operation/field/path/new_value",
+      "result": {"columns": ["update_id", "org_nr", "change_type", "timestamp", "operation", "field", "path", "new_value"]}
+    },
+    "brreg_download": {
+      "service": "enhetsregisteret",
+      "kind": "bulk",
+      "routes": [
+        {"type": "enheter", "format": "csv", "method": "GET", "path": "/enheter/lastned/csv"},
+        {"type": "enheter", "format": "json", "method": "GET", "path": "/enheter/lastned"},
+        {"type": "underenheter", "format": "csv", "method": "GET", "path": "/underenheter/lastned/csv"},
+        {"type": "underenheter", "format": "json", "method": "GET", "path": "/underenheter/lastned"},
+        {"type": "roller", "format": "json", "method": "GET", "path": "/roller/totalbestand"}
+      ],
+      "cache": {"dir": "tools::R_user_dir('tidybrreg', 'cache')", "file": "{type}_bulk.{format}.gz", "sidecar": "{file}.meta.json with url, etag, last_modified, downloaded_at", "refresh": ["FALSE", "TRUE", "auto (HEAD; re-download unless ETag or Last-Modified matches the sidecar)"]},
+      "output_modes": ["tibble", "path"]
+    },
+    "brreg_label": {"service": null, "kind": "local", "dictionaries": {"legal_form": "legal_forms", "role": "role_types", "role_group": "role_groups", "nace": "get_brreg_dic('nace')", "sector": "get_brreg_dic('sector')"}, "columns": {"legal_form": "legal_form", "nace_1": "nace", "nace_2": "nace", "nace_3": "nace", "sector_code": "sector", "role_code": "role", "role_group_code": "role_group"}},
+    "get_brreg_dic": {
+      "service": "klass",
+      "kind": "dictionary",
+      "routes": [
+        {"dictname": "nace", "method": "GET", "path": "/classifications/6/codesAt"},
+        {"dictname": "sector", "method": "GET", "path": "/classifications/39/codesAt"}
+      ],
+      "query": {"date": "YYYY-MM-DD (today)", "language": "en|nb (lang 'no' is sent as KLASS's 'nb')"},
+      "fallback": "bundled English dictionaries (nace_codes, sector_codes) with vintage attribute; source = 'bundled' | 'klass'",
+      "result": {"columns": ["code", "name", "level"], "attributes": ["source", "lang", "vintage"]}
+    },
+    "brreg_validate": {"service": null, "kind": "local", "rule": "org_nr"}
+  }
+}

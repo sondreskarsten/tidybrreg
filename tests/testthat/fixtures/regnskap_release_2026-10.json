@@ -1,0 +1,4831 @@
+[
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 5900000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": -6230673.0
+},
+"sumEgenkapital": -330673.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 3015772.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 0.0
+},
+"sumGjeld": 3015772.0
+},
+"sumEgenkapitalGjeld": 2685099.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 104900.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 2580199.0
+},
+"sumBankinnskuddOgKontanter": 44842.0,
+"sumEiendeler": 2685099.0,
+"sumFordringer": 1224438.0,
+"sumInvesteringer": 0.0,
+"sumVarer": 1310918.0
+},
+"id": 5402227,
+"journalnr": "2024732445",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 338569.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 8305042.0,
+"sumDriftsinntekter": 8681606.0
+},
+"driftskostnad": {
+"loennskostnad": 4581052.0,
+"sumDriftskostnad": 8146146.0
+},
+"driftsresultat": 535459.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 39708.0
+},
+"finanskostnad": {
+"annenRentekostnad": 236599.0,
+"sumFinanskostnad": 236599.0
+},
+"nettoFinans": -196890.0
+},
+"ordinaertResultatFoerSkattekostnad": 338569.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810034882"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 7600000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": -5882476.0
+},
+"sumEgenkapital": 1717524.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 2474848.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 0.0
+},
+"sumGjeld": 2474848.0
+},
+"sumEgenkapitalGjeld": 4192372.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 764300.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 3428072.0
+},
+"sumBankinnskuddOgKontanter": 38315.0,
+"sumEiendeler": 4192372.0,
+"sumFordringer": 1664189.0,
+"sumInvesteringer": 0.0,
+"sumVarer": 1725567.0
+},
+"id": 6324105,
+"journalnr": "2025757136",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2024-01-01",
+"tilDato": "2024-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 348197.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 8487322.0,
+"sumDriftsinntekter": 8524493.0
+},
+"driftskostnad": {
+"loennskostnad": 4347809.0,
+"sumDriftskostnad": 8101965.0
+},
+"driftsresultat": 422529.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 43557.0
+},
+"finanskostnad": {
+"annenRentekostnad": 117888.0,
+"sumFinanskostnad": 117888.0
+},
+"nettoFinans": -74331.0
+},
+"ordinaertResultatFoerSkattekostnad": 348197.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810034882"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 7600000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": -5960517.0
+},
+"sumEgenkapital": 1639483.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 2023452.0
+},
+"langsiktigGjeld": {},
+"sumGjeld": 2023452.0
+},
+"sumEgenkapitalGjeld": 3662935.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 501200.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 3161735.0
+},
+"sumBankinnskuddOgKontanter": 43362.0,
+"sumEiendeler": 3662935.0,
+"sumFordringer": 1463581.0,
+"sumInvesteringer": 0.0
+},
+"id": 6364789,
+"journalnr": "2026313880",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2025-01-01",
+"tilDato": "2025-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": -78041.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 9862527.0,
+"sumDriftsinntekter": 10021242.0
+},
+"driftskostnad": {
+"loennskostnad": 4024596.0,
+"sumDriftskostnad": 10053152.0
+},
+"driftsresultat": -31910.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 39727.0
+},
+"finanskostnad": {
+"annenRentekostnad": 85857.0,
+"sumFinanskostnad": 85857.0
+},
+"nettoFinans": -46131.0
+},
+"ordinaertResultatFoerSkattekostnad": -78041.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810034882"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 100000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 4892218.0
+},
+"sumEgenkapital": 4992218.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 354656.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 1323760.0
+},
+"sumGjeld": 1678416.0
+},
+"sumEgenkapitalGjeld": 6670634.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 6242472.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 428162.0
+},
+"sumBankinnskuddOgKontanter": 402489.0,
+"sumEiendeler": 6670634.0,
+"sumFordringer": 25673.0,
+"sumInvesteringer": 0.0,
+"sumVarer": 0.0
+},
+"id": 4627351,
+"journalnr": "2024334706",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 1042572.0,
+"driftsresultat": {
+"driftsinntekter": {
+"sumDriftsinntekter": 2030583.0
+},
+"driftskostnad": {
+"loennskostnad": 110600.0,
+"sumDriftskostnad": 620374.0
+},
+"driftsresultat": 1410209.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 1687.0
+},
+"finanskostnad": {
+"annenRentekostnad": 75275.0,
+"sumFinanskostnad": -75275.0
+},
+"nettoFinans": -73588.0
+},
+"ordinaertResultatFoerSkattekostnad": 1336621.0,
+"ordinaertResultatSkattekostnad": 294048.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810059672"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 100000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 5286332.0
+},
+"sumEgenkapital": 5386332.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 383672.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 1192404.0
+},
+"sumGjeld": 1576076.0
+},
+"sumEgenkapitalGjeld": 6962407.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 6126797.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 835610.0
+},
+"sumBankinnskuddOgKontanter": 616688.0,
+"sumEiendeler": 6962407.0,
+"sumFordringer": 218922.0,
+"sumInvesteringer": 0.0
+},
+"id": 5450727,
+"journalnr": "2025302451",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2024-01-01",
+"tilDato": "2024-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 1294114.0,
+"driftsresultat": {
+"driftsinntekter": {
+"sumDriftsinntekter": 2275533.0
+},
+"driftskostnad": {
+"loennskostnad": 0.0,
+"sumDriftskostnad": 540609.0
+},
+"driftsresultat": 1734924.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 2929.0
+},
+"finanskostnad": {
+"annenRentekostnad": 79009.0,
+"sumFinanskostnad": 79009.0
+},
+"nettoFinans": -76080.0
+},
+"ordinaertResultatFoerSkattekostnad": 1658843.0,
+"ordinaertResultatSkattekostnad": 364729.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810059672"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 100000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 5350419.0
+},
+"sumEgenkapital": 5450419.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 602651.0
+},
+"langsiktigGjeld": {},
+"sumGjeld": 1188655.0
+},
+"sumEgenkapitalGjeld": 6639073.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 6011871.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 627203.0
+},
+"sumBankinnskuddOgKontanter": 489640.0,
+"sumEiendeler": 6639073.0,
+"sumFordringer": 137563.0,
+"sumInvesteringer": 0.0
+},
+"id": 6502413,
+"journalnr": "2026408483",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2025-01-01",
+"tilDato": "2025-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 1064087.0,
+"driftsresultat": {
+"driftsinntekter": {
+"sumDriftsinntekter": 2279422.0
+},
+"driftskostnad": {
+"loennskostnad": 0.0,
+"sumDriftskostnad": 866718.0
+},
+"driftsresultat": 1412704.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 1458.0
+},
+"finanskostnad": {
+"annenRentekostnad": 47127.0,
+"sumFinanskostnad": 47127.0
+},
+"nettoFinans": -45669.0
+},
+"ordinaertResultatFoerSkattekostnad": 1367035.0,
+"ordinaertResultatSkattekostnad": 302948.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810059672"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 30096.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 60698114.0
+},
+"sumEgenkapital": 60728210.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 152159380.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 0.0
+},
+"sumGjeld": 152159380.0
+},
+"sumEgenkapitalGjeld": 212887590.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 32430871.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 180456719.0
+},
+"sumBankinnskuddOgKontanter": 146912039.0,
+"sumEiendeler": 212887590.0,
+"sumFordringer": 33544680.0
+},
+"id": 4607289,
+"journalnr": "2024323829",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 163490013.0,
+"driftsresultat": {
+"driftsinntekter": {
+"sumDriftsinntekter": 2060134.0
+},
+"driftskostnad": {
+"sumDriftskostnad": 1433973.0
+},
+"driftsresultat": 626161.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 169147062.0
+},
+"finanskostnad": {
+"annenRentekostnad": 5690915.0,
+"sumFinanskostnad": 5690915.0
+},
+"nettoFinans": 163456147.0
+},
+"ordinaertResultatFoerSkattekostnad": 164082308.0,
+"ordinaertResultatSkattekostnad": 592295.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810094532"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 30096.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 57552522.0
+},
+"sumEgenkapital": 57582618.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 151596025.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 0.0
+},
+"sumGjeld": 151596025.0
+},
+"sumEgenkapitalGjeld": 209178643.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 33041879.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 176136764.0
+},
+"sumBankinnskuddOgKontanter": 143203344.0,
+"sumEiendeler": 209178643.0,
+"sumFordringer": 32933420.0
+},
+"id": 5811393,
+"journalnr": "2025453986",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2024-01-01",
+"tilDato": "2024-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 1362550.0,
+"driftsresultat": {
+"driftsinntekter": {
+"sumDriftsinntekter": 2298420.0
+},
+"driftskostnad": {
+"sumDriftskostnad": 1407513.0
+},
+"driftsresultat": 890907.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 8116235.0
+},
+"finanskostnad": {
+"annenRentekostnad": 7276937.0,
+"sumFinanskostnad": 7276937.0
+},
+"nettoFinans": 839298.0
+},
+"ordinaertResultatFoerSkattekostnad": 1730205.0,
+"ordinaertResultatSkattekostnad": 367655.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810094532"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 4140000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 3457115.0
+},
+"sumEgenkapital": 7597115.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 115386.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 4356000.0
+},
+"sumGjeld": 4471386.0
+},
+"sumEgenkapitalGjeld": 12068501.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 10971342.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 1097160.0
+},
+"sumBankinnskuddOgKontanter": 977812.0,
+"sumEiendeler": 12068502.0,
+"sumFordringer": 119348.0
+},
+"id": 5070849,
+"journalnr": "2024579798",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": -67623.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 2444388.0,
+"sumDriftsinntekter": 2444388.0
+},
+"driftskostnad": {
+"loennskostnad": 858117.0,
+"sumDriftskostnad": 2283956.0
+},
+"driftsresultat": 160432.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 46585.0
+},
+"finanskostnad": {
+"annenRentekostnad": 274640.0,
+"sumFinanskostnad": 274640.0
+},
+"nettoFinans": -228055.0
+},
+"ordinaertResultatFoerSkattekostnad": -67623.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810098252"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 4140000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 3336976.0
+},
+"sumEgenkapital": 7476976.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 262307.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 4092000.0
+},
+"sumGjeld": 4354307.0
+},
+"sumEgenkapitalGjeld": 11831283.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 10668378.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 1162905.0
+},
+"sumBankinnskuddOgKontanter": 928817.0,
+"sumEiendeler": 11831283.0,
+"sumFordringer": 234088.0
+},
+"id": 5969855,
+"journalnr": "2025578862",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2024-01-01",
+"tilDato": "2024-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": -120138.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 2579965.0,
+"sumDriftsinntekter": 2579965.0
+},
+"driftskostnad": {
+"loennskostnad": 879025.0,
+"sumDriftskostnad": 2447828.0
+},
+"driftsresultat": 132137.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 32094.0
+},
+"finanskostnad": {
+"annenRentekostnad": 284369.0,
+"sumFinanskostnad": 284369.0
+},
+"nettoFinans": -252275.0
+},
+"ordinaertResultatFoerSkattekostnad": -120138.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810098252"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 4140000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 3394560.0
+},
+"sumEgenkapital": 7534560.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 248959.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 3828000.0
+},
+"sumGjeld": 4076959.0
+},
+"sumEgenkapitalGjeld": 11611519.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 10615727.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 995792.0
+},
+"sumBankinnskuddOgKontanter": 854861.0,
+"sumEiendeler": 11611519.0,
+"sumFordringer": 140931.0
+},
+"id": 7195511,
+"journalnr": "2026756322",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2025-01-01",
+"tilDato": "2025-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 90737.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 2632992.0,
+"sumDriftsinntekter": 2632992.0
+},
+"driftskostnad": {
+"loennskostnad": 890623.0,
+"sumDriftskostnad": 2315524.0
+},
+"driftsresultat": 317468.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 25913.0
+},
+"finanskostnad": {
+"sumFinanskostnad": 252644.0
+},
+"nettoFinans": -226731.0
+},
+"ordinaertResultatFoerSkattekostnad": 90737.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810098252"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 100000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 103496.0
+},
+"sumEgenkapital": 203496.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 267233.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 0.0
+},
+"sumGjeld": 267233.0
+},
+"sumEgenkapitalGjeld": 470729.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 139145.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 331584.0
+},
+"sumBankinnskuddOgKontanter": 331584.0,
+"sumEiendeler": 470729.0,
+"sumFordringer": 0.0,
+"sumInvesteringer": 0.0,
+"sumVarer": 0.0
+},
+"id": 5454631,
+"journalnr": "2025304677",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2024-01-01",
+"tilDato": "2024-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 192547.0,
+"driftsresultat": {
+"driftsinntekter": {
+"sumDriftsinntekter": 353980.0
+},
+"driftskostnad": {
+"sumDriftskostnad": 108657.0
+},
+"driftsresultat": 245323.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 0.0
+},
+"finanskostnad": {
+"annenRentekostnad": 69.0,
+"sumFinanskostnad": 69.0
+},
+"nettoFinans": -69.0
+},
+"ordinaertResultatFoerSkattekostnad": 245254.0,
+"ordinaertResultatSkattekostnad": 52707.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810105372"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 100000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 653551.0
+},
+"sumEgenkapital": 753551.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 465567.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 1870035.0
+},
+"sumGjeld": 2335602.0
+},
+"sumEgenkapitalGjeld": 3089153.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 2528816.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 560337.0
+},
+"sumBankinnskuddOgKontanter": 25062.0,
+"sumEiendeler": 3089153.0,
+"sumFordringer": 69275.0,
+"sumInvesteringer": 0.0,
+"sumVarer": 466000.0
+},
+"id": 5221483,
+"journalnr": "2024651358",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": -181603.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 1776621.0,
+"sumDriftsinntekter": 1928873.0
+},
+"driftskostnad": {
+"loennskostnad": 480212.0,
+"sumDriftskostnad": 1988020.0
+},
+"driftsresultat": -59148.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 823.0
+},
+"finanskostnad": {
+"annenRentekostnad": 116531.0,
+"sumFinanskostnad": 123278.0
+},
+"nettoFinans": -122455.0
+},
+"ordinaertResultatFoerSkattekostnad": -181603.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810130822"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 100000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 257494.0
+},
+"sumEgenkapital": 357494.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 513163.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 2230000.0
+},
+"sumGjeld": 2743163.0
+},
+"sumEgenkapitalGjeld": 3100657.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 2520742.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 579915.0
+},
+"sumBankinnskuddOgKontanter": 43516.0,
+"sumEiendeler": 3100657.0,
+"sumFordringer": 140399.0,
+"sumInvesteringer": 0.0,
+"sumVarer": 396000.0
+},
+"id": 5777439,
+"journalnr": "2025487424",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2024-01-01",
+"tilDato": "2024-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": -396057.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 2104783.0,
+"sumDriftsinntekter": 2171778.0
+},
+"driftskostnad": {
+"loennskostnad": 503493.0,
+"sumDriftskostnad": 2405567.0
+},
+"driftsresultat": -233789.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 287.0
+},
+"finanskostnad": {
+"annenRentekostnad": 158555.0,
+"sumFinanskostnad": 162555.0
+},
+"nettoFinans": -162268.0
+},
+"ordinaertResultatFoerSkattekostnad": -396057.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810130822"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 100000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 1624103.0
+},
+"sumEgenkapital": 1724103.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 580384.0
+},
+"langsiktigGjeld": {},
+"sumGjeld": 868614.0
+},
+"sumEgenkapitalGjeld": 2592717.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 2362913.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 229804.0
+},
+"sumBankinnskuddOgKontanter": 108459.0,
+"sumEiendeler": 2592717.0,
+"sumFordringer": 91346.0,
+"sumInvesteringer": 0.0
+},
+"id": 6892196,
+"journalnr": "2026637232",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2025-01-01",
+"tilDato": "2025-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 1366609.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 1606421.0,
+"sumDriftsinntekter": 3740422.0
+},
+"driftskostnad": {
+"loennskostnad": 357045.0,
+"sumDriftskostnad": 2045835.0
+},
+"driftsresultat": 1694587.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 4259.0
+},
+"finanskostnad": {
+"annenRentekostnad": 134744.0,
+"sumFinanskostnad": 134744.0
+},
+"nettoFinans": -130486.0
+},
+"ordinaertResultatFoerSkattekostnad": 1564101.0,
+"ordinaertResultatSkattekostnad": 197492.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810130822"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 100000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 2602440.0
+},
+"sumEgenkapital": 2702440.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 2493987.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 7135.0
+},
+"sumGjeld": 2501122.0
+},
+"sumEgenkapitalGjeld": 5203562.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 293900.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 4909662.0
+},
+"sumBankinnskuddOgKontanter": 69497.0,
+"sumEiendeler": 5203562.0,
+"sumFordringer": 433166.0,
+"sumInvesteringer": 0.0,
+"sumVarer": 4407000.0
+},
+"id": 4918741,
+"journalnr": "2024458094",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 334629.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 12249619.0,
+"sumDriftsinntekter": 12258288.0
+},
+"driftskostnad": {
+"loennskostnad": 2157562.0,
+"sumDriftskostnad": 11721879.0
+},
+"driftsresultat": 536409.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 7190.0
+},
+"finanskostnad": {
+"annenRentekostnad": 64484.0,
+"sumFinanskostnad": 112403.0
+},
+"nettoFinans": -105213.0
+},
+"ordinaertResultatFoerSkattekostnad": 431196.0,
+"ordinaertResultatSkattekostnad": 96567.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810182482"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 100000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 2115858.0
+},
+"sumEgenkapital": 2215858.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 2592948.0
+},
+"langsiktigGjeld": {},
+"sumGjeld": 2592948.0
+},
+"sumEgenkapitalGjeld": 4808806.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 216900.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 4591906.0
+},
+"sumBankinnskuddOgKontanter": 92903.0,
+"sumEiendeler": 4808806.0,
+"sumFordringer": 497570.0,
+"sumInvesteringer": 0.0
+},
+"id": 6911092,
+"journalnr": "2026545057",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2025-01-01",
+"tilDato": "2025-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": -425172.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 11728252.0,
+"sumDriftsinntekter": 11729956.0
+},
+"driftskostnad": {
+"loennskostnad": 2450353.0,
+"sumDriftskostnad": 12048656.0
+},
+"driftsresultat": -318700.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 7828.0
+},
+"finanskostnad": {
+"annenRentekostnad": 77171.0,
+"sumFinanskostnad": 94716.0
+},
+"nettoFinans": -86888.0
+},
+"ordinaertResultatFoerSkattekostnad": -405588.0,
+"ordinaertResultatSkattekostnad": 19584.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810182482"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 187981.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 5752979.0
+},
+"sumEgenkapital": 5940960.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 59246.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 22034.0
+},
+"sumGjeld": 81280.0
+},
+"sumEgenkapitalGjeld": 6022240.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 3229795.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 2792445.0
+},
+"sumBankinnskuddOgKontanter": 543460.0,
+"sumEiendeler": 6022240.0,
+"sumFordringer": 45985.0,
+"sumVarer": 2203000.0
+},
+"id": 4936791,
+"journalnr": "2024480724",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 861760.0,
+"driftsresultat": {
+"driftsinntekter": {
+"sumDriftsinntekter": 166236.0
+},
+"driftskostnad": {
+"sumDriftskostnad": 159804.0
+},
+"driftsresultat": 6432.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 879456.0
+},
+"finanskostnad": {
+"sumFinanskostnad": 6.0
+},
+"nettoFinans": 879450.0
+},
+"ordinaertResultatFoerSkattekostnad": 885882.0,
+"ordinaertResultatSkattekostnad": 24122.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810202572"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 187981.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 5769133.0
+},
+"sumEgenkapital": 5957114.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 78465.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 24168.0
+},
+"sumGjeld": 102633.0
+},
+"sumEgenkapitalGjeld": 6059747.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 2973074.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 3086673.0
+},
+"sumBankinnskuddOgKontanter": 843388.0,
+"sumEiendeler": 6059747.0,
+"sumFordringer": 40285.0,
+"sumVarer": 2203000.0
+},
+"id": 6193159,
+"journalnr": "2025694978",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2024-01-01",
+"tilDato": "2024-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 186155.0,
+"driftsresultat": {
+"driftsinntekter": {
+"sumDriftsinntekter": 174012.0
+},
+"driftskostnad": {
+"sumDriftskostnad": 182611.0
+},
+"driftsresultat": -8599.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 455732.0
+},
+"finanskostnad": {
+"sumFinanskostnad": 250103.0
+},
+"nettoFinans": 205629.0
+},
+"ordinaertResultatFoerSkattekostnad": 197030.0,
+"ordinaertResultatSkattekostnad": 10875.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810202572"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 187981.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 5971282.0
+},
+"sumEgenkapital": 6159263.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 92968.0
+},
+"langsiktigGjeld": {},
+"sumGjeld": 112742.0
+},
+"sumEgenkapitalGjeld": 6272005.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 3263253.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 3008752.0
+},
+"sumBankinnskuddOgKontanter": 3005703.0,
+"sumEiendeler": 6272005.0,
+"sumFordringer": 3049.0
+},
+"id": 6819710,
+"journalnr": "2026503970",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2025-01-01",
+"tilDato": "2025-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 287148.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 5900000.0,
+"sumDriftsinntekter": 6077921.0
+},
+"driftskostnad": {
+"sumDriftskostnad": 5947504.0
+},
+"driftsresultat": 130417.0
+},
+"finansresultat": {
+"finansinntekt": {},
+"finanskostnad": {},
+"nettoFinans": 223496.0
+},
+"ordinaertResultatFoerSkattekostnad": 353913.0,
+"ordinaertResultatSkattekostnad": 66765.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810202572"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 350000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 5255260.0
+},
+"sumEgenkapital": 5605260.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 1676899.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 10133549.0
+},
+"sumGjeld": 11810448.0
+},
+"sumEgenkapitalGjeld": 17415708.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 15430107.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 1985600.0
+},
+"sumBankinnskuddOgKontanter": 1909230.0,
+"sumEiendeler": 17415708.0,
+"sumFordringer": 76371.0
+},
+"id": 5669503,
+"journalnr": "2025429879",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2024-01-01",
+"tilDato": "2024-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 973638.0,
+"driftsresultat": {
+"driftsinntekter": {
+"sumDriftsinntekter": 3745836.0
+},
+"driftskostnad": {
+"loennskostnad": 53950.0,
+"sumDriftskostnad": 2160759.0
+},
+"driftsresultat": 1585077.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 58431.0
+},
+"finanskostnad": {
+"annenRentekostnad": 394443.0,
+"sumFinanskostnad": 395254.0
+},
+"nettoFinans": -336823.0
+},
+"ordinaertResultatFoerSkattekostnad": 1248254.0,
+"ordinaertResultatSkattekostnad": 274616.0,
+"totalresultat": 973638.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810274042"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 792000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 8420938.0
+},
+"sumEgenkapital": 9212938.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 3405457.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 0.0
+},
+"sumGjeld": 3405457.0
+},
+"sumEgenkapitalGjeld": 12618395.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 454984.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 12163410.0
+},
+"sumBankinnskuddOgKontanter": 8316079.0,
+"sumEiendeler": 12618395.0,
+"sumFordringer": 921400.0,
+"sumVarer": 2925931.0
+},
+"id": 5063413,
+"journalnr": "2024555081",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 107110.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 29814263.0,
+"sumDriftsinntekter": 29814263.0
+},
+"driftskostnad": {
+"loennskostnad": 7310575.0,
+"sumDriftskostnad": 29637641.0
+},
+"driftsresultat": 176622.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 30841.0
+},
+"finanskostnad": {
+"annenRentekostnad": 48882.0,
+"sumFinanskostnad": 70015.0
+},
+"nettoFinans": -39174.0
+},
+"ordinaertResultatFoerSkattekostnad": 137448.0,
+"ordinaertResultatSkattekostnad": 30338.0,
+"totalresultat": 107110.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810359862"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 60320700.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 100971499.0
+},
+"sumEgenkapital": 161292199.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 1059478977.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 29087910.0
+},
+"sumGjeld": 1088566887.0
+},
+"sumEgenkapitalGjeld": 1249859086.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 328104569.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 921754519.0
+},
+"sumBankinnskuddOgKontanter": 37490194.0,
+"sumEiendeler": 1249859088.0,
+"sumFordringer": 670996866.0,
+"sumVarer": 213267459.0
+},
+"id": 6234507,
+"journalnr": "2025716637",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2024-01-01",
+"tilDato": "2024-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 190646071.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 2494809382.0,
+"sumDriftsinntekter": 2495959508.0
+},
+"driftskostnad": {
+"loennskostnad": 68582602.0,
+"sumDriftskostnad": 2355565410.0
+},
+"driftsresultat": 140394098.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 113684028.0
+},
+"finanskostnad": {
+"annenRentekostnad": 29079351.0,
+"rentekostnadSammeKonsern": 509652.0,
+"sumFinanskostnad": 30502349.0
+},
+"nettoFinans": 83181679.0
+},
+"ordinaertResultatFoerSkattekostnad": 223575777.0,
+"ordinaertResultatSkattekostnad": 32929706.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810392312"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 60320700.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 101107204.0
+},
+"sumEgenkapital": 161427904.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 848769706.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 53370327.0
+},
+"sumGjeld": 902140033.0
+},
+"sumEgenkapitalGjeld": 1063567937.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 346769157.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 716798780.0
+},
+"sumBankinnskuddOgKontanter": 35927385.0,
+"sumEiendeler": 1063567937.0,
+"sumFordringer": 456736168.0,
+"sumVarer": 224135227.0
+},
+"id": 6691396,
+"journalnr": "2026426261",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": false
+},
+"regnskapsperiode": {
+"fraDato": "2025-01-01",
+"tilDato": "2025-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 176009821.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 2511986297.0,
+"sumDriftsinntekter": 2513261053.0
+},
+"driftskostnad": {
+"loennskostnad": 70320037.0,
+"sumDriftskostnad": 2383662317.0
+},
+"driftsresultat": 129598735.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 98804509.0
+},
+"finanskostnad": {
+"annenRentekostnad": 19465996.0,
+"sumFinanskostnad": 20643863.0
+},
+"nettoFinans": 78160646.0
+},
+"ordinaertResultatFoerSkattekostnad": 207759382.0,
+"ordinaertResultatSkattekostnad": 31749561.0,
+"totalresultat": 176009821.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810392312"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 15995188.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 36094298.0
+},
+"sumEgenkapital": 52089486.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 2836283.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 8259512.0
+},
+"sumGjeld": 11095794.0
+},
+"sumEgenkapitalGjeld": 63185280.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 15845688.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 47339592.0
+},
+"sumBankinnskuddOgKontanter": 15815296.0,
+"sumEiendeler": 63185280.0,
+"sumFordringer": 3500000.0,
+"sumInvesteringer": 28024296.0
+},
+"id": 4957051,
+"journalnr": "2024494398",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 7001041.0,
+"driftsresultat": {
+"driftsinntekter": {
+"sumDriftsinntekter": 0.0
+},
+"driftskostnad": {
+"sumDriftskostnad": 103728.0
+},
+"driftsresultat": -103728.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 8262976.0
+},
+"finanskostnad": {
+"annenRentekostnad": 102082.0,
+"sumFinanskostnad": 434733.0
+},
+"nettoFinans": 7828244.0
+},
+"ordinaertResultatFoerSkattekostnad": 7724516.0,
+"ordinaertResultatSkattekostnad": 723475.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810393572"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 86895530.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 94695333.0
+},
+"sumEgenkapital": 181590863.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 82064117.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 0.0
+},
+"sumGjeld": 82064117.0
+},
+"sumEgenkapitalGjeld": 263654980.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 241374402.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 22280578.0
+},
+"sumBankinnskuddOgKontanter": 19717626.0,
+"sumEiendeler": 263654981.0,
+"sumFordringer": 2562952.0,
+"sumInvesteringer": 0.0
+},
+"id": 6029657,
+"journalnr": "2025608487",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2024-01-01",
+"tilDato": "2024-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 30712684.0,
+"driftsresultat": {
+"driftsinntekter": {
+"sumDriftsinntekter": 48340800.0
+},
+"driftskostnad": {
+"sumDriftskostnad": 19138819.0
+},
+"driftsresultat": 29201981.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 1510971.0
+},
+"finanskostnad": {
+"annenRentekostnad": 268.0,
+"sumFinanskostnad": 268.0
+},
+"nettoFinans": 1510703.0
+},
+"ordinaertResultatFoerSkattekostnad": 30712684.0,
+"ordinaertResultatSkattekostnad": 0.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810412402"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 210000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 795912.0
+},
+"sumEgenkapital": 1005912.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 54875.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 0.0
+},
+"sumGjeld": 54875.0
+},
+"sumEgenkapitalGjeld": 1060788.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 185543.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 875245.0
+},
+"sumBankinnskuddOgKontanter": 363605.0,
+"sumEiendeler": 1060788.0,
+"sumFordringer": 476640.0,
+"sumVarer": 35000.0
+},
+"id": 5039497,
+"journalnr": "2024560153",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": -114931.0,
+"driftsresultat": {
+"driftsinntekter": {},
+"driftskostnad": {
+"loennskostnad": 0.0,
+"sumDriftskostnad": 135580.0
+},
+"driftsresultat": -135580.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 20649.0
+},
+"finanskostnad": {},
+"nettoFinans": 20649.0
+},
+"ordinaertResultatFoerSkattekostnad": -114931.0,
+"ordinaertResultatSkattekostnad": 0.0,
+"totalresultat": -114931.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810431172"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 3900000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 3697354.0
+},
+"sumEgenkapital": 7597354.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 3867203.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 2454597.0
+},
+"sumGjeld": 6321800.0
+},
+"sumEgenkapitalGjeld": 13919154.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 12255251.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 1663903.0
+},
+"sumBankinnskuddOgKontanter": 1580817.0,
+"sumEiendeler": 13919154.0,
+"sumFordringer": 83086.0,
+"sumVarer": 0.0
+},
+"id": 5273245,
+"journalnr": "2024675560",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": -1897910.0,
+"driftsresultat": {
+"driftsinntekter": {
+"sumDriftsinntekter": 1589480.0
+},
+"driftskostnad": {
+"loennskostnad": 233190.0,
+"sumDriftskostnad": 1366733.0
+},
+"driftsresultat": 222747.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 13328.0
+},
+"finanskostnad": {
+"annenRentekostnad": 176217.0,
+"sumFinanskostnad": 2120700.0
+},
+"nettoFinans": -2107372.0
+},
+"ordinaertResultatFoerSkattekostnad": -1884625.0,
+"ordinaertResultatSkattekostnad": 13285.0,
+"totalresultat": -1897910.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810432322"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 3179601.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 70704109.0
+},
+"sumEgenkapital": 73883710.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 49004754.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 0.0
+},
+"sumGjeld": 49004754.0
+},
+"sumEgenkapitalGjeld": 122888464.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 4850557.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 118037907.0
+},
+"sumBankinnskuddOgKontanter": 21893714.0,
+"sumEiendeler": 122888464.0,
+"sumFordringer": 32522040.0,
+"sumVarer": 63622154.0
+},
+"id": 5601035,
+"journalnr": "2025372451",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": false
+},
+"regnskapsperiode": {
+"fraDato": "2024-01-01",
+"tilDato": "2024-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 28142304.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 239558189.0,
+"sumDriftsinntekter": 239558329.0
+},
+"driftskostnad": {
+"loennskostnad": 26395129.0,
+"sumDriftskostnad": 205544694.0
+},
+"driftsresultat": 34013636.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 2288548.0
+},
+"finanskostnad": {
+"annenRentekostnad": 129946.0,
+"sumFinanskostnad": 129946.0
+},
+"nettoFinans": 2158601.0
+},
+"ordinaertResultatFoerSkattekostnad": 36172237.0,
+"ordinaertResultatSkattekostnad": 8029933.0,
+"totalresultat": 28142304.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810438452"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 3696649.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 14275546.0
+},
+"sumEgenkapital": 17972195.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 791282.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 5601148.0
+},
+"sumGjeld": 6392430.0
+},
+"sumEgenkapitalGjeld": 24364625.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 21383818.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 2980807.0
+},
+"sumBankinnskuddOgKontanter": 2920953.0,
+"sumEiendeler": 24364625.0,
+"sumFordringer": 59855.0
+},
+"id": 5540225,
+"journalnr": "2025349709",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2024-01-01",
+"tilDato": "2024-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 2115139.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 3565224.0,
+"sumDriftsinntekter": 3607512.0
+},
+"driftskostnad": {
+"sumDriftskostnad": 610483.0
+},
+"driftsresultat": 2997029.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 114771.0
+},
+"finanskostnad": {
+"annenRentekostnad": 400057.0,
+"sumFinanskostnad": 400057.0
+},
+"nettoFinans": -285286.0
+},
+"ordinaertResultatFoerSkattekostnad": 2711743.0,
+"ordinaertResultatSkattekostnad": 596604.0,
+"totalresultat": 2115139.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810463902"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 759396.0
+},
+"opptjentEgenkapital": {},
+"sumEgenkapital": 759396.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 268342.0
+},
+"langsiktigGjeld": {},
+"sumGjeld": 268342.0
+},
+"sumEgenkapitalGjeld": 1027738.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 233781.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 793957.0
+},
+"sumBankinnskuddOgKontanter": 321597.0,
+"sumEiendeler": 1027738.0,
+"sumFordringer": 472360.0
+},
+"id": 6969264,
+"journalnr": "2026675985",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2025-01-01",
+"tilDato": "2025-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 193247.0,
+"driftsresultat": {
+"driftsinntekter": {
+"sumDriftsinntekter": 492888.0
+},
+"driftskostnad": {
+"loennskostnad": 0.0,
+"sumDriftskostnad": 286562.0
+},
+"driftsresultat": 206326.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 41426.0
+},
+"finanskostnad": {
+"annenRentekostnad": 1.0,
+"sumFinanskostnad": 1.0
+},
+"nettoFinans": 41426.0
+},
+"ordinaertResultatFoerSkattekostnad": 247752.0,
+"ordinaertResultatSkattekostnad": 54505.0,
+"totalresultat": 193247.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810483822"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 10017000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 2536000.0
+},
+"sumEgenkapital": 12554000.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 83307000.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 0.0
+},
+"sumGjeld": 83307000.0
+},
+"sumEgenkapitalGjeld": 95861000.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 7527000.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 88334000.0
+},
+"sumBankinnskuddOgKontanter": 10275000.0,
+"sumEiendeler": 95861000.0,
+"sumFordringer": 58997000.0,
+"sumVarer": 19061000.0
+},
+"id": 4802307,
+"journalnr": "2024389774",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": false
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 35532000.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 207708000.0,
+"sumDriftsinntekter": 207769000.0
+},
+"driftskostnad": {
+"loennskostnad": 26812000.0,
+"sumDriftskostnad": 162674000.0
+},
+"driftsresultat": 45095000.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 2873000.0
+},
+"finanskostnad": {
+"sumFinanskostnad": 1016000.0
+},
+"nettoFinans": 460000.0
+},
+"ordinaertResultatFoerSkattekostnad": 45555000.0,
+"ordinaertResultatSkattekostnad": 10023000.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810547472"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 3060000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 265878643.0
+},
+"sumEgenkapital": 268938643.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 52240026.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 319833993.0
+},
+"sumGjeld": 372074019.0
+},
+"sumEgenkapitalGjeld": 641012662.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 593310299.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 47702363.0
+},
+"sumBankinnskuddOgKontanter": 38814242.0,
+"sumEiendeler": 641012662.0,
+"sumFordringer": 8738121.0,
+"sumVarer": 150000.0
+},
+"id": 5443723,
+"journalnr": "2024758000",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": false
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "KONSERN",
+"resultatregnskapResultat": {
+"aarsresultat": 44986087.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 112255956.0,
+"sumDriftsinntekter": 114851873.0
+},
+"driftskostnad": {
+"loennskostnad": 8989718.0,
+"sumDriftskostnad": 52773592.0
+},
+"driftsresultat": 62078281.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 10595082.0
+},
+"finanskostnad": {
+"annenRentekostnad": 17832392.0,
+"sumFinanskostnad": 18417103.0
+},
+"nettoFinans": -7822021.0
+},
+"ordinaertResultatFoerSkattekostnad": 54256260.0,
+"ordinaertResultatSkattekostnad": 9270173.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810574232"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 54000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 75975.0
+},
+"sumEgenkapital": 129975.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 48154.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 300168.0
+},
+"sumGjeld": 348322.0
+},
+"sumEgenkapitalGjeld": 478296.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 362680.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 115617.0
+},
+"sumBankinnskuddOgKontanter": 115617.0,
+"sumEiendeler": 478296.0
+},
+"id": 5736345,
+"journalnr": "2025464738",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2024-01-01",
+"tilDato": "2024-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 113411.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 5000.0,
+"sumDriftsinntekter": 333320.0
+},
+"driftskostnad": {
+"sumDriftskostnad": 173547.0
+},
+"driftsresultat": 159773.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 2809.0
+},
+"finanskostnad": {
+"annenRentekostnad": 17182.0,
+"sumFinanskostnad": 17182.0
+},
+"nettoFinans": -14373.0
+},
+"ordinaertResultatFoerSkattekostnad": 145399.0,
+"ordinaertResultatSkattekostnad": 31988.0,
+"totalresultat": 113411.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810582332"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 2025780.0
+},
+"opptjentEgenkapital": {},
+"sumEgenkapital": 2025780.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 87593.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 4437500.0
+},
+"sumGjeld": 4525093.0
+},
+"sumEgenkapitalGjeld": 6550873.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 2576222.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 3974651.0
+},
+"sumEiendeler": 6550873.0,
+"sumFordringer": 3974651.0
+},
+"id": 4912137,
+"journalnr": "2024450042",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": -326841.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 1811600.0,
+"sumDriftsinntekter": 1811600.0
+},
+"driftskostnad": {
+"loennskostnad": 0.0,
+"sumDriftskostnad": 2043070.0
+},
+"driftsresultat": -231470.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 125050.0
+},
+"finanskostnad": {
+"annenRentekostnad": 290279.0,
+"sumFinanskostnad": 290279.0
+},
+"nettoFinans": -165230.0
+},
+"ordinaertResultatFoerSkattekostnad": -396700.0,
+"ordinaertResultatSkattekostnad": -69859.0,
+"totalresultat": -326841.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810684402"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 1500000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 8660010.0
+},
+"sumEgenkapital": 10160010.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 31982.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 0.0
+},
+"sumGjeld": 31982.0
+},
+"sumEgenkapitalGjeld": 10191992.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 0.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 10191992.0
+},
+"sumBankinnskuddOgKontanter": 242975.0,
+"sumEiendeler": 10191992.0,
+"sumInvesteringer": 9949018.0
+},
+"id": 5497905,
+"journalnr": "2025333514",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2024-01-01",
+"tilDato": "2024-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": -127876.0,
+"driftsresultat": {
+"driftsinntekter": {
+"sumDriftsinntekter": 72408.0
+},
+"driftskostnad": {
+"loennskostnad": 0.0,
+"sumDriftskostnad": 202227.0
+},
+"driftsresultat": -129819.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 2084.0
+},
+"finanskostnad": {
+"annenRentekostnad": 141.0,
+"sumFinanskostnad": 141.0
+},
+"nettoFinans": 1943.0
+},
+"ordinaertResultatFoerSkattekostnad": -127876.0,
+"ordinaertResultatSkattekostnad": 0.0,
+"totalresultat": -127876.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810902612"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 1500000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 8841947.0
+},
+"sumEgenkapital": 10341947.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 33201.0
+},
+"langsiktigGjeld": {},
+"sumGjeld": 33201.0
+},
+"sumEgenkapitalGjeld": 10375149.0
+},
+"eiendeler": {
+"anleggsmidler": {},
+"omloepsmidler": {
+"sumOmloepsmidler": 10375149.0
+},
+"sumBankinnskuddOgKontanter": 195364.0,
+"sumEiendeler": 10375149.0,
+"sumInvesteringer": 10179785.0
+},
+"id": 6400399,
+"journalnr": "2026333232",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2025-01-01",
+"tilDato": "2025-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 181937.0,
+"driftsresultat": {
+"driftsinntekter": {
+"sumDriftsinntekter": 373276.0
+},
+"driftskostnad": {
+"loennskostnad": 0.0,
+"sumDriftskostnad": 192283.0
+},
+"driftsresultat": 180993.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 944.0
+},
+"finanskostnad": {},
+"nettoFinans": 944.0
+},
+"ordinaertResultatFoerSkattekostnad": 181937.0,
+"ordinaertResultatSkattekostnad": 0.0,
+"totalresultat": 181937.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810902612"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 2000000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 2678000.0
+},
+"sumEgenkapital": 4678000.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 0.0
+},
+"sumGjeld": 0.0
+},
+"sumEgenkapitalGjeld": 4678000.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 1700000.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 2978000.0
+},
+"sumBankinnskuddOgKontanter": 2481000.0,
+"sumEiendeler": 4678000.0,
+"sumFordringer": 497000.0
+},
+"id": 5991643,
+"journalnr": "2025588581",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "forenkletAnvendelseIFRS",
+"smaaForetak": false
+},
+"regnskapsperiode": {
+"fraDato": "2024-01-01",
+"tilDato": "2024-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 1119000.0,
+"driftsresultat": {
+"driftsinntekter": {},
+"driftskostnad": {
+"sumDriftskostnad": 14000.0
+},
+"driftsresultat": -14000.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 1449000.0
+},
+"finanskostnad": {},
+"nettoFinans": 1449000.0
+},
+"ordinaertResultatFoerSkattekostnad": 1435000.0,
+"ordinaertResultatSkattekostnad": 316000.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "810969652"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 100000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 622620.0
+},
+"sumEgenkapital": 722620.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 727130.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 711679.0
+},
+"sumGjeld": 1438809.0
+},
+"sumEgenkapitalGjeld": 2161428.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 11349.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 2150080.0
+},
+"sumBankinnskuddOgKontanter": 175902.0,
+"sumEiendeler": 2161428.0,
+"sumFordringer": 15204.0,
+"sumVarer": 1958973.0
+},
+"id": 5682679,
+"journalnr": "2025435834",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2024-01-01",
+"tilDato": "2024-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 360439.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 4759609.0,
+"sumDriftsinntekter": 4790460.0
+},
+"driftskostnad": {
+"loennskostnad": 1500634.0,
+"sumDriftskostnad": 4381687.0
+},
+"driftsresultat": 408772.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 1598.0
+},
+"finanskostnad": {
+"annenRentekostnad": 44821.0,
+"sumFinanskostnad": 49931.0
+},
+"nettoFinans": -48334.0
+},
+"ordinaertResultatFoerSkattekostnad": 360439.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "811141402"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 3443070000.0
+},
+"opptjentEgenkapital": {},
+"sumEgenkapital": 3443070000.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 200028000.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 730748000.0
+},
+"sumGjeld": 930776000.0
+},
+"sumEgenkapitalGjeld": 4373846000.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 3583649000.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 790197000.0
+},
+"sumEiendeler": 4373846000.0,
+"sumFordringer": 790197000.0
+},
+"id": 4810469,
+"journalnr": "2024391695",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2022-11-01",
+"tilDato": "2023-10-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": -934352000.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 0.0,
+"sumDriftsinntekter": 0.0
+},
+"driftskostnad": {
+"loennskostnad": 0.0,
+"sumDriftskostnad": 956828000.0
+},
+"driftsresultat": -956828000.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 28526000.0
+},
+"finanskostnad": {},
+"nettoFinans": 28526000.0
+},
+"ordinaertResultatFoerSkattekostnad": -928302000.0,
+"skattekostnadEkstraordinaertResultat": 6050000.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "811176702"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 4634489000.0
+},
+"opptjentEgenkapital": {},
+"sumEgenkapital": 4634489000.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 880056000.0
+},
+"sumGjeld": 880056000.0
+},
+"sumEgenkapitalGjeld": 5514545000.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 5514545000.0
+},
+"omloepsmidler": {},
+"sumEiendeler": 5514545000.0
+},
+"id": 6721126,
+"journalnr": "2026441436",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2024-11-01",
+"tilDato": "2025-10-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 1193919000.0,
+"driftsresultat": {
+"driftsinntekter": {
+"sumDriftsinntekter": 1283290000.0
+},
+"driftskostnad": {
+"sumDriftskostnad": 89371000.0
+},
+"driftsresultat": 1193919000.0
+},
+"finansresultat": {
+"finansinntekt": {},
+"finanskostnad": {}
+},
+"ordinaertResultatFoerSkattekostnad": 1193919000.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "811176702"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 120655000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 44958000.0
+},
+"sumEgenkapital": 165613000.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 260460000.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 230184000.0
+},
+"sumGjeld": 490644000.0
+},
+"sumEgenkapitalGjeld": 656257000.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 461723000.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 194534000.0
+},
+"sumBankinnskuddOgKontanter": 216000.0,
+"sumEiendeler": 656257000.0,
+"sumFordringer": 116008000.0,
+"sumVarer": 78310000.0
+},
+"id": 4878989,
+"journalnr": "2024416442",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": false
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 35531000.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 622983000.0,
+"sumDriftsinntekter": 622983000.0
+},
+"driftskostnad": {
+"loennskostnad": 43235000.0,
+"sumDriftskostnad": 617430000.0
+},
+"driftsresultat": 5553000.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 50974000.0
+},
+"finanskostnad": {
+"sumFinanskostnad": 22612000.0
+},
+"nettoFinans": 28362000.0
+},
+"ordinaertResultatFoerSkattekostnad": 33915000.0,
+"ordinaertResultatSkattekostnad": -1616000.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "EUR",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "ASA",
+"organisasjonsnummer": "811413682"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 140000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": -95473.0
+},
+"sumEgenkapital": 44528.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 0.0
+},
+"sumGjeld": 0.0
+},
+"sumEgenkapitalGjeld": 44528.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 33448.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 11079.0
+},
+"sumBankinnskuddOgKontanter": 3221.0,
+"sumEiendeler": 44528.0,
+"sumFordringer": 7858.0
+},
+"id": 5827189,
+"journalnr": "2025514242",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2024-01-01",
+"tilDato": "2024-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 0.0,
+"driftsresultat": {
+"driftsinntekter": {},
+"driftskostnad": {}
+},
+"finansresultat": {
+"finansinntekt": {},
+"finanskostnad": {}
+},
+"ordinaertResultatFoerSkattekostnad": 0.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "811445312"
+}
+},
+{
+"avviklingsregnskap": true,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 140000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": -95473.0
+},
+"sumEgenkapital": 44528.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": -33448.0
+},
+"langsiktigGjeld": {},
+"sumGjeld": -33448.0
+},
+"sumEgenkapitalGjeld": 11079.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 33448.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": -22369.0
+},
+"sumBankinnskuddOgKontanter": 3221.0,
+"sumEiendeler": 11079.0,
+"sumFordringer": -25590.0
+},
+"id": 7090662,
+"journalnr": "2026724132",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2025-01-01",
+"tilDato": "2025-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 0.0,
+"driftsresultat": {
+"driftsinntekter": {},
+"driftskostnad": {}
+},
+"finansresultat": {
+"finansinntekt": {},
+"finanskostnad": {}
+}
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "811445312"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 504000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 7017422.0
+},
+"sumEgenkapital": 7521422.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 108224.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 172301.0
+},
+"sumGjeld": 280525.0
+},
+"sumEgenkapitalGjeld": 7801947.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 7255566.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 546381.0
+},
+"sumBankinnskuddOgKontanter": 539226.0,
+"sumEiendeler": 7801947.0,
+"sumFordringer": 7155.0
+},
+"id": 4881339,
+"journalnr": "2024422882",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 316374.0,
+"driftsresultat": {
+"driftsinntekter": {
+"sumDriftsinntekter": 608645.0
+},
+"driftskostnad": {
+"sumDriftskostnad": 203037.0
+},
+"driftsresultat": 405608.0
+},
+"finansresultat": {
+"finansinntekt": {},
+"finanskostnad": {
+"rentekostnadSammeKonsern": 0.0
+}
+},
+"ordinaertResultatFoerSkattekostnad": 405608.0,
+"ordinaertResultatSkattekostnad": 89234.0,
+"totalresultat": 316374.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "811548812"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 80000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 219000.0
+},
+"sumEgenkapital": 299000.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {},
+"langsiktigGjeld": {}
+},
+"sumEgenkapitalGjeld": 299000.0
+},
+"eiendeler": {
+"anleggsmidler": {},
+"omloepsmidler": {
+"sumOmloepsmidler": 299000.0
+},
+"sumBankinnskuddOgKontanter": 261000.0,
+"sumEiendeler": 299000.0,
+"sumFordringer": 38000.0
+},
+"id": 7033674,
+"journalnr": "2026620183",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2025-01-01",
+"tilDato": "2025-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": -2000.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 0.0
+},
+"driftskostnad": {
+"loennskostnad": 0.0,
+"sumDriftskostnad": 240000.0
+},
+"driftsresultat": -240000.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 238000.0
+},
+"finanskostnad": {
+"annenRentekostnad": 1000.0,
+"sumFinanskostnad": 1000.0
+},
+"nettoFinans": 237000.0
+},
+"ordinaertResultatFoerSkattekostnad": -3000.0,
+"ordinaertResultatSkattekostnad": -1000.0,
+"totalresultat": -2000.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "811593362"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 44422587.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 25361225.0
+},
+"sumEgenkapital": 69783812.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 71001233.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 1204871.0
+},
+"sumGjeld": 72206105.0
+},
+"sumEgenkapitalGjeld": 141989916.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 73010818.0
+},
+"goodwill": 12945304.0,
+"omloepsmidler": {
+"sumOmloepsmidler": 68979098.0
+},
+"sumBankinnskuddOgKontanter": 981902.0,
+"sumEiendeler": 141989916.0,
+"sumFordringer": 66895474.0,
+"sumVarer": 1101721.0
+},
+"id": 4887729,
+"journalnr": "2024428779",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": false
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 20195320.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 224125618.0,
+"sumDriftsinntekter": 224363337.0
+},
+"driftskostnad": {
+"loennskostnad": 76429576.0,
+"sumDriftskostnad": 204962253.0
+},
+"driftsresultat": 19401084.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 5565663.0
+},
+"finanskostnad": {
+"annenRentekostnad": 309136.0,
+"sumFinanskostnad": 381980.0
+},
+"nettoFinans": 5183682.0
+},
+"ordinaertResultatFoerSkattekostnad": 24584767.0,
+"ordinaertResultatSkattekostnad": 4389447.0,
+"totalresultat": 20195320.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "811600792"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 30000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 3030292.0
+}
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 9375.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 951920.0
+},
+"sumGjeld": 961295.0
+},
+"sumEgenkapitalGjeld": 4021587.0
+},
+"eiendeler": {
+"anleggsmidler": {},
+"omloepsmidler": {
+"sumOmloepsmidler": 4021587.0
+},
+"sumBankinnskuddOgKontanter": -12959.0,
+"sumEiendeler": 4021587.0,
+"sumInvesteringer": 4034546.0
+},
+"id": 6837238,
+"journalnr": "2026600311",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2025-01-01",
+"tilDato": "2025-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 367122.0,
+"driftsresultat": {
+"driftsinntekter": {},
+"driftskostnad": {
+"loennskostnad": 10000.0,
+"sumDriftskostnad": 24317.0
+},
+"driftsresultat": -24317.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 524664.0
+},
+"finanskostnad": {
+"sumFinanskostnad": 133224.0
+},
+"nettoFinans": 391439.0
+},
+"ordinaertResultatFoerSkattekostnad": 367122.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "811708712"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": -89845.0
+},
+"sumEgenkapital": -89845.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 473.0
+},
+"langsiktigGjeld": {},
+"sumGjeld": 473.0
+},
+"sumEgenkapitalGjeld": -89372.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": -89372.0
+},
+"omloepsmidler": {},
+"sumEiendeler": -89372.0
+},
+"id": 6648732,
+"journalnr": "2026505399",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2025-01-01",
+"tilDato": "2025-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": -42743.0,
+"driftsresultat": {
+"driftsinntekter": {},
+"driftskostnad": {
+"loennskostnad": 0.0,
+"sumDriftskostnad": 42743.0
+},
+"driftsresultat": -42743.0
+},
+"finansresultat": {
+"finansinntekt": {},
+"finanskostnad": {},
+"nettoFinans": 0.0
+},
+"ordinaertResultatFoerSkattekostnad": -42743.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "811874302"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 164668.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 7168800.0
+},
+"sumEgenkapital": 7333469.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 32331332.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 0.0
+},
+"sumGjeld": 32331332.0
+},
+"sumEgenkapitalGjeld": 39664801.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 20862352.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 18802449.0
+},
+"sumBankinnskuddOgKontanter": 9431778.0,
+"sumEiendeler": 39664801.0,
+"sumFordringer": 9370671.0
+},
+"id": 5274801,
+"journalnr": "2024676441",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": false
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 25166804.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 26731455.0,
+"sumDriftsinntekter": 26731455.0
+},
+"driftskostnad": {
+"loennskostnad": 0.0,
+"sumDriftskostnad": 17382040.0
+},
+"driftsresultat": 9349415.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 15926640.0
+},
+"finanskostnad": {
+"sumFinanskostnad": 3039.0
+},
+"nettoFinans": 15923601.0
+},
+"ordinaertResultatFoerSkattekostnad": 25273017.0,
+"ordinaertResultatSkattekostnad": 106212.0,
+"totalresultat": 50333608.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "USD",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "814720942"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 239959.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": -400433.0
+},
+"sumEgenkapital": -160474.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": -1248.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 181723.0
+},
+"sumGjeld": 180475.0
+},
+"sumEgenkapitalGjeld": 20001.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 20001.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 0.0
+},
+"sumEiendeler": 20001.0
+},
+"id": 5252951,
+"journalnr": "2024665585",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": -4354.0,
+"driftsresultat": {
+"driftsinntekter": {},
+"driftskostnad": {
+"sumDriftskostnad": 4264.0
+},
+"driftsresultat": -4264.0
+},
+"finansresultat": {
+"finansinntekt": {},
+"finanskostnad": {
+"annenRentekostnad": 90.0,
+"sumFinanskostnad": 90.0
+},
+"nettoFinans": -90.0
+},
+"ordinaertResultatFoerSkattekostnad": -4354.0,
+"ordinaertResultatSkattekostnad": 0.0,
+"totalresultat": -4354.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "EDT",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "816392152"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 30000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": -50533.0
+},
+"sumEgenkapital": -20533.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 540370.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": -188083.0
+},
+"sumGjeld": 353637.0
+},
+"sumEgenkapitalGjeld": 333103.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 68173.0
+},
+"goodwill": 0.0,
+"omloepsmidler": {
+"sumOmloepsmidler": 264931.0
+},
+"sumBankinnskuddOgKontanter": 78355.0,
+"sumEiendeler": 333103.0,
+"sumFordringer": 186576.0,
+"sumInvesteringer": 0.0,
+"sumVarer": 0.0
+},
+"id": 5357705,
+"journalnr": "2024662149",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": -17265.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 381669.0,
+"sumDriftsinntekter": 381669.0
+},
+"driftskostnad": {
+"loennskostnad": 244755.0,
+"sumDriftskostnad": 393592.0
+},
+"driftsresultat": -11923.0
+},
+"ekstraordinaerePoster": 0.0,
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 0.0
+},
+"finanskostnad": {
+"annenRentekostnad": 0.0,
+"rentekostnadSammeKonsern": 0.0,
+"sumFinanskostnad": 3992.0
+},
+"nettoFinans": -3992.0
+},
+"ordinaertResultatFoerSkattekostnad": -15915.0,
+"ordinaertResultatSkattekostnad": 1350.0,
+"skattekostnadEkstraordinaertResultat": 0.0,
+"totalresultat": 0.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "NOK",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "817461182"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 7090007.0
+},
+"opptjentEgenkapital": {},
+"sumEgenkapital": 7090008.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 274153.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 33618740.0
+},
+"sumGjeld": 33892893.0
+},
+"sumEgenkapitalGjeld": 40982901.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 31942842.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 9040059.0
+},
+"sumBankinnskuddOgKontanter": 3248189.0,
+"sumEiendeler": 40982901.0,
+"sumFordringer": 5791870.0
+},
+"id": 5155283,
+"journalnr": "2024607829",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": -5542917.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 3702922.0,
+"sumDriftsinntekter": 3702922.0
+},
+"driftskostnad": {
+"loennskostnad": 1747209.0,
+"sumDriftskostnad": 8208669.0
+},
+"driftsresultat": -4505748.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 133258.0
+},
+"finanskostnad": {
+"sumFinanskostnad": 1170428.0
+},
+"nettoFinans": -1037170.0
+},
+"ordinaertResultatFoerSkattekostnad": -5542917.0,
+"ordinaertResultatSkattekostnad": 0.0,
+"totalresultat": -5542917.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "GBP",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "823862792"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 90394608.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": -29893989.0
+},
+"sumEgenkapital": 60500620.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 759589.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 0.0
+},
+"sumGjeld": 759589.0
+},
+"sumEgenkapitalGjeld": 61260208.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 61260208.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 0.0
+},
+"sumEiendeler": 61260208.0,
+"sumFordringer": 0.0
+},
+"id": 5294753,
+"journalnr": "2024687018",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": -1436851.0,
+"driftsresultat": {
+"driftsinntekter": {},
+"driftskostnad": {
+"sumDriftskostnad": 222360.0
+},
+"driftsresultat": -222360.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 35071.0
+},
+"finanskostnad": {
+"rentekostnadSammeKonsern": 12919.0,
+"sumFinanskostnad": 1249562.0
+},
+"nettoFinans": -1214491.0
+},
+"ordinaertResultatFoerSkattekostnad": -1436851.0,
+"ordinaertResultatSkattekostnad": 0.0,
+"totalresultat": -1436851.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "CHF",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "914558069"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 1100000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": -3850851.0
+},
+"sumEgenkapital": -2750851.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 6176646.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 0.0
+},
+"sumGjeld": 6176646.0
+},
+"sumEgenkapitalGjeld": 3425795.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 17132.0
+},
+"goodwill": 0.0,
+"omloepsmidler": {
+"sumOmloepsmidler": 3408663.0
+},
+"sumBankinnskuddOgKontanter": 240012.0,
+"sumEiendeler": 3425795.0,
+"sumFordringer": 3168651.0
+},
+"id": 5563001,
+"journalnr": "2025308938",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": true
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": -2435616.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 2415996.0,
+"sumDriftsinntekter": 2415996.0
+},
+"driftskostnad": {
+"loennskostnad": 3704195.0,
+"sumDriftskostnad": 5019061.0
+},
+"driftsresultat": -2603065.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 47067.0
+},
+"finanskostnad": {
+"annenRentekostnad": 290.0,
+"sumFinanskostnad": 42108.0
+},
+"nettoFinans": 4959.0
+},
+"ordinaertResultatFoerSkattekostnad": -2598106.0,
+"ordinaertResultatSkattekostnad": -162490.0,
+"totalresultat": -2435616.0
+},
+"revisjon": {
+"fravalgRevisjon": true,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "AED",
+"virksomhet": {
+"morselskap": false,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "919147555"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 3594077000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 806945000.0
+},
+"sumEgenkapital": 4401022000.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 0.0
+},
+"sumGjeld": 0.0
+},
+"sumEgenkapitalGjeld": 4401022000.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 4391087000.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 9935000.0
+},
+"sumBankinnskuddOgKontanter": 9935000.0,
+"sumEiendeler": 4401022000.0
+},
+"id": 5131003,
+"journalnr": "2024545627",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": false
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 214793000.0,
+"driftsresultat": {
+"driftsinntekter": {},
+"driftskostnad": {
+"sumDriftskostnad": 26366000.0
+},
+"driftsresultat": -26366000.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 241162000.0
+},
+"finanskostnad": {
+"sumFinanskostnad": 3000.0
+},
+"nettoFinans": 241159000.0
+},
+"ordinaertResultatFoerSkattekostnad": 214793000.0,
+"ordinaertResultatSkattekostnad": 0.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "SEK",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "919782021"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 20845779630.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": -8290664454.0
+},
+"sumEgenkapital": 12555115176.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 380665588.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 57999404040.0
+},
+"sumGjeld": 58380069628.0
+},
+"sumEgenkapitalGjeld": 70935184804.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 70933643167.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 1541637.0
+},
+"sumBankinnskuddOgKontanter": 1541637.0,
+"sumEiendeler": 70935184804.0
+},
+"id": 5090929,
+"journalnr": "2024565592",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": false
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 5910836804.0,
+"driftsresultat": {
+"driftsinntekter": {},
+"driftskostnad": {
+"sumDriftskostnad": 11239612.0
+},
+"driftsresultat": -11239612.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 7126653475.0
+},
+"finanskostnad": {
+"rentekostnadSammeKonsern": 1161346893.0,
+"sumFinanskostnad": 1162378556.0
+},
+"nettoFinans": 5964274919.0
+},
+"ordinaertResultatFoerSkattekostnad": 5953035308.0,
+"ordinaertResultatSkattekostnad": 42198504.0,
+"totalresultat": 5910836804.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "JPY",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "919953950"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 494956000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": -324058000.0
+},
+"sumEgenkapital": 170898000.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 1241000.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 1163000.0
+},
+"sumGjeld": 2404000.0
+},
+"sumEgenkapitalGjeld": 173302000.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 171613000.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 1689000.0
+},
+"sumBankinnskuddOgKontanter": 1419000.0,
+"sumEiendeler": 173302000.0,
+"sumFordringer": 270000.0
+},
+"id": 4970255,
+"journalnr": "2024488537",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "forenkletAnvendelseIFRS",
+"smaaForetak": false
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 1970000.0,
+"driftsresultat": {
+"driftsinntekter": {},
+"driftskostnad": {
+"loennskostnad": 371000.0,
+"sumDriftskostnad": 1561000.0
+},
+"driftsresultat": -1561000.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 5155000.0
+},
+"finanskostnad": {
+"sumFinanskostnad": 131000.0
+},
+"nettoFinans": 5024000.0
+},
+"ordinaertResultatFoerSkattekostnad": 3463000.0,
+"ordinaertResultatSkattekostnad": 1493000.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "CAD",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "ASA",
+"organisasjonsnummer": "925347884"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 463685000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 230735000.0
+},
+"sumEgenkapital": 694420000.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 1078080000.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 87868000.0
+},
+"sumGjeld": 1165948000.0
+},
+"sumEgenkapitalGjeld": 1860368000.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 366010000.0
+},
+"goodwill": 15113000.0,
+"omloepsmidler": {
+"sumOmloepsmidler": 1494358000.0
+},
+"sumBankinnskuddOgKontanter": 65202000.0,
+"sumEiendeler": 1860368000.0,
+"sumFordringer": 428359000.0,
+"sumInvesteringer": 43405000.0,
+"sumVarer": 957392000.0
+},
+"id": 6301253,
+"journalnr": "2025747554",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "regnskapslovenAlminneligRegler",
+"smaaForetak": false
+},
+"regnskapsperiode": {
+"fraDato": "2024-01-01",
+"tilDato": "2024-12-31"
+},
+"regnskapstype": "KONSERN",
+"resultatregnskapResultat": {
+"aarsresultat": 188023000.0,
+"driftsresultat": {
+"driftsinntekter": {
+"salgsinntekter": 3104171000.0,
+"sumDriftsinntekter": 2898914000.0
+},
+"driftskostnad": {
+"loennskostnad": 293060000.0,
+"sumDriftskostnad": 2635081000.0
+},
+"driftsresultat": 263833000.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 11583000.0
+},
+"finanskostnad": {
+"sumFinanskostnad": 32000000.0
+},
+"nettoFinans": -20417000.0
+},
+"ordinaertResultatFoerSkattekostnad": 243416000.0,
+"ordinaertResultatSkattekostnad": 55393000.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "DKK",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "977084709"
+}
+},
+{
+"avviklingsregnskap": false,
+"egenkapitalGjeld": {
+"egenkapital": {
+"innskuttEgenkapital": {
+"sumInnskuttEgenkaptial": 183043000.0
+},
+"opptjentEgenkapital": {
+"sumOpptjentEgenkapital": 70172000.0
+},
+"sumEgenkapital": 253215000.0
+},
+"gjeldOversikt": {
+"kortsiktigGjeld": {
+"sumKortsiktigGjeld": 8677000.0
+},
+"langsiktigGjeld": {
+"sumLangsiktigGjeld": 180487000.0
+},
+"sumGjeld": 189164000.0
+},
+"sumEgenkapitalGjeld": 442379000.0
+},
+"eiendeler": {
+"anleggsmidler": {
+"sumAnleggsmidler": 433773000.0
+},
+"omloepsmidler": {
+"sumOmloepsmidler": 8606000.0
+},
+"sumBankinnskuddOgKontanter": 7384000.0,
+"sumEiendeler": 442379000.0,
+"sumFordringer": 1222000.0
+},
+"id": 5182817,
+"journalnr": "2024555929",
+"oppstillingsplan": "store",
+"regnkapsprinsipper": {
+"regnskapsregler": "forenkletAnvendelseIFRS",
+"smaaForetak": false
+},
+"regnskapsperiode": {
+"fraDato": "2023-01-01",
+"tilDato": "2023-12-31"
+},
+"regnskapstype": "SELSKAP",
+"resultatregnskapResultat": {
+"aarsresultat": 1681000.0,
+"driftsresultat": {
+"driftsinntekter": {},
+"driftskostnad": {
+"sumDriftskostnad": 190000.0
+},
+"driftsresultat": -190000.0
+},
+"finansresultat": {
+"finansinntekt": {
+"sumFinansinntekter": 12944000.0
+},
+"finanskostnad": {
+"sumFinanskostnad": 6577000.0
+},
+"nettoFinans": 6367000.0
+},
+"ordinaertResultatFoerSkattekostnad": 6177000.0,
+"ordinaertResultatSkattekostnad": 4496000.0
+},
+"revisjon": {
+"fravalgRevisjon": false,
+"ikkeRevidertAarsregnskap": false
+},
+"valuta": "USN",
+"virksomhet": {
+"morselskap": true,
+"organisasjonsform": "AS",
+"organisasjonsnummer": "991562214"
+}
+}
+]

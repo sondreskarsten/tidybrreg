@@ -1,6 +1,7 @@
 ## data-raw/build_dictionaries.R
 ## Run this script to regenerate all bundled reference datasets from live sources.
-## Products: field_dict, legal_forms, role_types, role_groups, nace_codes, sector_codes
+## Products: field_dict, legal_forms, role_types, role_groups, nace_codes, sector_codes,
+##           regnskap_dict, regnskap_groups, regnskap_items
 
 library(httr2)
 library(tibble)
@@ -237,7 +238,14 @@ fetch_klass_en <- function(classification_id, date = Sys.Date()) {
     req_headers(Accept = "application/json") |>
     req_perform()
   body <- resp_body_json(resp)
-  map_dfr(body$codes, \(c) tibble(code = c$code, name_en = c$name, level = c$level))
+  out <- map_dfr(body$codes, \(c) tibble(code = as.character(c$code),
+                                          name = as.character(c$name),
+                                          level = as.character(c$level)))
+  attr(out, "vintage") <- date
+  attr(out, "classification_id") <- as.integer(classification_id)
+  attr(out, "source_url") <- paste0("https://data.ssb.no/api/klass/v1/classifications/",
+                                    classification_id, "/codesAt")
+  out
 }
 
 nace_codes <- fetch_klass_en(6)
@@ -248,27 +256,175 @@ cat("Institutional sector codes:", nrow(sector_codes), "entries\n")
 
 
 # =============================================================================
+# 6. REGNSKAP DICTIONARIES: the Regnskapsregisteret filing (OpenAPI 1.1.16),
+#    written the way field_dict, role_groups and role_types are for
+#    entities and roles. regnskap_dict maps dot paths to names and types
+#    and names the line items; regnskap_groups names the objects that
+#    group line items (level-0 rows are the three statements);
+#    regnskap_items carries the English and Norwegian labels of the line
+#    items (the Norwegian names are the statutory presentation-plan
+#    captions; English is a manual translation). Source spellings such
+#    as regnkapsprinsipper and sumInnskuttEgenkaptial are the API's own.
+# =============================================================================
+
+regnskap_dict <- tibble::tribble(
+  ~api_path, ~col_name, ~type,
+  "id", "filing_id", "integer",
+  "journalnr", "journal_nr", "character",
+  "regnskapstype", "account_type", "character",
+  "virksomhet.organisasjonsnummer", "org_nr", "character",
+  "virksomhet.organisasjonsform", "legal_form", "character",
+  "virksomhet.morselskap", "parent_company", "logical",
+  "regnskapsperiode.fraDato", "period_start", "Date",
+  "regnskapsperiode.tilDato", "period_end", "Date",
+  "valuta", "currency", "character",
+  "avviklingsregnskap", "liquidation_accounts", "logical",
+  "oppstillingsplan", "presentation_plan", "character",
+  "revisjon.ikkeRevidertAarsregnskap", "not_audited", "logical",
+  "revisjon.fravalgRevisjon", "audit_waived", "logical",
+  "regnkapsprinsipper.smaaForetak", "small_enterprise", "logical",
+  "regnkapsprinsipper.regnskapsregler", "accounting_rules", "character",
+  "egenkapitalGjeld.sumEgenkapitalGjeld", "total_equity_liabilities", "numeric",
+  "egenkapitalGjeld.egenkapital.sumEgenkapital", "total_equity", "numeric",
+  "egenkapitalGjeld.egenkapital.innskuttEgenkapital.sumInnskuttEgenkaptial", "paid_in_equity", "numeric",
+  "egenkapitalGjeld.egenkapital.opptjentEgenkapital.sumOpptjentEgenkapital", "retained_equity", "numeric",
+  "egenkapitalGjeld.gjeldOversikt.sumGjeld", "total_liabilities", "numeric",
+  "egenkapitalGjeld.gjeldOversikt.kortsiktigGjeld.sumKortsiktigGjeld", "current_liabilities", "numeric",
+  "egenkapitalGjeld.gjeldOversikt.langsiktigGjeld.sumLangsiktigGjeld", "long_term_liabilities", "numeric",
+  "eiendeler.sumEiendeler", "total_assets", "numeric",
+  "eiendeler.omloepsmidler.sumOmloepsmidler", "current_assets", "numeric",
+  "eiendeler.anleggsmidler.sumAnleggsmidler", "fixed_assets", "numeric",
+  "eiendeler.sumBankinnskuddOgKontanter", "cash_and_bank", "numeric",
+  "eiendeler.sumFordringer", "receivables", "numeric",
+  "eiendeler.sumInvesteringer", "investments", "numeric",
+  "eiendeler.sumVarer", "inventory", "numeric",
+  "eiendeler.goodwill", "goodwill", "numeric",
+  "resultatregnskapResultat.aarsresultat", "net_income", "numeric",
+  "resultatregnskapResultat.ordinaertResultatFoerSkattekostnad", "pre_tax_income", "numeric",
+  "resultatregnskapResultat.totalresultat", "comprehensive_income", "numeric",
+  "resultatregnskapResultat.ordinaertResultatSkattekostnad", "tax_expense", "numeric",
+  "resultatregnskapResultat.ekstraordinaerePoster", "extraordinary_items", "numeric",
+  "resultatregnskapResultat.skattekostnadEkstraordinaertResultat", "extraordinary_tax", "numeric",
+  "resultatregnskapResultat.driftsresultat.driftsresultat", "operating_income", "numeric",
+  "resultatregnskapResultat.driftsresultat.driftsinntekter.sumDriftsinntekter", "operating_revenue", "numeric",
+  "resultatregnskapResultat.driftsresultat.driftsinntekter.salgsinntekter", "sales_revenue", "numeric",
+  "resultatregnskapResultat.driftsresultat.driftskostnad.sumDriftskostnad", "operating_expenses", "numeric",
+  "resultatregnskapResultat.driftsresultat.driftskostnad.loennskostnad", "payroll_expenses", "numeric",
+  "resultatregnskapResultat.finansresultat.nettoFinans", "net_financial_items", "numeric",
+  "resultatregnskapResultat.finansresultat.finansinntekt.sumFinansinntekter", "financial_income", "numeric",
+  "resultatregnskapResultat.finansresultat.finanskostnad.sumFinanskostnad", "financial_expenses", "numeric",
+  "resultatregnskapResultat.finansresultat.finanskostnad.annenRentekostnad", "other_interest_expenses", "numeric",
+  "resultatregnskapResultat.finansresultat.finanskostnad.rentekostnadSammeKonsern", "intra_group_interest_expenses", "numeric"
+)
+
+regnskap_groups <- tibble::tribble(
+  ~path, ~group,
+  "eiendeler", "assets",
+  "eiendeler.omloepsmidler", "current_assets",
+  "eiendeler.anleggsmidler", "fixed_assets",
+  "egenkapitalGjeld", "equity_liabilities",
+  "egenkapitalGjeld.egenkapital", "equity",
+  "egenkapitalGjeld.egenkapital.innskuttEgenkapital", "paid_in_equity",
+  "egenkapitalGjeld.egenkapital.opptjentEgenkapital", "retained_equity",
+  "egenkapitalGjeld.gjeldOversikt", "liabilities",
+  "egenkapitalGjeld.gjeldOversikt.kortsiktigGjeld", "current_liabilities",
+  "egenkapitalGjeld.gjeldOversikt.langsiktigGjeld", "long_term_liabilities",
+  "resultatregnskapResultat", "income_statement",
+  "resultatregnskapResultat.driftsresultat", "operating",
+  "resultatregnskapResultat.driftsresultat.driftsinntekter", "operating_revenue",
+  "resultatregnskapResultat.driftsresultat.driftskostnad", "operating_expenses",
+  "resultatregnskapResultat.finansresultat", "financial",
+  "resultatregnskapResultat.finansresultat.finansinntekt", "financial_income",
+  "resultatregnskapResultat.finansresultat.finanskostnad", "financial_expenses"
+)
+
+regnskap_groups <- tribble(
+  ~path, ~code, ~name_en, ~name_no,
+  "eiendeler", "assets", "Assets", "Eiendeler",
+  "eiendeler.omloepsmidler", "current_assets", "Current assets", "Oml\u00f8psmidler",
+  "eiendeler.anleggsmidler", "fixed_assets", "Fixed assets", "Anleggsmidler",
+  "egenkapitalGjeld", "equity_liabilities", "Equity and liabilities", "Egenkapital og gjeld",
+  "egenkapitalGjeld.egenkapital", "equity", "Equity", "Egenkapital",
+  "egenkapitalGjeld.egenkapital.innskuttEgenkapital", "paid_in_equity", "Paid-in equity", "Innskutt egenkapital",
+  "egenkapitalGjeld.egenkapital.opptjentEgenkapital", "retained_equity", "Retained earnings", "Opptjent egenkapital",
+  "egenkapitalGjeld.gjeldOversikt", "liabilities", "Liabilities", "Gjeld",
+  "egenkapitalGjeld.gjeldOversikt.kortsiktigGjeld", "current_liabilities", "Current liabilities", "Kortsiktig gjeld",
+  "egenkapitalGjeld.gjeldOversikt.langsiktigGjeld", "long_term_liabilities", "Long-term liabilities", "Langsiktig gjeld",
+  "resultatregnskapResultat", "income_statement", "Income statement", "Resultatregnskap",
+  "resultatregnskapResultat.driftsresultat", "operating", "Operating result", "Driftsresultat",
+  "resultatregnskapResultat.driftsresultat.driftsinntekter", "operating_revenue", "Operating revenue", "Driftsinntekter",
+  "resultatregnskapResultat.driftsresultat.driftskostnad", "operating_expenses", "Operating expenses", "Driftskostnader",
+  "resultatregnskapResultat.finansresultat", "financial", "Financial result", "Finansresultat",
+  "resultatregnskapResultat.finansresultat.finansinntekt", "financial_income", "Financial income", "Finansinntekter",
+  "resultatregnskapResultat.finansresultat.finanskostnad", "financial_expenses", "Financial expenses", "Finanskostnader"
+)
+
+regnskap_items <- tribble(
+  ~code, ~name_en, ~name_no,
+  "total_equity_liabilities", "Total equity and liabilities", "Sum egenkapital og gjeld",
+  "total_equity", "Total equity", "Sum egenkapital",
+  "paid_in_equity", "Paid-in equity", "Sum innskutt egenkapital",
+  "retained_equity", "Retained earnings", "Sum opptjent egenkapital",
+  "total_liabilities", "Total liabilities", "Sum gjeld",
+  "current_liabilities", "Current liabilities", "Sum kortsiktig gjeld",
+  "long_term_liabilities", "Long-term liabilities", "Sum langsiktig gjeld",
+  "total_assets", "Total assets", "Sum eiendeler",
+  "current_assets", "Current assets", "Sum oml\u00f8psmidler",
+  "fixed_assets", "Fixed assets", "Sum anleggsmidler",
+  "cash_and_bank", "Cash and bank deposits", "Sum bankinnskudd og kontanter",
+  "receivables", "Receivables", "Sum fordringer",
+  "investments", "Investments", "Sum investeringer",
+  "inventory", "Inventories", "Sum varer",
+  "goodwill", "Goodwill", "Goodwill",
+  "net_income", "Net income", "\u00c5rsresultat",
+  "pre_tax_income", "Ordinary income before tax", "Ordin\u00e6rt resultat f\u00f8r skattekostnad",
+  "comprehensive_income", "Total comprehensive income", "Totalresultat",
+  "tax_expense", "Tax on ordinary income", "Skattekostnad p\u00e5 ordin\u00e6rt resultat",
+  "extraordinary_items", "Extraordinary items", "Ekstraordin\u00e6re poster",
+  "extraordinary_tax", "Tax on extraordinary items", "Skattekostnad p\u00e5 ekstraordin\u00e6rt resultat",
+  "operating_income", "Operating income", "Driftsresultat",
+  "operating_revenue", "Total operating revenue", "Sum driftsinntekter",
+  "sales_revenue", "Sales revenue", "Salgsinntekter",
+  "operating_expenses", "Total operating expenses", "Sum driftskostnader",
+  "payroll_expenses", "Payroll expenses", "L\u00f8nnskostnad",
+  "net_financial_items", "Net financial items", "Netto finans",
+  "financial_income", "Total financial income", "Sum finansinntekter",
+  "financial_expenses", "Total financial expenses", "Sum finanskostnader",
+  "other_interest_expenses", "Other interest expenses", "Annen rentekostnad",
+  "intra_group_interest_expenses", "Interest expenses to group companies", "Rentekostnad til foretak i samme konsern"
+)
+
+
+# =============================================================================
 # 5. SAVE ALL
 # =============================================================================
 
-usethis_available <- requireNamespace("usethis", quietly = TRUE)
-
-save(field_dict, legal_forms, role_types, role_groups, annotation_infotypes,
-     nace_codes, sector_codes,
-     file = "R/sysdata.rda", compress = "xz")
-cat("Saved sysdata.rda:",
-    round(file.size("R/sysdata.rda") / 1024, 1), "KB\n")
-
+## Exported datasets ship in data/ and are duplicated into R/sysdata.rda so
+## package code can reference them when the namespace is loaded but not
+## attached. The KLASS fallbacks are internal only. annotation_infotypes
+## belongs to tidybrregpanel.
+save(field_dict, file = "data/field_dict.rda", compress = "xz")
 save(legal_forms, file = "data/legal_forms.rda", compress = "xz")
 save(role_types, file = "data/role_types.rda", compress = "xz")
 save(role_groups, file = "data/role_groups.rda", compress = "xz")
-save(field_dict, file = "data/field_dict.rda", compress = "xz")
-save(annotation_infotypes, file = "data/annotation_infotypes.rda", compress = "xz")
+save(regnskap_dict, file = "data/regnskap_dict.rda", compress = "xz")
+save(regnskap_groups, file = "data/regnskap_groups.rda", compress = "xz")
+save(regnskap_items, file = "data/regnskap_items.rda", compress = "xz")
+save(annotation_infotypes, file = "tidybrregpanel/data/annotation_infotypes.rda", compress = "xz")
+save(field_dict, legal_forms, role_types, role_groups, nace_codes, sector_codes,
+     regnskap_dict, regnskap_groups, regnskap_items,
+     file = "R/sysdata.rda", compress = "xz")
+cat("Saved sysdata.rda:",
+    round(file.size("R/sysdata.rda") / 1024, 1), "KB\n")
+cat("Record the run date in man/tidybrreg_provenance.Rd (R/tidybrreg-package.R)\n")
 
 cat("\nExported datasets:\n")
 cat("  legal_forms:", nrow(legal_forms), "x", ncol(legal_forms), "\n")
 cat("  role_types:", nrow(role_types), "x", ncol(role_types), "\n")
 cat("  role_groups:", nrow(role_groups), "x", ncol(role_groups), "\n")
 cat("  field_dict:", nrow(field_dict), "x", ncol(field_dict), "\n")
+cat("  regnskap_dict:", nrow(regnskap_dict), "x", ncol(regnskap_dict), "\n")
+cat("  regnskap_groups:", nrow(regnskap_groups), "x", ncol(regnskap_groups), "\n")
+cat("  regnskap_items:", nrow(regnskap_items), "x", ncol(regnskap_items), "\n")
 cat("  nace_codes:", nrow(nace_codes), "x", ncol(nace_codes), "\n")
 cat("  sector_codes:", nrow(sector_codes), "x", ncol(sector_codes), "\n")

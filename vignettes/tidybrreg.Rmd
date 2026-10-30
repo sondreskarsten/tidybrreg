@@ -21,51 +21,55 @@ Register Centre at [data.brreg.no](https://data.brreg.no). The register
 contains approximately 1 million active entities — companies,
 partnerships, sole proprietorships, associations, and government bodies.
 
+The package is a thin, typed client: fifteen functions that each wrap
+one register endpoint and return a tibble with English column names.
+Persistence, synchronisation and panel construction live in the
+companion package tidybrregpanel.
+
 ## Installation
 
 ```{r}
-# Recommended
-# install.packages("pak")
-pak::pak("sondreskarsten/tidybrreg")
-
-# Or from r-universe (pre-built binaries)
+# From r-universe (pre-built binaries)
 install.packages("tidybrreg",
   repos = c("https://sondreskarsten.r-universe.dev",
             "https://cloud.r-project.org"))
-```
 
-For snapshot and panel features, also install a parquet backend:
-
-```{r}
-install.packages("nanoparquet")  # lightweight, read/write only
-# OR
-install.packages("arrow")       # full-featured, lazy queries
+# Or from GitHub
+pak::pak("sondreskarsten/tidybrreg")
 ```
 
 ## Look up a single entity
 
 Every Norwegian legal entity has a unique 9-digit organization number
 (organisasjonsnummer). Look up Equinor ASA:
- 
+
 ```{r}
 library(tidybrreg)
 
 brreg_entity("923609016")
-#> # A tibble: 1 × 65
+#> # A tibble: 1 × 63
 #>   org_nr    name        legal_form founding_date employees nace_1
 #>   <chr>     <chr>       <chr>      <date>            <int> <chr>
 #> 1 923609016 EQUINOR ASA ASA        1972-09-18        21408 06.100
 ```
 
 The result is a tibble with English column names mapped from the
-Norwegian API via the package's `field_dict`. All 49 dictionary-mapped
-columns are present in every output, filled with typed `NA` when the
-API omits a field.
+Norwegian API via the package's `field_dict`. Only the fields the
+register emitted for that entity are present: a sole proprietorship
+carries no `employees` or `founding_date`, a foreign branch no
+`municipality_code`. Test for a column with `%in% names()` rather than
+assuming it. Two columns are always present: `registry` (which
+registry answered) and `deleted`.
+
+A deleted entity is returned, not hidden. Both of the register's
+signals (HTTP 410, and HTTP 200 with `respons_klasse = "SlettetEnhet"`)
+yield `deleted = TRUE`, a parsed `deletion_date`, the remaining
+observed fields, and a `tidybrreg_warning_deleted`.
 
 ## Translate codes to labels
 
 By default, functions return raw codes (`ASA`, `06.100`). Two ways
-to get English labels:
+to get labels:
 
 ```{r}
 # Option 1: inline via type = "label"
@@ -78,10 +82,17 @@ brreg_entity("923609016") |>
 #> legal_form_code = "ASA"  (original code preserved)
 #> nace_1          = "Extraction of crude petroleum"
 #> nace_1_code     = "06.100"
+
+# Norwegian labels
+brreg_label(c("AS", "ENK"), dic = "legal_form", lang = "no")
 ```
 
 The `code =` argument keeps the original code in a `_code` suffixed
 column alongside the label — following the eurostat package's pattern.
+Legal-form and role labels are bundled; NACE and sector labels come
+from the SSB KLASS API on first use and are cached for the session. Set
+`options(tidybrreg.offline = TRUE)` to stay on the bundled English
+dictionaries; see `?get_brreg_dic`.
 
 ## Search for entities
 
@@ -98,9 +109,14 @@ brreg_search(
 )
 ```
 
-Search results are paginated automatically up to `max_results` or the
-API's 10,000-result ceiling. For larger extractions, use
-`brreg_download()`.
+Search results are paginated automatically up to `max_results`. The
+register's search window is 10,000 results: when a query matches more
+than that and you ask for more than the window, the call aborts with a
+`tidybrreg_error_result_window` instead of returning a partial
+population. When fewer rows are returned than matched, the result
+carries `attr(x, "complete") == FALSE` and `attr(x, "total_matches")`
+and a `tidybrreg_warning_truncated` is signalled. For larger
+extractions, use `brreg_download()`.
 
 ### Sub-entities (establishments)
 
@@ -109,29 +125,52 @@ offices, plants, and establishments linked to a parent entity:
 
 ```{r}
 brreg_search(name = "Equinor", registry = "underenheter", max_results = 5)
+brreg_underenheter("923609016")
 ```
 
-## Retrieve roles
+## Retrieve roles, groups and signing authority
 
 Board members, officers, and auditors for any entity:
 
 ```{r}
 roles <- brreg_roles("923609016")
 roles
-#> # A tibble: 25 × 14
+#> # A tibble: 25 × 17
 #>   org_nr    role_group        role              first_name last_name birth_date
 #>   <chr>     <chr>             <chr>             <chr>      <chr>     <date>
 #> 1 923609016 Board of Directors Chair of the Board Jon Erik   Reinhardsen 1960-07-14
 #> 2 923609016 Board of Directors Board member      ...
+
+# Roles Equinor holds in other entities
+brreg_roles_legal("923609016")
+
+# The corporate group tree
+brreg_konsern("923609016")
+
+# Who may sign for the entity, and procuration holders
+brreg_signatur("923609016")
+brreg_prokura("923609016")
 ```
 
-Derive board-level summary covariates:
+These per-entity endpoints share one status contract (see
+`?brreg_roles`): HTTP 404 returns the typed zero-row tibble with
+attribute `http_status = 404L` and no warning (the ordinary case for a
+company that is in no group), HTTP 410 warns about deletion, and any
+other failure is a `tidybrreg_error_http`.
+
+## Follow changes
+
+The change data capture feeds report what changed since an instant:
 
 ```{r}
-brreg_board_summary(roles)
-#> # A tibble: 1 × 10
-#>   org_nr    board_size n_chair n_members has_ceo has_auditor auditor_org_nr
+brreg_updates(since = "2026-03-01T00:00:00Z", size = 1000, max_pages = 10)
+brreg_update_fields(since = Sys.Date() - 1, size = 500)
+brreg_updates(type = "roller", since = Sys.Date() - 1)
 ```
+
+`since` is sent as a UTC instant and timestamps come back as UTC
+`POSIXct`. The result carries `complete`, `pages_fetched` and `cursor`
+attributes; pass `cursor + 1` to resume.
 
 ## Bulk download the full register
 
@@ -149,11 +188,28 @@ sub_entities <- brreg_download(type = "underenheter")
 
 # All roles for all entities: ~131 MB JSON
 all_roles <- brreg_download(type = "roller")
+
+# Only the file
+path <- brreg_download(type_output = "path")
 ```
 
 Downloads are cached in `tools::R_user_dir("tidybrreg", "cache")`.
 Use `refresh = TRUE` to force re-download, or `refresh = "auto"` to
-re-download only when the server has a newer version (ETag-based).
+re-download only when the server's validators (ETag, Last-Modified)
+differ from the cached copy's.
+
+## Conditions
+
+Every error and warning the package raises has a class you can catch
+or silence selectively; see `?tidybrreg_conditions`.
+
+```{r}
+tryCatch(
+  brreg_search(municipality_code = "4601", max_results = 20000),
+  tidybrreg_error_result_window = function(e) e$total_matches
+)
+suppressWarnings(brreg_konsern("923609016"), classes = "tidybrreg_warning_deleted")
+```
 
 ## Function → API endpoint mapping
 
@@ -163,16 +219,20 @@ re-download only when the server has a newer version (ETag-based).
 | `brreg_entity(org_nr, registry = "underenheter")` | `/underenheter/{orgnr}` | 1-row tibble |
 | `brreg_search(...)` | `/enheter?...` | N-row tibble |
 | `brreg_search(..., registry = "underenheter")` | `/underenheter?...` | N-row tibble |
+| `brreg_underenheter(org_nr)`, `brreg_children(org_nr)` | `/underenheter?overordnetEnhet=`, `/enheter?overordnetEnhet=` | N-row tibble |
 | `brreg_roles(org_nr)` | `/enheter/{orgnr}/roller` | N-row tibble |
 | `brreg_roles_legal(org_nr)` | `/roller/enheter/{orgnr}/juridiskeroller` | N-row tibble |
+| `brreg_konsern(org_nr)` | `/konsernstruktur/{orgnr}` | N-row tibble |
+| `brreg_signatur(org_nr)`, `brreg_prokura(org_nr)` | `fullmakt/enheter/{orgnr}/signatur`, `.../prokura` | N-row tibble |
 | `brreg_download("enheter")` | `/enheter/lastned/csv` | Full register tibble |
 | `brreg_download("enheter", format = "json")` | `/enheter/lastned` | Full register tibble |
 | `brreg_download("roller")` | `/roller/totalbestand` | Full roles tibble |
-| `brreg_updates(type = "enheter")` | `/oppdateringer/enheter` | Change events tibble |
+| `brreg_updates(type = "enheter")`, `brreg_update_fields()` | `/oppdateringer/enheter` | Change events tibble |
 | `brreg_updates(type = "roller")` | `/oppdateringer/roller` | Change events tibble |
+| `get_brreg_dic("nace")` | SSB KLASS `classifications/6/codesAt` | Dictionary tibble |
 
 ## Next steps
 
 - `vignette("business-data")` — Norwegian legal forms, NACE codes, and data quirks
-- `vignette("panels")` — Building firm-period panels and time series from snapshots
-- `vignette("governance")` — Board networks and survival analysis
+- The tidybrregpanel package — snapshots, synchronisation, panels, flows, networks
+- The tidybrregmcp package — the same fifteen functions as Model Context Protocol tools

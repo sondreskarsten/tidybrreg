@@ -2,13 +2,23 @@
 % Please edit documentation in R/parse.R
 \name{rename_from_dict}
 \alias{rename_from_dict}
-\title{Rename fields using field_dict; pass through unmapped fields
-All dict columns appear in output; absent fields become typed NA.}
+\title{Rename fields using field_dict; pass through unmapped fields}
 \usage{
-rename_from_dict(flat)
+rename_from_dict(flat, dict = field_dict)
+}
+\arguments{
+\item{flat}{A flat named list from \code{\link[=flatten_json]{flatten_json()}}.}
+
+\item{dict}{The field map to apply: \link{field_dict} (default) or
+\code{regnskap_dict}.}
 }
 \description{
-Rename fields using field_dict; pass through unmapped fields
-All dict columns appear in output; absent fields become typed NA.
+Only observed fields are emitted. A dictionary target that two
+distinct observed paths map to (the dictionary carries both the JSON
+and CSV spellings of a few fields) is filled from the first path in
+dictionary order; the second path falls back to its auto-generated
+snake_case name, keeping its dictionary type, so no observed value is
+lost. Unmapped paths whose snake_case names collide are made unique
+with a numeric suffix.
 }
 \keyword{internal}

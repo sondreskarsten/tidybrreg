@@ -1,0 +1,8 @@
+#!/usr/bin/env Rscript
+# Launch the tidybrreg MCP server.
+#   tidybrreg-mcp            stdio transport (for desktop MCP clients)
+#   tidybrreg-mcp http 8080  streamable HTTP on the given port
+args <- commandArgs(trailingOnly = TRUE)
+transport <- if (length(args) >= 1) args[1] else "stdio"
+port <- if (length(args) >= 2) as.integer(args[2]) else as.integer(Sys.getenv("PORT", "8080"))
+tidybrregmcp::mcp_serve(transport, port = port)

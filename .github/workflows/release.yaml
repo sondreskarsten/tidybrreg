@@ -1,0 +1,94 @@
+# Release: when a v* tag is pushed (or on manual dispatch), build the Node
+# MCP server from the tagged commit with a manifest regenerated from that
+# commit's tidybrreg, publish it to npm, and attach the tarball, the
+# manifest and the three R source packages to a GitHub Release. The MCP
+# release therefore always carries the tidybrreg it was generated from.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      publish_npm:
+        description: 'Publish tidybrreg-mcp to npm (needs NPM_TOKEN secret)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Install the three packages from this commit
+        run: |
+          Rscript -e '
+            install.packages(c("pak", "remotes"))
+            pak::local_install(".", dependencies = TRUE)
+            remotes::install_deps("tidybrregmcp", dependencies = TRUE, upgrade = "never")
+            remotes::install_local("tidybrregmcp", upgrade = "never")
+            remotes::install_deps("tidybrregpanel", dependencies = NA, upgrade = "never")
+            remotes::install_local("tidybrregpanel", upgrade = "never")'
+        shell: bash
+
+      - name: Versions must agree
+        run: |
+          v=$(awk -F': ' '/^Version:/{print $2}' DESCRIPTION)
+          n=$(node -p "require('./tidybrreg-mcp-node/package.json').version")
+          echo "tidybrreg $v / tidybrreg-mcp $n / ref ${GITHUB_REF_NAME}"
+          test "$v" = "$n"
+          case "${GITHUB_REF_NAME}" in v*) test "v$v" = "${GITHUB_REF_NAME}" ;; esac
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Regenerate the manifest from this commit and verify it is committed
+        working-directory: tidybrreg-mcp-node
+        run: |
+          npm ci
+          npm run check:manifest
+          npm run build
+          npm test
+
+      - name: Build R source packages
+        run: |
+          R CMD build --no-build-vignettes .
+          R CMD build --no-build-vignettes tidybrregpanel
+          R CMD build --no-build-vignettes tidybrregmcp
+          mkdir -p release && mv tidybrreg_*.tar.gz tidybrregpanel_*.tar.gz tidybrregmcp_*.tar.gz release/
+
+      - name: Pack the npm tarball
+        working-directory: tidybrreg-mcp-node
+        run: |
+          npm pack --pack-destination ../release
+          cp manifest.json ../release/tidybrreg-mcp-manifest.json
+
+      - name: Publish to npm
+        if: ${{ (github.event_name == 'push' || inputs.publish_npm) && env.NODE_AUTH_TOKEN != '' }}
+        working-directory: tidybrreg-mcp-node
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --provenance
+
+      - name: Create the GitHub release
+        if: ${{ github.event_name == 'push' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+          generate_release_notes: true
+          body: |
+            tidybrreg ${{ github.ref_name }}: the R packages (tidybrreg, tidybrregpanel, tidybrregmcp) and the Node MCP server `tidybrreg-mcp`, all built from this commit.
+
+            Run the MCP server without R: `npx tidybrreg-mcp` (stdio) or `npx tidybrreg-mcp --http 8080`.

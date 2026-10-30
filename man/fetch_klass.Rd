@@ -2,7 +2,7 @@
 % Please edit documentation in R/label.R
 \name{fetch_klass}
 \alias{fetch_klass}
-\title{Fetch English classification labels from SSB Klass API}
+\title{Fetch classification labels from SSB Klass API}
 \usage{
 fetch_klass(classification_id, lang = "en", date = Sys.Date())
 }
@@ -10,14 +10,15 @@ fetch_klass(classification_id, lang = "en", date = Sys.Date())
 \item{classification_id}{Integer. SSB Klass classification ID
 (6 = SN2007/NACE, 39 = institutional sector).}
 
-\item{lang}{Language code: \code{"en"} or \code{"no"}.}
+\item{lang}{Language code: \code{"en"} or \code{"no"}. KLASS names its
+languages \code{en}, \code{nb} and \code{nn}; \code{"no"} is sent as \code{nb} (Bokmål).}
 
 \item{date}{Date for which codes are valid.}
 }
 \value{
-A tibble with columns \code{code}, \code{name_en}, \code{level}.
+A tibble with columns \code{code}, \code{name}, \code{level}.
 }
 \description{
-Fetch English classification labels from SSB Klass API
+Fetch classification labels from SSB Klass API
 }
 \keyword{internal}

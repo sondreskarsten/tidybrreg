@@ -11,14 +11,14 @@ brreg_validate(org_nr)
 }
 \value{
 Logical vector the same length as \code{org_nr}. \code{TRUE} for valid
-numbers, \code{FALSE} otherwise.
+numbers, \code{FALSE} otherwise (including \code{NA} input).
 }
 \description{
 Check whether organization numbers (organisasjonsnummer) pass the
 modulus-11 check digit algorithm used by Norway's Central Coordinating
 Register for Legal Entities. Valid numbers are exactly 9 digits, start
-with 8 or 9, and have a correct check digit computed with weights
-\verb{3, 2, 7, 6, 5, 4, 3, 2}.
+with 8 or 9 (the series the register allocates from), and have a
+correct check digit computed with weights \verb{3, 2, 7, 6, 5, 4, 3, 2}.
 }
 \examples{
 brreg_validate(c("923609016", "984851006", "123456789", "999999999"))
@@ -26,8 +26,10 @@ brreg_validate(c("923609016", "984851006", "123456789", "999999999"))
 \seealso{
 \code{\link[=brreg_entity]{brreg_entity()}} which validates before querying the API.
 
-Other tidybrreg utilities:
-\code{\link[=brreg_label]{brreg_label()}},
-\code{\link[=get_brreg_dic]{get_brreg_dic()}}
+Other tidybrreg utilities: 
+\code{\link{brreg_label}()},
+\code{\link{get_brreg_dic}()},
+\code{\link{tidybrreg_conditions}},
+\code{\link{tidybrreg_endpoints}}
 }
 \concept{tidybrreg utilities}

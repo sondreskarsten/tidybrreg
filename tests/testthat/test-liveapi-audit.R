@@ -57,7 +57,9 @@ test_that("brreg_entity: Norges Bank ground truth", {
  expect_match(nb$name, "NORGES BANK", fixed = TRUE)
  expect_equal(nb$municipality_code, "0301")
  expect_equal(nb$bankrupt, FALSE)
- expect_s3_class(nb$founding_date, "Date")
+ # Only observed fields are emitted; a public body may carry no stiftelsesdato
+ if ("founding_date" %in% names(nb)) expect_s3_class(nb$founding_date, "Date")
+ expect_false(nb$deleted)
 })
 
 test_that("brreg_entity: Stortinget ground truth", {
@@ -65,7 +67,8 @@ test_that("brreg_entity: Stortinget ground truth", {
  st <- safely(brreg_entity("971524960"))
  expect_equal(st$org_nr, "971524960")
  expect_match(st$name, "STORTINGET", fixed = TRUE)
- expect_equal(st$legal_form, "ORGL")
+ # Registered as ORGL until 2026; now STAT
+ expect_true(st$legal_form %in% c("ORGL", "STAT"))
  expect_equal(st$municipality_code, "0301")
 })
 
@@ -99,8 +102,12 @@ test_that("brreg_entity: registry=enheter forces main entity lookup", {
 test_that("brreg_entity: zero-drop policy — unknown API fields pass through", {
  skip_if_no_api()
  eq <- safely(brreg_entity("923609016"))
- # Should have more columns than field_dict rows (extra API fields as snake_case)
- expect_gt(ncol(eq), nrow(field_dict))
+ # Only observed fields are emitted, so the column count is below the
+ # dictionary size; unknown API fields still pass through as snake_case.
+ extra <- setdiff(names(eq), c(field_dict$col_name, "registry", "deleted"))
+ expect_gt(length(extra), 0)
+ expect_true(all(grepl("^[a-z0-9_]+$", extra)))
+ expect_false(any(grepl("links", names(eq))))
 })
 
 test_that("brreg_entity: validates org_nr format before API call", {
@@ -124,7 +131,8 @@ test_that("brreg_entity: all field_dict types are correctly coerced", {
  expect_true(is.integer(eq$employees))
  # Logical columns
  expect_true(is.logical(eq$bankrupt))
- expect_true(is.logical(eq$under_liquidation))
+ expect_true(is.logical(eq$in_liquidation))
+ expect_true(is.logical(eq$deleted))
  # Character columns
  expect_true(is.character(eq$org_nr))
  expect_true(is.character(eq$name))
@@ -261,6 +269,119 @@ test_that("brreg_children: children are enheter not underenheter", {
 })
 
 # ============================================================================
+# Section 3b: Annual accounts (Regnskapsregisteret) — Expected vs Observed
+# ============================================================================
+
+test_that("brreg_regnskap: Equinor files SELSKAP and KONSERN accounts", {
+ skip_if_no_api()
+ acc <- safely(brreg_regnskap("923609016"))
+ expect_s3_class(acc, "tbl_df")
+ expect_gt(nrow(acc), 0)
+ expect_true(all(acc$org_nr == "923609016"))
+ expect_true(all(acc$account_type %in% c("SELSKAP", "KONSERN")))
+ expect_s3_class(acc$period_end, "Date")
+ expect_false(any(is.na(acc$period_end)))
+ # Equinor reports in USD; the register serves the filed currency as filed
+ expect_true(all(grepl("^[A-Z]{3}$", acc$currency)))
+ expect_type(acc$filing_id, "integer")
+ expect_false(any(duplicated(acc$filing_id)))
+ items <- dplyr::bind_rows(acc$items)
+ expect_true(all(c("total_assets", "total_equity", "operating_revenue", "net_income") %in% items$item))
+ expect_true(all(items$value[items$item == "total_assets"] > 0))
+ expect_true(all(items$statement %in% c("assets", "equity_liabilities", "income_statement")))
+ expect_type(acc$consistent, "logical")
+ # since 2026-10-01: at most three fiscal years per type
+ expect_true(all(table(acc$account_type) <= 3))
+ # a field the maps do not know must still arrive, never be dropped
+ unmapped <- setdiff(names(acc), c(tidybrreg:::regnskap_dict$col_name, "items", "consistent", "inconsistencies"))
+ expect_true(all(grepl("^[a-z0-9_]+$", unmapped)))
+ expect_true(all(grepl("^[a-z0-9_]+$", items$item)))
+})
+
+test_that("brreg_regnskap: an explicit year and type narrow the response", {
+ skip_if_no_api()
+ all_acc <- safely(brreg_regnskap("923609016"))
+ skip_if(nrow(all_acc) == 0, "no filings served")
+ yr <- max(as.integer(format(all_acc$period_end, "%Y")))
+ one <- safely(brreg_regnskap("923609016", year = yr, account_type = "SELSKAP"))
+ expect_true(all(one$account_type == "SELSKAP"))
+ expect_true(all(format(one$period_end, "%Y") == yr))
+ expect_lte(nrow(one), nrow(all_acc))
+})
+
+test_that("brreg_regnskap: a bank answers with an unsupported plan or filings, never an error", {
+ skip_if_no_api()
+ w <- NULL
+ acc <- withCallingHandlers(
+   safely(brreg_regnskap("984851006")),
+   tidybrreg_warning_unsupported_plan = function(cnd) { w <<- cnd; invokeRestart("muffleWarning") }
+ )
+ expect_s3_class(acc, "tbl_df")
+ if (!is.null(w)) {
+   expect_equal(nrow(acc), 0L)
+   expect_equal(attr(acc, "http_status"), 500L)
+   expect_equal(attr(acc, "unsupported_plan"), w$plan)
+   expect_match(w$plan, "^[A-Z]+$")
+ } else {
+   expect_gt(nrow(acc), 0)
+ }
+})
+
+test_that("brreg_regnskap: unknown number is the typed empty with http_status 404", {
+ skip_if_no_api()
+ acc <- safely(brreg_regnskap("999999999"))
+ expect_equal(nrow(acc), 0L)
+ expect_equal(attr(acc, "http_status"), 404L)
+ expect_named(acc, names(tidybrreg:::empty_regnskap()))
+})
+
+# ============================================================================
+# Section 3c: Probes for the stress-test rig's open findings
+# ============================================================================
+
+test_that("brreg_search: the register's privacy rule on employee ranges is reported, not swallowed (rig S-13)", {
+ skip_if_no_api()
+ err <- tryCatch(brreg_search(min_employees = 1, max_employees = 2, max_results = 20),
+                 tidybrreg_error_http = function(e) e)
+ expect_s3_class(err, "tidybrreg_error_http")
+ expect_equal(err$status, 400L)
+ expect_true(any(grepl("personvern", err$messages)), label = paste(err$messages, collapse = " | "))
+ res <- safely(brreg_search(min_employees = 5, max_employees = 10, max_results = 20))
+ expect_s3_class(res, "tbl_df")
+ expect_gt(nrow(res), 0)
+ expect_true(all(res$employees >= 5 & res$employees <= 10, na.rm = TRUE))
+})
+
+test_that("brreg_signatur: Equinor's rule is either resolved to rows or reported as unresolved (rig SG-01)", {
+ skip_if_no_api()
+ w <- NULL
+ sg <- withCallingHandlers(safely(brreg_signatur("923609016")),
+                           tidybrreg_warning_unresolved = function(cnd) { w <<- cnd; invokeRestart("muffleWarning") })
+ expect_s3_class(sg, "tbl_df")
+ if (nrow(sg) == 0) {
+   expect_s3_class(w, "tidybrreg_warning_unresolved")
+   expect_equal(attr(sg, "http_status"), 200L)
+   expect_type(attr(sg, "routine_status"), "character")
+ } else {
+   expect_null(w)
+   expect_false(any(is.na(sg$combination_id)))
+ }
+ pk <- suppressWarnings(safely(brreg_prokura("923609016")), classes = "tidybrreg_warning_unresolved")
+ expect_s3_class(pk, "tbl_df")
+})
+
+test_that("get_brreg_dic: Norwegian NACE labels come from KLASS (rig L-27)", {
+ skip_if_no_api()
+ d <- safely(get_brreg_dic("nace", lang = "no", source = "klass", refresh = TRUE))
+ expect_equal(attr(d, "source"), "klass")
+ expect_equal(attr(d, "lang"), "no")
+ expect_gt(nrow(d), 100)
+ expect_true(any(grepl("[\u00e6\u00f8\u00e5]", d$name)))
+ e <- safely(get_brreg_dic("nace", lang = "en", source = "klass", refresh = TRUE))
+ expect_false(identical(d$name, e$name))
+})
+
+# ============================================================================
 # Section 4: Roles & Governance — Expected vs Observed
 # ============================================================================
 
@@ -316,20 +437,6 @@ test_that("brreg_roles: entity-held roles (auditor firm)", {
  expect_true(all(grepl("^\\d{9}$", entity_roles$entity_org_nr)))
 })
 
-test_that("brreg_board_summary: Equinor expected board structure", {
- skip_if_no_api()
- roles <- safely(brreg_roles("923609016"))
- bs <- brreg_board_summary(roles)
- expect_equal(nrow(bs), 1)
- # Equinor is a major ASA — board must have at least 5 members
- expect_gt(bs$board_size, 5L)
- expect_true(bs$has_ceo)
- expect_true(bs$has_auditor)
- expect_true(is.integer(bs$board_size))
- expect_true(is.logical(bs$has_ceo))
- expect_true(is.logical(bs$has_auditor))
-})
-
 test_that("brreg_roles_legal: Equinor holds roles in subsidiaries", {
  skip_if_no_api()
  legal <- safely(brreg_roles_legal("923609016"))
@@ -341,61 +448,6 @@ test_that("brreg_roles_legal: Equinor holds roles in subsidiaries", {
    # org_nr should be the seed entity
    expect_true(all(legal$org_nr == "923609016"))
  }
-})
-
-test_that("brreg_board_network: bipartite graph from live data", {
- skip_if_no_api()
- skip_if_not_installed("tidygraph")
-
- roles <- safely(brreg_roles("923609016"))
- net <- brreg_board_network(roles_data = roles)
- expect_s3_class(net, "tbl_graph")
-
- nodes <- tidygraph::as_tibble(net, "nodes")
- edges <- tidygraph::as_tibble(net, "edges")
-
- # Must have both entity and person nodes
- expect_true("entity" %in% nodes$node_type)
- expect_true("person" %in% nodes$node_type)
- # No NA node names
- expect_true(all(!is.na(nodes$name)))
- # Edges should exist
- expect_gt(nrow(edges), 0)
-})
-
-test_that("brreg_network: depth=0 returns seed-only graph", {
- skip_if_no_api()
- skip_if_not_installed("tidygraph")
-
- net <- safely(brreg_network("923609016", depth = 0))
- expect_s3_class(net, "tbl_graph")
-
- nodes <- tidygraph::as_tibble(net, "nodes")
- expect_equal(nrow(nodes), 1)
- expect_equal(nodes$org_nr, "923609016")
- expect_match(nodes$name, "EQUINOR", fixed = TRUE)
-})
-
-test_that("brreg_network: depth=1 expands to ego network", {
- skip_if_no_api()
- skip_if_not_installed("tidygraph")
-
- net <- safely(brreg_network("923609016", depth = 1))
- expect_s3_class(net, "tbl_graph")
-
- nodes <- tidygraph::as_tibble(net, "nodes")
- edges <- tidygraph::as_tibble(net, "edges")
-
- # Should have multiple node types
- expect_true(length(unique(nodes$node_type)) > 1)
- # Should include person nodes from roles
- expect_true("person" %in% nodes$node_type)
- # Should include edges
- expect_gt(nrow(edges), 0)
- # Edge types should include role and structural relationships
- expect_true(any(edges$edge_type == "role"))
- # Node count should be substantial for a major company
- expect_gt(nrow(nodes), 10)
 })
 
 # ============================================================================
@@ -476,11 +528,12 @@ test_that("get_brreg_dic: NACE dictionary has expected content", {
  d <- safely(get_brreg_dic("nace"))
  expect_s3_class(d, "tbl_df")
  expect_gt(nrow(d), 1500)
- expect_true(all(c("code", "name_en", "level") %in% names(d)))
+ expect_true(all(c("code", "name", "level") %in% names(d)))
+ expect_equal(attr(d, "source"), "klass")
  # Ground truth: code 06.100 is oil extraction
  row_06100 <- d[d$code == "06.100", ]
  expect_equal(nrow(row_06100), 1)
- expect_match(row_06100$name_en, "petroleum|oil|crude", ignore.case = TRUE)
+ expect_match(row_06100$name, "petroleum|oil|crude", ignore.case = TRUE)
 })
 
 test_that("get_brreg_dic: sector dictionary has expected content", {
@@ -488,7 +541,7 @@ test_that("get_brreg_dic: sector dictionary has expected content", {
  d <- safely(get_brreg_dic("sector"))
  expect_s3_class(d, "tbl_df")
  expect_gt(nrow(d), 10)
- expect_true(all(c("code", "name_en") %in% names(d)))
+ expect_true(all(c("code", "name") %in% names(d)))
 })
 
 test_that("get_brreg_dic: caching returns identical object", {
@@ -545,43 +598,6 @@ test_that("brreg_label: NACE label for known codes", {
 # Section 7: Harmonization (SSB KLASS API)
 # ============================================================================
 
-test_that("brreg_harmonize_kommune: remaps old municipality codes", {
- skip_if_no_api()
- skip_if_not_installed("klassR")
-
- df <- tibble::tibble(municipality_code = c("0301", "1103"))
- result <- tryCatch(
-   brreg_harmonize_kommune(df),
-   error = function(e) {
-     skip(paste("SSB KLASS unavailable:", conditionMessage(e)))
-   }
- )
-
- expect_true("municipality_code_harmonized" %in% names(result))
- expect_true("municipality_code_target_name" %in% names(result))
- # Oslo (0301) should map to itself or its current code
- expect_true(!is.na(result$municipality_code_harmonized[1]))
-})
-
-test_that("brreg_harmonize_nace: SN2007 to SN2025 mapping", {
- skip_if_no_api()
- skip_if_not_installed("klassR")
-
- df <- tibble::tibble(nace_1 = c("06.100", "64.190", "62.010"))
- result <- tryCatch(
-   brreg_harmonize_nace(df, from = "SN2007", to = "SN2025"),
-   error = function(e) {
-     skip(paste("SSB KLASS unavailable:", conditionMessage(e)))
-   }
- )
-
- expect_true("nace_1_harmonized" %in% names(result))
- expect_true("nace_1_ambiguous" %in% names(result))
- expect_type(result$nace_1_ambiguous, "logical")
- # Harmonized codes should be non-empty strings
- expect_true(all(nchar(result$nace_1_harmonized) > 0))
-})
-
 # ============================================================================
 # Section 8: Cross-Function Consistency
 # ============================================================================
@@ -598,28 +614,6 @@ test_that("entity and search return consistent data for Equinor", {
    expect_equal(eq$nace_1, match_row$nace_1)
    expect_equal(eq$municipality_code, match_row$municipality_code)
  }
-})
-
-test_that("roles vs board_summary: CEO presence consistent", {
- skip_if_no_api()
- roles <- safely(brreg_roles("923609016"))
- bs <- brreg_board_summary(roles)
- # board_summary says has_ceo; verify DAGL role actually exists
- expect_true(bs$has_ceo)
- expect_true(any(roles$role_group_code == "DAGL"))
- # board_summary says has_auditor; verify REVI role actually exists
- expect_true(bs$has_auditor)
- expect_true(any(roles$role_group_code == "REVI"))
-})
-
-test_that("survival_data: entry_date matches entity founding_date", {
- skip_if_no_api()
- eq <- safely(brreg_entity("923609016"))
- surv <- brreg_survival_data(eq)
- expect_equal(surv$entry_date, eq$founding_date)
- # Equinor is not bankrupt/dissolved, so event should be 0 (right-censored)
- expect_equal(surv$event, 0L)
- expect_true(surv$duration_years > 50)  # Founded in 1972
 })
 
 test_that("underenheter count matches search count", {
@@ -647,9 +641,11 @@ test_that("field_dict: complete and internally consistent", {
 test_that("field_dict: covers live API response", {
  skip_if_no_api()
  eq <- safely(brreg_entity("923609016"))
- # At least 70% of dict columns should be present for a major entity
- present <- sum(field_dict$col_name %in% names(eq))
- expect_gt(present / nrow(field_dict), 0.7)
+ # The dictionary should name nearly every field the register emits for a
+ # major entity; the register emits only the fields that apply, so the
+ # converse (dictionary rows present) is not a contract.
+ covered <- mean(setdiff(names(eq), c("registry", "deleted")) %in% field_dict$col_name)
+ expect_gt(covered, 0.8)
 })
 
 test_that("legal_forms: has expected codes", {
@@ -707,13 +703,31 @@ test_that("brreg_download: validates type_output argument", {
  expect_error(brreg_download(type_output = "invalid"), "should be one of")
 })
 
-test_that("brreg_status: returns correct structure", {
- status <- brreg_status(quiet = TRUE)
- expect_type(status, "list")
- expect_true(all(c("available", "missing", "all_ready") %in% names(status)))
- expect_type(status$all_ready, "logical")
- expect_type(status$available, "character")
- expect_type(status$missing, "character")
+# ============================================================================
+# Section 11b: Result window boundary (evidence for ?tidybrreg_endpoints)
+# ============================================================================
+
+test_that("search window: size * (page + 1) <= 10,000 is the exact boundary", {
+  skip_if_no_api()
+  probe <- function(registry, size, page) {
+    resp <- safely(tidybrreg:::brreg_perform(
+      tidybrreg:::brreg_req(registry, query = list(size = size, page = page))))
+    httr2::resp_status(resp)
+  }
+  for (registry in c("enheter", "underenheter")) {
+    expect_equal(probe(registry, 100L, 99L), 200L)
+    expect_equal(probe(registry, 100L, 100L), 400L)
+    expect_equal(probe(registry, 10000L, 0L), 200L)
+    expect_equal(probe(registry, 10000L, 1L), 400L)
+  }
+})
+
+test_that("search aborts before returning a partial population over the window", {
+  skip_if_no_api()
+  e <- tryCatch(brreg_search(municipality_code = "4601", max_results = 20000),
+                error = function(e) e)
+  expect_s3_class(e, "tidybrreg_error_result_window")
+  expect_gt(e$total_matches, 10000L)
 })
 
 # ============================================================================
@@ -740,14 +754,15 @@ test_that("rapid sequential requests succeed (rate limiting works)", {
 
 test_that("parse_entity handles ENK with minimal fields", {
  skip_if_no_api()
- s <- safely(brreg_search(legal_form = "ENK", max_results = 1))
+ s <- safely(suppressWarnings(brreg_search(legal_form = "ENK", max_results = 1),
+                              classes = "tidybrreg_warning_truncated"))
  if (nrow(s) > 0) {
    enk <- safely(brreg_entity(s$org_nr[1]))
    expect_s3_class(enk, "tbl_df")
    expect_equal(nrow(enk), 1)
    expect_equal(enk$legal_form, "ENK")
-   # ENK may have NA for employees — that's expected
-   expect_true(is.integer(enk$employees) || is.na(enk$employees))
+   # ENK typically carries no antallAnsatte: the column is then absent, not NA
+   expect_true(!"employees" %in% names(enk) || is.integer(enk$employees))
  }
 })
 

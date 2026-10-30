@@ -12,19 +12,23 @@ parse_bulk_json(path, type = "enheter")
 \item{type}{Entity type (for column context).}
 }
 \value{
-A tibble with atomic columns only, mapped via \link{field_dict}.
+A tibble mapped via \link{field_dict}; arrays of objects are
+nested list-columns, everything else atomic.
 }
 \description{
 The \verb{/enheter/lastned} and \verb{/underenheter/lastned} endpoints return
 gzipped JSON arrays with nested objects. \code{jsonlite::fromJSON(flatten = TRUE)}
 expands nested objects to dot-notation columns but leaves arrays as list
-columns. This function algorithmically flattens all list columns to
-atomic types:
+columns. This function gives every list column the tidy shape of the
+live path (\code{\link[=collapse_observed]{collapse_observed()}}):
 }
 \details{
 \itemize{
-\item Character vectors (addresses, activities): collapsed with separator
-\item Data frames (paategninger): serialized to JSON strings
+\item Character vectors (addresses, activities): line fragments of one
+value, joined with \code{"\\n"}
+\item Data frames (\code{paategninger}, \code{historiskeNavn}): kept as a
+list-column of tibbles, one row per element, \code{NULL} where the
+entity has none
 \item Empty lists (HAL links): dropped
 \item NULL elements: \code{NA_character_}
 }

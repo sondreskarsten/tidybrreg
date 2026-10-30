@@ -11,7 +11,7 @@ flatten_signatur(raw, org_nr, signature_type)
 
 \item{org_nr}{Organization number (passed through to output).}
 
-\item{signature_type}{\code{"signatur"} or \code{"prokura"}.}
+\item{signature_type}{\code{"signature"} or \code{"procuration"}.}
 }
 \description{
 Flatten a Fullmakt signature/procuration response to a tibble

@@ -2,39 +2,66 @@
 % Please edit documentation in R/label.R
 \name{brreg_label}
 \alias{brreg_label}
-\title{Translate codes to human-readable English labels}
+\title{Translate codes to human-readable labels}
 \usage{
-brreg_label(x, dic = NULL, code = NULL, lang = "en")
+brreg_label(x, dic = NULL, code = NULL, lang = c("en", "no"))
 }
 \arguments{
-\item{x}{A tibble from \code{\link[=brreg_entity]{brreg_entity()}}, \code{\link[=brreg_search]{brreg_search()}}, or
-\code{\link[=brreg_roles]{brreg_roles()}}, or a character vector of codes.}
+\item{x}{A tibble from \code{\link[=brreg_entity]{brreg_entity()}}, \code{\link[=brreg_search]{brreg_search()}},
+\code{\link[=brreg_roles]{brreg_roles()}} or \code{\link[=brreg_regnskap]{brreg_regnskap()}}, or a character vector of
+codes.}
 
 \item{dic}{A character string naming the dictionary to use when \code{x}
 is a character vector. One of \code{"legal_form"}, \code{"nace"},
-\code{"sector"}, \code{"role"}, \code{"role_group"}. Ignored when \code{x} is a
-data frame (dictionaries are inferred from column names).}
+\code{"sector"}, \code{"role"}, \code{"role_group"}, \code{"regnskap_item"},
+\code{"regnskap_group"}. Ignored when \code{x} is a data frame
+(dictionaries are inferred from column names).}
 
 \item{code}{For data frames: character vector of column names for
 which to retain the original code alongside the label. A column
-with suffix \verb{_code} is added. For example,
+with suffix \verb{_code} is added before the label column. For example,
 \code{brreg_label(x, code = "legal_form")} adds \code{legal_form_code}.}
 
-\item{lang}{Language for NACE and sector labels. \code{"en"} (default)
-or \code{"no"} (Norwegian original from brreg API).}
+\item{lang}{Language for labels: \code{"en"} (default) or \code{"no"}
+(Norwegian, as published by BRREG and SSB).}
 }
 \value{
 When \code{x} is a data frame: the same tibble with code columns
-replaced by English labels. When \code{x} is a character vector: a
-character vector of labels.
+replaced by labels. When \code{x} is a character vector: a character
+vector of labels, without names.
 }
 \description{
-Replace coded values in a brreg tibble with English descriptions,
-following the eurostat package's \code{label_eurostat()} pattern. Works on
-both data frames and character vectors.
+Replace coded values in a brreg tibble with English (or Norwegian)
+descriptions, following the eurostat package's \code{label_eurostat()}
+pattern. Works on both data frames and character vectors.
 }
+\section{Which columns are labelled}{
+
+\code{legal_form} (from \link{legal_forms}), \code{role_code} (from \link{role_types}),
+\code{role_group_code} (from \link{role_groups}), \code{nace_1}, \code{nace_2}, \code{nace_3}
+and \code{sector_code} (from the NACE and institutional-sector
+dictionaries of \code{\link[=get_brreg_dic]{get_brreg_dic()}}), and the accounts columns \code{item}
+(from \link{regnskap_items}), \code{group} and \code{statement} (from
+\link{regnskap_groups}), inside a nested \code{items} list-column as well as
+on an unnested table. Other columns are never touched.
+Codes with no dictionary entry pass through unchanged, and labels
+are not codes, so applying \code{brreg_label()} twice is the same as
+applying it once. Attributes of the input (such as
+\code{total_matches} from \code{\link[=brreg_search]{brreg_search()}}) are preserved.
+}
+
+\section{Network access}{
+
+Legal-form and role dictionaries are bundled and never need the
+network. NACE and sector dictionaries come from the SSB KLASS API on
+first use in a session and are cached for the session; when KLASS
+cannot be reached, or \code{options(tidybrreg.offline = TRUE)} is set, the
+bundled English dictionaries are used instead and the result carries
+their vintage. See \code{\link[=get_brreg_dic]{get_brreg_dic()}} for the full policy.
+}
+
 \examples{
-\dontshow{if (interactive() && curl::has_internet()) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive() && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 eq <- brreg_entity("923609016")
 
 # Label all code columns
@@ -45,14 +72,19 @@ brreg_label(eq, code = "legal_form")
 
 # Label a character vector directly
 brreg_label(c("AS", "ASA", "ENK"), dic = "legal_form")
+brreg_label(c("AS", "ASA", "ENK"), dic = "legal_form", lang = "no")
+brreg_label(c("total_assets", "net_income"), dic = "regnskap_item", lang = "no")
 \dontshow{\}) # examplesIf}
 }
 \seealso{
-\link{legal_forms}, \link{role_types}, \link{role_groups} for bundled
-reference data, \code{\link[=get_brreg_dic]{get_brreg_dic()}} for fetching fresh dictionaries.
+\link{legal_forms}, \link{role_types}, \link{role_groups},
+\link{regnskap_items}, \link{regnskap_groups} for bundled reference data,
+\code{\link[=get_brreg_dic]{get_brreg_dic()}} for fetching fresh dictionaries.
 
-Other tidybrreg utilities:
-\code{\link[=brreg_validate]{brreg_validate()}},
-\code{\link[=get_brreg_dic]{get_brreg_dic()}}
+Other tidybrreg utilities: 
+\code{\link{brreg_validate}()},
+\code{\link{get_brreg_dic}()},
+\code{\link{tidybrreg_conditions}},
+\code{\link{tidybrreg_endpoints}}
 }
 \concept{tidybrreg utilities}
