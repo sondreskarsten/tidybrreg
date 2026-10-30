@@ -56,6 +56,19 @@ read \code{rule_text} in that case. \code{rule_text} may be \code{NA} when no fr
 text is recorded.
 }
 
+\section{Rules the service declines to resolve}{
+
+For some entities (Equinor ASA among them) the service answers HTTP
+200 with no combinations and a routine status instead: code \code{NA},
+"Generelle unntak, finnes roller som har status det ikke kan foretas
+maskinelt oppslag mot", meaning a rule is registered but cannot be
+resolved mechanically. The typed zero-row tibble is then returned
+with attributes \code{http_status = 200L}, \code{routine_status} and
+\code{routine_text}, and a \code{tidybrreg_warning_unresolved} is signalled,
+so the case is distinguishable from an entity with nothing
+registered (no attribute, no warning).
+}
+
 \section{Status handling}{
 
 The per-entity endpoints behind \code{\link[=brreg_roles]{brreg_roles()}}, \code{\link[=brreg_roles_legal]{brreg_roles_legal()}},

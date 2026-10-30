@@ -179,6 +179,14 @@ describe("tools over a mocked register", () => {
     r = await callTool(m, q.http, tool("brreg_signatur"), { org_nr: "923609016" });
     expect((r.structuredContent.error as any).class).toBe("tidybrreg_error_http");
     expect((r.structuredContent.error as any).fields.messages).toEqual(["boom"]);
+    const unresolved = JSON.parse(readFileSync(join(fixtures, "signatur_unresolved_equinor.json"), "utf8"));
+    q = queue([{ status: 200, body: unresolved }]);
+    r = await callTool(m, q.http, tool("brreg_signatur"), { org_nr: "923609016" });
+    expect(r.isError).toBe(false);
+    expect(r.structuredContent.n_total).toBe(0);
+    expect((r.structuredContent.attributes as any)).toEqual({ http_status: 200, routine_status: "NA", routine_text: "Generelle unntak, finnes roller som har status det ikke kan foretas maskinelt oppslag mot." });
+    expect((r.structuredContent.conditions as any[])[0].class).toBe("tidybrreg_warning_unresolved");
+    expect((r.structuredContent.columns as any[]).map((c) => c.name)).toContain("combination_id");
     q = queue([{ status: 400, body: { status: 400, feilmelding: "Feilaktig forespørsel", valideringsfeil: [{ feilmelding: "På grunn av krav til personvern kan du ikke gjøre søk mellom en og fire ansatte", parametere: ["fraAntallAnsatte", "tilAntallAnsatte"] }] } }]);
     r = await callTool(m, q.http, tool("brreg_search"), { min_employees: 1, max_employees: 2 });
     expect((r.structuredContent.error as any).class).toBe("tidybrreg_error_http");

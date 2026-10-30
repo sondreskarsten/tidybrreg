@@ -639,3 +639,23 @@ test_that("the register's Norwegian error body reaches the typed http error", {
   err <- tryCatch(brreg_search(name = "x"), tidybrreg_error_http = function(e) e)
   expect_equal(err$messages, "Feilaktig foresp\u00f8rsel")
 })
+
+test_that("a signature rule the Fullmakt service declines to resolve is a typed empty with the routine status", {
+  raw <- jsonlite::read_json(test_path("fixtures", "signatur_unresolved_equinor.json"))
+  w <- NULL
+  res <- withCallingHandlers(flatten_signatur(raw, "923609016", "signature"),
+                             tidybrreg_warning_unresolved = function(cnd) { w <<- cnd; invokeRestart("muffleWarning") })
+  expect_equal(nrow(res), 0L)
+  expect_named(res, names(empty_signatur()))
+  expect_equal(attr(res, "http_status"), 200L)
+  expect_equal(attr(res, "routine_status"), "NA")
+  expect_match(attr(res, "routine_text"), "maskinelt oppslag")
+  expect_s3_class(w, "tidybrreg_warning_unresolved")
+  expect_equal(w$signature_type, "signature")
+  expect_equal(w$routine_status, "NA")
+  local_brreg_responses(stub_resp(200L, raw))
+  expect_warning(res <- brreg_prokura("923609016"), class = "tidybrreg_warning_unresolved")
+  expect_equal(attr(res, "routine_status"), "NA")
+  expect_no_warning(res <- flatten_signatur(list(enhet = list(navn = "X")), "923609016", "signature"))
+  expect_null(attr(res, "routine_status"))
+})

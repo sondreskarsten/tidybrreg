@@ -106,7 +106,7 @@
       "routes": [{"method": "GET", "path": "/enheter/{org_nr}/signatur"}],
       "fixed_columns": {"signature_type": "signature"},
       "status": {"404": "typed empty, http_status = 404", "410": "typed empty, http_status = 410, tidybrreg_warning_deleted", "other>=400": "tidybrreg_error_http"},
-      "flatten": "signeringsKombinasjon.kombinasjon[].personRolleKombinasjon[] -> one row per person per combination (one row with NA person when a combination has none); birth dates DD.MM.YYYY",
+      "flatten": "signeringsKombinasjon.kombinasjon[].personRolleKombinasjon[] -> one row per person per combination (one row with NA person when a combination has none); birth dates DD.MM.YYYY. HTTP 200 without combinations but with status.rutineStatus (code NA, 'Generelle unntak, finnes roller som har status det ikke kan foretas maskinelt oppslag mot') is a rule the service declines to resolve: typed empty with http_status = 200, routine_status, routine_text and tidybrreg_warning_unresolved",
       "result": {"empty": ["org_nr", "entity_name", "signature_type", "rule_status", "rule_text", "combination_id", "combination_code", "rule", "name", "birth_date", "role_code", "role"]}
     },
     "brreg_prokura": {
@@ -115,7 +115,7 @@
       "routes": [{"method": "GET", "path": "/enheter/{org_nr}/prokura"}],
       "fixed_columns": {"signature_type": "procuration"},
       "status": {"404": "typed empty, http_status = 404", "410": "typed empty, http_status = 410, tidybrreg_warning_deleted", "other>=400": "tidybrreg_error_http"},
-      "flatten": "as brreg_signatur",
+      "flatten": "as brreg_signatur, including the unresolved-rule case",
       "result": {"empty": ["org_nr", "entity_name", "signature_type", "rule_status", "rule_text", "combination_id", "combination_code", "rule", "name", "birth_date", "role_code", "role"]}
     },
     "brreg_regnskap": {

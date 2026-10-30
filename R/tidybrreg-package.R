@@ -208,8 +208,8 @@ NULL
 #'
 #' | Route | Function | Pagination | Limits and boundary | Evidence |
 #' |---|---|---|---|---|
-#' | `GET /enheter/{orgnr}/signatur` | [brreg_signatur()] | none | 404 when nothing is registered (common for ENK) | documented |
-#' | `GET /enheter/{orgnr}/prokura` | [brreg_prokura()] | none | 404 when nothing is registered | documented |
+#' | `GET /enheter/{orgnr}/signatur` | [brreg_signatur()] | none | 404 when nothing is registered (common for ENK); 200 with `status.rutineStatus` and no combinations when the rule cannot be resolved mechanically (`tidybrreg_warning_unresolved`) | documented; unresolved case observed 2026-10-30 (Equinor ASA) |
+#' | `GET /enheter/{orgnr}/prokura` | [brreg_prokura()] | none | as signatur | documented |
 #'
 #' @section Regnskapsregisteret API:
 #' Base URL `https://data.brreg.no/regnskapsregisteret/regnskap`

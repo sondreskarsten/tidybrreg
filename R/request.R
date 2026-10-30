@@ -194,6 +194,12 @@ to_snake <- function(x) {
 #'   `members`.
 #' - `tidybrreg_warning_bundled_fallback`: SSB KLASS was unreachable and a
 #'   bundled dictionary was used instead. Fields `dictname`, `vintage`.
+#' - `tidybrreg_warning_unresolved`: the Fullmakt service answered HTTP
+#'   200 but declined to resolve the signature or procuration rule
+#'   mechanically (`status.rutineStatus`); the typed empty result carries
+#'   `http_status = 200L`, `routine_status` and `routine_text`. Fields
+#'   `org_nr`, `signature_type`, `routine_status`, `routine_text`. See
+#'   [brreg_signatur()].
 #' - `tidybrreg_warning_unsupported_plan`: Regnskapsregisteret does not
 #'   serve the entity's accounting plan (banks, insurers, pension funds);
 #'   the typed empty result carries `http_status = 500L` and

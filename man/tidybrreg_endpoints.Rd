@@ -35,8 +35,8 @@ Base URL \verb{https://data.brreg.no/enhetsregisteret/api}.\tabular{lllll}{
 
 Base URL \verb{https://data.brreg.no/fullmakt}.\tabular{lllll}{
    Route \tab Function \tab Pagination \tab Limits and boundary \tab Evidence \cr
-   \code{GET /enheter/{orgnr}/signatur} \tab \code{\link[=brreg_signatur]{brreg_signatur()}} \tab none \tab 404 when nothing is registered (common for ENK) \tab documented \cr
-   \code{GET /enheter/{orgnr}/prokura} \tab \code{\link[=brreg_prokura]{brreg_prokura()}} \tab none \tab 404 when nothing is registered \tab documented \cr
+   \code{GET /enheter/{orgnr}/signatur} \tab \code{\link[=brreg_signatur]{brreg_signatur()}} \tab none \tab 404 when nothing is registered (common for ENK); 200 with \code{status.rutineStatus} and no combinations when the rule cannot be resolved mechanically (\code{tidybrreg_warning_unresolved}) \tab documented; unresolved case observed 2026-10-30 (Equinor ASA) \cr
+   \code{GET /enheter/{orgnr}/prokura} \tab \code{\link[=brreg_prokura]{brreg_prokura()}} \tab none \tab as signatur \tab documented \cr
 }
 }
 

@@ -33,6 +33,17 @@
 #' read `rule_text` in that case. `rule_text` may be `NA` when no free
 #' text is recorded.
 #'
+#' @section Rules the service declines to resolve:
+#' For some entities (Equinor ASA among them) the service answers HTTP
+#' 200 with no combinations and a routine status instead: code `NA`,
+#' "Generelle unntak, finnes roller som har status det ikke kan foretas
+#' maskinelt oppslag mot", meaning a rule is registered but cannot be
+#' resolved mechanically. The typed zero-row tibble is then returned
+#' with attributes `http_status = 200L`, `routine_status` and
+#' `routine_text`, and a `tidybrreg_warning_unresolved` is signalled,
+#' so the case is distinguishable from an entity with nothing
+#' registered (no attribute, no warning).
+#'
 #' @inheritSection brreg_roles Status handling
 #'
 #' @param org_nr Character. A single 9-digit organization number.
@@ -74,6 +85,7 @@ brreg_signatur <- function(org_nr) {
 #' One row is returned per person within each registered combination.
 #'
 #' @inheritSection brreg_signatur Person identification
+#' @inheritSection brreg_signatur Rules the service declines to resolve
 #' @inheritSection brreg_roles Status handling
 #'
 #' @param org_nr Character. A single 9-digit organization number.
@@ -111,6 +123,32 @@ empty_signatur <- function() {
 }
 
 
+#' Typed empty for a rule the Fullmakt service declines to resolve
+#'
+#' The service answers HTTP 200 without `signeringsKombinasjon` and
+#' with `status.rutineStatus` (code `NA`, "Generelle unntak, finnes
+#' roller som har status det ikke kan foretas maskinelt oppslag mot")
+#' when a rule is registered but cannot be resolved mechanically. That
+#' is neither "nothing registered" nor an error: the typed empty is
+#' returned with attributes `http_status = 200L`, `routine_status` and
+#' `routine_text`, and a `tidybrreg_warning_unresolved` is signalled.
+#' @keywords internal
+unresolved_signatur <- function(org_nr, signature_type, routine, call = rlang::caller_env()) {
+  code <- routine$kode %||% NA_character_
+  text <- routine$tekstforklaring %||% NA_character_
+  brreg_warn(
+    c("The Fullmakt service declined to resolve the {signature_type} rule of entity {.val {org_nr}} (routine status {.val {code}}).",
+      "i" = text),
+    class = "unresolved", org_nr = org_nr, signature_type = signature_type,
+    routine_status = code, routine_text = text, call = call
+  )
+  out <- empty_signatur()
+  attr(out, "http_status") <- 200L
+  attr(out, "routine_status") <- code
+  attr(out, "routine_text") <- text
+  out
+}
+
 #' Flatten a Fullmakt signature/procuration response to a tibble
 #' @param raw Parsed JSON list from a signatur or prokura endpoint.
 #' @param org_nr Organization number (passed through to output).
@@ -118,7 +156,11 @@ empty_signatur <- function() {
 #' @keywords internal
 flatten_signatur <- function(raw, org_nr, signature_type) {
   komb <- raw$signeringsKombinasjon$kombinasjon
-  if (is.null(komb) || length(komb) == 0) return(empty_signatur())
+  if (is.null(komb) || length(komb) == 0) {
+    routine <- raw$status$rutineStatus
+    if (is.null(routine)) return(empty_signatur())
+    return(unresolved_signatur(org_nr, signature_type, routine))
+  }
   entity_name <- raw$enhet$navn %||% NA_character_
   rule_status <- raw$status$regelStatus$kode %||% NA_character_
   rule_text   <- raw$signeringsGrunnlag$signaturProkuraRoller$signaturProkuraFritekst %||% NA_character_

@@ -352,16 +352,21 @@ test_that("brreg_search: the register's privacy rule on employee ranges is repor
  expect_true(all(res$employees >= 5 & res$employees <= 10, na.rm = TRUE))
 })
 
-test_that("brreg_signatur: Equinor's HTTP 200 body flattens to rows (rig SG-01)", {
+test_that("brreg_signatur: Equinor's rule is either resolved to rows or reported as unresolved (rig SG-01)", {
  skip_if_no_api()
- sg <- safely(brreg_signatur("923609016"))
+ w <- NULL
+ sg <- withCallingHandlers(safely(brreg_signatur("923609016")),
+                           tidybrreg_warning_unresolved = function(cnd) { w <<- cnd; invokeRestart("muffleWarning") })
  expect_s3_class(sg, "tbl_df")
  if (nrow(sg) == 0) {
-   resp <- tidybrreg:::brreg_perform(tidybrreg:::brreg_req("enheter/923609016/signatur", service = "fullmakt"))
-   fail(paste0("signatur rows 0; HTTP ", httr2::resp_status(resp), " body: ",
-               substr(httr2::resp_body_string(resp), 1, 1500)))
+   expect_s3_class(w, "tidybrreg_warning_unresolved")
+   expect_equal(attr(sg, "http_status"), 200L)
+   expect_type(attr(sg, "routine_status"), "character")
+ } else {
+   expect_null(w)
+   expect_false(any(is.na(sg$combination_id)))
  }
- pk <- safely(brreg_prokura("923609016"))
+ pk <- suppressWarnings(safely(brreg_prokura("923609016")), classes = "tidybrreg_warning_unresolved")
  expect_s3_class(pk, "tbl_df")
 })
 

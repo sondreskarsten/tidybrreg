@@ -47,6 +47,12 @@ the package does not model; it is passed through unchanged. Field
 \code{members}.
 \item \code{tidybrreg_warning_bundled_fallback}: SSB KLASS was unreachable and a
 bundled dictionary was used instead. Fields \code{dictname}, \code{vintage}.
+\item \code{tidybrreg_warning_unresolved}: the Fullmakt service answered HTTP
+200 but declined to resolve the signature or procuration rule
+mechanically (\code{status.rutineStatus}); the typed empty result carries
+\code{http_status = 200L}, \code{routine_status} and \code{routine_text}. Fields
+\code{org_nr}, \code{signature_type}, \code{routine_status}, \code{routine_text}. See
+\code{\link[=brreg_signatur]{brreg_signatur()}}.
 \item \code{tidybrreg_warning_unsupported_plan}: Regnskapsregisteret does not
 serve the entity's accounting plan (banks, insurers, pension funds);
 the typed empty result carries \code{http_status = 500L} and

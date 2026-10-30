@@ -128,6 +128,18 @@ export async function brreg_konsern(ctx: ToolContext, args: Record<string, unkno
   return satellite(ctx, "brreg_konsern", args, flattenKonsern);
 }
 
+/** HTTP 200 without combinations but with status.rutineStatus: a rule the service declines to resolve. */
+export function unresolvedSignatur(ctx: ToolContext, raw: any, org_nr: string, signature_type: string, cols: string[]): ToolResult | null {
+  const komb = raw?.signeringsKombinasjon?.kombinasjon ?? [];
+  const routine = raw?.status?.rutineStatus;
+  if (komb.length > 0 || !routine) return null;
+  const routine_status = routine?.kode ?? null;
+  const routine_text = routine?.tekstforklaring ?? null;
+  ctx.cond.warn("unresolved", `The Fullmakt service declined to resolve the ${signature_type} rule of entity "${org_nr}" (routine status ${JSON.stringify(routine_status)}).${routine_text ? `\n${routine_text}` : ""}`,
+    { org_nr, signature_type, routine_status, routine_text });
+  return { kind: "table", rows: [], columns: cols, attributes: { http_status: 200, routine_status, routine_text } };
+}
+
 export function flattenSignatur(ctx: ToolContext, raw: any, org_nr: string, signature_type: string): Row[] {
   const komb = raw?.signeringsKombinasjon?.kombinasjon ?? [];
   const entity_name = raw?.enhet?.navn ?? null;
@@ -153,14 +165,28 @@ export function flattenSignatur(ctx: ToolContext, raw: any, org_nr: string, sign
   return rows;
 }
 
+async function fullmakt(ctx: ToolContext, name: string, args: Record<string, unknown>, fallback: string): Promise<ToolResult> {
+  const spec = fnSpec(ctx.m, name);
+  const t = spec.fixed_columns?.signature_type ?? fallback;
+  const org_nr = checkOrgNr(ctx.m, args.org_nr);
+  const route = spec.routes![0];
+  const endpoint = route.path.replace("{org_nr}", org_nr);
+  const resp = await ctx.http.get(url(ctx, spec, route, { org_nr }));
+  const cols = emptyColumns(spec);
+  const early = await satelliteStatus(ctx, resp, endpoint, org_nr, cols);
+  if (early) return early;
+  const raw = await resp.json();
+  const unresolved = unresolvedSignatur(ctx, raw, org_nr, t, cols);
+  if (unresolved) return unresolved;
+  return { kind: "table", rows: flattenSignatur(ctx, raw, org_nr, t), columns: cols, attributes: {} };
+}
+
 export async function brreg_signatur(ctx: ToolContext, args: Record<string, unknown>): Promise<ToolResult> {
-  const t = fnSpec(ctx.m, "brreg_signatur").fixed_columns?.signature_type ?? "signature";
-  return satellite(ctx, "brreg_signatur", args, (raw, org) => flattenSignatur(ctx, raw, org, t));
+  return fullmakt(ctx, "brreg_signatur", args, "signature");
 }
 
 export async function brreg_prokura(ctx: ToolContext, args: Record<string, unknown>): Promise<ToolResult> {
-  const t = fnSpec(ctx.m, "brreg_prokura").fixed_columns?.signature_type ?? "procuration";
-  return satellite(ctx, "brreg_prokura", args, (raw, org) => flattenSignatur(ctx, raw, org, t));
+  return fullmakt(ctx, "brreg_prokura", args, "procuration");
 }
 
 export interface RegnskapItem { statement: string; group: string; item: string; path: string; level: number; is_sum: boolean; value: number | null }
