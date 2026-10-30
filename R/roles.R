@@ -19,10 +19,11 @@
 #'
 #' @section Status handling:
 #' The per-entity endpoints behind [brreg_roles()], [brreg_roles_legal()],
-#' [brreg_konsern()], [brreg_signatur()] and [brreg_prokura()] share one
-#' contract. HTTP 404 means the organization number is unknown to that
-#' endpoint, which for konsern, signatur and prokura is the ordinary case
-#' of an entity with nothing registered there: the typed zero-row tibble
+#' [brreg_konsern()], [brreg_signatur()], [brreg_prokura()] and
+#' [brreg_regnskap()] share one contract. HTTP 404 means the organization
+#' number is unknown to that endpoint, which for konsern, signatur,
+#' prokura and regnskap is the ordinary case of an entity with nothing
+#' registered there: the typed zero-row tibble
 #' is returned with attribute `http_status = 404L` and no warning. HTTP
 #' 410 means the entity has been deleted: the typed zero-row tibble is
 #' returned with `http_status = 410L`, `deletion_date`, and a

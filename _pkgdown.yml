@@ -44,6 +44,13 @@ reference:
   - brreg_signatur
   - brreg_prokura
 
+- title: Annual accounts
+  desc: >
+    Key figures of the annual accounts filed with Regnskapsregisteret,
+    one row per filing.
+  contents:
+  - brreg_regnskap
+
 - title: Incremental updates (CDC)
   desc: >
     Fetch change events from the brreg API's change data capture

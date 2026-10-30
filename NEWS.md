@@ -3,13 +3,14 @@
 ## The split
 
 tidybrreg is now the narrow, typed client to the register: exactly
-fifteen exports, each wrapping one endpoint of Enhetsregisteret, the
-Fullmakt service, or SSB KLASS.
+sixteen exports, each wrapping one endpoint of Enhetsregisteret, the
+Fullmakt service, Regnskapsregisteret, or SSB KLASS.
 
 ```r
 brreg_entity()  brreg_search()  brreg_underenheter()  brreg_children()
 brreg_roles()   brreg_roles_legal()  brreg_konsern()
 brreg_signatur()  brreg_prokura()
+brreg_regnskap()
 brreg_updates()  brreg_update_fields()
 brreg_download()
 brreg_label()  get_brreg_dic()  brreg_validate()
@@ -25,13 +26,29 @@ repository. It depends on tidybrreg and is built alongside it on
 r-universe. The pre-split implementation remains at commit `c9bd992`.
 
 The Model Context Protocol server **tidybrregmcp** (`tidybrregmcp/`)
-exposes the fifteen exports as MCP tools, deriving every tool's
+exposes the sixteen exports as MCP tools, deriving every tool's
 documentation and schema from this package's help pages, and writes a
 manifest (`mcp_manifest()`) from which **tidybrreg-mcp**
 (`tidybrreg-mcp-node/`, on npm) serves the same catalogue without R.
 The package ships `inst/extdata/endpoints.json`, a machine-readable
 contract of every export's endpoint, query mapping and status handling,
 held to the functions by `tests/testthat/test-endpoints.R`.
+
+## New: annual accounts
+
+* New `brreg_regnskap()` retrieves the key figures of an entity's annual
+  accounts from the Regnskapsregisteret open API (`GET
+  /regnskapsregisteret/regnskap/{orgnr}`, optional `year` and
+  `account_type`), one row per filing with English columns for the
+  balance sheet and income statement (`total_assets`, `total_equity`,
+  `operating_revenue`, `net_income`, ...). Since 2026-10-01 the API
+  serves up to three fiscal years per account type; every returned
+  filing is kept, unknown leaves pass through as snake_case, and the
+  field map is published under `fields` in `endpoints.json` for the
+  MCP servers. Entities whose accounting plan the API does not serve
+  (banks, insurers, pension funds) return the typed empty with
+  `unsupported_plan` and a new `tidybrreg_warning_unsupported_plan`
+  instead of an error.
 
 ## Breaking changes
 

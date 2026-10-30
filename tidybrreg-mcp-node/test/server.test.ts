@@ -5,7 +5,7 @@ import { loadManifest, type Manifest } from "../src/manifest.js";
 import { Http, type Fetcher } from "../src/http.js";
 import { callTool, IMPLEMENTATIONS } from "../src/execute.js";
 import { parsePatch } from "../src/tools/updates.js";
-import { flattenRoles, flattenKonsern, flattenSignatur } from "../src/tools/satellites.js";
+import { flattenRoles, flattenKonsern, flattenSignatur, flattenRegnskap } from "../src/tools/satellites.js";
 import { parseBrregDate, parseBrregInstant, formatSince } from "../src/dates.js";
 import { renameFromDict, flattenJson, coerceRows, toSnake } from "../src/parse.js";
 import { validateOrgNr } from "../src/tools/common.js";
@@ -38,7 +38,7 @@ const entity = (org_nr = "923609016", extra: Record<string, unknown> = {}) => ({
 describe("manifest and catalogue", () => {
   it("every manifest tool has an implementation and vice versa", () => {
     expect(new Set(m.tools.map((t) => t.name))).toEqual(new Set(Object.keys(IMPLEMENTATIONS)));
-    expect(m.tools).toHaveLength(15);
+    expect(m.tools).toHaveLength(16);
   });
   it("package version matches the manifest's tidybrreg version", () => {
     const pkg = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8"));
@@ -179,6 +179,46 @@ describe("tools over a mocked register", () => {
     r = await callTool(m, q.http, tool("brreg_signatur"), { org_nr: "923609016" });
     expect((r.structuredContent.error as any).class).toBe("tidybrreg_error_http");
     expect((r.structuredContent.error as any).fields.messages).toEqual(["boom"]);
+  });
+
+  it("regnskap flattens one row per filing, maps the query and the unsupported plan", async () => {
+    const fx = JSON.parse(readFileSync(join(fixtures, "regnskap_synthetic.json"), "utf8"));
+    const spec = m.endpoints.functions.brreg_regnskap;
+    const flat = flattenRegnskap(spec, fx, "923609016");
+    expect(flat.rows).toHaveLength(6);
+    expect(flat.rows[0].account_type).toBe("KONSERN");
+    expect(flat.rows[5].period_end).toBe("2025-06-30");
+    expect(flat.rows[0].total_assets).toBe(3000900);
+    expect(flat.rows[0].parent_company).toBe(true);
+    expect("goodwill" in flat.rows[0]).toBe(false);
+    expect(Object.keys(flat.rows[0])[0]).toBe("org_nr");
+    expect(flat.problems).toHaveLength(0);
+    for (const f of spec.fields!) expect(flat.rows[1]).toHaveProperty(f.col_name);
+
+    let q = queue([{ status: 200, body: fx }]);
+    let r = await callTool(m, q.http, tool("brreg_regnskap"), { org_nr: "923609016", year: 2025, account_type: "SELSKAP" });
+    expect(r.isError).toBe(false);
+    expect(q.urls[0]).toMatch(/^https:\/\/data\.brreg\.no\/regnskapsregisteret\/regnskap\/923609016\?/);
+    expect(q.urls[0]).toContain("%C3%A5r=2025");
+    expect(q.urls[0]).toContain("regnskapstype=SELSKAP");
+    expect(r.structuredContent.n_total).toBe(6);
+    expect((r.structuredContent.columns as any[]).find((c) => c.name === "period_end").type).toBe("Date");
+
+    q = queue([{ status: 500, body: { status: 500, message: "Regnskapet inneholder en oppstillingsplan som ikke er stottet (BANK)" } }]);
+    r = await callTool(m, q.http, tool("brreg_regnskap"), { org_nr: "984851006" });
+    expect(r.isError).toBe(false);
+    expect((r.structuredContent.attributes as any)).toEqual({ http_status: 500, unsupported_plan: "BANK" });
+    expect((r.structuredContent.conditions as any[])[0].class).toBe("tidybrreg_warning_unsupported_plan");
+    expect((r.structuredContent.columns as any[]).map((c) => c.name)).toEqual(spec.result!.empty);
+
+    q = queue([{ status: 500, body: { error: "boom" } }]);
+    r = await callTool(m, q.http, tool("brreg_regnskap"), { org_nr: "923609016" });
+    expect((r.structuredContent.error as any).class).toBe("tidybrreg_error_http");
+    expect((r.structuredContent.error as any).fields.messages).toEqual(["boom"]);
+
+    q = queue([{ status: 404 }]);
+    r = await callTool(m, q.http, tool("brreg_regnskap"), { org_nr: "923609016" });
+    expect((r.structuredContent.attributes as any).http_status).toBe(404);
   });
 
   it("feeds paginate on the exclusive cursor and keep raw pointers", async () => {

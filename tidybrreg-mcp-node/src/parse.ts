@@ -89,9 +89,15 @@ export function dictTypeMap(m: Manifest): Map<string, string> {
   return types;
 }
 
+export type FieldMap = { api_path: string; col_name: string; type: string }[];
+
 /** Rename one flattened record through field_dict; observed fields only. */
 export function renameFromDict(m: Manifest, flat: Record<string, unknown>): { row: Row; types: Map<string, string> } {
-  const dict = m.dictionaries.field_dict;
+  return renameThrough(m.dictionaries.field_dict, flat);
+}
+
+/** The same rule with any field map (field_dict, or a function's `fields` in the endpoint spec). */
+export function renameThrough(dict: FieldMap, flat: Record<string, unknown>): { row: Row; types: Map<string, string> } {
   const row: Row = {};
   const types = new Map<string, string>();
   const mapped = new Set<string>();

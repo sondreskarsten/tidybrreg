@@ -46,10 +46,11 @@ national identity numbers.
 \section{Status handling}{
 
 The per-entity endpoints behind \code{\link[=brreg_roles]{brreg_roles()}}, \code{\link[=brreg_roles_legal]{brreg_roles_legal()}},
-\code{\link[=brreg_konsern]{brreg_konsern()}}, \code{\link[=brreg_signatur]{brreg_signatur()}} and \code{\link[=brreg_prokura]{brreg_prokura()}} share one
-contract. HTTP 404 means the organization number is unknown to that
-endpoint, which for konsern, signatur and prokura is the ordinary case
-of an entity with nothing registered there: the typed zero-row tibble
+\code{\link[=brreg_konsern]{brreg_konsern()}}, \code{\link[=brreg_signatur]{brreg_signatur()}}, \code{\link[=brreg_prokura]{brreg_prokura()}} and
+\code{\link[=brreg_regnskap]{brreg_regnskap()}} share one contract. HTTP 404 means the organization
+number is unknown to that endpoint, which for konsern, signatur,
+prokura and regnskap is the ordinary case of an entity with nothing
+registered there: the typed zero-row tibble
 is returned with attribute \code{http_status = 404L} and no warning. HTTP
 410 means the entity has been deleted: the typed zero-row tibble is
 returned with \code{http_status = 410L}, \code{deletion_date}, and a
@@ -75,6 +76,7 @@ Other tidybrreg entity functions:
 \code{\link{brreg_entity}()},
 \code{\link{brreg_konsern}()},
 \code{\link{brreg_prokura}()},
+\code{\link{brreg_regnskap}()},
 \code{\link{brreg_roles_legal}()},
 \code{\link{brreg_search}()},
 \code{\link{brreg_signatur}()},

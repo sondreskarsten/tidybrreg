@@ -115,6 +115,7 @@ Other tidybrreg entity functions:
 \code{\link{brreg_entity}()},
 \code{\link{brreg_konsern}()},
 \code{\link{brreg_prokura}()},
+\code{\link{brreg_regnskap}()},
 \code{\link{brreg_roles}()},
 \code{\link{brreg_roles_legal}()},
 \code{\link{brreg_signatur}()},

@@ -1,6 +1,8 @@
 import { type ToolContext, type ToolResult, fnSpec, checkOrgNr, satelliteStatus, lookupRole, lookupRoleGroup, personId, url, nz } from "./common.js";
 import { parseBrregDate } from "../dates.js";
-import type { Row } from "../parse.js";
+import { flattenJson, renameThrough, coerceRows, type Row, type FieldMap } from "../parse.js";
+import type { FunctionSpec } from "../manifest.js";
+import type { BrregResponse } from "../http.js";
 
 function emptyColumns(spec: ReturnType<typeof fnSpec>): string[] {
   return (spec.result?.empty as string[]) ?? [];
@@ -159,4 +161,56 @@ export async function brreg_signatur(ctx: ToolContext, args: Record<string, unkn
 export async function brreg_prokura(ctx: ToolContext, args: Record<string, unknown>): Promise<ToolResult> {
   const t = fnSpec(ctx.m, "brreg_prokura").fixed_columns?.signature_type ?? "procuration";
   return satellite(ctx, "brreg_prokura", args, (raw, org) => flattenSignatur(ctx, raw, org, t));
+}
+
+/** One row per filing: flatten, rename through the spec's field map (observed fields only), coerce with reported failures. */
+export function flattenRegnskap(spec: FunctionSpec, raw: any, org_nr: string): { rows: Row[]; types: Map<string, string>; problems: ReturnType<typeof coerceRows> } {
+  const fields = (spec.fields ?? []) as FieldMap;
+  const rows: Row[] = [];
+  const types = new Map<string, string>();
+  for (const filing of Array.isArray(raw) ? raw : []) {
+    const r = renameThrough(fields, flattenJson(filing ?? {}));
+    if (!("org_nr" in r.row)) r.row.org_nr = org_nr;
+    rows.push({ org_nr: r.row.org_nr, ...r.row });
+    for (const [k, v] of r.types) if (!types.has(k)) types.set(k, v);
+  }
+  const problems = coerceRows(rows, types);
+  return { rows, types, problems };
+}
+
+const UNSUPPORTED_PLAN = "oppstillingsplan som ikke er st";
+
+export async function brreg_regnskap(ctx: ToolContext, args: Record<string, unknown>): Promise<ToolResult> {
+  const spec = fnSpec(ctx.m, "brreg_regnskap");
+  const org_nr = checkOrgNr(ctx.m, args.org_nr);
+  const route = spec.routes![0];
+  const endpoint = route.path.replace("{org_nr}", org_nr);
+  const q = spec.query as Record<string, string>;
+  const query: Record<string, string | number | null> = {};
+  query[q.year] = args.year == null ? null : Number(args.year);
+  query[q.account_type] = args.account_type == null ? null : String(args.account_type);
+  const cols = (spec.result?.empty as string[]) ?? [];
+  let resp = await ctx.http.get(url(ctx, spec, route, { org_nr }, query));
+  if (resp.status === 500) {
+    let body: any = null;
+    try { body = await resp.json(); } catch { body = null; }
+    const message = String(body?.message ?? "");
+    if (message.includes(UNSUPPORTED_PLAN)) {
+      const plan = /\(([A-Z]+)\)/.exec(message)?.[1] ?? null;
+      ctx.cond.warn("unsupported_plan", `Entity "${org_nr}" files accounts under a plan the API does not serve (${plan ?? "NA"}).`, { org_nr, plan, api_message: message });
+      return { kind: "table", rows: [], columns: cols, attributes: { http_status: 500, unsupported_plan: plan } };
+    }
+    const replay: BrregResponse = { ...resp, json: async () => body, text: async () => JSON.stringify(body) };
+    resp = replay;
+  }
+  const early = await satelliteStatus(ctx, resp, endpoint, org_nr, cols);
+  if (early) return early;
+  const { rows, types, problems } = flattenRegnskap(spec, await resp.json(), org_nr);
+  if (problems.length > 0) {
+    const n = problems.reduce((acc, p, i, all) => (all.findIndex((x) => x.column === p.column) === i ? acc + p.n_failed : acc), 0);
+    ctx.cond.warn("parse", `${n} parse failure(s) in ${new Set(problems.map((p) => p.column)).size} column(s).`, { n });
+  }
+  const attributes: Record<string, unknown> = {};
+  if (problems.length > 0) attributes.brreg_parse_problems = problems;
+  return { kind: "table", rows, columns: cols, columnTypes: types, attributes };
 }

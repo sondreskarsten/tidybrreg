@@ -269,6 +269,68 @@ test_that("brreg_children: children are enheter not underenheter", {
 })
 
 # ============================================================================
+# Section 3b: Annual accounts (Regnskapsregisteret) — Expected vs Observed
+# ============================================================================
+
+test_that("brreg_regnskap: Equinor files SELSKAP and KONSERN accounts in NOK", {
+ skip_if_no_api()
+ acc <- safely(brreg_regnskap("923609016"))
+ expect_s3_class(acc, "tbl_df")
+ expect_gt(nrow(acc), 0)
+ expect_true(all(acc$org_nr == "923609016"))
+ expect_true(all(acc$account_type %in% c("SELSKAP", "KONSERN")))
+ expect_s3_class(acc$period_end, "Date")
+ expect_false(any(is.na(acc$period_end)))
+ expect_true(all(acc$currency == "NOK"))
+ expect_type(acc$filing_id, "integer")
+ expect_false(any(duplicated(acc$filing_id)))
+ expect_true(all(c("total_assets", "total_equity", "operating_revenue", "net_income") %in% names(acc)))
+ expect_true(all(acc$total_assets > 0))
+ # since 2026-10-01: at most three fiscal years per type
+ expect_true(all(table(acc$account_type) <= 3))
+ # a field the map does not know must still arrive, never be dropped
+ unmapped <- setdiff(names(acc), c(tidybrreg:::regnskap_dict$col_name))
+ expect_true(all(grepl("^[a-z0-9_]+$", unmapped)))
+})
+
+test_that("brreg_regnskap: an explicit year and type narrow the response", {
+ skip_if_no_api()
+ all_acc <- safely(brreg_regnskap("923609016"))
+ skip_if(nrow(all_acc) == 0, "no filings served")
+ yr <- max(as.integer(format(all_acc$period_end, "%Y")))
+ one <- safely(brreg_regnskap("923609016", year = yr, account_type = "SELSKAP"))
+ expect_true(all(one$account_type == "SELSKAP"))
+ expect_true(all(format(one$period_end, "%Y") == yr))
+ expect_lte(nrow(one), nrow(all_acc))
+})
+
+test_that("brreg_regnskap: a bank answers with an unsupported plan or filings, never an error", {
+ skip_if_no_api()
+ w <- NULL
+ acc <- withCallingHandlers(
+   safely(brreg_regnskap("984851006")),
+   tidybrreg_warning_unsupported_plan = function(cnd) { w <<- cnd; invokeRestart("muffleWarning") }
+ )
+ expect_s3_class(acc, "tbl_df")
+ if (!is.null(w)) {
+   expect_equal(nrow(acc), 0L)
+   expect_equal(attr(acc, "http_status"), 500L)
+   expect_equal(attr(acc, "unsupported_plan"), w$plan)
+   expect_match(w$plan, "^[A-Z]+$")
+ } else {
+   expect_gt(nrow(acc), 0)
+ }
+})
+
+test_that("brreg_regnskap: unknown number is the typed empty with http_status 404", {
+ skip_if_no_api()
+ acc <- safely(brreg_regnskap("999999999"))
+ expect_equal(nrow(acc), 0L)
+ expect_equal(attr(acc, "http_status"), 404L)
+ expect_named(acc, names(tidybrreg:::empty_regnskap()))
+})
+
+# ============================================================================
 # Section 4: Roles & Governance — Expected vs Observed
 # ============================================================================
 

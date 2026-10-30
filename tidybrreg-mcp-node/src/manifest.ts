@@ -45,6 +45,7 @@ export interface FunctionSpec {
   result?: Record<string, any>;
   fixed_columns?: Record<string, string>;
   include_changes?: { param: string; value: string };
+  fields?: { api_path: string; col_name: string; type: string }[];
   [k: string]: unknown;
 }
 

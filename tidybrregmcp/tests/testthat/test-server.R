@@ -10,7 +10,7 @@ req <- function(method, params = NULL, id = 1L) {
 
 test_that("every tidybrreg export is a tool and nothing else is", {
   expect_setequal(names(srv$tools), getNamespaceExports("tidybrreg"))
-  expect_length(srv$tools, 15L)
+  expect_length(srv$tools, 16L)
   for (t in srv$tools) {
     expect_true(nzchar(t$title))
     expect_true(nzchar(t$description))
@@ -71,7 +71,7 @@ test_that("ping, tools/list and unknown methods behave per JSON-RPC", {
   r <- mcp_handle(srv, req("ping"))
   expect_equal(length(r$result), 0L)
   r <- mcp_handle(srv, req("tools/list"))
-  expect_length(r$result$tools, 15L)
+  expect_length(r$result$tools, 16L)
   expect_null(r$result$tools[[1]]$fn)
   expect_true(all(vapply(r$result$tools, function(t) !is.null(t$outputSchema), logical(1))))
   r <- mcp_handle(srv, req("nope"))
@@ -159,7 +159,7 @@ test_that("exclusions drop tools from the catalogue", {
   withr::local_envvar(TIDYBRREG_MCP_EXCLUDE = "brreg_download, brreg_search")
   s2 <- mcp_server()
   expect_false(any(c("brreg_download", "brreg_search") %in% names(s2$tools)))
-  expect_length(s2$tools, 13L)
+  expect_length(s2$tools, 14L)
 })
 
 test_that("the HTTP handler speaks streamable HTTP", {
@@ -182,7 +182,7 @@ test_that("the HTTP handler speaks streamable HTTP", {
   n <- post(encode_msg(list(jsonrpc = "2.0", method = "notifications/initialized")), auth = "Bearer secret")
   expect_equal(n$status, 202L)
   h <- http_call(srv, list(PATH_INFO = "/health", REQUEST_METHOD = "GET"))
-  expect_equal(jsonlite::fromJSON(h$body)$tools, 15L)
+  expect_equal(jsonlite::fromJSON(h$body)$tools, 16L)
   batch <- post(encode_msg(list(req("ping", id = 1L), req("ping", id = 2L))), auth = "Bearer secret")
   expect_equal(nrow(jsonlite::fromJSON(batch$body)), 2L)
 })
@@ -211,7 +211,7 @@ test_that("the manifest carries everything a non-R server needs", {
   m <- mcp_manifest(NULL)
   expect_equal(m$manifest_version, 1L)
   expect_equal(m$tidybrreg$version, as.character(utils::packageVersion("tidybrreg")))
-  expect_length(m$tools, 15L)
+  expect_length(m$tools, 16L)
   expect_setequal(vapply(m$tools, function(t) t$name, character(1)), getNamespaceExports("tidybrreg"))
   expect_setequal(names(m$endpoints$functions), getNamespaceExports("tidybrreg"))
   expect_equal(m$endpoints$services$enhetsregisteret, "https://data.brreg.no/enhetsregisteret/api")
@@ -223,7 +223,7 @@ test_that("the manifest carries everything a non-R server needs", {
   f <- withr::local_tempfile(fileext = ".json")
   mcp_manifest(f)
   back <- jsonlite::fromJSON(f, simplifyVector = FALSE)
-  expect_equal(length(back$tools), 15L)
+  expect_equal(length(back$tools), 16L)
   expect_equal(back$tools[[1]]$inputSchema$type, "object")
   expect_true(is.list(back$endpoints$functions$brreg_search$query))
 })

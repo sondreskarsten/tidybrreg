@@ -7,18 +7,18 @@
 # Namespace
 # ---------------------------------------------------------------------------
 
-test_that("the namespace exports exactly the 15 core functions", {
+test_that("the namespace exports exactly the 16 core functions", {
   expected <- c(
     "brreg_entity", "brreg_search", "brreg_underenheter", "brreg_children",
     "brreg_roles", "brreg_roles_legal", "brreg_konsern", "brreg_signatur",
-    "brreg_prokura", "brreg_updates", "brreg_update_fields", "brreg_download",
-    "brreg_label", "get_brreg_dic", "brreg_validate"
+    "brreg_prokura", "brreg_regnskap", "brreg_updates", "brreg_update_fields",
+    "brreg_download", "brreg_label", "get_brreg_dic", "brreg_validate"
   )
   ns <- readLines(system.file("NAMESPACE", package = "tidybrreg"))
   if (length(ns) == 0) ns <- readLines(testthat::test_path("..", "..", "NAMESPACE"))
   actual <- sub("^export\\((.*)\\)$", "\\1", grep("^export\\(", ns, value = TRUE))
   expect_setequal(actual, expected)
-  expect_length(actual, 15L)
+  expect_length(actual, 16L)
 })
 
 # ---------------------------------------------------------------------------

@@ -72,7 +72,7 @@ jobs:
           v <- read.dcf("DESCRIPTION", "Version"); m <- read.dcf("tidybrregmcp/DESCRIPTION", "Version")
           p <- read.dcf("tidybrregpanel/DESCRIPTION", "Version")
           stopifnot(identical(v, m), identical(v, p))
-          cat("15 exports confirmed; tidybrreg, tidybrregpanel and tidybrregmcp all at", v, "\n")
+          cat("16 exports confirmed; tidybrreg, tidybrregpanel and tidybrregmcp all at", v, "\n")
         shell: Rscript {0}
 
   companions:
@@ -256,10 +256,10 @@ jobs:
         run: |
           docker run -d --rm --name mcp -p 8080:8080 -e MCP_TRANSPORT=http -e MCP_BEARER_TOKEN=ci-token tidybrreg-mcp:ci
           for i in $(seq 1 30); do curl -fsS http://localhost:8080/health && break; sleep 2; done
-          curl -fsS http://localhost:8080/health | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["tools"]==15, d; print(d)'
+          curl -fsS http://localhost:8080/health | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["tools"]==16, d; print(d)'
           test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8080/mcp -d '{}')" = "401"
           curl -fsS -X POST http://localhost:8080/mcp -H 'Authorization: Bearer ci-token' -H 'Content-Type: application/json' \
-            -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | python3 -c 'import json,sys; assert len(json.load(sys.stdin)["result"]["tools"])==15'
+            -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | python3 -c 'import json,sys; assert len(json.load(sys.stdin)["result"]["tools"])==16'
           curl -fsS -X POST http://localhost:8080/mcp -H 'Authorization: Bearer ci-token' -H 'Content-Type: application/json' \
             -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"brreg_entity","arguments":{"org_nr":"923609016",".columns":["org_nr","name","deleted"]}}}' \
             | python3 -c 'import json,sys; r=json.load(sys.stdin)["result"]; assert not r["isError"], r; print(r["structuredContent"]["rows"])'

@@ -1,17 +1,20 @@
 #' Base URL for a brreg API service
 #'
-#' Both services share the `data.brreg.no` host but live under different
-#' path roots: the Enhetsregisteret REST API and the Fullmakt (signature
-#' and procuration) service.
+#' The services share the `data.brreg.no` host but live under different
+#' path roots: the Enhetsregisteret REST API, the Fullmakt (signature
+#' and procuration) service and the Regnskapsregisteret accounts API.
 #'
-#' @param service One of `"enhetsregisteret"` or `"fullmakt"`.
+#' @param service One of `"enhetsregisteret"`, `"fullmakt"` or
+#'   `"regnskapsregisteret"`.
 #' @keywords internal
-brreg_base_url <- function(service = c("enhetsregisteret", "fullmakt")) {
+brreg_base_url <- function(service = c("enhetsregisteret", "fullmakt",
+                                       "regnskapsregisteret")) {
   service <- match.arg(service)
   switch(
     service,
-    enhetsregisteret = "https://data.brreg.no/enhetsregisteret/api",
-    fullmakt         = "https://data.brreg.no/fullmakt"
+    enhetsregisteret    = "https://data.brreg.no/enhetsregisteret/api",
+    fullmakt            = "https://data.brreg.no/fullmakt",
+    regnskapsregisteret = "https://data.brreg.no/regnskapsregisteret/regnskap"
   )
 }
 
@@ -65,10 +68,12 @@ brreg_http_req <- function(base_url, path, query = list(), realm,
 #' Build an httr2 request to a brreg API service
 #' @param path URL path appended to the base URL.
 #' @param query Named list of query parameters.
-#' @param service One of `"enhetsregisteret"` or `"fullmakt"`.
+#' @param service One of `"enhetsregisteret"`, `"fullmakt"` or
+#'   `"regnskapsregisteret"`.
 #' @keywords internal
 brreg_req <- function(path, query = list(),
-                      service = c("enhetsregisteret", "fullmakt")) {
+                      service = c("enhetsregisteret", "fullmakt",
+                                  "regnskapsregisteret")) {
   service <- match.arg(service)
   brreg_http_req(
     base_url   = brreg_base_url(service),
@@ -176,6 +181,11 @@ to_snake <- function(x) {
 #'   `members`.
 #' - `tidybrreg_warning_bundled_fallback`: SSB KLASS was unreachable and a
 #'   bundled dictionary was used instead. Fields `dictname`, `vintage`.
+#' - `tidybrreg_warning_unsupported_plan`: Regnskapsregisteret does not
+#'   serve the entity's accounting plan (banks, insurers, pension funds);
+#'   the typed empty result carries `http_status = 500L` and
+#'   `unsupported_plan`. Fields `org_nr`, `plan`, `api_message`. See
+#'   [brreg_regnskap()].
 #' - `tidybrreg_warning_parse`: values could not be coerced to the type
 #'   declared in [field_dict]; the result carries attribute
 #'   `brreg_parse_problems`. Field `n`.

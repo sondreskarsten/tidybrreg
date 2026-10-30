@@ -47,6 +47,11 @@ the package does not model; it is passed through unchanged. Field
 \code{members}.
 \item \code{tidybrreg_warning_bundled_fallback}: SSB KLASS was unreachable and a
 bundled dictionary was used instead. Fields \code{dictname}, \code{vintage}.
+\item \code{tidybrreg_warning_unsupported_plan}: Regnskapsregisteret does not
+serve the entity's accounting plan (banks, insurers, pension funds);
+the typed empty result carries \code{http_status = 500L} and
+\code{unsupported_plan}. Fields \code{org_nr}, \code{plan}, \code{api_message}. See
+\code{\link[=brreg_regnskap]{brreg_regnskap()}}.
 \item \code{tidybrreg_warning_parse}: values could not be coerced to the type
 declared in \link{field_dict}; the result carries attribute
 \code{brreg_parse_problems}. Field \code{n}.

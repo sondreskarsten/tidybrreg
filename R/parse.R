@@ -99,10 +99,12 @@ is_hal_link_path <- function(path) {
 #' snake_case name, keeping its dictionary type, so no observed value is
 #' lost. Unmapped paths whose snake_case names collide are made unique
 #' with a numeric suffix.
+#' @param flat A flat named list from [flatten_json()].
+#' @param dict The field map to apply: [field_dict] (default) or
+#'   `regnskap_dict`.
 #' @keywords internal
-rename_from_dict <- function(flat) {
+rename_from_dict <- function(flat, dict = field_dict) {
   flat <- flat[!is_hal_link_path(names(flat))]
-  dict <- field_dict
   result <- list()
   mapped_api_paths <- character()
 
@@ -180,9 +182,12 @@ parse_brreg_logical <- function(x) {
 #' Applied to every dictionary column present in `tbl`. Failures are
 #' attached as the `brreg_parse_problems` attribute and signalled once
 #' as a `tidybrreg_warning_parse`.
+#' @param tbl A tibble from [rename_from_dict()].
+#' @param dict The field map whose types apply: [field_dict] (default)
+#'   or `regnskap_dict`.
 #' @keywords internal
-coerce_types <- function(tbl) {
-  dict <- field_dict[!duplicated(field_dict$col_name), ]
+coerce_types <- function(tbl, dict = field_dict) {
+  dict <- dict[!duplicated(dict$col_name), ]
   types <- stats::setNames(dict$type, dict$col_name)
   extra <- attr(tbl, "brreg_dict_types")
   attr(tbl, "brreg_dict_types") <- NULL

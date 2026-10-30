@@ -211,6 +211,14 @@ NULL
 #' | `GET /enheter/{orgnr}/signatur` | [brreg_signatur()] | none | 404 when nothing is registered (common for ENK) | documented |
 #' | `GET /enheter/{orgnr}/prokura` | [brreg_prokura()] | none | 404 when nothing is registered | documented |
 #'
+#' @section Regnskapsregisteret API:
+#' Base URL `https://data.brreg.no/regnskapsregisteret/regnskap`
+#' (OpenAPI 1.1.16).
+#'
+#' | Route | Function | Pagination | Limits and boundary | Evidence |
+#' |---|---|---|---|---|
+#' | `GET /{orgnr}`, optional `år`, `regnskapstype` | [brreg_regnskap()] | none (whole array) | up to three fiscal years per type since 2026-10-01, KONSERN before SELSKAP; 404 when no accounts are served (unknown number, no filing, or a year outside the window); HTTP 500 `oppstillingsplan som ikke er støttet (PLAN)` for banks, insurers and pension funds, mapped to `tidybrreg_warning_unsupported_plan` | documented; behaviour change observed 2026-10-06 (six filings per ASA) |
+#'
 #' @section SSB KLASS (not BRREG):
 #' Base URL `https://data.ssb.no/api/klass/v1`.
 #'

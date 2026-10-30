@@ -1,8 +1,9 @@
 {
-  "$schema_note": "Machine-readable endpoint contract of the fifteen tidybrreg exports. Every entry is asserted against the function it names by tests/testthat/test-endpoints.R (the request each function builds must match `path` and the query map). Consumers that implement the same calls outside R (tidybrregmcp::mcp_manifest(), the Node MCP server) read this file rather than re-deriving it.",
+  "$schema_note": "Machine-readable endpoint contract of the sixteen tidybrreg exports. Every entry is asserted against the function it names by tests/testthat/test-endpoints.R (the request each function builds must match `path` and the query map). Consumers that implement the same calls outside R (tidybrregmcp::mcp_manifest(), the Node MCP server) read this file rather than re-deriving it.",
   "services": {
     "enhetsregisteret": "https://data.brreg.no/enhetsregisteret/api",
     "fullmakt": "https://data.brreg.no/fullmakt",
+    "regnskapsregisteret": "https://data.brreg.no/regnskapsregisteret/regnskap",
     "klass": "https://data.ssb.no/api/klass/v1"
   },
   "http": {
@@ -114,6 +115,272 @@
       "status": {"404": "typed empty, http_status = 404", "410": "typed empty, http_status = 410, tidybrreg_warning_deleted", "other>=400": "tidybrreg_error_http"},
       "flatten": "as brreg_signatur",
       "result": {"empty": ["org_nr", "entity_name", "signature_type", "rule_status", "rule_text", "combination_id", "combination_code", "rule", "name", "birth_date", "role_code", "role"]}
+    },
+    "brreg_regnskap": {
+      "service": "regnskapsregisteret",
+      "kind": "satellite",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/{org_nr}"
+        }
+      ],
+      "query": {
+        "year": "år",
+        "account_type": "regnskapstype"
+      },
+      "query_note": "the `år` name is sent percent-encoded as %C3%A5r in every locale",
+      "status": {
+        "404": "typed empty, http_status = 404 (no accounts available through the endpoint, or unknown number)",
+        "410": "typed empty, http_status = 410, tidybrreg_warning_deleted",
+        "500 unsupported plan": "error body whose message contains 'oppstillingsplan som ikke er støttet (PLAN)' (also spelled 'stottet'): typed empty, http_status = 500, unsupported_plan = PLAN, tidybrreg_warning_unsupported_plan",
+        "other>=400": "tidybrreg_error_http"
+      },
+      "flatten": "JSON array of filings -> one row per filing; nested objects flattened to dot paths, renamed through `fields` (observed fields only), unmapped leaves pass through as snake_case with the same reported-coercion rule as entities; a valid empty array is the typed empty with no attribute. Since 2026-10-01 the default response carries up to three fiscal years per regnskapstype, KONSERN before SELSKAP; explicit year or type requests reveal no further years",
+      "fields": [
+        {
+          "api_path": "id",
+          "col_name": "filing_id",
+          "type": "integer"
+        },
+        {
+          "api_path": "journalnr",
+          "col_name": "journal_nr",
+          "type": "character"
+        },
+        {
+          "api_path": "regnskapstype",
+          "col_name": "account_type",
+          "type": "character"
+        },
+        {
+          "api_path": "virksomhet.organisasjonsnummer",
+          "col_name": "org_nr",
+          "type": "character"
+        },
+        {
+          "api_path": "virksomhet.organisasjonsform",
+          "col_name": "legal_form",
+          "type": "character"
+        },
+        {
+          "api_path": "virksomhet.morselskap",
+          "col_name": "parent_company",
+          "type": "logical"
+        },
+        {
+          "api_path": "regnskapsperiode.fraDato",
+          "col_name": "period_start",
+          "type": "Date"
+        },
+        {
+          "api_path": "regnskapsperiode.tilDato",
+          "col_name": "period_end",
+          "type": "Date"
+        },
+        {
+          "api_path": "valuta",
+          "col_name": "currency",
+          "type": "character"
+        },
+        {
+          "api_path": "avviklingsregnskap",
+          "col_name": "liquidation_accounts",
+          "type": "logical"
+        },
+        {
+          "api_path": "oppstillingsplan",
+          "col_name": "presentation_plan",
+          "type": "character"
+        },
+        {
+          "api_path": "revisjon.ikkeRevidertAarsregnskap",
+          "col_name": "not_audited",
+          "type": "logical"
+        },
+        {
+          "api_path": "revisjon.fravalgRevisjon",
+          "col_name": "audit_waived",
+          "type": "logical"
+        },
+        {
+          "api_path": "regnkapsprinsipper.smaaForetak",
+          "col_name": "small_enterprise",
+          "type": "logical"
+        },
+        {
+          "api_path": "regnkapsprinsipper.regnskapsregler",
+          "col_name": "accounting_rules",
+          "type": "character"
+        },
+        {
+          "api_path": "egenkapitalGjeld.sumEgenkapitalGjeld",
+          "col_name": "total_equity_liabilities",
+          "type": "numeric"
+        },
+        {
+          "api_path": "egenkapitalGjeld.egenkapital.sumEgenkapital",
+          "col_name": "total_equity",
+          "type": "numeric"
+        },
+        {
+          "api_path": "egenkapitalGjeld.egenkapital.innskuttEgenkapital.sumInnskuttEgenkaptial",
+          "col_name": "paid_in_equity",
+          "type": "numeric"
+        },
+        {
+          "api_path": "egenkapitalGjeld.egenkapital.opptjentEgenkapital.sumOpptjentEgenkapital",
+          "col_name": "retained_equity",
+          "type": "numeric"
+        },
+        {
+          "api_path": "egenkapitalGjeld.gjeldOversikt.sumGjeld",
+          "col_name": "total_liabilities",
+          "type": "numeric"
+        },
+        {
+          "api_path": "egenkapitalGjeld.gjeldOversikt.kortsiktigGjeld.sumKortsiktigGjeld",
+          "col_name": "current_liabilities",
+          "type": "numeric"
+        },
+        {
+          "api_path": "egenkapitalGjeld.gjeldOversikt.langsiktigGjeld.sumLangsiktigGjeld",
+          "col_name": "long_term_liabilities",
+          "type": "numeric"
+        },
+        {
+          "api_path": "eiendeler.sumEiendeler",
+          "col_name": "total_assets",
+          "type": "numeric"
+        },
+        {
+          "api_path": "eiendeler.omloepsmidler.sumOmloepsmidler",
+          "col_name": "current_assets",
+          "type": "numeric"
+        },
+        {
+          "api_path": "eiendeler.anleggsmidler.sumAnleggsmidler",
+          "col_name": "fixed_assets",
+          "type": "numeric"
+        },
+        {
+          "api_path": "eiendeler.sumBankinnskuddOgKontanter",
+          "col_name": "cash_and_bank",
+          "type": "numeric"
+        },
+        {
+          "api_path": "eiendeler.sumFordringer",
+          "col_name": "receivables",
+          "type": "numeric"
+        },
+        {
+          "api_path": "eiendeler.sumInvesteringer",
+          "col_name": "investments",
+          "type": "numeric"
+        },
+        {
+          "api_path": "eiendeler.sumVarer",
+          "col_name": "inventory",
+          "type": "numeric"
+        },
+        {
+          "api_path": "eiendeler.goodwill",
+          "col_name": "goodwill",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.aarsresultat",
+          "col_name": "net_income",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.ordinaertResultatFoerSkattekostnad",
+          "col_name": "pre_tax_income",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.totalresultat",
+          "col_name": "comprehensive_income",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.ordinaertResultatSkattekostnad",
+          "col_name": "tax_expense",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.ekstraordinaerePoster",
+          "col_name": "extraordinary_items",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.skattekostnadEkstraordinaertResultat",
+          "col_name": "extraordinary_tax",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.driftsresultat.driftsresultat",
+          "col_name": "operating_income",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.driftsresultat.driftsinntekter.sumDriftsinntekter",
+          "col_name": "operating_revenue",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.driftsresultat.driftsinntekter.salgsinntekter",
+          "col_name": "sales_revenue",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.driftsresultat.driftskostnad.sumDriftskostnad",
+          "col_name": "operating_expenses",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.driftsresultat.driftskostnad.loennskostnad",
+          "col_name": "payroll_expenses",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.finansresultat.nettoFinans",
+          "col_name": "net_financial_items",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.finansresultat.finansinntekt.sumFinansinntekter",
+          "col_name": "financial_income",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.finansresultat.finanskostnad.sumFinanskostnad",
+          "col_name": "financial_expenses",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.finansresultat.finanskostnad.annenRentekostnad",
+          "col_name": "other_interest_expenses",
+          "type": "numeric"
+        },
+        {
+          "api_path": "resultatregnskapResultat.finansresultat.finanskostnad.rentekostnadSammeKonsern",
+          "col_name": "intra_group_interest_expenses",
+          "type": "numeric"
+        }
+      ],
+      "result": {
+        "empty": [
+          "org_nr",
+          "filing_id",
+          "journal_nr",
+          "account_type",
+          "period_start",
+          "period_end",
+          "currency"
+        ],
+        "key": "org_nr, account_type, year(period_end) is the logical account key; filing_id is the filing identity; journal_nr can be shared by SELSKAP and KONSERN"
+      }
     },
     "brreg_updates": {
       "service": "enhetsregisteret",

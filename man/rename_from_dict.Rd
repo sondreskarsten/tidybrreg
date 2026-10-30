@@ -4,7 +4,13 @@
 \alias{rename_from_dict}
 \title{Rename fields using field_dict; pass through unmapped fields}
 \usage{
-rename_from_dict(flat)
+rename_from_dict(flat, dict = field_dict)
+}
+\arguments{
+\item{flat}{A flat named list from \code{\link[=flatten_json]{flatten_json()}}.}
+
+\item{dict}{The field map to apply: \link{field_dict} (default) or
+\code{regnskap_dict}.}
 }
 \description{
 Only observed fields are emitted. A dictionary target that two

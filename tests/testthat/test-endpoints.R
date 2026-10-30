@@ -75,7 +75,7 @@ test_that("the wrappers delegate to brreg_search as the spec says", {
 test_that("satellite endpoints request their single route", {
   sats <- list(brreg_roles = brreg_roles, brreg_roles_legal = brreg_roles_legal,
                brreg_konsern = brreg_konsern, brreg_signatur = brreg_signatur,
-               brreg_prokura = brreg_prokura)
+               brreg_prokura = brreg_prokura, brreg_regnskap = brreg_regnskap)
   for (nm in names(sats)) {
     d <- spec$functions[[nm]]
     expect_equal(d$kind, "satellite", info = nm)
@@ -85,6 +85,20 @@ test_that("satellite endpoints request their single route", {
     expect_setequal(names(res), unlist(d$result$empty))
     expect_equal(attr(res, "http_status"), 404L)
   }
+})
+
+test_that("brreg_regnskap maps its query and publishes the field map it applies", {
+  d <- spec$functions$brreg_regnskap
+  q <- local_brreg_responses(stub_resp(200L, list()))
+  brreg_regnskap("923609016", year = 2025, account_type = "KONSERN")
+  url <- requested(q)[1]
+  expect_path(url, d$service, sub("\\{org_nr\\}", "923609016", d$routes[[1]]$path))
+  expect_match(url, paste0("[?&]", utils::URLencode(d$query$year, reserved = TRUE), "=2025\\b"))
+  expect_match(url, paste0("[?&]", d$query$account_type, "=KONSERN\\b"))
+  published <- dplyr::bind_rows(lapply(d$fields, tibble::as_tibble))
+  expect_equal(published, tidybrreg:::regnskap_dict)
+  mapped <- vapply(d$fields, \(f) f$col_name, character(1))
+  expect_true(all(unlist(d$result$empty) %in% mapped))
 })
 
 test_that("update feeds use the documented cursors", {

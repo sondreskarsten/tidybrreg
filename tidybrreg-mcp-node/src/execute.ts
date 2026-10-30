@@ -7,7 +7,7 @@ import { Http } from "./http.js";
 import { Conditions, TidybrregError } from "./conditions.js";
 import type { ToolContext, ToolResult } from "./tools/common.js";
 import { brreg_entity, brreg_search, brreg_underenheter, brreg_children, brreg_validate } from "./tools/entities.js";
-import { brreg_roles, brreg_roles_legal, brreg_konsern, brreg_signatur, brreg_prokura } from "./tools/satellites.js";
+import { brreg_roles, brreg_roles_legal, brreg_konsern, brreg_signatur, brreg_prokura, brreg_regnskap } from "./tools/satellites.js";
 import { brreg_updates, brreg_update_fields } from "./tools/updates.js";
 import { brreg_label, get_brreg_dic } from "./tools/label.js";
 import { brreg_download } from "./tools/download.js";
@@ -17,7 +17,7 @@ type Impl = (ctx: ToolContext, args: Record<string, unknown>) => Promise<ToolRes
 
 export const IMPLEMENTATIONS: Record<string, Impl> = {
   brreg_entity, brreg_search, brreg_underenheter, brreg_children, brreg_validate,
-  brreg_roles, brreg_roles_legal, brreg_konsern, brreg_signatur, brreg_prokura,
+  brreg_roles, brreg_roles_legal, brreg_konsern, brreg_signatur, brreg_prokura, brreg_regnskap,
   brreg_updates, brreg_update_fields, brreg_label, get_brreg_dic, brreg_download,
 };
 

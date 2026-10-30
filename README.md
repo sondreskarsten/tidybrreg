@@ -19,7 +19,7 @@ together:
 
 | Package            | Directory         | Purpose                                                                                                                     |
 |--------------------|-------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| **tidybrreg**      | `/`               | The typed client: fifteen functions, one per register endpoint. CRAN-bound.                                                 |
+| **tidybrreg**      | `/`               | The typed client: sixteen functions, one per register endpoint. CRAN-bound.                                                 |
 | **tidybrregpanel** | `tidybrregpanel/` | Managed state: Parquet snapshots, `brreg_sync()`, replay, changelog, flows, panels, series, networks, survival data.        |
 | **tidybrregmcp**   | `tidybrregmcp/`   | A Model Context Protocol server whose tools, schemas and documentation are derived from tidybrreg’s exports and help pages. |
 | **tidybrreg-mcp**  | `tidybrreg-mcp-node/` | The same server without R: an npm package (`npx tidybrreg-mcp`) built from the manifest tidybrregmcp writes, for Claude, ChatGPT and OpenAI clients. |
@@ -89,6 +89,15 @@ brreg_konsern("923609016")        # the corporate group tree
 brreg_signatur("923609016")       # who may sign for the entity
 brreg_prokura("923609016")        # procuration holders
 ```
+
+## Annual accounts
+
+```r
+brreg_regnskap("923609016")                           # up to 3 years per type
+brreg_regnskap("923609016", account_type = "SELSKAP", year = 2025)
+```
+
+Banks, insurers and pension funds answer with a plan the API does not serve; the result is the typed empty with `unsupported_plan` and a `tidybrreg_warning_unsupported_plan`.
 
 ## Incremental updates
 
@@ -161,7 +170,7 @@ whatever the session time zone.
 
 ## MCP server
 
-`tidybrregmcp` serves these fifteen functions to any Model Context
+`tidybrregmcp` serves these sixteen functions to any Model Context
 Protocol client. Tool names are the function names and the descriptions
 are the help pages, so the server changes exactly when this package
 changes.

@@ -40,6 +40,15 @@ Base URL \verb{https://data.brreg.no/fullmakt}.\tabular{lllll}{
 }
 }
 
+\section{Regnskapsregisteret API}{
+
+Base URL \verb{https://data.brreg.no/regnskapsregisteret/regnskap}
+(OpenAPI 1.1.16).\tabular{lllll}{
+   Route \tab Function \tab Pagination \tab Limits and boundary \tab Evidence \cr
+   \code{GET /{orgnr}}, optional \verb{år}, \code{regnskapstype} \tab \code{\link[=brreg_regnskap]{brreg_regnskap()}} \tab none (whole array) \tab up to three fiscal years per type since 2026-10-01, KONSERN before SELSKAP; 404 when no accounts are served (unknown number, no filing, or a year outside the window); HTTP 500 \verb{oppstillingsplan som ikke er støttet (PLAN)} for banks, insurers and pension funds, mapped to \code{tidybrreg_warning_unsupported_plan} \tab documented; behaviour change observed 2026-10-06 (six filings per ASA) \cr
+}
+}
+
 \section{SSB KLASS (not BRREG)}{
 
 Base URL \verb{https://data.ssb.no/api/klass/v1}.\tabular{lllll}{

@@ -24,7 +24,7 @@ This repository holds three packages that are versioned and built together:
 
 | Package | Directory | Purpose |
 |---|---|---|
-| **tidybrreg** | `/` | The typed client: fifteen functions, one per register endpoint. CRAN-bound. |
+| **tidybrreg** | `/` | The typed client: sixteen functions, one per register endpoint. CRAN-bound. |
 | **tidybrregpanel** | `tidybrregpanel/` | Managed state: Parquet snapshots, `brreg_sync()`, replay, changelog, flows, panels, series, networks, survival data. |
 | **tidybrregmcp** | `tidybrregmcp/` | A Model Context Protocol server whose tools, schemas and documentation are derived from tidybrreg's exports and help pages. |
 | **tidybrreg-mcp** | `tidybrreg-mcp-node/` | The same server without R: an npm package (`npx tidybrreg-mcp`) built from the manifest tidybrregmcp writes, for Claude, ChatGPT and OpenAI clients. |
@@ -90,6 +90,15 @@ brreg_signatur("923609016")       # who may sign for the entity
 brreg_prokura("923609016")        # procuration holders
 ```
 
+## Annual accounts
+
+```r
+brreg_regnskap("923609016")                           # up to 3 years per type
+brreg_regnskap("923609016", account_type = "SELSKAP", year = 2025)
+```
+
+Banks, insurers and pension funds answer with a plan the API does not serve; the result is the typed empty with `unsupported_plan` and a `tidybrreg_warning_unsupported_plan`.
+
 ## Incremental updates
 
 ```{r updates, eval = FALSE}
@@ -140,6 +149,7 @@ brreg_validate(c("923609016", "984851006", "123456789"))
 | `brreg_konsern()` | Corporate group structure |
 | `brreg_signatur()` | Signature authority |
 | `brreg_prokura()` | Procuration |
+| `brreg_regnskap()` | Annual accounts from Regnskapsregisteret, one row per filing |
 | `brreg_updates()` | Incremental change stream (enheter, underenheter, roller) |
 | `brreg_update_fields()` | Flat field-level changes |
 | `brreg_download()` | Full register bulk download (enheter, underenheter, roller) |
@@ -149,7 +159,7 @@ brreg_validate(c("923609016", "984851006", "123456789"))
 
 ## MCP server
 
-`tidybrregmcp` serves these fifteen functions to any Model Context Protocol client. Tool names are the function names and the descriptions are the help pages, so the server changes exactly when this package changes.
+`tidybrregmcp` serves these sixteen functions to any Model Context Protocol client. Tool names are the function names and the descriptions are the help pages, so the server changes exactly when this package changes.
 
 ```json
 {"mcpServers": {"tidybrreg": {"command": "Rscript", "args": ["-e", "tidybrregmcp::mcp_serve()"]}}}

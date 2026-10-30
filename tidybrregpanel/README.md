@@ -3,7 +3,7 @@
 Managed state and longitudinal analysis for Norway's business registry,
 built on [tidybrreg](https://github.com/sondreskarsten/tidybrreg).
 
-tidybrreg is the typed client: fifteen functions, one per register
+tidybrreg is the typed client: sixteen functions, one per register
 endpoint, no persistence. tidybrregpanel is everything that keeps
 state on disk or derives quantities over time:
 
@@ -19,7 +19,7 @@ state on disk or derives quantities over time:
 
 All retrieval goes through tidybrreg, and internal parsers are reached
 through `tidybrreg:::` (the one deliberate `:::` dependency in the
-ecosystem, so the core keeps its exact fifteen exports).
+ecosystem, so the core keeps its exact sixteen exports).
 
 ## Installation
 

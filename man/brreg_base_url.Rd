@@ -4,14 +4,17 @@
 \alias{brreg_base_url}
 \title{Base URL for a brreg API service}
 \usage{
-brreg_base_url(service = c("enhetsregisteret", "fullmakt"))
+brreg_base_url(
+  service = c("enhetsregisteret", "fullmakt", "regnskapsregisteret")
+)
 }
 \arguments{
-\item{service}{One of \code{"enhetsregisteret"} or \code{"fullmakt"}.}
+\item{service}{One of \code{"enhetsregisteret"}, \code{"fullmakt"} or
+\code{"regnskapsregisteret"}.}
 }
 \description{
-Both services share the \code{data.brreg.no} host but live under different
-path roots: the Enhetsregisteret REST API and the Fullmakt (signature
-and procuration) service.
+The services share the \code{data.brreg.no} host but live under different
+path roots: the Enhetsregisteret REST API, the Fullmakt (signature
+and procuration) service and the Regnskapsregisteret accounts API.
 }
 \keyword{internal}
