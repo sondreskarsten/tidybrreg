@@ -57,7 +57,9 @@ test_that("brreg_entity: Norges Bank ground truth", {
  expect_match(nb$name, "NORGES BANK", fixed = TRUE)
  expect_equal(nb$municipality_code, "0301")
  expect_equal(nb$bankrupt, FALSE)
- expect_s3_class(nb$founding_date, "Date")
+ # Only observed fields are emitted; a public body may carry no stiftelsesdato
+ if ("founding_date" %in% names(nb)) expect_s3_class(nb$founding_date, "Date")
+ expect_false(nb$deleted)
 })
 
 test_that("brreg_entity: Stortinget ground truth", {
@@ -65,7 +67,8 @@ test_that("brreg_entity: Stortinget ground truth", {
  st <- safely(brreg_entity("971524960"))
  expect_equal(st$org_nr, "971524960")
  expect_match(st$name, "STORTINGET", fixed = TRUE)
- expect_equal(st$legal_form, "ORGL")
+ # Registered as ORGL until 2026; now STAT
+ expect_true(st$legal_form %in% c("ORGL", "STAT"))
  expect_equal(st$municipality_code, "0301")
 })
 
@@ -99,8 +102,12 @@ test_that("brreg_entity: registry=enheter forces main entity lookup", {
 test_that("brreg_entity: zero-drop policy — unknown API fields pass through", {
  skip_if_no_api()
  eq <- safely(brreg_entity("923609016"))
- # Should have more columns than field_dict rows (extra API fields as snake_case)
- expect_gt(ncol(eq), nrow(field_dict))
+ # Only observed fields are emitted, so the column count is below the
+ # dictionary size; unknown API fields still pass through as snake_case.
+ extra <- setdiff(names(eq), c(field_dict$col_name, "registry", "deleted"))
+ expect_gt(length(extra), 0)
+ expect_true(all(grepl("^[a-z0-9_]+$", extra)))
+ expect_false(any(grepl("links", names(eq))))
 })
 
 test_that("brreg_entity: validates org_nr format before API call", {
@@ -124,7 +131,8 @@ test_that("brreg_entity: all field_dict types are correctly coerced", {
  expect_true(is.integer(eq$employees))
  # Logical columns
  expect_true(is.logical(eq$bankrupt))
- expect_true(is.logical(eq$under_liquidation))
+ expect_true(is.logical(eq$in_liquidation))
+ expect_true(is.logical(eq$deleted))
  # Character columns
  expect_true(is.character(eq$org_nr))
  expect_true(is.character(eq$name))
@@ -407,11 +415,12 @@ test_that("get_brreg_dic: NACE dictionary has expected content", {
  d <- safely(get_brreg_dic("nace"))
  expect_s3_class(d, "tbl_df")
  expect_gt(nrow(d), 1500)
- expect_true(all(c("code", "name_en", "level") %in% names(d)))
+ expect_true(all(c("code", "name", "level") %in% names(d)))
+ expect_equal(attr(d, "source"), "klass")
  # Ground truth: code 06.100 is oil extraction
  row_06100 <- d[d$code == "06.100", ]
  expect_equal(nrow(row_06100), 1)
- expect_match(row_06100$name_en, "petroleum|oil|crude", ignore.case = TRUE)
+ expect_match(row_06100$name, "petroleum|oil|crude", ignore.case = TRUE)
 })
 
 test_that("get_brreg_dic: sector dictionary has expected content", {
@@ -419,7 +428,7 @@ test_that("get_brreg_dic: sector dictionary has expected content", {
  d <- safely(get_brreg_dic("sector"))
  expect_s3_class(d, "tbl_df")
  expect_gt(nrow(d), 10)
- expect_true(all(c("code", "name_en") %in% names(d)))
+ expect_true(all(c("code", "name") %in% names(d)))
 })
 
 test_that("get_brreg_dic: caching returns identical object", {
@@ -519,9 +528,11 @@ test_that("field_dict: complete and internally consistent", {
 test_that("field_dict: covers live API response", {
  skip_if_no_api()
  eq <- safely(brreg_entity("923609016"))
- # At least 70% of dict columns should be present for a major entity
- present <- sum(field_dict$col_name %in% names(eq))
- expect_gt(present / nrow(field_dict), 0.7)
+ # The dictionary should name nearly every field the register emits for a
+ # major entity; the register emits only the fields that apply, so the
+ # converse (dictionary rows present) is not a contract.
+ covered <- mean(setdiff(names(eq), c("registry", "deleted")) %in% field_dict$col_name)
+ expect_gt(covered, 0.8)
 })
 
 test_that("legal_forms: has expected codes", {
@@ -630,14 +641,15 @@ test_that("rapid sequential requests succeed (rate limiting works)", {
 
 test_that("parse_entity handles ENK with minimal fields", {
  skip_if_no_api()
- s <- safely(brreg_search(legal_form = "ENK", max_results = 1))
+ s <- safely(suppressWarnings(brreg_search(legal_form = "ENK", max_results = 1),
+                              classes = "tidybrreg_warning_truncated"))
  if (nrow(s) > 0) {
    enk <- safely(brreg_entity(s$org_nr[1]))
    expect_s3_class(enk, "tbl_df")
    expect_equal(nrow(enk), 1)
    expect_equal(enk$legal_form, "ENK")
-   # ENK may have NA for employees — that's expected
-   expect_true(is.integer(enk$employees) || is.na(enk$employees))
+   # ENK typically carries no antallAnsatte: the column is then absent, not NA
+   expect_true(!"employees" %in% names(enk) || is.integer(enk$employees))
  }
 })
 
