@@ -3,8 +3,13 @@
 # implement. These tests hold it to the functions: the request each
 # export builds must match the spec's path and query mapping.
 
-spec <- jsonlite::fromJSON(testthat::test_path("..", "..", "inst", "extdata", "endpoints.json"),
-                           simplifyVector = FALSE)
+pkg_file <- function(...) {
+  path <- system.file(..., package = "tidybrreg")
+  if (!nzchar(path)) path <- testthat::test_path("..", "..", "inst", ...)
+  path
+}
+
+spec <- jsonlite::fromJSON(pkg_file("extdata", "endpoints.json"), simplifyVector = FALSE)
 
 requested <- function(q) vapply(q$requests, function(r) r$url, character(1))
 
@@ -15,7 +20,7 @@ expect_path <- function(url, service, path) {
 
 test_that("every export has an endpoint entry and vice versa", {
   exports <- sub("^export\\((.*)\\)$", "\\1",
-                 grep("^export\\(", readLines(testthat::test_path("..", "..", "NAMESPACE")), value = TRUE))
+                 grep("^export\\(", readLines(system.file("NAMESPACE", package = "tidybrreg")), value = TRUE))
   expect_setequal(names(spec$functions), exports)
 })
 
