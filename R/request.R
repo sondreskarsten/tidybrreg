@@ -115,13 +115,26 @@ klass_req <- function(path, query = list()) {
 }
 
 #' Extract error messages from brreg API error responses
+#'
+#' Enhetsregisteret answers a rejected request with a Norwegian error
+#' body (`feilmelding`, `valideringsfeil[].feilmelding` with the
+#' offending `parametere`); older and other services use
+#' `validationErrors[].errorMessage`, `error` and `trace`. Every form
+#' is read so the `tidybrreg_error_http` carries what the register said.
 #' @param resp An httr2 response object.
 #' @keywords internal
 brreg_error_body <- function(resp) {
   body <- tryCatch(httr2::resp_body_json(resp), error = \(e) list())
   msgs <- character()
+  if (!is.null(body$valideringsfeil))
+    msgs <- vapply(body$valideringsfeil, \(e) {
+      params <- paste(unlist(e$parametere), collapse = ", ")
+      if (nzchar(params)) paste0(e$feilmelding, " (", params, ")") else e$feilmelding
+    }, character(1))
   if (!is.null(body$validationErrors))
-    msgs <- vapply(body$validationErrors, \(e) e$errorMessage, character(1))
+    msgs <- c(msgs, vapply(body$validationErrors, \(e) e$errorMessage, character(1)))
+  if (!is.null(body$feilmelding) && length(msgs) == 0)
+    msgs <- c(msgs, body$feilmelding)
   if (!is.null(body$error))
     msgs <- c(msgs, body$error)
   if (!is.null(body$trace))

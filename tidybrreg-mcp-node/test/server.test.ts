@@ -179,6 +179,10 @@ describe("tools over a mocked register", () => {
     r = await callTool(m, q.http, tool("brreg_signatur"), { org_nr: "923609016" });
     expect((r.structuredContent.error as any).class).toBe("tidybrreg_error_http");
     expect((r.structuredContent.error as any).fields.messages).toEqual(["boom"]);
+    q = queue([{ status: 400, body: { status: 400, feilmelding: "Feilaktig forespørsel", valideringsfeil: [{ feilmelding: "På grunn av krav til personvern kan du ikke gjøre søk mellom en og fire ansatte", parametere: ["fraAntallAnsatte", "tilAntallAnsatte"] }] } }]);
+    r = await callTool(m, q.http, tool("brreg_search"), { min_employees: 1, max_employees: 2 });
+    expect((r.structuredContent.error as any).class).toBe("tidybrreg_error_http");
+    expect((r.structuredContent.error as any).fields.messages).toEqual(["På grunn av krav til personvern kan du ikke gjøre søk mellom en og fire ansatte (fraAntallAnsatte, tilAntallAnsatte)"]);
   });
 
   it("regnskap nests one row per filing with items and flags equal to the Python oracle", async () => {

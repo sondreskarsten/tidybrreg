@@ -11,7 +11,8 @@
     "accept": "application/json;charset=UTF-8",
     "throttle_per_second_per_host": 5,
     "retry_statuses": [429, 503],
-    "retry_max_tries": 3
+    "retry_max_tries": 3,
+    "error_body": "messages are read from valideringsfeil[].feilmelding (+ parametere), validationErrors[].errorMessage, feilmelding, error and trace"
   },
   "org_nr": {
     "pattern": "^[89][0-9]{8}$",
@@ -48,6 +49,7 @@
         "nace_code": "naeringskode",
         "min_employees": "fraAntallAnsatte",
         "max_employees": "tilAntallAnsatte",
+        "employee_range_note": "a range within 1 to 4 employees is refused for privacy (HTTP 400, valideringsfeil 'kan du ikke gjøre søk mellom en og fire ansatte'); 0 and 5 and above are served",
         "parent_org_nr": "overordnetEnhet",
         "municipality_code": {"enheter": "kommunenummer", "underenheter": "beliggenhetsadresse.kommunenummer"},
         "bankrupt": {"enheter": "konkurs", "underenheter": null}

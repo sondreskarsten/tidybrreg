@@ -339,28 +339,30 @@ test_that("brreg_regnskap: unknown number is the typed empty with http_status 40
 # Section 3c: Probes for the stress-test rig's open findings
 # ============================================================================
 
-test_that("brreg_search: an employee range is accepted by the API (rig S-13)", {
+test_that("brreg_search: the register's privacy rule on employee ranges is reported, not swallowed (rig S-13)", {
  skip_if_no_api()
- res <- tryCatch(brreg_search(min_employees = 1, max_employees = 2, max_results = 20),
+ err <- tryCatch(brreg_search(min_employees = 1, max_employees = 2, max_results = 20),
                  tidybrreg_error_http = function(e) e)
- if (inherits(res, "tidybrreg_error_http")) {
-   resp <- tidybrreg:::brreg_perform(tidybrreg:::brreg_req(
-     "enheter", list(fraAntallAnsatte = 1L, tilAntallAnsatte = 2L, size = 20L, page = 0L)))
-   fail(paste0("HTTP ", httr2::resp_status(resp), " for ", resp$url, "\nbody: ",
-               substr(httr2::resp_body_string(resp), 1, 600)))
- }
+ expect_s3_class(err, "tidybrreg_error_http")
+ expect_equal(err$status, 400L)
+ expect_true(any(grepl("personvern", err$messages)), label = paste(err$messages, collapse = " | "))
+ res <- safely(brreg_search(min_employees = 5, max_employees = 10, max_results = 20))
  expect_s3_class(res, "tbl_df")
- expect_true(all(res$employees <= 2, na.rm = TRUE))
+ expect_gt(nrow(res), 0)
+ expect_true(all(res$employees >= 5 & res$employees <= 10, na.rm = TRUE))
 })
 
-test_that("brreg_signatur and brreg_prokura: Equinor answers with rows or a typed empty (rig SG-01)", {
+test_that("brreg_signatur: Equinor's HTTP 200 body flattens to rows (rig SG-01)", {
  skip_if_no_api()
  sg <- safely(brreg_signatur("923609016"))
  expect_s3_class(sg, "tbl_df")
- expect_gt(nrow(sg), 0, label = paste0("signatur rows (http_status ", attr(sg, "http_status") %||% 200L, ")"))
+ if (nrow(sg) == 0) {
+   resp <- tidybrreg:::brreg_perform(tidybrreg:::brreg_req("enheter/923609016/signatur", service = "fullmakt"))
+   fail(paste0("signatur rows 0; HTTP ", httr2::resp_status(resp), " body: ",
+               substr(httr2::resp_body_string(resp), 1, 1500)))
+ }
  pk <- safely(brreg_prokura("923609016"))
  expect_s3_class(pk, "tbl_df")
- expect_true(nrow(pk) > 0 || identical(attr(pk, "http_status"), 404L) || nrow(pk) == 0)
 })
 
 test_that("get_brreg_dic: Norwegian NACE labels come from KLASS (rig L-27)", {

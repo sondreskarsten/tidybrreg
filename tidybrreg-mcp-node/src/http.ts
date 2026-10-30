@@ -74,7 +74,14 @@ export async function errorMessages(resp: BrregResponse): Promise<string[]> {
   try {
     const body = await resp.json();
     const msgs: string[] = [];
+    if (Array.isArray(body?.valideringsfeil)) {
+      msgs.push(...body.valideringsfeil.map((e: any) => {
+        const params = Array.isArray(e?.parametere) ? e.parametere.join(", ") : "";
+        return params ? `${e.feilmelding} (${params})` : String(e.feilmelding);
+      }));
+    }
     if (Array.isArray(body?.validationErrors)) msgs.push(...body.validationErrors.map((e: any) => String(e.errorMessage)));
+    if (body?.feilmelding && msgs.length === 0) msgs.push(String(body.feilmelding));
     if (body?.error) msgs.push(String(body.error));
     if (body?.trace) msgs.push(`trace: ${body.trace}`);
     return msgs;

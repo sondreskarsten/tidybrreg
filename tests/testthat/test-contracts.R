@@ -623,3 +623,19 @@ test_that("KLASS is asked for Bokmaal (nb) when lang is no", {
   fetch_klass(6L, lang = "en")
   expect_match(seen$url, "[?&]language=en\\b")
 })
+
+test_that("the register's Norwegian error body reaches the typed http error", {
+  body <- list(tidsstempel = 1793334115413, status = 400L, feilmelding = "Feilaktig foresp\u00f8rsel",
+               valideringsfeil = list(list(feilmelding = "P\u00e5 grunn av krav til personvern kan du ikke gj\u00f8re s\u00f8k mellom en og fire ansatte",
+                                           parametere = list("fraAntallAnsatte", "tilAntallAnsatte"))),
+               sti = "/enhetsregisteret/api/enheter", antallFeil = 1L)
+  local_brreg_responses(stub_resp(400L, body))
+  err <- tryCatch(brreg_search(min_employees = 1, max_employees = 2), tidybrreg_error_http = function(e) e)
+  expect_equal(err$status, 400L)
+  expect_length(err$messages, 1L)
+  expect_match(err$messages, "personvern.*\\(fraAntallAnsatte, tilAntallAnsatte\\)$")
+  expect_match(conditionMessage(err), "personvern")
+  local_brreg_responses(stub_resp(400L, list(feilmelding = "Feilaktig foresp\u00f8rsel")))
+  err <- tryCatch(brreg_search(name = "x"), tidybrreg_error_http = function(e) e)
+  expect_equal(err$messages, "Feilaktig foresp\u00f8rsel")
+})

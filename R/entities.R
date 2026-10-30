@@ -165,6 +165,10 @@ mark_deleted <- function(result, status, body) {
 #' @param municipality_code Character. 4-digit Norwegian municipality code.
 #' @param nace_code Character. NACE industry code (e.g. `"64.190"`).
 #' @param min_employees,max_employees Integer. Employee count range.
+#'   For privacy the register refuses a range that lies within one to
+#'   four employees (HTTP 400, `tidybrreg_error_http` with the
+#'   register's message); ranges starting at 0 or at 5 and above are
+#'   served.
 #' @param bankrupt Logical. If `TRUE`, return only bankrupt entities.
 #'   Only supported for `registry = "enheter"`; supplying it for
 #'   `"underenheter"` is an error.

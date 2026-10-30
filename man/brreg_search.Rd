@@ -28,7 +28,11 @@ etc. See \link{legal_forms} for valid codes.}
 
 \item{nace_code}{Character. NACE industry code (e.g. \code{"64.190"}).}
 
-\item{min_employees, max_employees}{Integer. Employee count range.}
+\item{min_employees, max_employees}{Integer. Employee count range.
+For privacy the register refuses a range that lies within one to
+four employees (HTTP 400, \code{tidybrreg_error_http} with the
+register's message); ranges starting at 0 or at 5 and above are
+served.}
 
 \item{bankrupt}{Logical. If \code{TRUE}, return only bankrupt entities.
 Only supported for \code{registry = "enheter"}; supplying it for
