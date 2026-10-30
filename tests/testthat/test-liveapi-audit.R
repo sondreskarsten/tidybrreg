@@ -272,7 +272,7 @@ test_that("brreg_children: children are enheter not underenheter", {
 # Section 3b: Annual accounts (Regnskapsregisteret) — Expected vs Observed
 # ============================================================================
 
-test_that("brreg_regnskap: Equinor files SELSKAP and KONSERN accounts in NOK", {
+test_that("brreg_regnskap: Equinor files SELSKAP and KONSERN accounts", {
  skip_if_no_api()
  acc <- safely(brreg_regnskap("923609016"))
  expect_s3_class(acc, "tbl_df")
@@ -281,7 +281,8 @@ test_that("brreg_regnskap: Equinor files SELSKAP and KONSERN accounts in NOK", {
  expect_true(all(acc$account_type %in% c("SELSKAP", "KONSERN")))
  expect_s3_class(acc$period_end, "Date")
  expect_false(any(is.na(acc$period_end)))
- expect_true(all(acc$currency == "NOK"))
+ # Equinor reports in USD; the register serves the filed currency as filed
+ expect_true(all(grepl("^[A-Z]{3}$", acc$currency)))
  expect_type(acc$filing_id, "integer")
  expect_false(any(duplicated(acc$filing_id)))
  items <- dplyr::bind_rows(acc$items)
