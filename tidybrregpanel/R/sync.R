@@ -1125,18 +1125,26 @@ extract_historiske_navn <- function(entities) {
     return(empty_historiske_navn())
   }
 
-  vals <- as.character(entities[[hist_col[1]]])
-  has_hist <- !is.na(vals) & startsWith(trimws(vals), "[")
-  if (!any(has_hist)) return(empty_historiske_navn())
-
-  orgs <- entities$org_nr[has_hist]
-  parsed <- lapply(vals[has_hist], jsonlite::fromJSON)
+  col <- entities[[hist_col[1]]]
+  if (is.list(col)) {
+    has_hist <- vapply(col, is.data.frame, logical(1))
+    if (!any(has_hist)) return(empty_historiske_navn())
+    orgs <- entities$org_nr[has_hist]
+    parsed <- col[has_hist]
+  } else {
+    vals <- as.character(col)
+    has_hist <- !is.na(vals) & startsWith(trimws(vals), "[")
+    if (!any(has_hist)) return(empty_historiske_navn())
+    orgs <- entities$org_nr[has_hist]
+    parsed <- lapply(vals[has_hist], jsonlite::fromJSON)
+  }
   n_each <- vapply(parsed, function(d) if (is.data.frame(d)) nrow(d) else 0L,
                    integer(1))
-  field_chr <- function(nm) {
+  field_chr <- function(nm, alt = nm) {
     unlist(lapply(parsed, function(d) {
       if (!is.data.frame(d)) return(character(0))
-      if (is.null(d[[nm]])) rep(NA_character_, nrow(d)) else as.character(d[[nm]])
+      v <- d[[nm]] %||% d[[alt]]
+      if (is.null(v)) rep(NA_character_, nrow(d)) else as.character(v)
     }), use.names = FALSE)
   }
   result <- tibble::tibble(
@@ -1144,8 +1152,8 @@ extract_historiske_navn <- function(entities) {
     position  = unlist(lapply(n_each, function(n) seq_len(n) - 1L),
                         use.names = FALSE),
     name      = field_chr("navn"),
-    from_date = field_chr("fraDato"),
-    to_date   = field_chr("tilDato")
+    from_date = field_chr("fra_dato", "fraDato"),
+    to_date   = field_chr("til_dato", "tilDato")
   )
   if (nrow(result) == 0) return(empty_historiske_navn())
   result
@@ -1158,9 +1166,9 @@ extract_historiske_navn <- function(entities) {
 #' (column `annotations` after [tidybrreg::field_dict] renaming); annotation
 #' content is then fetched per entity from the enheter endpoint for
 #' the entities whose flag is true. The JSON bulk carries the full
-#' påtegning array inline, serialized to a JSON string by
-#' `tidybrreg:::flatten_cell()` — detected by a leading `[` — and is parsed
-#' directly with no per-entity fetches.
+#' påtegning array inline, which tidybrreg nests as a list-column of
+#' tibbles (older snapshots hold it as a JSON string, detected by a
+#' leading `[`); either is read directly with no per-entity fetches.
 #' @param entities A tibble of bulk entity data with `org_nr` and the
 #'   `annotations` flag or serialized array.
 #' @keywords internal
@@ -1168,17 +1176,24 @@ extract_paategninger <- function(entities) {
   flag_col <- intersect(c("annotations", "paategninger"), names(entities))
   if (length(flag_col) == 0 || !"org_nr" %in% names(entities)) return(empty_paategninger())
 
-  vals <- as.character(entities[[flag_col[1]]])
-  inline <- !is.na(vals) & startsWith(trimws(vals), "[")
+  col <- entities[[flag_col[1]]]
+  if (is.list(col)) {
+    inline <- vapply(col, is.data.frame, logical(1))
+    vals <- rep(NA_character_, length(col))
+  } else {
+    vals <- as.character(col)
+    inline <- !is.na(vals) & startsWith(trimws(vals), "[")
+  }
   if (any(inline)) {
     orgs <- entities$org_nr[inline]
-    parsed <- lapply(vals[inline], jsonlite::fromJSON)
+    parsed <- if (is.list(col)) col[inline] else lapply(vals[inline], jsonlite::fromJSON)
     n_each <- vapply(parsed, function(d) if (is.data.frame(d)) nrow(d) else 0L,
                      integer(1))
-    field_chr <- function(nm) {
+    field_chr <- function(nm, alt = nm) {
       unlist(lapply(parsed, function(d) {
         if (!is.data.frame(d)) return(character(0))
-        if (is.null(d[[nm]])) rep(NA_character_, nrow(d)) else as.character(d[[nm]])
+        v <- d[[nm]] %||% d[[alt]]
+        if (is.null(v)) rep(NA_character_, nrow(d)) else as.character(v)
       }), use.names = FALSE)
     }
     result <- tibble::tibble(
@@ -1187,7 +1202,7 @@ extract_paategninger <- function(entities) {
                               use.names = FALSE),
       infotype      = field_chr("infotype"),
       tekst         = field_chr("tekst"),
-      innfoert_dato = field_chr("innfoertDato")
+      innfoert_dato = field_chr("innfoert_dato", "innfoertDato")
     )
     if (nrow(result) == 0) return(empty_paategninger())
     return(result)

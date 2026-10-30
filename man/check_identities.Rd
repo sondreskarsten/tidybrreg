@@ -11,7 +11,7 @@ check_identities(items)
 }
 \value{
 A list with \code{consistent} (logical, \code{NA} when nothing is
-checkable) and \code{inconsistencies} (newline-separated names, \code{NA}
+checkable) and \code{inconsistencies} (the failing names, zero-length
 when none fails).
 }
 \description{

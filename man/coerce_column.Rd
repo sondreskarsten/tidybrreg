@@ -21,5 +21,7 @@ The single coercion rule shared by the live JSON path
 dictionary type is invariant across sources. A value that is present
 (not \code{NA}, not empty) but does not parse is a failure; its index is
 returned so the caller can build the \code{brreg_parse_problems} table.
+A list-column (a nested array of objects) is returned unchanged: the
+dictionary types describe scalar cells only.
 }
 \keyword{internal}

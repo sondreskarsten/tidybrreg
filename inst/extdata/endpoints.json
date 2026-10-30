@@ -18,6 +18,13 @@
     "pattern": "^[89][0-9]{8}$",
     "check": "modulus 11 with weights 3,2,7,6,5,4,3,2 over the first eight digits; remainder 0 gives check digit 0, remainder giving check digit 10 is invalid"
   },
+  "tidy": {
+    "note": "Every result is tidy: one observation per row, one variable per column, one observational unit per table; no cell holds more than one value and nothing is serialized to JSON text.",
+    "string_arrays": "line fragments of one value (addresses, vedtektsfestetFormaal, aktivitet): joined with \\n, which no fragment contains",
+    "object_arrays": "observations of another unit (historiskeNavn, paategninger, any array of objects): nested as a list-column of tibbles / JSON arrays of records, one row per element, columns snake_case of the element's leaf paths, no dictionary type applied, NULL (absent) for an entity without them",
+    "empty_arrays": "no observation: the key is not emitted",
+    "nested_results": {"brreg_regnskap": ["items", "inconsistencies"], "brreg_updates": ["changes (include_changes = TRUE)"]}
+  },
   "functions": {
     "brreg_entity": {
       "service": "enhetsregisteret",
@@ -34,7 +41,7 @@
         "410": "deleted: parse the body, deleted = TRUE, deletion_date from slettedato, tidybrreg_warning_deleted",
         "other>=400": "tidybrreg_error_http"
       },
-      "result": {"added_columns": ["registry", "deleted"], "emission": "observed fields only, renamed through field_dict, HAL _links removed at any depth"}
+      "result": {"added_columns": ["registry", "deleted"], "emission": "observed fields only, renamed through field_dict, HAL _links removed at any depth", "nesting": "arrays of objects are list-columns of tibbles (historiske_navn, annotations); see `tidy`"}
     },
     "brreg_search": {
       "service": "enhetsregisteret",
@@ -447,7 +454,7 @@
         }
       ],
       "identities": {
-        "note": "Accounting identities checked per filing on the items, by item name; an identity is checkable when lhs and every non-optional term are present (optional terms absent count as 0); it fails when |lhs - (sum of plus - sum of minus)| > tolerance. `consistent` is TRUE when every checkable identity holds, FALSE when any fails, NA when none is checkable; `inconsistencies` lists the failing names joined by newline. Filings are published as filed: a failure is flagged, never corrected. Tolerance 1 absorbs the rounding observed in the register (data-2026-10 release: 6-16% of filings fail at tolerance 0, 0.1-2.5% at tolerance 1).",
+        "note": "Accounting identities checked per filing on the items, by item name; an identity is checkable when lhs and every non-optional term are present (optional terms absent count as 0); it fails when |lhs - (sum of plus - sum of minus)| > tolerance. `consistent` is TRUE when every checkable identity holds, FALSE when any fails, NA when none is checkable; `inconsistencies` is a list-column of the failing names (zero-length when none). Filings are published as filed: a failure is flagged, never corrected. Tolerance 1 absorbs the rounding observed in the register (data-2026-10 release: 6-16% of filings fail at tolerance 0, 0.1-2.5% at tolerance 1).",
         "tolerance": 1,
         "rules": [
           {

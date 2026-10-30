@@ -34,6 +34,24 @@ The package ships `inst/extdata/endpoints.json`, a machine-readable
 contract of every export's endpoint, query mapping and status handling,
 held to the functions by `tests/testthat/test-endpoints.R`.
 
+## Tidy shape
+
+* Every tibble the package returns is now tidy in Wickham's sense,
+  with no cell holding more than one value. Arrays of objects the
+  register nests inside an entity (`historiskeNavn`, `paategninger`)
+  were serialized to JSON text in one cell; `brreg_entity()`,
+  `brreg_search()` and the JSON bulk of `brreg_download()` now return
+  them as list-columns of tibbles (`historiske_navn`, `annotations`),
+  one row per element with snake_case columns, `NULL` for an entity
+  without them, so `tidyr::unnest()` gives the table of the other
+  unit. An empty array emits no column. Arrays of strings (addresses,
+  `purpose`, `activity`) are line fragments of one value and keep the
+  `"\n"` join. `brreg_regnskap()`'s `inconsistencies` is a list-column
+  of the failing identity names (zero-length when none) instead of a
+  newline-joined string. The Node MCP server returns the same nesting
+  as JSON arrays. tidybrregpanel's bootstrap reads both the nested
+  column and the JSON text of older snapshots.
+
 ## New: annual accounts
 
 * New `brreg_regnskap()` retrieves an entity's annual accounts from the

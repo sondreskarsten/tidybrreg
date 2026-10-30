@@ -1,7 +1,7 @@
 import { type ToolContext, type ToolResult, fnSpec, abortHttp, url, nz } from "./common.js";
 import { TidybrregError } from "../conditions.js";
 import { formatSince, parseBrregInstant } from "../dates.js";
-import { collapseObserved, toSnake, type Row } from "../parse.js";
+import { toSnake, type Row } from "../parse.js";
 
 const KNOWN_MEMBERS = ["oppdateringsid", "organisasjonsnummer", "endringstype", "dato", "endringer", "_links"];
 const KNOWN_EVENT = ["specversion", "id", "source", "type", "time", "data", "datacontenttype", "subject"];
@@ -10,10 +10,15 @@ export const FIELD_COLUMNS = [...UPDATE_COLUMNS, "operation", "field", "path", "
 
 export interface Patch { operation: string | null; field: string | null; path: string | null; new_value: string | null }
 
-function flattenCell(v: unknown): string | null {
+function memberText(v: unknown): string | null {
   if (v === null || v === undefined) return null;
   if (typeof v === "object" && !Array.isArray(v)) return JSON.stringify(v);
-  return collapseObserved(Array.isArray(v) ? v : [v]);
+  if (Array.isArray(v)) {
+    if (v.length === 0) return null;
+    if (v.some((e) => e !== null && typeof e === "object")) return JSON.stringify(v);
+    return v.map((e) => String(e)).join("\n");
+  }
+  return String(v);
 }
 
 export function parsePatch(endringer: any[] | undefined | null): Patch[] {
@@ -48,7 +53,7 @@ function parseUpdatesPage(raw: any[], includeChanges: boolean): { rows: Row[]; u
     for (const k of Object.keys(u ?? {})) {
       if (KNOWN_MEMBERS.includes(k)) continue;
       extra.add(k);
-      row[toSnake(k)] = flattenCell(u[k]);
+      row[toSnake(k)] = memberText(u[k]);
     }
     if (includeChanges) row.changes = parsePatch(u?.endringer) as unknown as Record<string, unknown>[];
     return row;
@@ -183,7 +188,7 @@ async function rollerUpdates(ctx: ToolContext, since: unknown, size: number, max
       for (const k of Object.keys(e ?? {})) {
         if (KNOWN_EVENT.includes(k)) continue;
         unknown.add(k);
-        row[toSnake(k)] = flattenCell(e[k]);
+        row[toSnake(k)] = memberText(e[k]);
       }
       rows.push(row);
     }

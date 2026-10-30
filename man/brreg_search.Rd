@@ -98,6 +98,24 @@ register. When \code{max_results} is at or below the window the first
 more matches exist.
 }
 
+\section{Tidy shape}{
+
+Every tibble the package returns is tidy in Wickham's sense: one
+observation per row, one variable per column, one observational
+unit per table. The register nests two kinds of array inside an
+entity. Arrays of strings (\code{business_address}, \code{postal_address},
+\code{location_address}, \code{purpose}, \code{activity}) are the line fragments
+of one value and are joined with \code{"\\n"}, which no fragment
+contains, so \code{strsplit(x, "\\n")} recovers the lines. Arrays of
+objects (\code{historiske_navn}, \code{annotations}, any array of objects the
+register adds) are observations of another unit and are nested as a
+list-column of tibbles, one row per element with snake_case
+columns, \code{NULL} for an entity without them; \code{tidyr::unnest()}
+expands them to their own table. An empty array is not an
+observation and emits no column. Nothing is serialized to JSON
+text.
+}
+
 \examples{
 \dontshow{if (interactive() && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 # Search by name

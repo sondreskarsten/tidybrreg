@@ -32,7 +32,9 @@ A tibble with one row and one column per field the API
 returned, named via \link{field_dict}, plus \code{registry} (which registry
 answered) and \code{deleted} (logical). Frequently present columns include
 \code{org_nr}, \code{name}, \code{legal_form}, \code{employees}, \code{founding_date},
-\code{nace_1}, \code{municipality_code}, \code{bankrupt}, and \code{parent_org_nr}.
+\code{nace_1}, \code{municipality_code}, \code{bankrupt}, and \code{parent_org_nr};
+\code{historiske_navn} and \code{annotations} are list-columns of tibbles
+(see the section on tidy shape).
 }
 \description{
 Retrieve registration details for a legal entity from Norway's Central
@@ -57,6 +59,24 @@ returned columns are exactly the fields the response carried, so
 every column other than \code{org_nr}, \code{registry} and \code{deleted} is
 conditionally present. Test for a column with \code{"x" \%in\% names(result)}
 rather than assuming it.
+}
+
+\section{Tidy shape}{
+
+Every tibble the package returns is tidy in Wickham's sense: one
+observation per row, one variable per column, one observational
+unit per table. The register nests two kinds of array inside an
+entity. Arrays of strings (\code{business_address}, \code{postal_address},
+\code{location_address}, \code{purpose}, \code{activity}) are the line fragments
+of one value and are joined with \code{"\\n"}, which no fragment
+contains, so \code{strsplit(x, "\\n")} recovers the lines. Arrays of
+objects (\code{historiske_navn}, \code{annotations}, any array of objects the
+register adds) are observations of another unit and are nested as a
+list-column of tibbles, one row per element with snake_case
+columns, \code{NULL} for an entity without them; \code{tidyr::unnest()}
+expands them to their own table. An empty array is not an
+observation and emits no column. Nothing is serialized to JSON
+text.
 }
 
 \section{Deleted entities}{

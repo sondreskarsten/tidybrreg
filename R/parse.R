@@ -13,16 +13,19 @@ parse_entity <- function(raw) {
   coerce_types(mapped)
 }
 
-#' Collapse an observed array value to a single character cell
+#' Collapse an observed array value to one tidy cell
 #'
 #' BRREG returns addresses, `vedtektsfestetFormaal`, and `aktivitet`
-#' as arrays of register line-fragments. Element text routinely
-#' contains commas and semicolons but never newlines, so `"\n"` is the
-#' only separator that survives a round trip: a consumer can split it
-#' back into the observed elements, which `"; "` and `", "` do not
-#' allow. Arrays whose elements are objects (`historiskeNavn`,
-#' `paategninger`) have no meaningful text join and are serialized to
-#' JSON instead, preserving field structure.
+#' as arrays of register line-fragments of one value. Element text
+#' routinely contains commas and semicolons but never newlines, so
+#' `"\n"` is the only separator that survives a round trip: a consumer
+#' can split it back into the observed elements, which `"; "` and
+#' `", "` do not allow. Arrays whose elements are objects
+#' (`historiskeNavn`, `paategninger`) are repeated observations of
+#' another unit and are nested instead: the cell is a tibble with one
+#' row per element and one column per leaf of the element, named in
+#' snake_case of the leaf's dot path, so the caller's column is a
+#' list-column that `tidyr::unnest()` expands.
 #'
 #' Note that the CSV bulk is BRREG's own flattening and uses
 #' field-specific separators (newline for addresses, space for
@@ -30,30 +33,63 @@ parse_entity <- function(raw) {
 #' JSON-sourced values for those fields are not byte-identical and
 #' cannot be made so without imposing a per-field rule.
 #'
-#' @param val A list or atomic vector taken from a parsed response.
-#' @returns A length-1 character value.
+#' @param val A list, atomic vector or data frame taken from a parsed
+#'   response.
+#' @returns A length-1 character value, or a tibble for an array of
+#'   objects.
 #' @keywords internal
 collapse_observed <- function(val) {
   if (is.null(val) || length(val) == 0) return(NA_character_)
   if (is.data.frame(val)) {
     if (nrow(val) == 0) return(NA_character_)
-    return(as.character(jsonlite::toJSON(val, auto_unbox = TRUE)))
+    return(nest_records(val))
   }
   if (is.list(val) && all(vapply(val, is.null, logical(1)))) {
     return(NA_character_)
   }
   if (is.list(val) &&
       any(vapply(val, function(e) is.list(e) || is.data.frame(e), logical(1)))) {
-    return(as.character(jsonlite::toJSON(val, auto_unbox = TRUE)))
+    return(nest_records(val))
   }
   paste(as.character(unlist(val)), collapse = "\n")
+}
+
+#' Nest an array of objects as a tibble, one row per element
+#'
+#' Each element is flattened with [flatten_json()] so nested objects
+#' inside an element become dot paths, then renamed to snake_case. A
+#' data frame (the shape `jsonlite::fromJSON(flatten = TRUE)` gives the
+#' bulk JSON) is taken as is. Values are kept as observed: the field
+#' dictionary does not describe the leaves of these arrays, so no type
+#' is asserted.
+#' @param val An unnamed list of named lists, or a data frame.
+#' @returns A tibble.
+#' @keywords internal
+nest_records <- function(val) {
+  if (is.data.frame(val)) {
+    out <- tibble::as_tibble(val)
+    names(out) <- to_snake(names(out))
+    return(out)
+  }
+  rows <- lapply(val, function(e) {
+    if (is.null(e) || length(e) == 0) return(tibble::tibble())
+    if (!is.list(e)) return(tibble::tibble(value = as.character(e)))
+    flat <- flatten_json(e)
+    flat <- lapply(flat, function(v) if (is.data.frame(v)) list(v) else v)
+    names(flat) <- to_snake(names(flat))
+    tibble::as_tibble(flat)
+  })
+  dplyr::bind_rows(rows)
 }
 
 
 #' Recursively flatten nested JSON into dot-notation keys
 #'
 #' Nested objects recurse into `parent.child` keys. Arrays are
-#' collapsed by [collapse_observed()].
+#' collapsed by [collapse_observed()]: arrays of strings to one
+#' newline-joined cell, arrays of objects to a nested tibble. An empty
+#' array carries no observation and emits no key, so a batch can bind
+#' entities with and without the array.
 #' @param x A parsed JSON list.
 #' @param prefix Key prefix used during recursion.
 #' @returns A flat named list.
@@ -66,6 +102,7 @@ flatten_json <- function(x, prefix = "") {
     if (is.list(val) && !is.null(names(val))) {
       out <- c(out, flatten_json(val, full))
     } else if (is.list(val) && is.null(names(val))) {
+      if (length(val) == 0) next
       out[[full]] <- collapse_observed(val)
     } else {
       out[[full]] <- val
@@ -131,6 +168,7 @@ rename_from_dict <- function(flat, dict = field_dict) {
 
   result <- lapply(result, function(v) {
     if (is.null(v) || length(v) == 0) return(NA)
+    if (is.data.frame(v)) return(list(v))
     if (length(v) > 1) return(collapse_observed(v))
     v
   })
@@ -146,6 +184,8 @@ rename_from_dict <- function(flat, dict = field_dict) {
 #' dictionary type is invariant across sources. A value that is present
 #' (not `NA`, not empty) but does not parse is a failure; its index is
 #' returned so the caller can build the `brreg_parse_problems` table.
+#' A list-column (a nested array of objects) is returned unchanged: the
+#' dictionary types describe scalar cells only.
 #'
 #' @param x A vector.
 #' @param type One of the [field_dict] types.
@@ -153,6 +193,7 @@ rename_from_dict <- function(flat, dict = field_dict) {
 #'   (integer indices of unparseable values).
 #' @keywords internal
 coerce_column <- function(x, type) {
+  if (is.list(x)) return(list(value = x, failed = integer()))
   present <- !is.na(x) & !(is.character(x) & !nzchar(trimws(as.character(x))))
   value <- switch(type,
     Date      = parse_brreg_date(x),

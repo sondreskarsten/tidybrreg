@@ -38,8 +38,9 @@ the file path without parsing).}
 Depends on \code{type_output}:
 \itemize{
 \item \code{"tibble"}: A tibble with ~1 million rows. Column names mapped
-via \link{field_dict}. For \code{type = "roller"}, one row per role
-assignment with the columns of \code{\link[=brreg_roles]{brreg_roles()}}.
+via \link{field_dict}; with \code{format = "json"} the arrays of objects
+are list-columns of tibbles. For \code{type = "roller"}, one row per
+role assignment with the columns of \code{\link[=brreg_roles]{brreg_roles()}}.
 \item \code{"path"}: Character file path to the gzipped download.
 }
 }
@@ -66,7 +67,10 @@ entities.
 
 Results from both paths use the same column names and types via
 \link{field_dict}; only observed columns are emitted (see
-\code{\link[=brreg_entity]{brreg_entity()}}).
+\code{\link[=brreg_entity]{brreg_entity()}}). The JSON bulk carries the arrays the CSV lacks:
+\code{historiskeNavn} and the full \code{paategninger} array arrive as the
+nested list-columns \code{historiske_navn} and \code{annotations}, while the
+CSV's \code{annotations} is BRREG's own presence flag.
 }
 
 \section{Caching}{
@@ -87,6 +91,24 @@ at load time.
 Metadata of the most recent download (\code{url}, \code{etag}, \code{last_modified}
 as a UTC \code{POSIXct}, \code{downloaded_at}, \code{path}) is available as
 \code{attr(result, "brreg_download")} on tibble output.
+}
+
+\section{Tidy shape}{
+
+Every tibble the package returns is tidy in Wickham's sense: one
+observation per row, one variable per column, one observational
+unit per table. The register nests two kinds of array inside an
+entity. Arrays of strings (\code{business_address}, \code{postal_address},
+\code{location_address}, \code{purpose}, \code{activity}) are the line fragments
+of one value and are joined with \code{"\\n"}, which no fragment
+contains, so \code{strsplit(x, "\\n")} recovers the lines. Arrays of
+objects (\code{historiske_navn}, \code{annotations}, any array of objects the
+register adds) are observations of another unit and are nested as a
+list-column of tibbles, one row per element with snake_case
+columns, \code{NULL} for an entity without them; \code{tidyr::unnest()}
+expands them to their own table. An empty array is not an
+observation and emits no column. Nothing is serialized to JSON
+text.
 }
 
 \examples{

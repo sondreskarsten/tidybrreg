@@ -1,6 +1,7 @@
 // The two tidybrreg parsing rules, ported: flatten nested JSON to
-// dot-notation keys (arrays collapsed with "\n", arrays of objects
-// serialised), rename through field_dict emitting observed fields only,
+// dot-notation keys (arrays of strings joined with "\n", arrays of
+// objects nested as records with snake_case keys), rename through
+// field_dict emitting observed fields only,
 // strip HAL links at any depth, and coerce dictionary types with
 // failures reported rather than fatal.
 import type { Manifest } from "./manifest.js";
@@ -17,16 +18,30 @@ export function isHalLinkPath(path: string): boolean {
   return path.split(".").some((p) => p === "_links" || p === "links");
 }
 
-export function collapseObserved(val: unknown): string | null {
+export type Nested = Record<string, unknown>[];
+
+export function collapseObserved(val: unknown): string | Nested | null {
   if (val === null || val === undefined) return null;
   if (Array.isArray(val)) {
     if (val.length === 0) return null;
     if (val.every((v) => v === null || v === undefined)) return null;
-    if (val.some((v) => v !== null && typeof v === "object")) return JSON.stringify(val);
+    if (val.some((v) => v !== null && typeof v === "object")) return nestRecords(val);
     return val.map((v) => String(v)).join("\n");
   }
   if (typeof val === "object") return JSON.stringify(val);
   return String(val);
+}
+
+/** An array of objects as one record per element, leaves flattened to snake_case keys (tidybrreg's nest_records). */
+export function nestRecords(val: unknown[]): Nested {
+  return val.map((e) => {
+    if (e === null || e === undefined) return {};
+    if (typeof e !== "object") return { value: String(e) };
+    const flat = flattenJson(e as Record<string, unknown>);
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(flat)) out[toSnake(k)] = v;
+    return out;
+  });
 }
 
 export function flattenJson(x: Record<string, unknown>, prefix = ""): Record<string, unknown> {
@@ -36,6 +51,7 @@ export function flattenJson(x: Record<string, unknown>, prefix = ""): Record<str
     if (v !== null && typeof v === "object" && !Array.isArray(v)) {
       Object.assign(out, flattenJson(v as Record<string, unknown>, full));
     } else if (Array.isArray(v)) {
+      if (v.length === 0) continue;
       out[full] = collapseObserved(v);
     } else {
       out[full] = v;
@@ -126,7 +142,7 @@ export function renameThrough(dict: FieldMap, flat: Record<string, unknown>): { 
   return { row, types };
 }
 
-function scalarise(v: unknown): Cell {
+function scalarise(v: unknown): Cell | Nested {
   if (v === null || v === undefined) return null;
   if (Array.isArray(v)) return collapseObserved(v);
   if (typeof v === "object") return JSON.stringify(v);
@@ -141,7 +157,7 @@ export function coerceRows(rows: Row[], types: Map<string, string>): ParseProble
   for (const [col, type] of types) {
     const failed: { row: number; actual: string }[] = [];
     rows.forEach((r, i) => {
-      if (!(col in r)) return;
+      if (!(col in r) || Array.isArray(r[col])) return;
       const { value, failed: f } = coerceValue(r[col], type);
       if (f) failed.push({ row: i + 1, actual: String(r[col]) });
       r[col] = value;

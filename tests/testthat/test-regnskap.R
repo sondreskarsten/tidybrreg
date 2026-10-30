@@ -72,29 +72,31 @@ test_that("consistency flags equal the independent Python check of the same iden
   exp <- regnskap_expected()
   expected_consistent <- vapply(exp, \(e) if (is.null(e$consistent)) NA else isTRUE(e$consistent), logical(1))
   expect_equal(res$consistent, expected_consistent)
-  expected_inc <- vapply(exp, \(e) if (length(e$inconsistencies) == 0) NA_character_ else paste(unlist(e$inconsistencies), collapse = "\n"), character(1))
+  expected_inc <- lapply(exp, \(e) as.character(unlist(e$inconsistencies)))
+  expect_type(res$inconsistencies, "list")
   expect_equal(res$inconsistencies, expected_inc)
   expect_true(any(res$consistent %in% FALSE))
   expect_true(any(res$consistent %in% TRUE))
-  expect_true(all(is.na(res$inconsistencies[res$consistent %in% TRUE])))
+  expect_true(all(lengths(res$inconsistencies[res$consistent %in% TRUE]) == 0L))
+  expect_true(all(lengths(res$inconsistencies[res$consistent %in% FALSE]) > 0L))
 })
 
 test_that("the identities are checked within the tolerance and only when checkable", {
   f <- regnskap_fixture()[[1]]
   f$eiendeler$sumEiendeler <- f$egenkapitalGjeld$sumEgenkapitalGjeld + 1
   res <- flatten_regnskap(list(f), "923609016")
-  expect_false("balance" %in% strsplit(res$inconsistencies %||% "", "\n")[[1]])
+  expect_false("balance" %in% res$inconsistencies[[1]])
   f$eiendeler$sumEiendeler <- f$egenkapitalGjeld$sumEgenkapitalGjeld + 2
   res <- flatten_regnskap(list(f), "923609016")
   expect_false(res$consistent)
-  expect_true("balance" %in% strsplit(res$inconsistencies, "\n")[[1]])
+  expect_true("balance" %in% res$inconsistencies[[1]])
   g <- list(id = 1L, journalnr = "x", regnskapstype = "SELSKAP",
             virksomhet = list(organisasjonsnummer = "923609016"),
             regnskapsperiode = list(fraDato = "2025-01-01", tilDato = "2025-12-31"),
             valuta = "NOK", eiendeler = list(sumEiendeler = 10))
   res <- flatten_regnskap(list(g), "923609016")
   expect_true(is.na(res$consistent))
-  expect_true(is.na(res$inconsistencies))
+  expect_equal(res$inconsistencies, list(character()))
   expect_equal(nrow(res$items[[1]]), 1L)
 })
 

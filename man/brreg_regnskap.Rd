@@ -24,7 +24,8 @@ filing is returned: \code{org_nr}, \code{filing_id} (integer), \code{journal_nr}
 \code{account_type}, \code{period_start} and \code{period_end} (Date), \code{currency},
 \code{items} (list of tibbles with columns \code{statement}, \code{group}, \code{item},
 \code{path}, \code{level}, \code{is_sum}, \code{value}), \code{consistent} (logical) and
-\code{inconsistencies} (character). Frequently present: \code{legal_form},
+\code{inconsistencies} (list of character vectors). Frequently present:
+\code{legal_form},
 \code{parent_company}, \code{liquidation_accounts}, \code{presentation_plan},
 \code{not_audited}, \code{audit_waived}, \code{small_enterprise},
 \code{accounting_rules}. A zero-row tibble typed on the always-present
@@ -91,8 +92,9 @@ and net income follow from their components; the list is
 \code{consistent} is \code{TRUE} when every checkable identity holds within a
 tolerance of 1 unit of currency, \code{FALSE} when any fails and \code{NA}
 when none is checkable (an identity is checkable when its total and
-every non-optional term are present). \code{inconsistencies} names the
-failing identities, newline-separated, and is \code{NA} when none fails.
+every non-optional term are present). \code{inconsistencies} is a
+list-column holding the names of the failing identities, a
+zero-length character vector when none fails.
 In the October 2026 population (1,129,601 filings) between 0.1\% and
 2.5\% of filings fail each identity at that tolerance.
 

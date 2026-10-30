@@ -122,6 +122,25 @@ describe("fixtures shared with the R test suite", () => {
 });
 
 describe("tools over a mocked register", () => {
+  it("brreg_entity nests arrays of objects and joins line fragments like the R package", async () => {
+    const body = entity("923609016", {
+      vedtektsfestetFormaal: ["Line 1", "Line 2"],
+      historiskeNavn: [{ navn: "STATOIL ASA", fraDato: "2001-05-11 08:32:09", tilDato: "2007-10-01 06:44:33" }],
+      paategninger: [{ infotype: "KONT", tekst: "x", innfoertDato: "2025-05-05" }, { infotype: "FADR", tekst: "y", innfoertDato: "2025-06-06" }],
+      aktivitet: [],
+    });
+    const q = queue([{ status: 200, body }]);
+    const r = await callTool(m, q.http, tool("brreg_entity"), { org_nr: "923609016" });
+    expect(r.isError).toBe(false);
+    const row = (r.structuredContent.rows as any[])[0];
+    expect(row.purpose).toBe("Line 1\nLine 2");
+    expect(row.historiske_navn).toEqual([{ navn: "STATOIL ASA", fra_dato: "2001-05-11 08:32:09", til_dato: "2007-10-01 06:44:33" }]);
+    expect(row.annotations).toHaveLength(2);
+    expect(row.annotations[1]).toEqual({ infotype: "FADR", tekst: "y", innfoert_dato: "2025-06-06" });
+    expect("activity" in row).toBe(false);
+    expect((r.structuredContent.conditions as any[]).some((c) => c.class === "tidybrreg_warning_parse")).toBe(false);
+  });
+
   it("brreg_entity models deletion and errors like the R package", async () => {
     let q = queue([{ status: 200, body: entity("923609016", { respons_klasse: "SlettetEnhet", slettedato: "2026-02-01" }) }]);
     let r = await callTool(m, q.http, tool("brreg_entity"), { org_nr: "923609016" });
@@ -206,7 +225,7 @@ describe("tools over a mocked register", () => {
       const items = r.items as any[];
       expect(new Set(items.map((x) => x.path))).toEqual(new Set(expected[i].item_paths));
       expect(r.consistent).toBe(expected[i].consistent);
-      expect(r.inconsistencies).toBe(expected[i].inconsistencies.length ? expected[i].inconsistencies.join("\n") : null);
+      expect(r.inconsistencies).toEqual(expected[i].inconsistencies);
     });
     expect(Object.keys(flat.rows[0])[0]).toBe("org_nr");
     const all = flat.rows.flatMap((r) => r.items as any[]);

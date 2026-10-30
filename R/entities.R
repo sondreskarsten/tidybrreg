@@ -21,6 +21,22 @@
 #' conditionally present. Test for a column with `"x" %in% names(result)`
 #' rather than assuming it.
 #'
+#' @section Tidy shape:
+#' Every tibble the package returns is tidy in Wickham's sense: one
+#' observation per row, one variable per column, one observational
+#' unit per table. The register nests two kinds of array inside an
+#' entity. Arrays of strings (`business_address`, `postal_address`,
+#' `location_address`, `purpose`, `activity`) are the line fragments
+#' of one value and are joined with `"\n"`, which no fragment
+#' contains, so `strsplit(x, "\n")` recovers the lines. Arrays of
+#' objects (`historiske_navn`, `annotations`, any array of objects the
+#' register adds) are observations of another unit and are nested as a
+#' list-column of tibbles, one row per element with snake_case
+#' columns, `NULL` for an entity without them; `tidyr::unnest()`
+#' expands them to their own table. An empty array is not an
+#' observation and emits no column. Nothing is serialized to JSON
+#' text.
+#'
 #' @section Deleted entities:
 #' BRREG reports a deleted entity either as HTTP 410 or, for most
 #' deletions, as HTTP 200 with `respons_klasse = "SlettetEnhet"` and a
@@ -48,7 +64,9 @@
 #'   returned, named via [field_dict], plus `registry` (which registry
 #'   answered) and `deleted` (logical). Frequently present columns include
 #'   `org_nr`, `name`, `legal_form`, `employees`, `founding_date`,
-#'   `nace_1`, `municipality_code`, `bankrupt`, and `parent_org_nr`.
+#'   `nace_1`, `municipality_code`, `bankrupt`, and `parent_org_nr`;
+#'   `historiske_navn` and `annotations` are list-columns of tibbles
+#'   (see the section on tidy shape).
 #'
 #' @family tidybrreg entity functions
 #' @seealso [brreg_search()] for querying multiple entities,
@@ -142,6 +160,8 @@ mark_deleted <- function(result, status, body) {
 #' - **NUF**: Norwegian-registered foreign entity (branch office)
 #'
 #' See [legal_forms] for the complete list with English translations.
+#'
+#' @inheritSection brreg_entity Tidy shape
 #'
 #' @section Result window:
 #' The search endpoints allow a page size of up to 10,000 but reject any

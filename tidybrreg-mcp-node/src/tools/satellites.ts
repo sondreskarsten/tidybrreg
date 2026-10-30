@@ -225,7 +225,7 @@ export function buildItems(spec: FunctionSpec, flat: Record<string, unknown>): {
 }
 
 /** The accounting identities of one filing, by item name, within the spec's tolerance. */
-export function checkIdentities(spec: FunctionSpec, items: RegnskapItem[]): { consistent: boolean | null; inconsistencies: string | null } {
+export function checkIdentities(spec: FunctionSpec, items: RegnskapItem[]): { consistent: boolean | null; inconsistencies: string[] } {
   const valueOf = (name: string): number | null => items.find((i) => i.item === name)?.value ?? null;
   const checked: string[] = []; const failed: string[] = [];
   for (const rule of spec.identities?.rules ?? []) {
@@ -237,7 +237,7 @@ export function checkIdentities(spec: FunctionSpec, items: RegnskapItem[]): { co
     checked.push(rule.name);
     if (Math.abs(lhs - rhs) > (spec.identities?.tolerance ?? 0)) failed.push(rule.name);
   }
-  return { consistent: checked.length === 0 ? null : failed.length === 0, inconsistencies: failed.length === 0 ? null : failed.join("\n") };
+  return { consistent: checked.length === 0 ? null : failed.length === 0, inconsistencies: failed };
 }
 
 /** One nested row per filing: scalars renamed through the field map, items built from the statement leaves, identities checked. */
@@ -264,7 +264,7 @@ export function flattenRegnskap(spec: FunctionSpec, raw: any, org_nr: string): {
     const flags = checkIdentities(spec, built.items);
     rows.push({ org_nr: r.row.org_nr, ...r.row, items: built.items as unknown as Record<string, unknown>[], consistent: flags.consistent, inconsistencies: flags.inconsistencies });
   });
-  types.set("items", "list"); types.set("consistent", "logical"); types.set("inconsistencies", "character");
+  types.set("items", "list"); types.set("consistent", "logical"); types.set("inconsistencies", "list");
   const byColumn = new Map<string, number>();
   for (const p of problems) byColumn.set(p.column, (byColumn.get(p.column) ?? 0) + 1);
   for (const p of problems) p.n_failed = byColumn.get(p.column)!;

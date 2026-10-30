@@ -111,6 +111,18 @@ test_that("brreg_regnskap maps its query and publishes the field map it applies"
   expect_true(all(used %in% mapped))
 })
 
+test_that("the tidy rule in the spec is the rule the flatteners apply", {
+  expect_true(all(c("string_arrays", "object_arrays", "empty_arrays") %in% names(spec$tidy)))
+  expect_type(tidybrreg:::empty_regnskap()$inconsistencies, "list")
+  expect_type(tidybrreg:::empty_regnskap()$items, "list")
+  expect_setequal(unlist(spec$tidy$nested_results$brreg_regnskap), c("items", "inconsistencies"))
+  lines <- tidybrreg:::collapse_observed(list("a", "b"))
+  expect_equal(strsplit(lines, "\n")[[1]], c("a", "b"))
+  nested <- tidybrreg:::collapse_observed(list(list(x = 1), list(x = 2)))
+  expect_s3_class(nested, "tbl_df")
+  expect_false("empty" %in% names(tidybrreg:::flatten_json(list(empty = list()))))
+})
+
 test_that("update feeds use the documented cursors", {
   d <- spec$functions$brreg_updates
   page1 <- stub_resp(200L, update_body(list(update_event(1L), update_event(2L))))

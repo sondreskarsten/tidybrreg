@@ -332,6 +332,19 @@ brreg_updates_roller <- function(since, size, max_pages = 1L, verbose = FALSE) {
                               cursor = cursor_id, type = "roller"), unknown)
 }
 
+#' Text of an update member the package does not model
+#'
+#' Scalars as character, arrays joined by newline, objects as JSON
+#' text: the member's shape is unknown, so nothing is asserted about it
+#' beyond its text.
+#' @keywords internal
+member_text <- function(x) {
+  if (is.null(x) || length(x) == 0) return(NA_character_)
+  if (is.list(x) && !is.null(names(x))) return(as.character(jsonlite::toJSON(x, auto_unbox = TRUE)))
+  if (is.list(x) && any(vapply(x, is.list, logical(1)))) return(as.character(jsonlite::toJSON(x, auto_unbox = TRUE)))
+  paste(as.character(unlist(x)), collapse = "\n")
+}
+
 #' Parse one page of roller CloudEvents
 #' @keywords internal
 parse_roller_page <- function(events) {
@@ -348,7 +361,7 @@ parse_roller_page <- function(events) {
     ts[i] <- e$time %||% NA_character_
     for (nm in setdiff(names(e), known)) {
       if (is.null(extra[[nm]])) extra[[nm]] <- rep(NA_character_, n)
-      extra[[nm]][i] <- flatten_cell(e[[nm]])
+      extra[[nm]][i] <- member_text(e[[nm]])
     }
   }
   out <- tibble::tibble(update_id = ids, org_nr = orgs, change_type = types,
@@ -377,7 +390,7 @@ parse_updates_page <- function(raw_updates, include_changes = FALSE) {
     ts[i] <- u$dato %||% NA_character_
     for (nm in setdiff(names(u), known_update_members())) {
       if (is.null(extra[[nm]])) extra[[nm]] <- rep(NA_character_, n)
-      extra[[nm]][i] <- flatten_cell(u[[nm]])
+      extra[[nm]][i] <- member_text(u[[nm]])
     }
   }
 

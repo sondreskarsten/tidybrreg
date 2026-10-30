@@ -20,7 +20,12 @@
 #'
 #' Results from both paths use the same column names and types via
 #' [field_dict]; only observed columns are emitted (see
-#' [brreg_entity()]).
+#' [brreg_entity()]). The JSON bulk carries the arrays the CSV lacks:
+#' `historiskeNavn` and the full `paategninger` array arrive as the
+#' nested list-columns `historiske_navn` and `annotations`, while the
+#' CSV's `annotations` is BRREG's own presence flag.
+#'
+#' @inheritSection brreg_entity Tidy shape
 #'
 #' @section Caching:
 #' With `cache = TRUE` (default) the gzipped payload is stored in
@@ -59,8 +64,9 @@
 #'
 #' @returns Depends on `type_output`:
 #'   - `"tibble"`: A tibble with ~1 million rows. Column names mapped
-#'     via [field_dict]. For `type = "roller"`, one row per role
-#'     assignment with the columns of [brreg_roles()].
+#'     via [field_dict]; with `format = "json"` the arrays of objects
+#'     are list-columns of tibbles. For `type = "roller"`, one row per
+#'     role assignment with the columns of [brreg_roles()].
 #'   - `"path"`: Character file path to the gzipped download.
 #'
 #' @family tidybrreg entity functions
@@ -256,11 +262,14 @@ parse_bulk_csv <- function(path, type = "enheter", n_max = Inf) {
 #' The `/enheter/lastned` and `/underenheter/lastned` endpoints return
 #' gzipped JSON arrays with nested objects. `jsonlite::fromJSON(flatten = TRUE)`
 #' expands nested objects to dot-notation columns but leaves arrays as list
-#' columns. This function algorithmically flattens all list columns to
-#' atomic types:
+#' columns. This function gives every list column the tidy shape of the
+#' live path ([collapse_observed()]):
 #'
-#' - Character vectors (addresses, activities): collapsed with separator
-#' - Data frames (paategninger): serialized to JSON strings
+#' - Character vectors (addresses, activities): line fragments of one
+#'   value, joined with `"\n"`
+#' - Data frames (`paategninger`, `historiskeNavn`): kept as a
+#'   list-column of tibbles, one row per element, `NULL` where the
+#'   entity has none
 #' - Empty lists (HAL links): dropped
 #' - NULL elements: `NA_character_`
 #'
@@ -270,7 +279,8 @@ parse_bulk_csv <- function(path, type = "enheter", n_max = Inf) {
 #'
 #' @param path Path to the gzipped JSON file.
 #' @param type Entity type (for column context).
-#' @returns A tibble with atomic columns only, mapped via [field_dict].
+#' @returns A tibble mapped via [field_dict]; arrays of objects are
+#'   nested list-columns, everything else atomic.
 #' @keywords internal
 parse_bulk_json <- function(path, type = "enheter") {
   dat <- jsonlite::fromJSON(path, flatten = TRUE)
@@ -283,30 +293,41 @@ parse_bulk_json <- function(path, type = "enheter") {
 }
 
 
-#' Algorithmically flatten all list columns to atomic types
+#' Give every list column its tidy shape
 #'
 #' Dispatches on the runtime type of each list column's elements:
-#' character/numeric vectors are collapsed, data.frames are serialized
-#' to JSON, NULLs become `NA_character_`.
+#' character/numeric vectors are collapsed, NULLs become
+#' `NA_character_`, and a column whose elements are data frames stays a
+#' list-column of tibbles (`NULL` where the entity has none).
 #'
 #' @param dat A tibble potentially containing list columns.
-#' @returns The same tibble with all list columns converted to character.
+#' @returns The same tibble with list columns converted to character or
+#'   to list-columns of tibbles.
 #' @keywords internal
 flatten_list_columns <- function(dat) {
   list_cols <- names(dat)[vapply(dat, is.list, logical(1))]
   for (col in list_cols) {
-    dat[[col]] <- vapply(dat[[col]], flatten_cell, character(1))
+    cells <- lapply(dat[[col]], flatten_cell)
+    nested <- vapply(cells, is.data.frame, logical(1))
+    dat[[col]] <- if (any(nested)) {
+      lapply(cells, function(v) if (is.data.frame(v)) v else NULL)
+    } else {
+      vapply(cells, function(v) v, character(1))
+    }
   }
   dat
 }
 
-#' Flatten a single list-column cell to an atomic character value
+#' Flatten a single list-column cell to its tidy value
+#'
+#' A character scalar, or a tibble for an array of objects; a single
+#' named object (not an array) is serialized to JSON text.
 #' @keywords internal
 flatten_cell <- function(x) {
   if (is.null(x) || length(x) == 0) return(NA_character_)
   if (is.data.frame(x)) {
     if (nrow(x) == 0) return(NA_character_)
-    return(as.character(jsonlite::toJSON(x, auto_unbox = TRUE)))
+    return(nest_records(x))
   }
   if (is.list(x) && is.null(names(x)) && all(vapply(x, is.null, logical(1)))) {
     return(NA_character_)

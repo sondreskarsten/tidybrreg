@@ -2,11 +2,12 @@
 % Please edit documentation in R/download.R
 \name{flatten_cell}
 \alias{flatten_cell}
-\title{Flatten a single list-column cell to an atomic character value}
+\title{Flatten a single list-column cell to its tidy value}
 \usage{
 flatten_cell(x)
 }
 \description{
-Flatten a single list-column cell to an atomic character value
+A character scalar, or a tibble for an array of objects; a single
+named object (not an array) is serialized to JSON text.
 }
 \keyword{internal}

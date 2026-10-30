@@ -56,8 +56,9 @@
 #' `consistent` is `TRUE` when every checkable identity holds within a
 #' tolerance of 1 unit of currency, `FALSE` when any fails and `NA`
 #' when none is checkable (an identity is checkable when its total and
-#' every non-optional term are present). `inconsistencies` names the
-#' failing identities, newline-separated, and is `NA` when none fails.
+#' every non-optional term are present). `inconsistencies` is a
+#' list-column holding the names of the failing identities, a
+#' zero-length character vector when none fails.
 #' In the October 2026 population (1,129,601 filings) between 0.1% and
 #' 2.5% of filings fail each identity at that tolerance.
 #'
@@ -92,7 +93,8 @@
 #'   `account_type`, `period_start` and `period_end` (Date), `currency`,
 #'   `items` (list of tibbles with columns `statement`, `group`, `item`,
 #'   `path`, `level`, `is_sum`, `value`), `consistent` (logical) and
-#'   `inconsistencies` (character). Frequently present: `legal_form`,
+#'   `inconsistencies` (list of character vectors). Frequently present:
+#'   `legal_form`,
 #'   `parent_company`, `liquidation_accounts`, `presentation_plan`,
 #'   `not_audited`, `audit_waived`, `small_enterprise`,
 #'   `accounting_rules`. A zero-row tibble typed on the always-present
@@ -146,7 +148,7 @@ empty_regnskap <- function() {
     org_nr = character(), filing_id = integer(), journal_nr = character(),
     account_type = character(), period_start = as.Date(character()),
     period_end = as.Date(character()), currency = character(),
-    items = list(), consistent = logical(), inconsistencies = character()
+    items = list(), consistent = logical(), inconsistencies = list()
   )
 }
 
@@ -314,7 +316,7 @@ build_items <- function(flat) {
 #' Check the accounting identities of one filing
 #' @param items The filing's line-item table from [build_items()].
 #' @returns A list with `consistent` (logical, `NA` when nothing is
-#'   checkable) and `inconsistencies` (newline-separated names, `NA`
+#'   checkable) and `inconsistencies` (the failing names, zero-length
 #'   when none fails).
 #' @keywords internal
 check_identities <- function(items) {
@@ -337,7 +339,7 @@ check_identities <- function(items) {
   }
   list(
     consistent = if (length(checked) == 0) NA else length(failed) == 0,
-    inconsistencies = if (length(failed) == 0) NA_character_ else paste(failed, collapse = "\n")
+    inconsistencies = failed
   )
 }
 
@@ -410,7 +412,7 @@ flatten_regnskap <- function(raw, org_nr) {
     flags <- check_identities(built$items)
     tbl$items <- list(built$items)
     tbl$consistent <- flags$consistent
-    tbl$inconsistencies <- flags$inconsistencies
+    tbl$inconsistencies <- list(flags$inconsistencies)
     tbl
   })
   out <- dplyr::relocate(dplyr::bind_rows(rows), "org_nr")
