@@ -8,7 +8,10 @@
 #' `legal_form` (from [legal_forms]), `role_code` (from [role_types]),
 #' `role_group_code` (from [role_groups]), `nace_1`, `nace_2`, `nace_3`
 #' and `sector_code` (from the NACE and institutional-sector
-#' dictionaries of [get_brreg_dic()]). Other columns are never touched.
+#' dictionaries of [get_brreg_dic()]), and the accounts columns `item`
+#' (from [regnskap_items]), `group` and `statement` (from
+#' [regnskap_groups]), inside a nested `items` list-column as well as
+#' on an unnested table. Other columns are never touched.
 #' Codes with no dictionary entry pass through unchanged, and labels
 #' are not codes, so applying `brreg_label()` twice is the same as
 #' applying it once. Attributes of the input (such as
@@ -22,12 +25,14 @@
 #' bundled English dictionaries are used instead and the result carries
 #' their vintage. See [get_brreg_dic()] for the full policy.
 #'
-#' @param x A tibble from [brreg_entity()], [brreg_search()], or
-#'   [brreg_roles()], or a character vector of codes.
+#' @param x A tibble from [brreg_entity()], [brreg_search()],
+#'   [brreg_roles()] or [brreg_regnskap()], or a character vector of
+#'   codes.
 #' @param dic A character string naming the dictionary to use when `x`
 #'   is a character vector. One of `"legal_form"`, `"nace"`,
-#'   `"sector"`, `"role"`, `"role_group"`. Ignored when `x` is a
-#'   data frame (dictionaries are inferred from column names).
+#'   `"sector"`, `"role"`, `"role_group"`, `"regnskap_item"`,
+#'   `"regnskap_group"`. Ignored when `x` is a data frame
+#'   (dictionaries are inferred from column names).
 #' @param code For data frames: character vector of column names for
 #'   which to retain the original code alongside the label. A column
 #'   with suffix `_code` is added before the label column. For example,
@@ -40,8 +45,9 @@
 #'   vector of labels, without names.
 #'
 #' @family tidybrreg utilities
-#' @seealso [legal_forms], [role_types], [role_groups] for bundled
-#'   reference data, [get_brreg_dic()] for fetching fresh dictionaries.
+#' @seealso [legal_forms], [role_types], [role_groups],
+#'   [regnskap_items], [regnskap_groups] for bundled reference data,
+#'   [get_brreg_dic()] for fetching fresh dictionaries.
 #'
 #' @export
 #' @examplesIf interactive() && curl::has_internet()
@@ -56,6 +62,7 @@
 #' # Label a character vector directly
 #' brreg_label(c("AS", "ASA", "ENK"), dic = "legal_form")
 #' brreg_label(c("AS", "ASA", "ENK"), dic = "legal_form", lang = "no")
+#' brreg_label(c("total_assets", "net_income"), dic = "regnskap_item", lang = "no")
 brreg_label <- function(x, dic = NULL, code = NULL, lang = c("en", "no")) {
   lang <- match.arg(lang)
   if (is.data.frame(x)) {
@@ -73,13 +80,19 @@ brreg_label <- function(x, dic = NULL, code = NULL, lang = c("en", "no")) {
 labelable_columns <- function() {
   c(legal_form = "legal_form", nace_1 = "nace", nace_2 = "nace",
     nace_3 = "nace", sector_code = "sector", role_code = "role",
-    role_group_code = "role_group")
+    role_group_code = "role_group", item = "regnskap_item",
+    group = "regnskap_group", statement = "regnskap_group")
 }
 
 #' Label a data frame — iterates over columns
 #' @keywords internal
 label_df <- function(x, code = NULL, lang = "en") {
   if (nrow(x) == 0) return(x)
+  if ("items" %in% names(x) && is.list(x[["items"]])) {
+    x[["items"]] <- lapply(x[["items"]], function(it) {
+      if (is.data.frame(it)) label_df(it, code = code, lang = lang) else it
+    })
+  }
   cols <- labelable_columns()
   present <- intersect(names(cols), names(x))
   if (length(present) == 0) return(x)
@@ -109,8 +122,8 @@ label_df <- function(x, code = NULL, lang = "en") {
 #' @keywords internal
 label_vec <- function(x, dic, lang = "en") {
   dic <- as.character(dic)
-  if (!dic %in% c("legal_form", "nace", "sector", "role", "role_group")) {
-    cli::cli_abort("Unknown dictionary: {.val {dic}}. Options: legal_form, nace, sector, role, role_group.")
+  if (!dic %in% c("legal_form", "nace", "sector", "role", "role_group", "regnskap_item", "regnskap_group")) {
+    cli::cli_abort("Unknown dictionary: {.val {dic}}. Options: legal_form, nace, sector, role, role_group, regnskap_item, regnskap_group.")
   }
   apply_label_map(x, label_map(dic, lang = lang))
 }
@@ -137,6 +150,8 @@ label_map <- function(dic, lang = "en") {
     legal_form = legal_forms,
     role       = role_types,
     role_group = role_groups,
+    regnskap_item  = regnskap_items,
+    regnskap_group = regnskap_groups,
     nace       = get_brreg_dic("nace", lang = lang),
     sector     = get_brreg_dic("sector", lang = lang)
   )

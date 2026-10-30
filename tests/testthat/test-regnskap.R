@@ -81,6 +81,16 @@ test_that("consistency flags equal the independent Python check of the same iden
   expect_true(all(lengths(res$inconsistencies[res$consistent %in% FALSE]) > 0L))
 })
 
+test_that("type = \"label\" labels the filing row and its items as brreg_entity does", {
+  local_brreg_responses(stub_resp(200L, regnskap_fixture()[1:2]))
+  res <- brreg_regnskap("923609016", type = "label")
+  expect_equal(nrow(res), 2L)
+  expect_true(all(res$items[[1]]$item %in% c(regnskap_items$name_en, tidybrreg:::to_snake(res$items[[1]]$path))))
+  expect_true("Total assets" %in% res$items[[1]]$item)
+  expect_true(all(res$items[[1]]$statement %in% regnskap_groups$name_en))
+  expect_equal(res$items[[1]]$path, flatten_regnskap(regnskap_fixture()[1:2], "923609016")$items[[1]]$path)
+})
+
 test_that("the identities are checked within the tolerance and only when checkable", {
   f <- regnskap_fixture()[[1]]
   f$eiendeler$sumEiendeler <- f$egenkapitalGjeld$sumEgenkapitalGjeld + 1

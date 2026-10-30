@@ -62,6 +62,13 @@
 #' In the October 2026 population (1,129,601 filings) between 0.1% and
 #' 2.5% of filings fail each identity at that tolerance.
 #'
+#' Codes are returned by default: `item`, `group` and `statement` are
+#' the codes of [regnskap_dict] and [regnskap_groups] and `legal_form`
+#' the register's code. `type = "label"` or [brreg_label()] translates
+#' them from [regnskap_items], [regnskap_groups] and [legal_forms] in
+#' English or Norwegian, inside the nested `items` as well as on the
+#' filing row.
+#'
 #' The logical account key is `org_nr`, `account_type` and the year of
 #' `period_end`; `filing_id` identifies the filing itself (a new id
 #' under the same key is a resubmission) and `journal_nr` can be shared
@@ -87,6 +94,13 @@
 #' @param account_type Character. `"SELSKAP"` (the company's own
 #'   accounts) or `"KONSERN"` (the group accounts). `NULL` (default)
 #'   returns both.
+#' @param type A type of variables: `"code"` (default) returns the
+#'   item, group and statement codes of [regnskap_dict] and
+#'   [regnskap_groups] and the legal form code, `"label"` returns
+#'   English labels for them from [regnskap_items], [regnskap_groups]
+#'   and [legal_forms], following the eurostat package's pattern as
+#'   [brreg_entity()] does. Pipe to [brreg_label()] for Norwegian
+#'   labels or to keep the codes alongside.
 #'
 #' @returns A tibble with one row per filing. Always present when a
 #'   filing is returned: `org_nr`, `filing_id` (integer), `journal_nr`,
@@ -112,7 +126,15 @@
 #' acc[c("account_type", "period_end", "consistent")]
 #' tidyr::unnest(acc, items)                             # one row per line item
 #' brreg_regnskap("923609016", account_type = "SELSKAP", year = 2025)
-brreg_regnskap <- function(org_nr, year = NULL, account_type = NULL) {
+#'
+#' # English labels for items, groups, statements and the legal form
+#' tidyr::unnest(brreg_regnskap("923609016", type = "label"), items)
+#'
+#' # Or pipe to brreg_label() for Norwegian labels
+#' brreg_regnskap("923609016") |> brreg_label(lang = "no")
+brreg_regnskap <- function(org_nr, year = NULL, account_type = NULL,
+                           type = c("code", "label")) {
+  type <- match.arg(type)
   org_nr <- check_org_nr(org_nr)
   if (!is.null(account_type)) {
     account_type <- match.arg(account_type, c("SELSKAP", "KONSERN"))
@@ -126,7 +148,9 @@ brreg_regnskap <- function(org_nr, year = NULL, account_type = NULL) {
   if (!is.null(out)) return(out)
   out <- satellite_status(resp, endpoint, org_nr, empty_regnskap())
   if (!is.null(out)) return(out)
-  flatten_regnskap(httr2::resp_body_json(resp), org_nr)
+  result <- flatten_regnskap(httr2::resp_body_json(resp), org_nr)
+  if (identical(type, "label")) result <- brreg_label(result)
+  result
 }
 
 #' Append the `år` query parameter with its UTF-8 percent-encoding
@@ -164,94 +188,30 @@ empty_items <- function() {
 
 #' Maps of the Regnskapsregisteret filing shape
 #'
-#' `regnskap_dict` maps dot paths of the filing JSON (OpenAPI 1.1.16)
-#' to tidybrreg names and types, applied by [rename_from_dict()] and
-#' [coerce_types()] exactly as [field_dict] is for entities, and names
-#' the line items. `regnskap_groups` names the objects that group line
-#' items and `regnskap_statements` the three statement objects.
+#' The bundled datasets [regnskap_dict], [regnskap_groups] and
+#' [regnskap_items] describe the filing JSON (OpenAPI 1.1.16) the way
+#' [field_dict], [role_groups] and [role_types] describe entities and
+#' roles: `regnskap_dict` is applied by [rename_from_dict()] and
+#' [coerce_types()] and names the line items, `regnskap_groups` names
+#' the objects that group line items (its level-0 rows are the three
+#' statements, [regnskap_statements()]), and `regnskap_items` carries
+#' the English and Norwegian labels [brreg_label()] applies.
 #' `regnskap_identities` lists the accounting identities checked per
 #' filing on the line items (by item name; `optional` terms count as 0
-#' when absent) within `regnskap_tolerance`. Source spellings such as
-#' `regnkapsprinsipper` and `sumInnskuttEgenkaptial` are the API's own.
-#' All of this is published under `brreg_regnskap` in
-#' `inst/extdata/endpoints.json` and held equal to these objects by
-#' `tests/testthat/test-endpoints.R`.
+#' when absent) within `regnskap_tolerance`. All of this is published
+#' under `brreg_regnskap` in `inst/extdata/endpoints.json` and held
+#' equal to these objects by `tests/testthat/test-endpoints.R`.
 #' @name regnskap_maps
 #' @keywords internal
 NULL
 
-regnskap_dict <- tibble::tribble(
-  ~api_path, ~col_name, ~type,
-  "id", "filing_id", "integer",
-  "journalnr", "journal_nr", "character",
-  "regnskapstype", "account_type", "character",
-  "virksomhet.organisasjonsnummer", "org_nr", "character",
-  "virksomhet.organisasjonsform", "legal_form", "character",
-  "virksomhet.morselskap", "parent_company", "logical",
-  "regnskapsperiode.fraDato", "period_start", "Date",
-  "regnskapsperiode.tilDato", "period_end", "Date",
-  "valuta", "currency", "character",
-  "avviklingsregnskap", "liquidation_accounts", "logical",
-  "oppstillingsplan", "presentation_plan", "character",
-  "revisjon.ikkeRevidertAarsregnskap", "not_audited", "logical",
-  "revisjon.fravalgRevisjon", "audit_waived", "logical",
-  "regnkapsprinsipper.smaaForetak", "small_enterprise", "logical",
-  "regnkapsprinsipper.regnskapsregler", "accounting_rules", "character",
-  "egenkapitalGjeld.sumEgenkapitalGjeld", "total_equity_liabilities", "numeric",
-  "egenkapitalGjeld.egenkapital.sumEgenkapital", "total_equity", "numeric",
-  "egenkapitalGjeld.egenkapital.innskuttEgenkapital.sumInnskuttEgenkaptial", "paid_in_equity", "numeric",
-  "egenkapitalGjeld.egenkapital.opptjentEgenkapital.sumOpptjentEgenkapital", "retained_equity", "numeric",
-  "egenkapitalGjeld.gjeldOversikt.sumGjeld", "total_liabilities", "numeric",
-  "egenkapitalGjeld.gjeldOversikt.kortsiktigGjeld.sumKortsiktigGjeld", "current_liabilities", "numeric",
-  "egenkapitalGjeld.gjeldOversikt.langsiktigGjeld.sumLangsiktigGjeld", "long_term_liabilities", "numeric",
-  "eiendeler.sumEiendeler", "total_assets", "numeric",
-  "eiendeler.omloepsmidler.sumOmloepsmidler", "current_assets", "numeric",
-  "eiendeler.anleggsmidler.sumAnleggsmidler", "fixed_assets", "numeric",
-  "eiendeler.sumBankinnskuddOgKontanter", "cash_and_bank", "numeric",
-  "eiendeler.sumFordringer", "receivables", "numeric",
-  "eiendeler.sumInvesteringer", "investments", "numeric",
-  "eiendeler.sumVarer", "inventory", "numeric",
-  "eiendeler.goodwill", "goodwill", "numeric",
-  "resultatregnskapResultat.aarsresultat", "net_income", "numeric",
-  "resultatregnskapResultat.ordinaertResultatFoerSkattekostnad", "pre_tax_income", "numeric",
-  "resultatregnskapResultat.totalresultat", "comprehensive_income", "numeric",
-  "resultatregnskapResultat.ordinaertResultatSkattekostnad", "tax_expense", "numeric",
-  "resultatregnskapResultat.ekstraordinaerePoster", "extraordinary_items", "numeric",
-  "resultatregnskapResultat.skattekostnadEkstraordinaertResultat", "extraordinary_tax", "numeric",
-  "resultatregnskapResultat.driftsresultat.driftsresultat", "operating_income", "numeric",
-  "resultatregnskapResultat.driftsresultat.driftsinntekter.sumDriftsinntekter", "operating_revenue", "numeric",
-  "resultatregnskapResultat.driftsresultat.driftsinntekter.salgsinntekter", "sales_revenue", "numeric",
-  "resultatregnskapResultat.driftsresultat.driftskostnad.sumDriftskostnad", "operating_expenses", "numeric",
-  "resultatregnskapResultat.driftsresultat.driftskostnad.loennskostnad", "payroll_expenses", "numeric",
-  "resultatregnskapResultat.finansresultat.nettoFinans", "net_financial_items", "numeric",
-  "resultatregnskapResultat.finansresultat.finansinntekt.sumFinansinntekter", "financial_income", "numeric",
-  "resultatregnskapResultat.finansresultat.finanskostnad.sumFinanskostnad", "financial_expenses", "numeric",
-  "resultatregnskapResultat.finansresultat.finanskostnad.annenRentekostnad", "other_interest_expenses", "numeric",
-  "resultatregnskapResultat.finansresultat.finanskostnad.rentekostnadSammeKonsern", "intra_group_interest_expenses", "numeric"
-)
-
-regnskap_groups <- tibble::tribble(
-  ~path, ~group,
-  "eiendeler", "assets",
-  "eiendeler.omloepsmidler", "current_assets",
-  "eiendeler.anleggsmidler", "fixed_assets",
-  "egenkapitalGjeld", "equity_liabilities",
-  "egenkapitalGjeld.egenkapital", "equity",
-  "egenkapitalGjeld.egenkapital.innskuttEgenkapital", "paid_in_equity",
-  "egenkapitalGjeld.egenkapital.opptjentEgenkapital", "retained_equity",
-  "egenkapitalGjeld.gjeldOversikt", "liabilities",
-  "egenkapitalGjeld.gjeldOversikt.kortsiktigGjeld", "current_liabilities",
-  "egenkapitalGjeld.gjeldOversikt.langsiktigGjeld", "long_term_liabilities",
-  "resultatregnskapResultat", "income_statement",
-  "resultatregnskapResultat.driftsresultat", "operating",
-  "resultatregnskapResultat.driftsresultat.driftsinntekter", "operating_revenue",
-  "resultatregnskapResultat.driftsresultat.driftskostnad", "operating_expenses",
-  "resultatregnskapResultat.finansresultat", "financial",
-  "resultatregnskapResultat.finansresultat.finansinntekt", "financial_income",
-  "resultatregnskapResultat.finansresultat.finanskostnad", "financial_expenses"
-)
-
-regnskap_statements <- c("eiendeler" = "assets", "egenkapitalGjeld" = "equity_liabilities", "resultatregnskapResultat" = "income_statement")
+#' The three statement objects, named from [regnskap_groups]
+#' @returns A named character vector: API object name to statement code.
+#' @keywords internal
+regnskap_statements <- function() {
+  roots <- !grepl(".", regnskap_groups$path, fixed = TRUE)
+  stats::setNames(regnskap_groups$code[roots], regnskap_groups$path[roots])
+}
 
 regnskap_identities <- list(
   list(name = "balance", lhs = "total_equity_liabilities", plus = c("total_assets"), minus = character(), optional = character()),
@@ -271,7 +231,7 @@ regnskap_tolerance <- 1
 #'   outside the statement objects.
 #' @keywords internal
 statement_of <- function(path) {
-  unname(regnskap_statements[sub("\\..*$", "", path)])
+  unname(regnskap_statements()[sub("\\..*$", "", path)])
 }
 
 #' Build the line-item table of one filing
@@ -286,10 +246,10 @@ build_items <- function(flat) {
   parts <- strsplit(path, ".", fixed = TRUE)
   leaf <- vapply(parts, function(p) p[length(p)], character(1))
   node <- vapply(parts, function(p) paste(p[-length(p)], collapse = "."), character(1))
-  group <- regnskap_groups$group[match(node, regnskap_groups$path)]
+  group <- regnskap_groups$code[match(node, regnskap_groups$path)]
   unknown <- is.na(group)
   group[unknown] <- vapply(parts[unknown], function(p) {
-    if (length(p) < 2L) unname(regnskap_statements[p[1]]) else to_snake(p[length(p) - 1L])
+    if (length(p) < 2L) unname(regnskap_statements()[p[1]]) else to_snake(p[length(p) - 1L])
   }, character(1))
   item <- regnskap_dict$col_name[match(path, regnskap_dict$api_path)]
   item[is.na(item)] <- to_snake(leaf[is.na(item)])

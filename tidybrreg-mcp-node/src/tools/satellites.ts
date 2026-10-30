@@ -3,6 +3,7 @@ import { parseBrregDate } from "../dates.js";
 import { flattenJson, renameThrough, coerceRows, isHalLinkPath, toSnake, type Row, type FieldMap } from "../parse.js";
 import type { FunctionSpec } from "../manifest.js";
 import type { BrregResponse } from "../http.js";
+import { labelRows } from "./label.js";
 
 function emptyColumns(spec: ReturnType<typeof fnSpec>): string[] {
   return (spec.result?.empty as string[]) ?? [];
@@ -208,7 +209,7 @@ export function buildItems(spec: FunctionSpec, flat: Record<string, unknown>): {
     const parts = path.split(".");
     const leaf = parts[parts.length - 1];
     const node = parts.slice(0, -1).join(".");
-    let group = groups.find((g) => g.path === node)?.group;
+    let group = groups.find((g) => g.path === node)?.code;
     if (group === undefined) group = parts.length < 2 ? statement : toSnake(parts[parts.length - 2]);
     const item = fields.find((f) => f.api_path === path)?.col_name ?? toSnake(leaf);
     const present = !(v === null || v === undefined || (typeof v === "string" && v.trim() === ""));
@@ -298,7 +299,8 @@ export async function brreg_regnskap(ctx: ToolContext, args: Record<string, unkn
   }
   const early = await satelliteStatus(ctx, resp, endpoint, org_nr, cols);
   if (early) return early;
-  const { rows, types, problems } = flattenRegnskap(spec, await resp.json(), org_nr);
+  let { rows, types, problems } = flattenRegnskap(spec, await resp.json(), org_nr);
+  if (String(args.type ?? "code") === "label") rows = await labelRows(ctx, rows, "en");
   if (problems.length > 0) {
     const columns = new Set(problems.map((p) => p.column));
     const n = [...columns].reduce((acc, c) => acc + problems.find((p) => p.column === c)!.n_failed, 0);

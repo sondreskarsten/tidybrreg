@@ -96,9 +96,11 @@ test_that("brreg_regnskap maps its query and publishes the field map it applies"
   expect_match(url, paste0("[?&]", utils::URLencode(d$query$year, reserved = TRUE), "=2025\\b"))
   expect_match(url, paste0("[?&]", d$query$account_type, "=KONSERN\\b"))
   published <- dplyr::bind_rows(lapply(d$fields, tibble::as_tibble))
-  expect_equal(published, tidybrreg:::regnskap_dict)
-  expect_equal(dplyr::bind_rows(lapply(d$groups, tibble::as_tibble)), tidybrreg:::regnskap_groups)
-  expect_equal(unlist(d$statements), tidybrreg:::regnskap_statements)
+  expect_equal(published, tidybrreg::regnskap_dict)
+  expect_equal(dplyr::bind_rows(lapply(d$groups, tibble::as_tibble)), tidybrreg::regnskap_groups)
+  expect_equal(dplyr::bind_rows(lapply(d$items, tibble::as_tibble)), tidybrreg::regnskap_items)
+  expect_equal(unlist(d$statements), tidybrreg:::regnskap_statements())
+  expect_equal(unlist(d$dictionaries), c(fields = "regnskap_dict", groups = "regnskap_groups", items = "regnskap_items"))
   expect_equal(d$identities$tolerance, tidybrreg:::regnskap_tolerance)
   rules <- lapply(d$identities$rules, \(r) list(name = r$name, lhs = r$lhs,
     plus = as.character(unlist(r$plus)), minus = as.character(unlist(r$minus)),

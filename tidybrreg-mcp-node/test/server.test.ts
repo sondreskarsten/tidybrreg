@@ -6,6 +6,7 @@ import { Http, type Fetcher } from "../src/http.js";
 import { callTool, IMPLEMENTATIONS } from "../src/execute.js";
 import { parsePatch } from "../src/tools/updates.js";
 import { flattenRoles, flattenKonsern, flattenSignatur, flattenRegnskap } from "../src/tools/satellites.js";
+import { labelRows } from "../src/tools/label.js";
 import { parseBrregDate, parseBrregInstant, formatSince } from "../src/dates.js";
 import { renameFromDict, flattenJson, coerceRows, toSnake } from "../src/parse.js";
 import { validateOrgNr } from "../src/tools/common.js";
@@ -294,6 +295,19 @@ describe("tools over a mocked register", () => {
 
     r = await callTool(m, q.http, tool("brreg_updates"), { type: "roller", include_changes: true });
     expect((r.structuredContent.error as any).class).toBe("tidybrreg_error_invalid_filter");
+  });
+
+  it("labels regnskap items, groups and statements inside the nested table", async () => {
+    const ctx = { m, http: new Http(m), cond: new Conditions() };
+    const fx = JSON.parse(readFileSync(join(fixtures, "regnskap_release_2026-10.json"), "utf8"));
+    const { rows } = flattenRegnskap(m.endpoints.functions.brreg_regnskap, fx.slice(0, 1), "923609016");
+    const lab = await labelRows(ctx, rows, "no");
+    const items = lab[0].items as any[];
+    expect(items.map((i) => i.path)).toEqual((rows[0].items as any[]).map((i) => i.path));
+    expect(items.some((i) => i.item === "Sum eiendeler")).toBe(true);
+    expect(items.every((i) => i.statement !== "assets")).toBe(true);
+    expect(m.dictionaries.regnskap_items.length).toBe(31);
+    expect(m.dictionaries.regnskap_dict.length).toBe(m.endpoints.functions.brreg_regnskap.fields!.length);
   });
 
   it("labels, dictionaries and validation run offline from the manifest", async () => {

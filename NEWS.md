@@ -70,6 +70,15 @@ held to the functions by `tests/testthat/test-endpoints.R`.
   `endpoints.json` for the MCP servers, and the flattening is verified
   against every structural shape of the 1,129,601 filings in the
   brreg-json-fetcher `data-2026-10` release (`data-raw/regnskap/`).
+  The maps are bundled datasets built in `data-raw/build_dictionaries.R`
+  the way the entity and role dictionaries are: `regnskap_dict` (as
+  `field_dict`, applied by the same rename and coercion rule),
+  `regnskap_groups` and `regnskap_items` (as `role_groups` and
+  `role_types`, with `name_en` and `name_no`). `brreg_regnskap(type =
+  "label")` and `brreg_label()` translate `item`, `group`, `statement`
+  and `legal_form` in English or Norwegian, inside the nested `items`
+  as well as after `tidyr::unnest()`; `brreg_label()` accepts the
+  dictionaries `"regnskap_item"` and `"regnskap_group"` for vectors.
   Entities whose accounting plan the API does not serve (banks,
   insurers, pension funds) return the typed empty with
   `unsupported_plan` and a new `tidybrreg_warning_unsupported_plan`

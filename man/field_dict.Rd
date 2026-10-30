@@ -41,6 +41,9 @@ field_dict[field_dict$type == "Date", ]
 
 Other tidybrreg reference data: 
 \code{\link{legal_forms}},
+\code{\link{regnskap_dict}},
+\code{\link{regnskap_groups}},
+\code{\link{regnskap_items}},
 \code{\link{role_groups}},
 \code{\link{role_types}},
 \code{\link{tidybrreg_provenance}}

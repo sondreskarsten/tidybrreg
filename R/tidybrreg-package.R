@@ -45,6 +45,23 @@ NULL
 #'   \item{[role_groups]}{**Package-authored from BRREG documentation.**
 #'     As [role_types], for role group (`rollegruppe`) codes. Last
 #'     revised 2026-06-16. Used by [brreg_roles()] and [brreg_label()].}
+#'   \item{[regnskap_dict]}{**Package-authored.** As [field_dict], for
+#'     the Regnskapsregisteret filing: dot paths of the filing JSON
+#'     (OpenAPI 1.1.16, <https://data.brreg.no/regnskapsregisteret/regnskap/v3/api-docs>,
+#'     population-verified against the brreg-json-fetcher `data-2026-10`
+#'     release) to English names and R types. Written 2026-10-30. Used
+#'     by [brreg_regnskap()].}
+#'   \item{[regnskap_groups]}{**Package-authored.** The objects that
+#'     group line items in the filing, with English and Norwegian
+#'     names; the level-0 rows are the three statements. The Norwegian
+#'     names are the presentation-plan captions of the Norwegian
+#'     Accounting Act; English is a manual translation by the package
+#'     author. Written 2026-10-30. Used by [brreg_regnskap()] and
+#'     [brreg_label()].}
+#'   \item{[regnskap_items]}{**Package-authored.** English and Norwegian
+#'     labels of the line items named in [regnskap_dict], as
+#'     [role_types] is for role codes. Written 2026-10-30. Used by
+#'     [brreg_label()].}
 #' }
 #'
 #' @section Internal fallback dictionaries (`R/sysdata.rda`):
@@ -106,6 +123,89 @@ NULL
 #' field_dict
 #' field_dict[field_dict$type == "Date", ]
 "field_dict"
+
+#' Regnskap field dictionary: filing JSON paths to English column names
+#'
+#' A tibble mapping dot paths of the Regnskapsregisteret filing JSON to
+#' English column names and R types, with the columns of [field_dict].
+#' [brreg_regnskap()] applies it exactly as [brreg_entity()] applies
+#' [field_dict]: leaves outside the three statement objects become the
+#' filing's scalar columns, leaves inside them become the `item` codes
+#' of the nested `items` table, and paths absent from the dictionary
+#' pass through with auto-generated snake_case names. Source spellings
+#' such as `regnkapsprinsipper` and `sumInnskuttEgenkaptial` are the
+#' API's own.
+#'
+#' @format A tibble with 46 rows and 3 columns:
+#' \describe{
+#'   \item{api_path}{Dot-notation path in the filing JSON
+#'     (e.g. `"regnskapsperiode.tilDato"`, `"eiendeler.sumEiendeler"`).}
+#'   \item{col_name}{English name used in package output: a column of
+#'     the filing row or an `item` code (e.g. `"period_end"`,
+#'     `"total_assets"`).}
+#'   \item{type}{R type for coercion: `"character"`, `"Date"`,
+#'     `"integer"`, `"numeric"`, or `"logical"`.}
+#' }
+#'
+#' @source Package-authored; see [tidybrreg_provenance].
+#' @family tidybrreg reference data
+#' @seealso [brreg_regnskap()], [regnskap_groups], [regnskap_items].
+#'
+#' @examples
+#' regnskap_dict
+#' regnskap_dict[regnskap_dict$type == "numeric", ]
+"regnskap_dict"
+
+#' Regnskap groups: the objects that group line items, with labels
+#'
+#' One row per object of the filing JSON that contains line items, from
+#' the three statements (`eiendeler`, `egenkapitalGjeld`,
+#' `resultatregnskapResultat`, level 0) down to the leaf groups. The
+#' `code` is the `group` (and, for level-0 rows, the `statement`) of
+#' the `items` table of [brreg_regnskap()]; [brreg_label()] translates
+#' it to `name_en` or `name_no`, as [role_groups] does for role groups.
+#'
+#' @format A tibble with 17 rows and 4 columns:
+#' \describe{
+#'   \item{path}{Dot-notation path of the object in the filing JSON.}
+#'   \item{code}{Group code used in package output (e.g. `"assets"`,
+#'     `"current_liabilities"`).}
+#'   \item{name_en}{English name.}
+#'   \item{name_no}{Norwegian name, the presentation-plan caption.}
+#' }
+#'
+#' @source Package-authored; see [tidybrreg_provenance].
+#' @family tidybrreg reference data
+#' @seealso [brreg_regnskap()], [regnskap_dict], [regnskap_items].
+#'
+#' @examples
+#' regnskap_groups
+#' brreg_label(c("assets", "operating"), dic = "regnskap_group", lang = "no")
+"regnskap_groups"
+
+#' Regnskap line items with English and Norwegian labels
+#'
+#' One row per line item of the filing, keyed by the `item` code that
+#' [regnskap_dict] assigns to each statement leaf. [brreg_label()]
+#' translates the `item` column of [brreg_regnskap()]'s `items` table
+#' to `name_en` or `name_no`, as [role_types] does for role codes.
+#'
+#' @format A tibble with 31 rows and 3 columns:
+#' \describe{
+#'   \item{code}{Item code used in package output (e.g.
+#'     `"total_assets"`, `"net_income"`).}
+#'   \item{name_en}{English label.}
+#'   \item{name_no}{Norwegian label, the presentation-plan caption.}
+#' }
+#'
+#' @source Package-authored; see [tidybrreg_provenance].
+#' @family tidybrreg reference data
+#' @seealso [brreg_regnskap()], [regnskap_dict], [regnskap_groups].
+#'
+#' @examples
+#' regnskap_items
+#' brreg_label(c("total_assets", "net_income"), dic = "regnskap_item", lang = "no")
+"regnskap_items"
 
 #' Norwegian legal form codes with English translations
 #'

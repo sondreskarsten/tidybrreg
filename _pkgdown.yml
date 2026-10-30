@@ -83,6 +83,9 @@ reference:
   - legal_forms
   - role_types
   - role_groups
+  - regnskap_dict
+  - regnskap_groups
+  - regnskap_items
   - tidybrreg_provenance
   - tidybrreg_conditions
   - tidybrreg_endpoints

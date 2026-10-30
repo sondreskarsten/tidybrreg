@@ -31,6 +31,9 @@ role_groups
 Other tidybrreg reference data: 
 \code{\link{field_dict}},
 \code{\link{legal_forms}},
+\code{\link{regnskap_dict}},
+\code{\link{regnskap_groups}},
+\code{\link{regnskap_items}},
 \code{\link{role_types}},
 \code{\link{tidybrreg_provenance}}
 }

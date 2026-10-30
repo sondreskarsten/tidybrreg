@@ -41,6 +41,23 @@ translations. Last revised 2026-06-16. Used by \code{\link[=brreg_roles]{brreg_r
 \item{\link{role_groups}}{\strong{Package-authored from BRREG documentation.}
 As \link{role_types}, for role group (\code{rollegruppe}) codes. Last
 revised 2026-06-16. Used by \code{\link[=brreg_roles]{brreg_roles()}} and \code{\link[=brreg_label]{brreg_label()}}.}
+\item{\link{regnskap_dict}}{\strong{Package-authored.} As \link{field_dict}, for
+the Regnskapsregisteret filing: dot paths of the filing JSON
+(OpenAPI 1.1.16, \url{https://data.brreg.no/regnskapsregisteret/regnskap/v3/api-docs},
+population-verified against the brreg-json-fetcher \code{data-2026-10}
+release) to English names and R types. Written 2026-10-30. Used
+by \code{\link[=brreg_regnskap]{brreg_regnskap()}}.}
+\item{\link{regnskap_groups}}{\strong{Package-authored.} The objects that
+group line items in the filing, with English and Norwegian
+names; the level-0 rows are the three statements. The Norwegian
+names are the presentation-plan captions of the Norwegian
+Accounting Act; English is a manual translation by the package
+author. Written 2026-10-30. Used by \code{\link[=brreg_regnskap]{brreg_regnskap()}} and
+\code{\link[=brreg_label]{brreg_label()}}.}
+\item{\link{regnskap_items}}{\strong{Package-authored.} English and Norwegian
+labels of the line items named in \link{regnskap_dict}, as
+\link{role_types} is for role codes. Written 2026-10-30. Used by
+\code{\link[=brreg_label]{brreg_label()}}.}
 }
 }
 
@@ -77,6 +94,9 @@ labels retrieved at runtime are Statistics Norway's.
 Other tidybrreg reference data: 
 \code{\link{field_dict}},
 \code{\link{legal_forms}},
+\code{\link{regnskap_dict}},
+\code{\link{regnskap_groups}},
+\code{\link{regnskap_items}},
 \code{\link{role_groups}},
 \code{\link{role_types}}
 }

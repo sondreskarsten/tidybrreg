@@ -4,17 +4,18 @@
 \alias{regnskap_maps}
 \title{Maps of the Regnskapsregisteret filing shape}
 \description{
-\code{regnskap_dict} maps dot paths of the filing JSON (OpenAPI 1.1.16)
-to tidybrreg names and types, applied by \code{\link[=rename_from_dict]{rename_from_dict()}} and
-\code{\link[=coerce_types]{coerce_types()}} exactly as \link{field_dict} is for entities, and names
-the line items. \code{regnskap_groups} names the objects that group line
-items and \code{regnskap_statements} the three statement objects.
+The bundled datasets \link{regnskap_dict}, \link{regnskap_groups} and
+\link{regnskap_items} describe the filing JSON (OpenAPI 1.1.16) the way
+\link{field_dict}, \link{role_groups} and \link{role_types} describe entities and
+roles: \code{regnskap_dict} is applied by \code{\link[=rename_from_dict]{rename_from_dict()}} and
+\code{\link[=coerce_types]{coerce_types()}} and names the line items, \code{regnskap_groups} names
+the objects that group line items (its level-0 rows are the three
+statements, \code{\link[=regnskap_statements]{regnskap_statements()}}), and \code{regnskap_items} carries
+the English and Norwegian labels \code{\link[=brreg_label]{brreg_label()}} applies.
 \code{regnskap_identities} lists the accounting identities checked per
 filing on the line items (by item name; \code{optional} terms count as 0
-when absent) within \code{regnskap_tolerance}. Source spellings such as
-\code{regnkapsprinsipper} and \code{sumInnskuttEgenkaptial} are the API's own.
-All of this is published under \code{brreg_regnskap} in
-\code{inst/extdata/endpoints.json} and held equal to these objects by
-\code{tests/testthat/test-endpoints.R}.
+when absent) within \code{regnskap_tolerance}. All of this is published
+under \code{brreg_regnskap} in \code{inst/extdata/endpoints.json} and held
+equal to these objects by \code{tests/testthat/test-endpoints.R}.
 }
 \keyword{internal}

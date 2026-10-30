@@ -4,7 +4,12 @@
 \alias{brreg_regnskap}
 \title{Retrieve annual accounts (regnskap) from Regnskapsregisteret}
 \usage{
-brreg_regnskap(org_nr, year = NULL, account_type = NULL)
+brreg_regnskap(
+  org_nr,
+  year = NULL,
+  account_type = NULL,
+  type = c("code", "label")
+)
 }
 \arguments{
 \item{org_nr}{Character. A single 9-digit organization number,
@@ -17,6 +22,14 @@ end date (\code{period_end}), including non-calendar fiscal years.
 \item{account_type}{Character. \code{"SELSKAP"} (the company's own
 accounts) or \code{"KONSERN"} (the group accounts). \code{NULL} (default)
 returns both.}
+
+\item{type}{A type of variables: \code{"code"} (default) returns the
+item, group and statement codes of \link{regnskap_dict} and
+\link{regnskap_groups} and the legal form code, \code{"label"} returns
+English labels for them from \link{regnskap_items}, \link{regnskap_groups}
+and \link{legal_forms}, following the eurostat package's pattern as
+\code{\link[=brreg_entity]{brreg_entity()}} does. Pipe to \code{\link[=brreg_label]{brreg_label()}} for Norwegian
+labels or to keep the codes alongside.}
 }
 \value{
 A tibble with one row per filing. Always present when a
@@ -98,6 +111,13 @@ zero-length character vector when none fails.
 In the October 2026 population (1,129,601 filings) between 0.1\% and
 2.5\% of filings fail each identity at that tolerance.
 
+Codes are returned by default: \code{item}, \code{group} and \code{statement} are
+the codes of \link{regnskap_dict} and \link{regnskap_groups} and \code{legal_form}
+the register's code. \code{type = "label"} or \code{\link[=brreg_label]{brreg_label()}} translates
+them from \link{regnskap_items}, \link{regnskap_groups} and \link{legal_forms} in
+English or Norwegian, inside the nested \code{items} as well as on the
+filing row.
+
 The logical account key is \code{org_nr}, \code{account_type} and the year of
 \code{period_end}; \code{filing_id} identifies the filing itself (a new id
 under the same key is a resubmission) and \code{journal_nr} can be shared
@@ -140,6 +160,12 @@ acc <- brreg_regnskap("923609016")                   # Equinor ASA, all years
 acc[c("account_type", "period_end", "consistent")]
 tidyr::unnest(acc, items)                             # one row per line item
 brreg_regnskap("923609016", account_type = "SELSKAP", year = 2025)
+
+# English labels for items, groups, statements and the legal form
+tidyr::unnest(brreg_regnskap("923609016", type = "label"), items)
+
+# Or pipe to brreg_label() for Norwegian labels
+brreg_regnskap("923609016") |> brreg_label(lang = "no")
 \dontshow{\}) # examplesIf}
 }
 \seealso{

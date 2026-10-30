@@ -7,13 +7,15 @@
 brreg_label(x, dic = NULL, code = NULL, lang = c("en", "no"))
 }
 \arguments{
-\item{x}{A tibble from \code{\link[=brreg_entity]{brreg_entity()}}, \code{\link[=brreg_search]{brreg_search()}}, or
-\code{\link[=brreg_roles]{brreg_roles()}}, or a character vector of codes.}
+\item{x}{A tibble from \code{\link[=brreg_entity]{brreg_entity()}}, \code{\link[=brreg_search]{brreg_search()}},
+\code{\link[=brreg_roles]{brreg_roles()}} or \code{\link[=brreg_regnskap]{brreg_regnskap()}}, or a character vector of
+codes.}
 
 \item{dic}{A character string naming the dictionary to use when \code{x}
 is a character vector. One of \code{"legal_form"}, \code{"nace"},
-\code{"sector"}, \code{"role"}, \code{"role_group"}. Ignored when \code{x} is a
-data frame (dictionaries are inferred from column names).}
+\code{"sector"}, \code{"role"}, \code{"role_group"}, \code{"regnskap_item"},
+\code{"regnskap_group"}. Ignored when \code{x} is a data frame
+(dictionaries are inferred from column names).}
 
 \item{code}{For data frames: character vector of column names for
 which to retain the original code alongside the label. A column
@@ -38,7 +40,10 @@ pattern. Works on both data frames and character vectors.
 \code{legal_form} (from \link{legal_forms}), \code{role_code} (from \link{role_types}),
 \code{role_group_code} (from \link{role_groups}), \code{nace_1}, \code{nace_2}, \code{nace_3}
 and \code{sector_code} (from the NACE and institutional-sector
-dictionaries of \code{\link[=get_brreg_dic]{get_brreg_dic()}}). Other columns are never touched.
+dictionaries of \code{\link[=get_brreg_dic]{get_brreg_dic()}}), and the accounts columns \code{item}
+(from \link{regnskap_items}), \code{group} and \code{statement} (from
+\link{regnskap_groups}), inside a nested \code{items} list-column as well as
+on an unnested table. Other columns are never touched.
 Codes with no dictionary entry pass through unchanged, and labels
 are not codes, so applying \code{brreg_label()} twice is the same as
 applying it once. Attributes of the input (such as
@@ -68,11 +73,13 @@ brreg_label(eq, code = "legal_form")
 # Label a character vector directly
 brreg_label(c("AS", "ASA", "ENK"), dic = "legal_form")
 brreg_label(c("AS", "ASA", "ENK"), dic = "legal_form", lang = "no")
+brreg_label(c("total_assets", "net_income"), dic = "regnskap_item", lang = "no")
 \dontshow{\}) # examplesIf}
 }
 \seealso{
-\link{legal_forms}, \link{role_types}, \link{role_groups} for bundled
-reference data, \code{\link[=get_brreg_dic]{get_brreg_dic()}} for fetching fresh dictionaries.
+\link{legal_forms}, \link{role_types}, \link{role_groups},
+\link{regnskap_items}, \link{regnskap_groups} for bundled reference data,
+\code{\link[=get_brreg_dic]{get_brreg_dic()}} for fetching fresh dictionaries.
 
 Other tidybrreg utilities: 
 \code{\link{brreg_validate}()},

@@ -383,75 +383,59 @@
         "egenkapitalGjeld": "equity_liabilities",
         "resultatregnskapResultat": "income_statement"
       },
+      "dictionaries": {"fields": "regnskap_dict", "groups": "regnskap_groups", "items": "regnskap_items"},
+      "labels": "type = 'label' (or brreg_label) translates item (regnskap_items), group and statement (regnskap_groups) inside items, and legal_form (legal_forms), in en or no",
       "groups": [
-        {
-          "path": "eiendeler",
-          "group": "assets"
-        },
-        {
-          "path": "eiendeler.omloepsmidler",
-          "group": "current_assets"
-        },
-        {
-          "path": "eiendeler.anleggsmidler",
-          "group": "fixed_assets"
-        },
-        {
-          "path": "egenkapitalGjeld",
-          "group": "equity_liabilities"
-        },
-        {
-          "path": "egenkapitalGjeld.egenkapital",
-          "group": "equity"
-        },
-        {
-          "path": "egenkapitalGjeld.egenkapital.innskuttEgenkapital",
-          "group": "paid_in_equity"
-        },
-        {
-          "path": "egenkapitalGjeld.egenkapital.opptjentEgenkapital",
-          "group": "retained_equity"
-        },
-        {
-          "path": "egenkapitalGjeld.gjeldOversikt",
-          "group": "liabilities"
-        },
-        {
-          "path": "egenkapitalGjeld.gjeldOversikt.kortsiktigGjeld",
-          "group": "current_liabilities"
-        },
-        {
-          "path": "egenkapitalGjeld.gjeldOversikt.langsiktigGjeld",
-          "group": "long_term_liabilities"
-        },
-        {
-          "path": "resultatregnskapResultat",
-          "group": "income_statement"
-        },
-        {
-          "path": "resultatregnskapResultat.driftsresultat",
-          "group": "operating"
-        },
-        {
-          "path": "resultatregnskapResultat.driftsresultat.driftsinntekter",
-          "group": "operating_revenue"
-        },
-        {
-          "path": "resultatregnskapResultat.driftsresultat.driftskostnad",
-          "group": "operating_expenses"
-        },
-        {
-          "path": "resultatregnskapResultat.finansresultat",
-          "group": "financial"
-        },
-        {
-          "path": "resultatregnskapResultat.finansresultat.finansinntekt",
-          "group": "financial_income"
-        },
-        {
-          "path": "resultatregnskapResultat.finansresultat.finanskostnad",
-          "group": "financial_expenses"
-        }
+        {"path": "eiendeler", "code": "assets", "name_en": "Assets", "name_no": "Eiendeler"},
+        {"path": "eiendeler.omloepsmidler", "code": "current_assets", "name_en": "Current assets", "name_no": "Omløpsmidler"},
+        {"path": "eiendeler.anleggsmidler", "code": "fixed_assets", "name_en": "Fixed assets", "name_no": "Anleggsmidler"},
+        {"path": "egenkapitalGjeld", "code": "equity_liabilities", "name_en": "Equity and liabilities", "name_no": "Egenkapital og gjeld"},
+        {"path": "egenkapitalGjeld.egenkapital", "code": "equity", "name_en": "Equity", "name_no": "Egenkapital"},
+        {"path": "egenkapitalGjeld.egenkapital.innskuttEgenkapital", "code": "paid_in_equity", "name_en": "Paid-in equity", "name_no": "Innskutt egenkapital"},
+        {"path": "egenkapitalGjeld.egenkapital.opptjentEgenkapital", "code": "retained_equity", "name_en": "Retained earnings", "name_no": "Opptjent egenkapital"},
+        {"path": "egenkapitalGjeld.gjeldOversikt", "code": "liabilities", "name_en": "Liabilities", "name_no": "Gjeld"},
+        {"path": "egenkapitalGjeld.gjeldOversikt.kortsiktigGjeld", "code": "current_liabilities", "name_en": "Current liabilities", "name_no": "Kortsiktig gjeld"},
+        {"path": "egenkapitalGjeld.gjeldOversikt.langsiktigGjeld", "code": "long_term_liabilities", "name_en": "Long-term liabilities", "name_no": "Langsiktig gjeld"},
+        {"path": "resultatregnskapResultat", "code": "income_statement", "name_en": "Income statement", "name_no": "Resultatregnskap"},
+        {"path": "resultatregnskapResultat.driftsresultat", "code": "operating", "name_en": "Operating result", "name_no": "Driftsresultat"},
+        {"path": "resultatregnskapResultat.driftsresultat.driftsinntekter", "code": "operating_revenue", "name_en": "Operating revenue", "name_no": "Driftsinntekter"},
+        {"path": "resultatregnskapResultat.driftsresultat.driftskostnad", "code": "operating_expenses", "name_en": "Operating expenses", "name_no": "Driftskostnader"},
+        {"path": "resultatregnskapResultat.finansresultat", "code": "financial", "name_en": "Financial result", "name_no": "Finansresultat"},
+        {"path": "resultatregnskapResultat.finansresultat.finansinntekt", "code": "financial_income", "name_en": "Financial income", "name_no": "Finansinntekter"},
+        {"path": "resultatregnskapResultat.finansresultat.finanskostnad", "code": "financial_expenses", "name_en": "Financial expenses", "name_no": "Finanskostnader"}
+      ],
+      "items": [
+        {"code": "total_equity_liabilities", "name_en": "Total equity and liabilities", "name_no": "Sum egenkapital og gjeld"},
+        {"code": "total_equity", "name_en": "Total equity", "name_no": "Sum egenkapital"},
+        {"code": "paid_in_equity", "name_en": "Paid-in equity", "name_no": "Sum innskutt egenkapital"},
+        {"code": "retained_equity", "name_en": "Retained earnings", "name_no": "Sum opptjent egenkapital"},
+        {"code": "total_liabilities", "name_en": "Total liabilities", "name_no": "Sum gjeld"},
+        {"code": "current_liabilities", "name_en": "Current liabilities", "name_no": "Sum kortsiktig gjeld"},
+        {"code": "long_term_liabilities", "name_en": "Long-term liabilities", "name_no": "Sum langsiktig gjeld"},
+        {"code": "total_assets", "name_en": "Total assets", "name_no": "Sum eiendeler"},
+        {"code": "current_assets", "name_en": "Current assets", "name_no": "Sum omløpsmidler"},
+        {"code": "fixed_assets", "name_en": "Fixed assets", "name_no": "Sum anleggsmidler"},
+        {"code": "cash_and_bank", "name_en": "Cash and bank deposits", "name_no": "Sum bankinnskudd og kontanter"},
+        {"code": "receivables", "name_en": "Receivables", "name_no": "Sum fordringer"},
+        {"code": "investments", "name_en": "Investments", "name_no": "Sum investeringer"},
+        {"code": "inventory", "name_en": "Inventories", "name_no": "Sum varer"},
+        {"code": "goodwill", "name_en": "Goodwill", "name_no": "Goodwill"},
+        {"code": "net_income", "name_en": "Net income", "name_no": "Årsresultat"},
+        {"code": "pre_tax_income", "name_en": "Ordinary income before tax", "name_no": "Ordinært resultat før skattekostnad"},
+        {"code": "comprehensive_income", "name_en": "Total comprehensive income", "name_no": "Totalresultat"},
+        {"code": "tax_expense", "name_en": "Tax on ordinary income", "name_no": "Skattekostnad på ordinært resultat"},
+        {"code": "extraordinary_items", "name_en": "Extraordinary items", "name_no": "Ekstraordinære poster"},
+        {"code": "extraordinary_tax", "name_en": "Tax on extraordinary items", "name_no": "Skattekostnad på ekstraordinært resultat"},
+        {"code": "operating_income", "name_en": "Operating income", "name_no": "Driftsresultat"},
+        {"code": "operating_revenue", "name_en": "Total operating revenue", "name_no": "Sum driftsinntekter"},
+        {"code": "sales_revenue", "name_en": "Sales revenue", "name_no": "Salgsinntekter"},
+        {"code": "operating_expenses", "name_en": "Total operating expenses", "name_no": "Sum driftskostnader"},
+        {"code": "payroll_expenses", "name_en": "Payroll expenses", "name_no": "Lønnskostnad"},
+        {"code": "net_financial_items", "name_en": "Net financial items", "name_no": "Netto finans"},
+        {"code": "financial_income", "name_en": "Total financial income", "name_no": "Sum finansinntekter"},
+        {"code": "financial_expenses", "name_en": "Total financial expenses", "name_no": "Sum finanskostnader"},
+        {"code": "other_interest_expenses", "name_en": "Other interest expenses", "name_no": "Annen rentekostnad"},
+        {"code": "intra_group_interest_expenses", "name_en": "Interest expenses to group companies", "name_no": "Rentekostnad til foretak i samme konsern"}
       ],
       "identities": {
         "note": "Accounting identities checked per filing on the items, by item name; an identity is checkable when lhs and every non-optional term are present (optional terms absent count as 0); it fails when |lhs - (sum of plus - sum of minus)| > tolerance. `consistent` is TRUE when every checkable identity holds, FALSE when any fails, NA when none is checkable; `inconsistencies` is a list-column of the failing names (zero-length when none). Filings are published as filed: a failure is flagged, never corrected. Tolerance 1 absorbs the rounding observed in the register (data-2026-10 release: 6-16% of filings fail at tolerance 0, 0.1-2.5% at tolerance 1).",

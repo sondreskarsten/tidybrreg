@@ -6,6 +6,7 @@ import type { Manifest } from "../manifest.js";
 const COLUMN_DICS: Record<string, string> = {
   legal_form: "legal_form", nace_1: "nace", nace_2: "nace", nace_3: "nace",
   sector_code: "sector", role_code: "role", role_group_code: "role_group",
+  item: "regnskap_item", group: "regnskap_group", statement: "regnskap_group",
 };
 
 export interface Dictionary { rows: { code: string; name: string; level: string | null }[]; source: "klass" | "bundled"; lang: string; vintage: string }
@@ -67,11 +68,13 @@ async function labelMap(ctx: ToolContext, dic: string, lang: string): Promise<Ma
     case "legal_form": return fromRows(m.dictionaries.legal_forms);
     case "role": return fromRows(m.dictionaries.role_types);
     case "role_group": return fromRows(m.dictionaries.role_groups);
+    case "regnskap_item": return fromRows(m.dictionaries.regnskap_items);
+    case "regnskap_group": return fromRows(m.dictionaries.regnskap_groups as unknown as Record<string, string | null>[]);
     case "nace": case "sector": {
       const d = await getDictionary(ctx, dic, lang);
       return new Map(d.rows.map((r) => [r.code, r.name]));
     }
-    default: throw new TidybrregError("invalid_filter", `Unknown dictionary: "${dic}". Options: legal_form, nace, sector, role, role_group.`, { filter: "dic" });
+    default: throw new TidybrregError("invalid_filter", `Unknown dictionary: "${dic}". Options: legal_form, nace, sector, role, role_group, regnskap_item, regnskap_group.`, { filter: "dic" });
   }
 }
 
@@ -81,6 +84,9 @@ function apply(values: unknown[], map: Map<string, string>): (string | null)[] {
 
 export async function labelRows(ctx: ToolContext, rows: Row[], lang: string, code: string[] = []): Promise<Row[]> {
   if (rows.length === 0) return rows;
+  if (rows.some((r) => Array.isArray(r.items))) {
+    rows = await Promise.all(rows.map(async (r) => (Array.isArray(r.items) ? { ...r, items: await labelRows(ctx, r.items as Row[], lang, code) } : r)));
+  }
   const present = Object.keys(COLUMN_DICS).filter((c) => rows.some((r) => c in r));
   if (present.length === 0) return rows;
   const maps = new Map<string, Map<string, string>>();
