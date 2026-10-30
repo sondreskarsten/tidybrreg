@@ -5,12 +5,13 @@
 .Rhistory
 .RData
 docs/
+tidybrregpanel/
+tidybrregmcp/deploy/
+data-raw/
 pkgdown/
 man/figures/
-README.md
 README.Rmd
 LICENSE.md
-NEWS.md
 ARCHITECTURE.md
 CONTRIBUTING.md
 CODE_OF_CONDUCT.md
