@@ -37,6 +37,7 @@ Suggests:
     pkgload,
     rmarkdown,
     testthat (>= 3.0.0),
+    tidyr,
     withr,
     yyjsonr
 VignetteBuilder: knitr

@@ -36,17 +36,24 @@ held to the functions by `tests/testthat/test-endpoints.R`.
 
 ## New: annual accounts
 
-* New `brreg_regnskap()` retrieves the key figures of an entity's annual
-  accounts from the Regnskapsregisteret open API (`GET
-  /regnskapsregisteret/regnskap/{orgnr}`, optional `year` and
-  `account_type`), one row per filing with English columns for the
-  balance sheet and income statement (`total_assets`, `total_equity`,
-  `operating_revenue`, `net_income`, ...). Since 2026-10-01 the API
-  serves up to three fiscal years per account type; every returned
-  filing is kept, unknown leaves pass through as snake_case, and the
-  field map is published under `fields` in `endpoints.json` for the
-  MCP servers. Entities whose accounting plan the API does not serve
-  (banks, insurers, pension funds) return the typed empty with
+* New `brreg_regnskap()` retrieves an entity's annual accounts from the
+  Regnskapsregisteret open API (`GET /regnskapsregisteret/regnskap/{orgnr}`,
+  optional `year` and `account_type`). The result is nested: one row per
+  filing with its identity, period, currency, legal form and audit
+  flags as scalar columns, and the figures as an `items` tibble per
+  filing that keeps the API's structure (`statement`, `group`, `item`,
+  `path`, `level`, `is_sum`, `value`), so totals and components are
+  never added together by accident; `tidyr::unnest()` gives the long
+  form. Every filing is flagged for the accounting identities it fails
+  (`consistent`, `inconsistencies`; balance sheet balances, totals equal
+  their components, results follow from their parts, within 1 unit of
+  currency), since the register publishes filings as filed. The field,
+  group and identity maps are published under `brreg_regnskap` in
+  `endpoints.json` for the MCP servers, and the flattening is verified
+  against every structural shape of the 1,129,601 filings in the
+  brreg-json-fetcher `data-2026-10` release (`data-raw/regnskap/`).
+  Entities whose accounting plan the API does not serve (banks,
+  insurers, pension funds) return the typed empty with
   `unsupported_plan` and a new `tidybrreg_warning_unsupported_plan`
   instead of an error.
 

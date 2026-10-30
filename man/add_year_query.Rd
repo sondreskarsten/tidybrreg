@@ -2,7 +2,7 @@
 % Please edit documentation in R/regnskap.R
 \name{add_year_query}
 \alias{add_year_query}
-\title{Append the \verb{\\u00e5r} query parameter with its UTF-8 percent-encoding}
+\title{Append the \verb{år} query parameter with its UTF-8 percent-encoding}
 \usage{
 add_year_query(req, year)
 }

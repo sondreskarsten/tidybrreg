@@ -2,7 +2,7 @@
 % Please edit documentation in R/regnskap.R
 \name{flatten_regnskap}
 \alias{flatten_regnskap}
-\title{Flatten a Regnskapsregisteret response to one row per filing}
+\title{Flatten a Regnskapsregisteret response to one nested row per filing}
 \usage{
 flatten_regnskap(raw, org_nr)
 }
@@ -12,13 +12,16 @@ flatten_regnskap(raw, org_nr)
 \item{org_nr}{Organization number that was queried.}
 }
 \description{
-Each filing is flattened with \code{\link[=flatten_json]{flatten_json()}}, renamed through
-\link{regnskap_dict} by \code{\link[=rename_from_dict]{rename_from_dict()}} (observed fields only,
+Each filing is flattened with \code{\link[=flatten_json]{flatten_json()}}. Leaves inside the
+statement objects become the filing's \code{items} table
+(\code{\link[=build_items]{build_items()}}); the other leaves are renamed through
+\code{regnskap_dict} (\link{regnskap_maps}) by \code{\link[=rename_from_dict]{rename_from_dict()}} (observed fields only,
 unmapped leaves as snake_case) and coerced by \code{\link[=coerce_types]{coerce_types()}} with
-the shared reported-failure rule, then the filings are bound and the
-per-filing parse problems are re-indexed by filing and attached once
-as \code{brreg_parse_problems} with one \code{tidybrreg_warning_parse}. The
-queried \code{org_nr} fills the column only when the filing carries no
-\code{virksomhet.organisasjonsnummer}.
+the shared reported-failure rule. The identities are checked
+(\code{\link[=check_identities]{check_identities()}}), the filings are bound, and the per-filing
+parse problems (scalar columns and \code{items.value}) are re-indexed by
+filing and attached once as \code{brreg_parse_problems} with one
+\code{tidybrreg_warning_parse}. The queried \code{org_nr} fills the column
+only when the filing carries no \code{virksomhet.organisasjonsnummer}.
 }
 \keyword{internal}

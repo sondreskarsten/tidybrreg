@@ -15,7 +15,7 @@ R package:
 | the 16 exported functions | the 16 tools, same names |
 | each function's help page | tool title, description, argument descriptions |
 | formals + `@param` types | input JSON schema (enums, defaults, required) |
-| `inst/extdata/endpoints.json` (tested against the functions in R) | which URL each tool calls, query-parameter mapping, pagination, status contract, and the regnskap field map |
+| `inst/extdata/endpoints.json` (tested against the functions in R) | which URL each tool calls, query-parameter mapping, pagination, status contract, and the regnskap field, group and identity maps |
 | `field_dict`, `legal_forms`, `role_types`, `role_groups`, bundled NACE and sector codes | column renaming, type coercion, labels, offline dictionaries (with vintage) |
 | `?tidybrreg_conditions` | the condition classes reported in results and errors |
 | every help topic, provenance, NEWS | `tidybrreg://` resources and the server instructions |

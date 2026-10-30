@@ -21,51 +21,87 @@ returns both.}
 \value{
 A tibble with one row per filing. Always present when a
 filing is returned: \code{org_nr}, \code{filing_id} (integer), \code{journal_nr},
-\code{account_type}, \code{period_start} and \code{period_end} (Date), \code{currency}.
-Frequently present: \code{legal_form}, \code{parent_company},
-\code{liquidation_accounts}, \code{presentation_plan}, \code{not_audited},
-\code{audit_waived}, \code{small_enterprise}, \code{accounting_rules},
-\code{total_equity_liabilities}, \code{total_equity}, \code{paid_in_equity},
-\code{retained_equity}, \code{total_liabilities}, \code{current_liabilities},
-\code{long_term_liabilities}, \code{total_assets}, \code{current_assets},
-\code{fixed_assets}, \code{cash_and_bank}, \code{receivables}, \code{investments},
-\code{inventory}, \code{goodwill}, \code{net_income}, \code{pre_tax_income},
-\code{comprehensive_income}, \code{tax_expense}, \code{extraordinary_items},
-\code{extraordinary_tax}, \code{operating_income}, \code{operating_revenue},
-\code{sales_revenue}, \code{operating_expenses}, \code{payroll_expenses},
-\code{net_financial_items}, \code{financial_income}, \code{financial_expenses},
-\code{other_interest_expenses}, \code{intra_group_interest_expenses}. A
-zero-row tibble typed on the first seven columns when no filing
-is available.
+\code{account_type}, \code{period_start} and \code{period_end} (Date), \code{currency},
+\code{items} (list of tibbles with columns \code{statement}, \code{group}, \code{item},
+\code{path}, \code{level}, \code{is_sum}, \code{value}), \code{consistent} (logical) and
+\code{inconsistencies} (character). Frequently present: \code{legal_form},
+\code{parent_company}, \code{liquidation_accounts}, \code{presentation_plan},
+\code{not_audited}, \code{audit_waived}, \code{small_enterprise},
+\code{accounting_rules}. A zero-row tibble typed on the always-present
+columns when no filing is available.
 }
 \description{
 Fetch the key figures of the annual accounts filed by a Norwegian
 legal entity from the Regnskapsregisteret open API
-(\verb{https://data.brreg.no/regnskapsregisteret/regnskap/\{orgnr\}}). One
-row per filing is returned. Since 2026-10-01 the default response
-carries up to three fiscal years per account type, consolidated
-(\code{KONSERN}) accounts before company (\code{SELSKAP}) accounts; requesting
-an explicit \code{year} or \code{account_type} reveals no further years, and
-years the API no longer serves answer 404.
+(\verb{https://data.brreg.no/regnskapsregisteret/regnskap/\{orgnr\}},
+OpenAPI 1.1.16). One row per filing is returned. Since 2026-10-01 the
+default response carries up to three fiscal years per account type,
+consolidated (\code{KONSERN}) accounts before company (\code{SELSKAP}) accounts;
+requesting an explicit \code{year} or \code{account_type} reveals no further
+years, and years the API no longer serves answer 404.
 }
-\details{
-Nested figures are flattened to dot paths and renamed through the
-package's regnskap field map (\code{regnskap_dict}, mirrored under
-\code{fields} in \code{inst/extdata/endpoints.json}): balance-sheet and
-income-statement totals become English columns such as
-\code{total_assets}, \code{total_equity}, \code{operating_revenue} and
-\code{net_income}, all in full units of \code{currency}. As with
-\code{\link[=brreg_entity]{brreg_entity()}}, only observed fields are emitted and an API field
-the map does not know passes through under an auto-generated
-snake_case name, so additions BRREG makes to the filing shape (the
-asset, tax and cost leaves added 2026-10-01, for instance) are never
-dropped. An absent leaf is \code{NA}, not zero.
+\section{Shape}{
+
+The result is nested in the tidyr sense: the filing is the
+observational unit of the outer table and its line items are the
+observational unit of the \code{items} table nested in each row. Filing
+attributes (identity, period, currency, legal form, audit and
+accounting-principle flags) are scalar columns renamed through the
+package's regnskap field map (\code{regnskap_dict}, published as \code{fields}
+in \code{inst/extdata/endpoints.json}). The figures of the three statement
+objects the API emits (\code{eiendeler}, \code{egenkapitalGjeld},
+\code{resultatregnskapResultat}) are rows of \code{items}, one per leaf, with:
+\itemize{
+\item \code{statement}: \code{assets}, \code{equity_liabilities} or \code{income_statement}.
+\item \code{group}: English name of the object the leaf sits in
+(\code{current_assets}, \code{equity}, \code{operating_revenue}, ...), from the
+group map (\code{groups} in the endpoint spec).
+\item \code{item}: English name of the leaf (\code{total_assets}, \code{cash_and_bank},
+\code{net_income}, ...), from the field map.
+\item \code{path}: the API's dot path, unchanged.
+\item \code{level}: depth of the leaf in the API's structure.
+\item \code{is_sum}: whether the API names the leaf \code{sum...}, its own marking
+of a total.
+\item \code{value}: the amount in full units of \code{currency}.
+}
+
+The API's grouping is structural, not an additive partition: a
+group's total sits beside components and beside sub-group totals
+(\code{sumEiendeler} next to \code{sumOmloepsmidler} and \code{sumFordringer}), so
+adding \code{value} across items double counts unless \code{is_sum} and
+\code{group} are used. \code{tidyr::unnest(items)} gives the long form and
+\code{tidyr::pivot_wider(names_from = item, values_from = value)} the
+wide form. As with \code{\link[=brreg_entity]{brreg_entity()}}, only observed fields are
+emitted and an API field the maps do not know passes through under
+an auto-generated snake_case name (an unknown leaf inside a statement
+becomes an item, an unknown object outside the statements becomes
+scalar columns), so additions BRREG makes to the filing shape are
+never dropped. An absent leaf is absent, not zero; an object the API
+sends empty (\code{{}}) contributes no items.
+}
+
+\section{Consistency flags}{
+
+Filings are published as filed; the register does not correct them
+and neither does this function, but it checks the accounting
+identities the structure implies (balance sheet balances, equity and
+liabilities add up to their totals, operating and financial results
+and net income follow from their components; the list is
+\code{identities} in the endpoint spec) and flags what fails.
+\code{consistent} is \code{TRUE} when every checkable identity holds within a
+tolerance of 1 unit of currency, \code{FALSE} when any fails and \code{NA}
+when none is checkable (an identity is checkable when its total and
+every non-optional term are present). \code{inconsistencies} names the
+failing identities, newline-separated, and is \code{NA} when none fails.
+In the October 2026 population (1,129,601 filings) between 0.1\% and
+2.5\% of filings fail each identity at that tolerance.
 
 The logical account key is \code{org_nr}, \code{account_type} and the year of
 \code{period_end}; \code{filing_id} identifies the filing itself (a new id
 under the same key is a resubmission) and \code{journal_nr} can be shared
 by the \code{SELSKAP} and \code{KONSERN} filings of one submission.
 }
+
 \section{Unsupported accounting plans}{
 
 Banks, insurers, pension funds and other entities whose accounting
@@ -98,9 +134,10 @@ from a live entity with nothing registered.
 
 \examples{
 \dontshow{if (interactive() && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-brreg_regnskap("923609016")                          # Equinor ASA, all years
-brreg_regnskap("923609016", account_type = "SELSKAP")
-brreg_regnskap("923609016", year = 2025)
+acc <- brreg_regnskap("923609016")                   # Equinor ASA, all years
+acc[c("account_type", "period_end", "consistent")]
+tidyr::unnest(acc, items)                             # one row per line item
+brreg_regnskap("923609016", account_type = "SELSKAP", year = 2025)
 \dontshow{\}) # examplesIf}
 }
 \seealso{

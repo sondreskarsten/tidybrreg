@@ -46,6 +46,9 @@ export interface FunctionSpec {
   fixed_columns?: Record<string, string>;
   include_changes?: { param: string; value: string };
   fields?: { api_path: string; col_name: string; type: string }[];
+  statements?: Record<string, string>;
+  groups?: { path: string; group: string }[];
+  identities?: { tolerance: number; rules: { name: string; lhs: string; plus: string[]; minus: string[]; optional: string[] }[] };
   [k: string]: unknown;
 }
 

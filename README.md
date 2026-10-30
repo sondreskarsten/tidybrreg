@@ -93,11 +93,13 @@ brreg_prokura("923609016")        # procuration holders
 ## Annual accounts
 
 ```r
-brreg_regnskap("923609016")                           # up to 3 years per type
+acc <- brreg_regnskap("923609016")                    # one row per filing, up to 3 years per type
+acc[c("account_type", "period_end", "currency", "consistent")]
+tidyr::unnest(acc, items)                             # statement, group, item, path, level, is_sum, value
 brreg_regnskap("923609016", account_type = "SELSKAP", year = 2025)
 ```
 
-Banks, insurers and pension funds answer with a plan the API does not serve; the result is the typed empty with `unsupported_plan` and a `tidybrreg_warning_unsupported_plan`.
+The figures are nested per filing and keep the API's structure, so a group's total and its components are never summed together by accident; `consistent` and `inconsistencies` flag filings whose accounting identities do not hold (the register publishes them as filed). Banks, insurers and pension funds answer with a plan the API does not serve; the result is the typed empty with `unsupported_plan` and a `tidybrreg_warning_unsupported_plan`.
 
 ## Incremental updates
 
@@ -161,6 +163,7 @@ whatever the session time zone.
 | `brreg_konsern()`       | Corporate group structure                                      |
 | `brreg_signatur()`      | Signature authority                                            |
 | `brreg_prokura()`       | Procuration                                                    |
+| `brreg_regnskap()`      | Annual accounts from Regnskapsregisteret, nested per filing with consistency flags |
 | `brreg_updates()`       | Incremental change stream (enheter, underenheter, roller)      |
 | `brreg_update_fields()` | Flat field-level changes                                       |
 | `brreg_download()`      | Full register bulk download (enheter, underenheter, roller)    |

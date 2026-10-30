@@ -136,7 +136,7 @@
         "500 unsupported plan": "error body whose message contains 'oppstillingsplan som ikke er støttet (PLAN)' (also spelled 'stottet'): typed empty, http_status = 500, unsupported_plan = PLAN, tidybrreg_warning_unsupported_plan",
         "other>=400": "tidybrreg_error_http"
       },
-      "flatten": "JSON array of filings -> one row per filing; nested objects flattened to dot paths, renamed through `fields` (observed fields only), unmapped leaves pass through as snake_case with the same reported-coercion rule as entities; a valid empty array is the typed empty with no attribute. Since 2026-10-01 the default response carries up to three fiscal years per regnskapstype, KONSERN before SELSKAP; explicit year or type requests reveal no further years",
+      "flatten": "JSON array of filings -> one row per filing. Leaves outside the statement objects are flattened to dot paths and renamed through `fields` (observed fields only, unmapped leaves pass through as snake_case, the entity coercion rule with reported failures). Leaves inside a statement object (`statements`) become rows of the nested `items` table: statement, group (English name of the enclosing object from `groups`, else snake_case), item (from `fields`, else snake_case of the leaf), path (raw dot path), level (dots in the path), is_sum (leaf name starts with `sum`, the API's own marking of totals), value (numeric). The API's grouping is structural, not an additive partition: siblings inside a group mix totals and components, so sums over items must go through `is_sum` and `group`. A present-but-empty object ({}) contributes no items. A valid empty array is the typed empty with no attribute. Since 2026-10-01 the default response carries up to three fiscal years per regnskapstype, KONSERN before SELSKAP; explicit year or type requests reveal no further years",
       "fields": [
         {
           "api_path": "id",
@@ -369,6 +369,184 @@
           "type": "numeric"
         }
       ],
+      "statements": {
+        "eiendeler": "assets",
+        "egenkapitalGjeld": "equity_liabilities",
+        "resultatregnskapResultat": "income_statement"
+      },
+      "groups": [
+        {
+          "path": "eiendeler",
+          "group": "assets"
+        },
+        {
+          "path": "eiendeler.omloepsmidler",
+          "group": "current_assets"
+        },
+        {
+          "path": "eiendeler.anleggsmidler",
+          "group": "fixed_assets"
+        },
+        {
+          "path": "egenkapitalGjeld",
+          "group": "equity_liabilities"
+        },
+        {
+          "path": "egenkapitalGjeld.egenkapital",
+          "group": "equity"
+        },
+        {
+          "path": "egenkapitalGjeld.egenkapital.innskuttEgenkapital",
+          "group": "paid_in_equity"
+        },
+        {
+          "path": "egenkapitalGjeld.egenkapital.opptjentEgenkapital",
+          "group": "retained_equity"
+        },
+        {
+          "path": "egenkapitalGjeld.gjeldOversikt",
+          "group": "liabilities"
+        },
+        {
+          "path": "egenkapitalGjeld.gjeldOversikt.kortsiktigGjeld",
+          "group": "current_liabilities"
+        },
+        {
+          "path": "egenkapitalGjeld.gjeldOversikt.langsiktigGjeld",
+          "group": "long_term_liabilities"
+        },
+        {
+          "path": "resultatregnskapResultat",
+          "group": "income_statement"
+        },
+        {
+          "path": "resultatregnskapResultat.driftsresultat",
+          "group": "operating"
+        },
+        {
+          "path": "resultatregnskapResultat.driftsresultat.driftsinntekter",
+          "group": "operating_revenue"
+        },
+        {
+          "path": "resultatregnskapResultat.driftsresultat.driftskostnad",
+          "group": "operating_expenses"
+        },
+        {
+          "path": "resultatregnskapResultat.finansresultat",
+          "group": "financial"
+        },
+        {
+          "path": "resultatregnskapResultat.finansresultat.finansinntekt",
+          "group": "financial_income"
+        },
+        {
+          "path": "resultatregnskapResultat.finansresultat.finanskostnad",
+          "group": "financial_expenses"
+        }
+      ],
+      "identities": {
+        "note": "Accounting identities checked per filing on the items, by item name; an identity is checkable when lhs and every non-optional term are present (optional terms absent count as 0); it fails when |lhs - (sum of plus - sum of minus)| > tolerance. `consistent` is TRUE when every checkable identity holds, FALSE when any fails, NA when none is checkable; `inconsistencies` lists the failing names joined by newline. Filings are published as filed: a failure is flagged, never corrected. Tolerance 1 absorbs the rounding observed in the register (data-2026-10 release: 6-16% of filings fail at tolerance 0, 0.1-2.5% at tolerance 1).",
+        "tolerance": 1,
+        "rules": [
+          {
+            "name": "balance",
+            "lhs": "total_equity_liabilities",
+            "plus": [
+              "total_assets"
+            ],
+            "minus": [],
+            "optional": []
+          },
+          {
+            "name": "equity_liabilities",
+            "lhs": "total_equity_liabilities",
+            "plus": [
+              "total_equity",
+              "total_liabilities"
+            ],
+            "minus": [],
+            "optional": []
+          },
+          {
+            "name": "equity",
+            "lhs": "total_equity",
+            "plus": [
+              "paid_in_equity",
+              "retained_equity"
+            ],
+            "minus": [],
+            "optional": []
+          },
+          {
+            "name": "liabilities",
+            "lhs": "total_liabilities",
+            "plus": [
+              "current_liabilities",
+              "long_term_liabilities"
+            ],
+            "minus": [],
+            "optional": []
+          },
+          {
+            "name": "assets",
+            "lhs": "total_assets",
+            "plus": [
+              "current_assets",
+              "fixed_assets"
+            ],
+            "minus": [],
+            "optional": []
+          },
+          {
+            "name": "operating",
+            "lhs": "operating_income",
+            "plus": [
+              "operating_revenue"
+            ],
+            "minus": [
+              "operating_expenses"
+            ],
+            "optional": []
+          },
+          {
+            "name": "financial",
+            "lhs": "net_financial_items",
+            "plus": [
+              "financial_income"
+            ],
+            "minus": [
+              "financial_expenses"
+            ],
+            "optional": []
+          },
+          {
+            "name": "pre_tax",
+            "lhs": "pre_tax_income",
+            "plus": [
+              "operating_income",
+              "net_financial_items"
+            ],
+            "minus": [],
+            "optional": []
+          },
+          {
+            "name": "net_income",
+            "lhs": "net_income",
+            "plus": [
+              "pre_tax_income",
+              "extraordinary_items"
+            ],
+            "minus": [
+              "tax_expense",
+              "extraordinary_tax"
+            ],
+            "optional": [
+              "extraordinary_items",
+              "extraordinary_tax"
+            ]
+          }
+        ]
+      },
       "result": {
         "empty": [
           "org_nr",
@@ -377,7 +555,19 @@
           "account_type",
           "period_start",
           "period_end",
-          "currency"
+          "currency",
+          "items",
+          "consistent",
+          "inconsistencies"
+        ],
+        "items_columns": [
+          "statement",
+          "group",
+          "item",
+          "path",
+          "level",
+          "is_sum",
+          "value"
         ],
         "key": "org_nr, account_type, year(period_end) is the logical account key; filing_id is the filing identity; journal_nr can be shared by SELSKAP and KONSERN"
       }

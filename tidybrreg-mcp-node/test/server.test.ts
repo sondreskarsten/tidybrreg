@@ -181,28 +181,45 @@ describe("tools over a mocked register", () => {
     expect((r.structuredContent.error as any).fields.messages).toEqual(["boom"]);
   });
 
-  it("regnskap flattens one row per filing, maps the query and the unsupported plan", async () => {
-    const fx = JSON.parse(readFileSync(join(fixtures, "regnskap_synthetic.json"), "utf8"));
+  it("regnskap nests one row per filing with items and flags equal to the Python oracle", async () => {
+    const fx = JSON.parse(readFileSync(join(fixtures, "regnskap_release_2026-10.json"), "utf8"));
+    const expected = JSON.parse(readFileSync(join(fixtures, "regnskap_release_2026-10.expected.json"), "utf8"));
     const spec = m.endpoints.functions.brreg_regnskap;
     const flat = flattenRegnskap(spec, fx, "923609016");
-    expect(flat.rows).toHaveLength(6);
-    expect(flat.rows[0].account_type).toBe("KONSERN");
-    expect(flat.rows[5].period_end).toBe("2025-06-30");
-    expect(flat.rows[0].total_assets).toBe(3000900);
-    expect(flat.rows[0].parent_company).toBe(true);
-    expect("goodwill" in flat.rows[0]).toBe(false);
-    expect(Object.keys(flat.rows[0])[0]).toBe("org_nr");
+    expect(flat.rows).toHaveLength(expected.length);
     expect(flat.problems).toHaveLength(0);
-    for (const f of spec.fields!) expect(flat.rows[1]).toHaveProperty(f.col_name);
+    flat.rows.forEach((r, i) => {
+      expect(r.filing_id).toBe(expected[i].filing_id);
+      expect(r.org_nr).toBe(expected[i].org_nr);
+      const items = r.items as any[];
+      expect(new Set(items.map((x) => x.path))).toEqual(new Set(expected[i].item_paths));
+      expect(r.consistent).toBe(expected[i].consistent);
+      expect(r.inconsistencies).toBe(expected[i].inconsistencies.length ? expected[i].inconsistencies.join("\n") : null);
+    });
+    expect(Object.keys(flat.rows[0])[0]).toBe("org_nr");
+    const all = flat.rows.flatMap((r) => r.items as any[]);
+    expect(all.find((x) => x.path === "eiendeler.omloepsmidler.sumOmloepsmidler")).toMatchObject({ statement: "assets", group: "current_assets", item: "current_assets", level: 2, is_sum: true });
+    expect(all.find((x) => x.path === "resultatregnskapResultat.aarsresultat")).toMatchObject({ group: "income_statement", item: "net_income", level: 1, is_sum: false });
+    expect(all.every((x) => typeof x.value === "number")).toBe(true);
+    expect(flat.rows.some((r) => r.consistent === false)).toBe(true);
+    for (const f of spec.fields!) if (!/^(eiendeler|egenkapitalGjeld|resultatregnskapResultat)\./.test(f.api_path)) expect(flat.rows[0]).toHaveProperty(f.col_name);
 
-    let q = queue([{ status: 200, body: fx }]);
+    const f2 = structuredClone(fx[0]); f2.eiendeler.nyPost = 12; f2.nyttFelt = "x"; f2.eiendeler.sumEiendeler = "nope";
+    const one = flattenRegnskap(spec, [f2], "923609016");
+    expect((one.rows[0].items as any[]).find((x) => x.path === "eiendeler.nyPost")).toMatchObject({ item: "ny_post", group: "assets" });
+    expect(one.rows[0].nytt_felt).toBe("x");
+    expect(one.problems[0]).toMatchObject({ column: "items.value", actual: "nope", row: 1 });
+
+    let q = queue([{ status: 200, body: fx.slice(0, 3) }]);
     let r = await callTool(m, q.http, tool("brreg_regnskap"), { org_nr: "923609016", year: 2025, account_type: "SELSKAP" });
     expect(r.isError).toBe(false);
     expect(q.urls[0]).toMatch(/^https:\/\/data\.brreg\.no\/regnskapsregisteret\/regnskap\/923609016\?/);
     expect(q.urls[0]).toContain("%C3%A5r=2025");
     expect(q.urls[0]).toContain("regnskapstype=SELSKAP");
-    expect(r.structuredContent.n_total).toBe(6);
+    expect(r.structuredContent.n_total).toBe(3);
     expect((r.structuredContent.columns as any[]).find((c) => c.name === "period_end").type).toBe("Date");
+    expect((r.structuredContent.columns as any[]).find((c) => c.name === "items").type).toBe("list");
+    expect(Array.isArray((r.structuredContent.rows as any[])[0].items)).toBe(true);
 
     q = queue([{ status: 500, body: { status: 500, message: "Regnskapet inneholder en oppstillingsplan som ikke er stottet (BANK)" } }]);
     r = await callTool(m, q.http, tool("brreg_regnskap"), { org_nr: "984851006" });

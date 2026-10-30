@@ -284,13 +284,17 @@ test_that("brreg_regnskap: Equinor files SELSKAP and KONSERN accounts in NOK", {
  expect_true(all(acc$currency == "NOK"))
  expect_type(acc$filing_id, "integer")
  expect_false(any(duplicated(acc$filing_id)))
- expect_true(all(c("total_assets", "total_equity", "operating_revenue", "net_income") %in% names(acc)))
- expect_true(all(acc$total_assets > 0))
+ items <- dplyr::bind_rows(acc$items)
+ expect_true(all(c("total_assets", "total_equity", "operating_revenue", "net_income") %in% items$item))
+ expect_true(all(items$value[items$item == "total_assets"] > 0))
+ expect_true(all(items$statement %in% c("assets", "equity_liabilities", "income_statement")))
+ expect_type(acc$consistent, "logical")
  # since 2026-10-01: at most three fiscal years per type
  expect_true(all(table(acc$account_type) <= 3))
- # a field the map does not know must still arrive, never be dropped
- unmapped <- setdiff(names(acc), c(tidybrreg:::regnskap_dict$col_name))
+ # a field the maps do not know must still arrive, never be dropped
+ unmapped <- setdiff(names(acc), c(tidybrreg:::regnskap_dict$col_name, "items", "consistent", "inconsistencies"))
  expect_true(all(grepl("^[a-z0-9_]+$", unmapped)))
+ expect_true(all(grepl("^[a-z0-9_]+$", items$item)))
 })
 
 test_that("brreg_regnskap: an explicit year and type narrow the response", {

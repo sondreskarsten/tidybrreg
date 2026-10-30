@@ -97,8 +97,18 @@ test_that("brreg_regnskap maps its query and publishes the field map it applies"
   expect_match(url, paste0("[?&]", d$query$account_type, "=KONSERN\\b"))
   published <- dplyr::bind_rows(lapply(d$fields, tibble::as_tibble))
   expect_equal(published, tidybrreg:::regnskap_dict)
+  expect_equal(dplyr::bind_rows(lapply(d$groups, tibble::as_tibble)), tidybrreg:::regnskap_groups)
+  expect_equal(unlist(d$statements), tidybrreg:::regnskap_statements)
+  expect_equal(d$identities$tolerance, tidybrreg:::regnskap_tolerance)
+  rules <- lapply(d$identities$rules, \(r) list(name = r$name, lhs = r$lhs,
+    plus = as.character(unlist(r$plus)), minus = as.character(unlist(r$minus)),
+    optional = as.character(unlist(r$optional))))
+  expect_equal(rules, tidybrreg:::regnskap_identities)
+  expect_equal(unlist(d$result$empty), names(tidybrreg:::empty_regnskap()))
+  expect_equal(unlist(d$result$items_columns), names(tidybrreg:::empty_items()))
   mapped <- vapply(d$fields, \(f) f$col_name, character(1))
-  expect_true(all(unlist(d$result$empty) %in% mapped))
+  used <- unique(unlist(lapply(d$identities$rules, \(r) c(r$lhs, r$plus, r$minus))))
+  expect_true(all(used %in% mapped))
 })
 
 test_that("update feeds use the documented cursors", {
