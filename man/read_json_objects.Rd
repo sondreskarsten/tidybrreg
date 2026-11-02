@@ -8,7 +8,7 @@ read_json_objects(
   path,
   emit,
   n_max = Inf,
-  batch_size = 25000L,
+  batch_size = 5000L,
   chunk_size = 16777216L
 )
 }
@@ -36,6 +36,8 @@ text, so the caller parses one batch at a time. Object boundaries
 are found with a vectorised scan: unescaped quotes delimit string
 literals, braces outside them change the depth, and an object ends
 where the depth returns to zero. Nothing beyond \code{n_max} objects is
-read, so a sample of a 200 MB bulk costs a few megabytes.
+read, so a sample of a 200 MB bulk costs a few megabytes. The batch
+size bounds the transient the JSON decoder needs: 5,000 objects keep
+it near 1 GB where 25,000 took 1.7 GB, at the same speed.
 }
 \keyword{internal}

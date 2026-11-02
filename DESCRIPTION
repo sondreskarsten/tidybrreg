@@ -28,7 +28,8 @@ Imports:
     httr2 (>= 1.0.0),
     jsonlite,
     rlang,
-    tibble
+    tibble,
+    vctrs
 Suggests:
     callr,
     curl,

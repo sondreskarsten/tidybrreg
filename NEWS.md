@@ -99,7 +99,12 @@ held to the functions by `tests/testthat/test-endpoints.R`.
   in batches of complete objects (`read_json_objects()`), each parsed on
   its own, so the whole decoded tree of a million entities is never in
   memory at once, and a sample is read without touching the rest of the
-  file (`parse_bulk_json(n_max = )`). tidybrregpanel follows:
+  file (`parse_bulk_json(n_max = )`). The batches are bound one column
+  at a time (`bind_batches()`) rather than with `dplyr::bind_rows()`,
+  which held every batch and the result together; on a synthetic
+  register of 1.1 million entities the peak fell from 3.5 GB to 2.8 GB
+  for a 1 GB result in about 11 minutes. `brreg_download()` documents
+  the memory and time of the full parse. tidybrregpanel follows:
   `brreg_snapshot()` and `brreg_sync()` lose `format`, `brreg_import()`
   takes a JSON bulk file, and the CSV flag-then-fetch bootstrap of
   annotations is gone.

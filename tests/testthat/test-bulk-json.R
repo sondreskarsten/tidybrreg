@@ -78,3 +78,17 @@ test_that("a batch where every array is empty drops the column so batches bind",
   expect_false("paategninger" %in% names(out))
   expect_equal(out$forretningsadresse.adresse, c("A\nB", NA))
 })
+
+test_that("bind_batches binds like bind_rows, filling columns a batch did not carry", {
+  a <- tibble::tibble(x = c("1", "2"), n = 1:2, nested = list(tibble::tibble(v = "a"), NULL))
+  b <- tibble::tibble(x = "3", flag = TRUE)
+  c <- tibble::tibble(x = c("4", "5"), n = c(4.5, NA), nested = list(NULL, tibble::tibble(v = "e")))
+  out <- bind_batches(list(a, b, c))
+  expect_equal(out, dplyr::bind_rows(a, b, c))
+  expect_equal(names(out), c("x", "n", "nested", "flag"))
+  expect_equal(out$n, c(1, 2, NA, 4.5, NA))
+  expect_equal(out$flag, c(NA, NA, TRUE, NA, NA))
+  expect_null(out$nested[[3]])
+  expect_equal(out$nested[[5]]$v, "e")
+  expect_equal(nrow(bind_batches(list(a))), 2L)
+})

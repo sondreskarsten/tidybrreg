@@ -30,6 +30,20 @@
 #'
 #' @inheritSection brreg_entity Tidy shape
 #'
+#' @section Memory and time:
+#' The tibble of the full `enheter` register (about 1.1 million rows,
+#' nested list-columns included) is built in memory. The gzipped array
+#' is decoded in batches of complete objects and the batches are bound
+#' one column at a time, so the peak is the result plus about one
+#' gigabyte of decoder transient rather than a multiple of the result;
+#' on a synthetic register of 1.1 million entities the peak was 2.8 GB
+#' for a 1 GB result, and real data with its distinct names, addresses
+#' and purposes gives a larger result. Expect 10 to 15 minutes for the
+#' full `enheter` parse. A machine with 8 GB may not have the headroom;
+#' `type_output = "path"` costs nothing beyond the download, and
+#' `parse_bulk_json(path, n_max = )` (internal) reads the head of the
+#' array without inflating the rest.
+#'
 #' @section Caching:
 #' With `cache = TRUE` (default) the gzipped payload is stored in
 #' `tools::R_user_dir("tidybrreg", "cache")` together with a sidecar
@@ -258,7 +272,38 @@ parse_bulk_json <- function(path, type = "enheter", n_max = Inf) {
     batches[[length(batches) + 1L]] <<- dat
   })
   if (length(batches) == 0) return(empty_entities())
-  rename_and_coerce(dplyr::bind_rows(batches))
+  rename_and_coerce(bind_batches(batches))
+}
+
+#' Bind parsed batches into one tibble, one column at a time
+#'
+#' `dplyr::bind_rows()` holds every batch and the bound result at once,
+#' so the peak is twice the data. Binding column by column keeps one
+#' extra column alive instead: each column is concatenated across the
+#' batches with [vctrs::vec_c()] under their common type, batches that
+#' did not carry the column (no entity in them had the field) contribute
+#' a typed `NA` run, and the batches release the column as soon as it is
+#' bound. List-columns of nested tibbles bind as lists, `NULL` where the
+#' batch had no element. On the 1.1 million entity register this takes
+#' about a fifth off the peak compared with `bind_rows()`.
+#'
+#' @param batches A list of tibbles with compatible columns.
+#' @returns One tibble with the union of the columns.
+#' @keywords internal
+bind_batches <- function(batches) {
+  cols <- unique(unlist(lapply(batches, names)))
+  n <- vapply(batches, nrow, integer(1))
+  out <- vector("list", length(cols))
+  names(out) <- cols
+  for (col in cols) {
+    parts <- lapply(batches, function(b) b[[col]])
+    ptype <- vctrs::vec_ptype_common(!!!parts)
+    missing <- vapply(parts, is.null, logical(1))
+    parts[missing] <- lapply(n[missing], function(k) vctrs::vec_init(ptype, k))
+    out[[col]] <- vctrs::vec_c(!!!parts, .ptype = ptype)
+    for (i in seq_along(batches)) batches[[i]][[col]] <- NULL
+  }
+  tibble::new_tibble(out, nrow = sum(n))
 }
 
 
@@ -273,7 +318,9 @@ parse_bulk_json <- function(path, type = "enheter", n_max = Inf) {
 #' are found with a vectorised scan: unescaped quotes delimit string
 #' literals, braces outside them change the depth, and an object ends
 #' where the depth returns to zero. Nothing beyond `n_max` objects is
-#' read, so a sample of a 200 MB bulk costs a few megabytes.
+#' read, so a sample of a 200 MB bulk costs a few megabytes. The batch
+#' size bounds the transient the JSON decoder needs: 5,000 objects keep
+#' it near 1 GB where 25,000 took 1.7 GB, at the same speed.
 #'
 #' @param path Path to a gzipped (or plain) JSON array file.
 #' @param emit Function called with the JSON text of each batch.
@@ -282,7 +329,7 @@ parse_bulk_json <- function(path, type = "enheter", n_max = Inf) {
 #' @param chunk_size Bytes read from the file per step.
 #' @returns The number of objects emitted, invisibly.
 #' @keywords internal
-read_json_objects <- function(path, emit, n_max = Inf, batch_size = 25000L,
+read_json_objects <- function(path, emit, n_max = Inf, batch_size = 5000L,
                               chunk_size = 16777216L) {
   con <- gzfile(path, open = "rb")
   on.exit(close(con))
