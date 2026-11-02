@@ -1,9 +1,10 @@
 # Field dictionary: Norwegian API paths to English column names
 
 A tibble mapping brreg JSON field paths to English column names and R
-types. Used internally by the parse engine. API fields absent from this
-dictionary pass through with auto-generated snake_case names rather than
-being silently dropped.
+types. Used internally by the parse engine, on the single-entity
+lookups, the searches and the JSON bulk alike. API fields absent from
+this dictionary pass through with auto-generated snake_case names rather
+than being silently dropped.
 
 ## Usage
 
@@ -13,7 +14,7 @@ field_dict
 
 ## Format
 
-A tibble with 103 rows and 3 columns:
+A tibble with 101 rows and 3 columns:
 
 - api_path:
 
@@ -30,22 +31,30 @@ A tibble with 103 rows and 3 columns:
   R type for coercion: `"character"`, `"Date"`, `"integer"`,
   `"numeric"`, or `"logical"`.
 
+## Source
+
+Package-authored; see
+[tidybrreg_provenance](https://sondreskarsten.github.io/tidybrreg/reference/tidybrreg_provenance.md).
+
 ## See also
 
 [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md)
 for the function that uses this dictionary.
 
 Other tidybrreg reference data:
-[`annotation_infotypes`](https://sondreskarsten.github.io/tidybrreg/reference/annotation_infotypes.md),
 [`legal_forms`](https://sondreskarsten.github.io/tidybrreg/reference/legal_forms.md),
+[`regnskap_dict`](https://sondreskarsten.github.io/tidybrreg/reference/regnskap_dict.md),
+[`regnskap_groups`](https://sondreskarsten.github.io/tidybrreg/reference/regnskap_groups.md),
+[`regnskap_items`](https://sondreskarsten.github.io/tidybrreg/reference/regnskap_items.md),
 [`role_groups`](https://sondreskarsten.github.io/tidybrreg/reference/role_groups.md),
-[`role_types`](https://sondreskarsten.github.io/tidybrreg/reference/role_types.md)
+[`role_types`](https://sondreskarsten.github.io/tidybrreg/reference/role_types.md),
+[`tidybrreg_provenance`](https://sondreskarsten.github.io/tidybrreg/reference/tidybrreg_provenance.md)
 
 ## Examples
 
 ``` r
 field_dict
-#> # A tibble: 103 × 3
+#> # A tibble: 101 × 3
 #>    api_path                          col_name           type     
 #>    <chr>                             <chr>              <chr>    
 #>  1 organisasjonsnummer               org_nr             character
@@ -58,9 +67,9 @@ field_dict
 #>  8 harRegistrertAntallAnsatte        employees_reported logical  
 #>  9 hjemmeside                        website            character
 #> 10 naeringskode1.kode                nace_1             character
-#> # ℹ 93 more rows
+#> # ℹ 91 more rows
 field_dict[field_dict$type == "Date", ]
-#> # A tibble: 28 × 3
+#> # A tibble: 26 × 3
 #>    api_path                                            col_name            type 
 #>    <chr>                                               <chr>               <chr>
 #>  1 stiftelsesdato                                      founding_date       Date 
@@ -73,5 +82,5 @@ field_dict[field_dict$type == "Date", ]
 #>  8 tvangsopplostPgaManglendeRevisorDato                forced_dissolution… Date 
 #>  9 registreringsdatoMerverdiavgiftsregisteret          vat_registration_d… Date 
 #> 10 registreringsdatoFrivilligMerverdiavgiftsregisteret voluntary_vat_reg_… Date 
-#> # ℹ 18 more rows
+#> # ℹ 16 more rows
 ```

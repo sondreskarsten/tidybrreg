@@ -5,7 +5,11 @@ Build an httr2 request to a brreg API service
 ## Usage
 
 ``` r
-brreg_req(path, query = list(), service = c("enhetsregisteret", "fullmakt"))
+brreg_req(
+  path,
+  query = list(),
+  service = c("enhetsregisteret", "fullmakt", "regnskapsregisteret")
+)
 ```
 
 ## Arguments
@@ -20,4 +24,4 @@ brreg_req(path, query = list(), service = c("enhetsregisteret", "fullmakt"))
 
 - service:
 
-  One of `"enhetsregisteret"` or `"fullmakt"`.
+  One of `"enhetsregisteret"`, `"fullmakt"` or `"regnskapsregisteret"`.

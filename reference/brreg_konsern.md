@@ -17,15 +17,16 @@ brreg_konsern(org_nr)
 
 - org_nr:
 
-  Character. 9-digit organization number.
+  Character. A single 9-digit organization number.
 
 ## Value
 
 A tibble with one row per node in the group tree. Columns: `org_nr` (the
 queried entity), `node_org_nr`, `node_name`, `level` (0 for the root),
 `link_form`, `link_form_desc`, `basis`, `relation_date` (Date),
-`parent_org_nr`, `parent_name`, `legal_form`, `legal_form_desc`. Returns
-an empty tibble if no group structure is registered.
+`parent_org_nr`, `parent_name`, `legal_form`, `legal_form_desc`. A
+zero-row tibble with the same typed columns if no group structure is
+registered.
 
 ## Details
 
@@ -42,10 +43,32 @@ used in public-sector (ORGL) structures, not konsern ownership.
 
 The endpoint returns 404 both for organization numbers that do not exist
 and for live entities that are not part of any registered group — the
-common case for ordinary companies. A warning is issued and an empty
-tibble returned; the `in_corporate_group` column from
+common case for ordinary companies. The `in_corporate_group` column from
 [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md)
 disambiguates the two without a second lookup here.
+
+## Status handling
+
+The per-entity endpoints behind
+[`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md),
+[`brreg_roles_legal()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles_legal.md),
+`brreg_konsern()`,
+[`brreg_signatur()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_signatur.md),
+[`brreg_prokura()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_prokura.md)
+and
+[`brreg_regnskap()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_regnskap.md)
+share one contract. HTTP 404 means the organization number is unknown to
+that endpoint, which for konsern, signatur, prokura and regnskap is the
+ordinary case of an entity with nothing registered there: the typed
+zero-row tibble is returned with attribute `http_status = 404L` and no
+warning. HTTP 410 means the entity has been deleted: the typed zero-row
+tibble is returned with `http_status = 410L`, `deletion_date`, and a
+`tidybrreg_warning_deleted`. Any other status of 400 or above aborts
+with a `tidybrreg_error_http`. A successful response with nothing
+registered returns the typed zero-row tibble with no attribute. Use
+[`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md)
+to distinguish a non-existent organization number from a live entity
+with nothing registered.
 
 ## See also
 
@@ -57,11 +80,11 @@ for the `in_corporate_group` flag,
 for roles an entity holds in others.
 
 Other tidybrreg entity functions:
-[`brreg_board_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_summary.md),
 [`brreg_children()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_children.md),
 [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md),
 [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md),
 [`brreg_prokura()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_prokura.md),
+[`brreg_regnskap()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_regnskap.md),
 [`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md),
 [`brreg_roles_legal()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles_legal.md),
 [`brreg_search()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_search.md),

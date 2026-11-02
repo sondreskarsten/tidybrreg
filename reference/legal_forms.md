@@ -1,8 +1,9 @@
 # Norwegian legal form codes with English translations
 
 All organisasjonsformer registered with the Brønnøysund Register Centre,
-with English translations. Fetched from the brreg API during package
-build and supplemented with manual English translations.
+with English translations. Codes and Norwegian names are fetched from
+the brreg API during package build; the English names are manual
+translations by the package author.
 
 ## Usage
 
@@ -30,16 +31,26 @@ A tibble with 44 rows and 4 columns:
 
   English translation.
 
+## Source
+
+Brønnøysund Register Centre,
+<https://data.brreg.no/enhetsregisteret/api/organisasjonsformer>, NLOD
+2.0, retrieved 2026-06-16; see
+[tidybrreg_provenance](https://sondreskarsten.github.io/tidybrreg/reference/tidybrreg_provenance.md).
+
 ## See also
 
 [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md)
 to translate legal form codes in entity data.
 
 Other tidybrreg reference data:
-[`annotation_infotypes`](https://sondreskarsten.github.io/tidybrreg/reference/annotation_infotypes.md),
 [`field_dict`](https://sondreskarsten.github.io/tidybrreg/reference/field_dict.md),
+[`regnskap_dict`](https://sondreskarsten.github.io/tidybrreg/reference/regnskap_dict.md),
+[`regnskap_groups`](https://sondreskarsten.github.io/tidybrreg/reference/regnskap_groups.md),
+[`regnskap_items`](https://sondreskarsten.github.io/tidybrreg/reference/regnskap_items.md),
 [`role_groups`](https://sondreskarsten.github.io/tidybrreg/reference/role_groups.md),
-[`role_types`](https://sondreskarsten.github.io/tidybrreg/reference/role_types.md)
+[`role_types`](https://sondreskarsten.github.io/tidybrreg/reference/role_types.md),
+[`tidybrreg_provenance`](https://sondreskarsten.github.io/tidybrreg/reference/tidybrreg_provenance.md)
 
 ## Examples
 

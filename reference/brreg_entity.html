@@ -15,7 +15,7 @@ in this central register."><meta property="og:image" content="https://sondreskar
 
     <a class="navbar-brand me-2" href="../index.html">tidybrreg</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,11 +29,6 @@ in this central register."><meta property="og:image" content="https://sondreskar
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/tidybrreg.html">Getting started</a></li>
     <li><a class="dropdown-item" href="../articles/business-data.html">Norwegian business data</a></li>
-    <li><a class="dropdown-item" href="../articles/panels.html">Building firm panels</a></li>
-    <li><a class="dropdown-item" href="../articles/governance.html">Governance research</a></li>
-    <li><a class="dropdown-item" href="../articles/roller-cdc.html">Tracking role changes</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/architecture.html">Architecture</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -73,8 +68,9 @@ in this central register.</p>
 
 
 <dl><dt id="arg-org-nr">org_nr<a class="anchor" aria-label="anchor" href="#arg-org-nr"></a></dt>
-<dd><p>Character. A 9-digit Norwegian organization number.
-Validated using <code><a href="brreg_validate.html">brreg_validate()</a></code> before the API call.</p></dd>
+<dd><p>Character. A single 9-digit Norwegian organization
+number. Validated using <code><a href="brreg_validate.html">brreg_validate()</a></code> before the API call; a
+vector of several numbers is an error (iterate with <code><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply()</a></code>).</p></dd>
 
 
 <dt id="arg-registry">registry<a class="anchor" aria-label="anchor" href="#arg-registry"></a></dt>
@@ -89,17 +85,19 @@ entity, <code>beliggenhetsadresse</code> instead of <code>forretningsadresse</co
 <dd><p>A type of variables: <code>"code"</code> (default) returns raw
 codes, <code>"label"</code> returns English labels for coded columns
 (legal form, NACE, sector, etc.), following the eurostat
-package's pattern.</p></dd>
+package's pattern. Labelling NACE and sector codes consults SSB
+KLASS on first use in a session; see <code><a href="get_brreg_dic.html">get_brreg_dic()</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A tibble with one row and one column per API field. Column
-names follow the package field dictionary. Key columns include
+    <p>A tibble with one row and one column per field the API
+returned, named via <a href="field_dict.html">field_dict</a>, plus <code>registry</code> (which registry
+answered) and <code>deleted</code> (logical). Frequently present columns include
 <code>org_nr</code>, <code>name</code>, <code>legal_form</code>, <code>employees</code>, <code>founding_date</code>,
-<code>nace_1</code>, <code>municipality_code</code>, <code>bankrupt</code>, and <code>parent_org_nr</code>.
-For deleted entities (HTTP 410), returns a tibble with columns
-<code>org_nr</code>, <code>deleted</code>, and <code>deletion_date</code>.</p>
+<code>nace_1</code>, <code>municipality_code</code>, <code>bankrupt</code>, and <code>parent_org_nr</code>;
+<code>historiske_navn</code> and <code>annotations</code> are list-columns of tibbles
+(see the section on tidy shape).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -110,16 +108,60 @@ brreg are never silently dropped. Use <code><a href="brreg_label.html">brreg_lab
 coded values (legal forms, NACE codes) to English descriptions.</p>
     </div>
     <div class="section level2">
+    <h2 id="observed-fields-only">Observed fields only<a class="anchor" aria-label="anchor" href="#observed-fields-only"></a></h2>
+
+
+<p>The register emits only the fields that apply to an entity: a sole
+proprietorship (<code>ENK</code>) typically carries no <code>founding_date</code> or
+<code>employees</code>, a foreign branch (<code>NUF</code>) no <code>municipality_code</code>. The
+returned columns are exactly the fields the response carried, so
+every column other than <code>org_nr</code>, <code>registry</code> and <code>deleted</code> is
+conditionally present. Test for a column with <code>"x" %in% names(result)</code>
+rather than assuming it.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="tidy-shape">Tidy shape<a class="anchor" aria-label="anchor" href="#tidy-shape"></a></h2>
+
+
+<p>Every tibble the package returns is tidy in Wickham's sense: one
+observation per row, one variable per column, one observational
+unit per table. The register nests two kinds of array inside an
+entity. Arrays of strings (<code>business_address</code>, <code>postal_address</code>,
+<code>location_address</code>, <code>purpose</code>, <code>activity</code>) are the line fragments
+of one value and are joined with <code>"\n"</code>, which no fragment
+contains, so <code>strsplit(x, "\n")</code> recovers the lines. Arrays of
+objects (<code>historiske_navn</code>, <code>annotations</code>, any array of objects the
+register adds) are observations of another unit and are nested as a
+list-column of tibbles, one row per element with snake_case
+columns, <code>NULL</code> for an entity without them; <code><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">tidyr::unnest()</a></code>
+expands them to their own table. An empty array is not an
+observation and emits no column. Nothing is serialized to JSON
+text.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="deleted-entities">Deleted entities<a class="anchor" aria-label="anchor" href="#deleted-entities"></a></h2>
+
+
+<p>BRREG reports a deleted entity either as HTTP 410 or, for most
+deletions, as HTTP 200 with <code>respons_klasse = "SlettetEnhet"</code> and a
+<code>slettedato</code>. Both are modelled the same way: <code>deleted</code> is <code>TRUE</code>,
+<code>deletion_date</code> is the parsed date, every other field the response
+carried is kept, and a <code>tidybrreg_warning_deleted</code> is signalled
+(silence it with <code>suppressWarnings(classes = "tidybrreg_warning_deleted")</code>).
+Live entities carry <code>deleted = FALSE</code>.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="brreg_search.html">brreg_search()</a></code> for querying multiple entities,
 <code><a href="brreg_label.html">brreg_label()</a></code> for translating codes to English,
-<a href="field_dict.html">field_dict</a> for the column name mapping.</p>
+<a href="field_dict.html">field_dict</a> for the column name mapping,
+<a href="tidybrreg_conditions.html">tidybrreg_conditions</a> for the errors and warnings signalled.</p>
 <p>Other tidybrreg entity functions:
-<code><a href="brreg_board_summary.html">brreg_board_summary()</a></code>,
 <code><a href="brreg_children.html">brreg_children()</a></code>,
 <code><a href="brreg_download.html">brreg_download()</a></code>,
 <code><a href="brreg_konsern.html">brreg_konsern()</a></code>,
 <code><a href="brreg_prokura.html">brreg_prokura()</a></code>,
+<code><a href="brreg_regnskap.html">brreg_regnskap()</a></code>,
 <code><a href="brreg_roles.html">brreg_roles()</a></code>,
 <code><a href="brreg_roles_legal.html">brreg_roles_legal()</a></code>,
 <code><a href="brreg_search.html">brreg_search()</a></code>,

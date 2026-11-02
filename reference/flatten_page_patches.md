@@ -1,9 +1,11 @@
-# Flatten all patches from a page of CDC events in a single pass
+# Flatten all patches from a page of CDC events
 
-No recursion. The brreg CDC nesting depth is bounded at 2 levels: object
--\> scalar, or object -\> array -\> scalar. Inlines the unpack for both
-levels. Events with no `endringer` (Ny, Sletting, Fjernet) emit a single
-synthetic row with `operation = NA`, `field = NA`, `new_value = NA`.
+One row per patch leaf via
+[`parse_patch()`](https://sondreskarsten.github.io/tidybrreg/reference/parse_patch.md),
+so nesting of any depth is handled identically to the `changes`
+list-column of
+[`brreg_updates()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates.md).
+Events with no `endringer` emit one synthetic row.
 
 ## Usage
 
@@ -19,5 +21,5 @@ flatten_page_patches(raw_updates)
 
 ## Value
 
-A flat tibble with update_id, org_nr, change_type, timestamp, operation,
-field, new_value.
+A flat tibble; see
+[`brreg_update_fields()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_update_fields.md).

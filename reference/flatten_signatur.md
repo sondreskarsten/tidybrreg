@@ -20,4 +20,4 @@ flatten_signatur(raw, org_nr, signature_type)
 
 - signature_type:
 
-  `"signatur"` or `"prokura"`.
+  `"signature"` or `"procuration"`.

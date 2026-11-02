@@ -24,16 +24,24 @@ A tibble with 15 rows and 3 columns:
 
   Norwegian description.
 
+## Source
+
+Package-authored from BRREG documentation; see
+[tidybrreg_provenance](https://sondreskarsten.github.io/tidybrreg/reference/tidybrreg_provenance.md).
+
 ## See also
 
 [`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md),
 [role_types](https://sondreskarsten.github.io/tidybrreg/reference/role_types.md).
 
 Other tidybrreg reference data:
-[`annotation_infotypes`](https://sondreskarsten.github.io/tidybrreg/reference/annotation_infotypes.md),
 [`field_dict`](https://sondreskarsten.github.io/tidybrreg/reference/field_dict.md),
 [`legal_forms`](https://sondreskarsten.github.io/tidybrreg/reference/legal_forms.md),
-[`role_types`](https://sondreskarsten.github.io/tidybrreg/reference/role_types.md)
+[`regnskap_dict`](https://sondreskarsten.github.io/tidybrreg/reference/regnskap_dict.md),
+[`regnskap_groups`](https://sondreskarsten.github.io/tidybrreg/reference/regnskap_groups.md),
+[`regnskap_items`](https://sondreskarsten.github.io/tidybrreg/reference/regnskap_items.md),
+[`role_types`](https://sondreskarsten.github.io/tidybrreg/reference/role_types.md),
+[`tidybrreg_provenance`](https://sondreskarsten.github.io/tidybrreg/reference/tidybrreg_provenance.md)
 
 ## Examples
 

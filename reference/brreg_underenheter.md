@@ -21,7 +21,9 @@ brreg_underenheter(org_nr, max_results = 200, type = c("code", "label"))
 
 - max_results:
 
-  Integer. Maximum sub-units to return (default 200).
+  Integer. Maximum sub-units to return (default 200). When the parent
+  has more, the result carries `complete = FALSE` and a
+  `tidybrreg_warning_truncated` is signalled.
 
 - type:
 
@@ -29,7 +31,7 @@ brreg_underenheter(org_nr, max_results = 200, type = c("code", "label"))
 
 ## Value
 
-A tibble with one row per sub-unit. Same column schema as
+A tibble with one row per sub-unit. Same column schema and attributes as
 [`brreg_search()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_search.md)
 with `registry = "underenheter"`.
 
@@ -41,12 +43,12 @@ for the parent entity,
 for child enheter in the ORGL hierarchy.
 
 Other tidybrreg entity functions:
-[`brreg_board_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_summary.md),
 [`brreg_children()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_children.md),
 [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md),
 [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md),
 [`brreg_konsern()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_konsern.md),
 [`brreg_prokura()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_prokura.md),
+[`brreg_regnskap()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_regnskap.md),
 [`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md),
 [`brreg_roles_legal()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles_legal.md),
 [`brreg_search()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_search.md),

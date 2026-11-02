@@ -1,6 +1,6 @@
-# Fetch English classification labels from SSB Klass API
+# Fetch classification labels from SSB Klass API
 
-Fetch English classification labels from SSB Klass API
+Fetch classification labels from SSB Klass API
 
 ## Usage
 
@@ -17,7 +17,8 @@ fetch_klass(classification_id, lang = "en", date = Sys.Date())
 
 - lang:
 
-  Language code: `"en"` or `"no"`.
+  Language code: `"en"` or `"no"`. KLASS names its languages `en`, `nb`
+  and `nn`; `"no"` is sent as `nb` (Bokmål).
 
 - date:
 
@@ -25,4 +26,4 @@ fetch_klass(classification_id, lang = "en", date = Sys.Date())
 
 ## Value
 
-A tibble with columns `code`, `name_en`, `level`.
+A tibble with columns `code`, `name`, `level`.

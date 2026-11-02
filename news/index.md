@@ -1,5 +1,291 @@
 # Changelog
 
+## tidybrreg 0.6.0
+
+### The split
+
+tidybrreg is now the narrow, typed client to the register: exactly
+sixteen exports, each wrapping one endpoint of Enhetsregisteret, the
+Fullmakt service, Regnskapsregisteret, or SSB KLASS.
+
+``` r
+brreg_entity()  brreg_search()  brreg_underenheter()  brreg_children()
+brreg_roles()   brreg_roles_legal()  brreg_konsern()
+brreg_signatur()  brreg_prokura()
+brreg_regnskap()
+brreg_updates()  brreg_update_fields()
+brreg_download()
+brreg_label()  get_brreg_dic()  brreg_validate()
+```
+
+The managed-state subsystem (snapshot store, `brreg_sync()`, replay,
+changelog queries, flows, panels, series, tsibble conversion, events,
+annotations, name history, harmonisation, director networks, survival
+data, `brreg_board_summary()`, `diff_roller_state()`, `brreg_status()`)
+has moved, unchanged in behaviour, to the companion package
+**tidybrregpanel** in the `tidybrregpanel/` directory of this
+repository. It depends on tidybrreg and is built alongside it on
+r-universe. The pre-split implementation remains at commit `c9bd992`.
+
+The Model Context Protocol server **tidybrregmcp** (`tidybrregmcp/`)
+exposes the sixteen exports as MCP tools, deriving every tool’s
+documentation and schema from this package’s help pages, and writes a
+manifest (`mcp_manifest()`) from which **tidybrreg-mcp**
+(`tidybrreg-mcp-node/`, on npm) serves the same catalogue without R. The
+package ships `inst/extdata/endpoints.json`, a machine-readable contract
+of every export’s endpoint, query mapping and status handling, held to
+the functions by `tests/testthat/test-endpoints.R`.
+
+### Tidy shape
+
+- Every tibble the package returns is now tidy in Wickham’s sense, with
+  no cell holding more than one value. Arrays of objects the register
+  nests inside an entity (`historiskeNavn`, `paategninger`) were
+  serialized to JSON text in one cell;
+  [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md),
+  [`brreg_search()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_search.md)
+  and the JSON bulk of
+  [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md)
+  now return them as list-columns of tibbles (`historiske_navn`,
+  `annotations`), one row per element with snake_case columns, `NULL`
+  for an entity without them, so
+  [`tidyr::unnest()`](https://tidyr.tidyverse.org/reference/unnest.html)
+  gives the table of the other unit. An empty array emits no column.
+  Arrays of strings (addresses, `purpose`, `activity`) are line
+  fragments of one value and keep the `"\n"` join.
+  [`brreg_regnskap()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_regnskap.md)’s
+  `inconsistencies` is a list-column of the failing identity names
+  (zero-length when none) instead of a newline-joined string. The Node
+  MCP server returns the same nesting as JSON arrays. tidybrregpanel’s
+  bootstrap reads both the nested column and the JSON text of older
+  snapshots.
+
+### New: annual accounts
+
+- New
+  [`brreg_regnskap()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_regnskap.md)
+  retrieves an entity’s annual accounts from the Regnskapsregisteret
+  open API (`GET /regnskapsregisteret/regnskap/{orgnr}`, optional `year`
+  and `account_type`). The result is nested: one row per filing with its
+  identity, period, currency, legal form and audit flags as scalar
+  columns, and the figures as an `items` tibble per filing that keeps
+  the API’s structure (`statement`, `group`, `item`, `path`, `level`,
+  `is_sum`, `value`), so totals and components are never added together
+  by accident;
+  [`tidyr::unnest()`](https://tidyr.tidyverse.org/reference/unnest.html)
+  gives the long form. Every filing is flagged for the accounting
+  identities it fails (`consistent`, `inconsistencies`; balance sheet
+  balances, totals equal their components, results follow from their
+  parts, within 1 unit of currency), since the register publishes
+  filings as filed. The field, group and identity maps are published
+  under `brreg_regnskap` in `endpoints.json` for the MCP servers, and
+  the flattening is verified against every structural shape of the
+  1,129,601 filings in the brreg-json-fetcher `data-2026-10` release
+  (`data-raw/regnskap/`). The maps are bundled datasets built in
+  `data-raw/build_dictionaries.R` the way the entity and role
+  dictionaries are: `regnskap_dict` (as `field_dict`, applied by the
+  same rename and coercion rule), `regnskap_groups` and `regnskap_items`
+  (as `role_groups` and `role_types`, with `name_en` and `name_no`).
+  `brreg_regnskap(type = "label")` and
+  [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md)
+  translate `item`, `group`, `statement` and `legal_form` in English or
+  Norwegian, inside the nested `items` as well as after
+  [`tidyr::unnest()`](https://tidyr.tidyverse.org/reference/unnest.html);
+  [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md)
+  accepts the dictionaries `"regnskap_item"` and `"regnskap_group"` for
+  vectors. Entities whose accounting plan the API does not serve (banks,
+  insurers, pension funds) return the typed empty with
+  `unsupported_plan` and a new `tidybrreg_warning_unsupported_plan`
+  instead of an error.
+
+### Breaking changes
+
+- [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md)
+  reads the JSON bulk only: the `format` argument is gone and
+  `/enheter/lastned/csv` and `/underenheter/lastned/csv` are no longer
+  requested. The JSON bulk is the representation the single-entity
+  lookups and the update feeds use, so a bulk row, a lookup and a patch
+  now agree on every field, nested arrays included; the CSV was BRREG’s
+  own flattening with its own separators and a presence flag in place of
+  the annotation array. The cache file is `{type}_bulk.json.gz`.
+  `field_dict` loses the two CSV-only spellings
+  (`registreringsdatoIEnhetsregisteret`,
+  `registreringsdatoAntallAnsatteNavAaregisteret`). The array is read in
+  batches of complete objects
+  ([`read_json_objects()`](https://sondreskarsten.github.io/tidybrreg/reference/read_json_objects.md)),
+  each parsed on its own, so the whole decoded tree of a million
+  entities is never in memory at once, and a sample is read without
+  touching the rest of the file (`parse_bulk_json(n_max = )`). The
+  batches are bound one column at a time
+  ([`bind_batches()`](https://sondreskarsten.github.io/tidybrreg/reference/bind_batches.md))
+  rather than with
+  [`dplyr::bind_rows()`](https://dplyr.tidyverse.org/reference/bind_rows.html),
+  which held every batch and the result together. On the live register
+  (2026-11-02) the full `enheter` parse takes 14.6 minutes and peaks at
+  4.0 GB for a 1.6 GB tibble of 1,179,853 rows; `underenheter` 7.1
+  minutes and 2.0 GB for 870,571 rows. The roller bulk
+  (`/roller/totalbestand`) is streamed the same way:
+  [`parse_roles_bulk()`](https://sondreskarsten.github.io/tidybrreg/reference/parse_roles_bulk.md)
+  decodes and flattens one batch of entities at a time instead of
+  holding the decoded tree of the whole register, which exceeded 7 GB:
+  3,426,438 roles in 11.1 minutes at a 2.3 GB peak.
+  [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md)
+  documents the memory and time of the full parse. tidybrregpanel’s
+  parquet layer carries the nested columns on both backends: arrow’s
+  `list_of` vectors are read back as plain lists so state binds with
+  fresh
+  [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md)
+  rows (the replay sync failed on the type clash), and nanoparquet,
+  which writes no nested types, stores them as JSON text named in the
+  file metadata and restores the tibbles on read. Before arrow writes a
+  list-column its tibbles are widened to the union of their fields in
+  one order, since arrow derives the struct from the first element and a
+  row added by a sync carries the response’s key order. tidybrregpanel
+  follows: `brreg_snapshot()` and `brreg_sync()` lose `format`,
+  `brreg_import()` takes a JSON bulk file, and the CSV flag-then-fetch
+  bootstrap of annotations is gone.
+
+- [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md)
+  supports `type_output = "tibble"` and `"path"` only. The Arrow backend
+  is withdrawn: BRREG’s CSV fails in `arrow::read_csv_arrow()` on
+  embedded newlines in quoted addresses, its JSON bulk is a
+  pretty-printed array rather than NDJSON, and the path bypassed the
+  dictionary. arrow, nanoparquet and duckdb are no longer Suggests.
+
+- [`get_brreg_dic()`](https://sondreskarsten.github.io/tidybrreg/reference/get_brreg_dic.md)
+  returns columns `code`, `name`, `level` (`name` replaces `name_en`,
+  which was wrong for `lang = "no"`), with attributes `source`, `lang`
+  and `vintage`, and gains `source = c("auto", "klass", "bundled")` and
+  `refresh`.
+
+- [`brreg_update_fields()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_update_fields.md)
+  and the `changes` column of
+  [`brreg_updates()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates.md)
+  gain a `path` column holding the raw JSON pointer of each patch leaf.
+
+- Timestamps from the update feeds are `POSIXct` in UTC (previously
+  parsed as local time); `since` keeps the precision of a `POSIXct` and
+  is sent as a UTC instant; a `Date` means midnight UTC.
+
+- [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md)
+  always carries `deleted` (logical) and `registry`.
+
+- Valid empty results are typed zero-row tibbles everywhere (previously
+  zero-column `tibble()`): search results carry `org_nr`, `name`,
+  `legal_form`; roles, legal roles, konsern, signatur and prokura carry
+  their full documented column set; update feeds carry their four (or
+  seven) columns.
+
+- The per-entity endpoints
+  ([`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md),
+  [`brreg_roles_legal()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles_legal.md),
+  [`brreg_konsern()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_konsern.md),
+  [`brreg_signatur()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_signatur.md),
+  [`brreg_prokura()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_prokura.md))
+  no longer warn on HTTP 404; they return the typed empty with attribute
+  `http_status = 404L`. HTTP 410 warns about deletion; other HTTP errors
+  abort.
+
+- Loading or attaching the package performs no filesystem or network
+  access: the startup message about missing bulk data and the
+  undocumented `.onLoad` override of bundled dictionaries from RDS files
+  are gone.
+
+### Typed conditions
+
+Every error and warning now carries a class and fields; see
+[`?tidybrreg_conditions`](https://sondreskarsten.github.io/tidybrreg/reference/tidybrreg_conditions.md).
+Errors: `tidybrreg_error_invalid_org_nr`, `_invalid_filter`,
+`_not_found`, `_http`, `_result_window`, `_invalid_since`,
+`_no_bundled_dictionary`, `_rate_limited`, `_connection`. Warnings:
+`tidybrreg_warning_deleted`, `_partial`, `_truncated`,
+`_unknown_member`, `_bundled_fallback`, `_parse`, `_unresolved`,
+`_unsupported_plan`.
+
+### Request layer
+
+The retry rule follows what the brreg-json-fetcher collector observed
+live. 500, 502 and 504 are transient like 429 and 503 (three tries,
+exponential pause), except the Regnskapsregisteret 500 that names an
+unsupported accounting plan, which is a property of the entity and is
+final. The register’s rate limit sometimes arrives as HTTP 200 with a
+`text/plain` body `Too many requests`; it was an unreadable-body crash
+and is now retried and, when it persists, a typed
+`tidybrreg_error_rate_limited`. A connection failure (DNS, TCP, TLS,
+dropped connection) is retried the same number of times and then a
+`tidybrreg_error_connection`; the bulk download goes through the same
+rule, so a connection reset mid-download is retried and a server error
+aborts with the typed `tidybrreg_error_http`. The live audit probes the
+fetcher’s two deleted controls (931264338, 991128972) as deleted here
+too. The Node server applies the same rule from `endpoints.json`.
+
+### Fixes to the retained core
+
+- [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md)
+  models deletion consistently: HTTP 200 with
+  `respons_klasse = "SlettetEnhet"` (the form BRREG uses for nearly all
+  deletions) and HTTP 410 both yield `deleted = TRUE`, a parsed
+  `deletion_date`, every other observed field, and a warning. A vector
+  of several organization numbers is rejected instead of silently
+  querying the first. Nested HAL `_links` blocks
+  (`organisasjonsform._links.self.href`) are stripped at any depth on
+  both the live and bulk paths.
+
+- [`brreg_search()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_search.md)
+  aborts on unsupported filters (`bankrupt` for underenheter), aborts
+  with `tidybrreg_error_result_window` before returning a partial
+  population when a query exceeds BRREG’s 10,000 result window, reports
+  truncation with `complete = FALSE` and a warning, aborts on a
+  first-page HTTP failure, and warns on a later one instead of returning
+  a silently partial result.
+
+- [`brreg_updates()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_updates.md)
+  and
+  [`brreg_update_fields()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_update_fields.md)
+  share one paginator: first-page failures abort, later failures warn
+  and return the pages read with `complete = FALSE`; stopping on
+  `max_pages` with a full last page warns; results carry `complete`,
+  `pages_fetched` and `cursor`. Members of an update object the package
+  does not model pass through as columns with a
+  `tidybrreg_warning_unknown_member`. The roller feed honours
+  `max_pages` and `verbose` (paginating on `afterId`) and rejects
+  `include_changes`. Patch flattening handles any nesting depth
+  identically on the flat and list-column paths.
+
+- [`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md)
+  validates `refresh` (`TRUE`, `FALSE`, `"auto"`) and `cache`;
+  `cache = FALSE` uses a temporary file instead of writing the payload
+  to the cache directory anyway; `refresh = "auto"` revalidates against
+  both `ETag` and `Last-Modified` and re-downloads when nothing can
+  prove the cache current; download metadata (`last_modified` as UTC
+  `POSIXct`) is attached as `attr(x, "brreg_download")` and written to a
+  sidecar.
+
+- Dictionary coercion is one rule on every path: the four numeric
+  `capital_*` fields are numeric on bulk CSV as well as live JSON; parse
+  failures are reported for every type, never abort the parse (the
+  diagnostics table used to break on more than twenty failures), and the
+  `brreg_parse_problems` table carries `n_failed`. A field the
+  dictionary lists under two spellings keeps both observed values; a
+  snake_case collision between unmapped fields is made unique rather
+  than dropping the second.
+
+- Dates and instants: konsern relation dates and Fullmakt birth dates
+  accept both ISO and `DD.MM.YYYY`; `Last-Modified` headers parse in any
+  locale.
+
+- [`brreg_label()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_label.md)
+  honours `lang = "no"` for every dictionary, is idempotent, leaves no
+  stray `names` attribute on labelled columns, and preserves the input’s
+  attributes (`total_matches` survives `code =`).
+  `options(tidybrreg.offline = TRUE)` keeps labelling off the network;
+  KLASS failures fall back to the bundled dictionaries with a warning
+  stating their vintage.
+
+- `DESCRIPTION` carries the maintainer’s real address. Provenance,
+  licence and vintage of every bundled table are documented in
+  [`?tidybrreg_provenance`](https://sondreskarsten.github.io/tidybrreg/reference/tidybrreg_provenance.md).
+
 ## tidybrreg 0.5.0
 
 ### Breaking changes
@@ -17,10 +303,8 @@
   in the batch, `NA` for records in that batch lacking it, absent
   entirely when unobserved.
   [`parse_entities()`](https://sondreskarsten.github.io/tidybrreg/reference/parse_entities.md)
-  unions across the batch via
-  [`bind_rows()`](https://dplyr.tidyverse.org/reference/bind_rows.html),
-  so multi-entity results are unchanged except that never-observed
-  columns are gone. Single-entity
+  unions across the batch via `bind_rows()`, so multi-entity results are
+  unchanged except that never-observed columns are gone. Single-entity
   [`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md)
   now returns roughly 61-63 columns instead of a fixed 104. This also
   stops the enheter bulk parse from stamping twelve underenheter-only
@@ -48,14 +332,11 @@
   which had left `resigned` constant `FALSE` for every role. The column
   now appears only when a payload actually carries `fratraadt` (replays
   of pre-June data), with within-payload absence keeping the old `FALSE`
-  semantics.
-  [`diff_roller_state()`](https://sondreskarsten.github.io/tidybrreg/reference/diff_roller_state.md)
-  already intersects its comparison set with the columns present on both
-  sides, so mixed old/new states diff cleanly.
-  [`brreg_board_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_summary.md)
-  gains a column-tolerant active filter; the previous pre-guard
-  collapsed to a scalar when `resigned` was absent and silently disabled
-  the deregistered filter.
+  semantics. `diff_roller_state()` already intersects its comparison set
+  with the columns present on both sides, so mixed old/new states diff
+  cleanly. `brreg_board_summary()` gains a column-tolerant active
+  filter; the previous pre-guard collapsed to a scalar when `resigned`
+  was absent and silently disabled the deregistered filter.
 
 ### New features
 
@@ -72,29 +353,25 @@
   disambiguates.
 
 - Name history (`historiskeNavn`, added by BRREG 2026-06-16/18) is
-  captured.
-  [`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md)
-  ingests the `add /historiskeNavn/-` CDC patches for both enheter and
-  underenheter into a `historiske_navn` state table, read by the new
-  [`brreg_historical_names()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_historical_names.md).
-  Rename events land in the changelog as `registry = "historiske_navn"`,
+  captured. `brreg_sync()` ingests the `add /historiskeNavn/-` CDC
+  patches for both enheter and underenheter into a `historiske_navn`
+  state table, read by the new `brreg_historical_names()`. Rename events
+  land in the changelog as `registry = "historiske_navn"`,
   `change_type = "name_history_added"`, carrying the superseded name and
   its validity interval.
 
-- [`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md)
-  gains a `format` argument (default `"csv"`, behaviour-preserving)
-  forwarded to the bootstrap bulk download. `historiskeNavn` has no CSV
-  column and no presence flag, so history predating the first sync
-  exists only in the JSON bulk; `format = "json"` backfills it at
-  bootstrap.
+- `brreg_sync()` gains a `format` argument (default `"csv"`,
+  behaviour-preserving) forwarded to the bootstrap bulk download.
+  `historiskeNavn` has no CSV column and no presence flag, so history
+  predating the first sync exists only in the JSON bulk;
+  `format = "json"` backfills it at bootstrap.
 
 ### Minor improvements and fixes
 
-- [`extract_paategninger()`](https://sondreskarsten.github.io/tidybrreg/reference/extract_paategninger.md)
-  parses inline annotation arrays on the JSON bulk path. Previously the
-  boolean-flag matcher never fired on the serialized arrays, so a
-  JSON-format bootstrap silently produced an empty påtegninger state;
-  the CSV flag-then-fetch path is unchanged.
+- `extract_paategninger()` parses inline annotation arrays on the JSON
+  bulk path. Previously the boolean-flag matcher never fired on the
+  serialized arrays, so a JSON-format bootstrap silently produced an
+  empty påtegninger state; the CSV flag-then-fetch path is unchanged.
 
 - Documentation corrected against the live bulk files: the enheter and
   underenheter CSVs are comma-delimited (not semicolon), and `kapital`,
@@ -105,9 +382,7 @@
 - The API monitor’s schema probe also samples the per-entity roles
   endpoint and the konsernstruktur endpoint (ASA census guarantees group
   members in the sample), so roller field removals like `fratraadt` and
-  new endpoints are visible to drift detection.
-
-## tidybrreg 0.4.0
+  new endpoints are visible to drift detection. \# tidybrreg 0.4.0
 
 ### New features
 
@@ -143,17 +418,13 @@
 
 ### Bug fixes
 
-- [`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md)
-  now populates `paategninger` state. The enheter bulk download (CSV)
-  only carries påtegninger as a boolean presence flag, not the
-  annotation content, so
-  [`extract_paategninger()`](https://sondreskarsten.github.io/tidybrreg/reference/extract_paategninger.md)
-  previously always produced empty state and
-  [`brreg_annotations()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotations.md)
-  returned nothing after a sync. The bootstrap now reads the flag
-  (column `annotations`) and fetches the actual annotation content per
-  flagged entity from the enheter endpoint. New internal helper
-  [`fetch_entity_paategninger()`](https://sondreskarsten.github.io/tidybrreg/reference/fetch_entity_paategninger.md).
+- `brreg_sync()` now populates `paategninger` state. The enheter bulk
+  download (CSV) only carries påtegninger as a boolean presence flag,
+  not the annotation content, so `extract_paategninger()` previously
+  always produced empty state and `brreg_annotations()` returned nothing
+  after a sync. The bootstrap now reads the flag (column `annotations`)
+  and fetches the actual annotation content per flagged entity from the
+  enheter endpoint. New internal helper `fetch_entity_paategninger()`.
 
 ## tidybrreg 0.3.7
 
@@ -163,11 +434,10 @@
   `infotype` codes to English descriptions. Sourced from the brreg API
   reference (`NAVN`, `FADR`) and codes observed in live data (role codes
   used for missing-role annotations); unknown codes pass through.
-- [`brreg_annotations()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotations.md)
-  gains a `translate` argument. With `translate = TRUE` an
-  `infotype_desc` column with English descriptions (from
-  `annotation_infotypes`) is added after `infotype`. Default `FALSE`, so
-  existing behaviour is unchanged.
+- `brreg_annotations()` gains a `translate` argument. With
+  `translate = TRUE` an `infotype_desc` column with English descriptions
+  (from `annotation_infotypes`) is added after `infotype`. Default
+  `FALSE`, so existing behaviour is unchanged.
 
 ### Documentation
 
@@ -195,9 +465,8 @@
 
 ### Internal
 
-- [`read_changelog()`](https://sondreskarsten.github.io/tidybrreg/reference/read_changelog.md):
-  the arrow branch now references the partition column as
-  `.data$sync_date` and imports the
+- `read_changelog()`: the arrow branch now references the partition
+  column as `.data$sync_date` and imports the
   [`rlang::.env`](https://rlang.r-lib.org/reference/dot-data.html)
   pronoun, removing the “no visible binding for global variable” check
   note. Runtime behaviour is unchanged.
@@ -209,29 +478,25 @@
 
 ### Roller CDC: field-level change detection
 
-- [`bootstrap_state()`](https://sondreskarsten.github.io/tidybrreg/reference/bootstrap_state.md)
-  now initializes the CDC cursor to the current tip (max event ID) at
-  bootstrap time via
-  [`get_cdc_tip()`](https://sondreskarsten.github.io/tidybrreg/reference/get_cdc_tip.md).
-  Previously the cursor remained at 0 after bootstrap, causing the first
-  CDC poll to replay the entire event history (~4.4M roller events, ~24M
-  enheter events). This caused OOM and timeout failures on Cloud Run.
+- `bootstrap_state()` now initializes the CDC cursor to the current tip
+  (max event ID) at bootstrap time via `get_cdc_tip()`. Previously the
+  cursor remained at 0 after bootstrap, causing the first CDC poll to
+  replay the entire event history (~4.4M roller events, ~24M enheter
+  events). This caused OOM and timeout failures on Cloud Run.
 - `bootstrap_state(roller_method = "cdc")` skips the roller totalbestand
   download entirely. Writes an empty state table and builds state
   incrementally via per-org
   [`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md)
   calls. Reduces bootstrap from 32 GiB RAM / 30+ minutes to \<10 seconds
   and negligible memory.
-- [`paginate_cdc()`](https://sondreskarsten.github.io/tidybrreg/reference/paginate_cdc.md)
-  gains a `max_pages` parameter and a safety guard: if `cursor_id == 0`
-  (no prior sync), pagination caps at 5 pages and emits a
-  [`cli::cli_warn()`](https://cli.r-lib.org/reference/cli_abort.html).
+- `paginate_cdc()` gains a `max_pages` parameter and a safety guard: if
+  `cursor_id == 0` (no prior sync), pagination caps at 5 pages and emits
+  a [`cli::cli_warn()`](https://cli.r-lib.org/reference/cli_abort.html).
   Belt-and-suspenders — should never trigger after a correct bootstrap.
-- [`diff_roller_state()`](https://sondreskarsten.github.io/tidybrreg/reference/diff_roller_state.md)
-  (new, exported) — computes field-level diffs between two flattened
-  roller state tibbles. Returns a long-format changelog with
-  `change_type` (entry/exit/change), `field`, `value_from`, `value_to`.
-  Roles are keyed by a composite of
+- `diff_roller_state()` (new, exported) — computes field-level diffs
+  between two flattened roller state tibbles. Returns a long-format
+  changelog with `change_type` (entry/exit/change), `field`,
+  `value_from`, `value_to`. Roles are keyed by a composite of
   `(org_nr, role_group_code, role_code, holder_id)` where holder_id is
   derived from `person_id` (person-held) or `entity:{org_nr}`
   (entity-held).
@@ -248,10 +513,9 @@
   gains 4 new columns: `deregistered` (avregistrert), `ordering`
   (rekkefolge), `elected_by` (valgtAv\$kode), `group_modified`
   (sistEndret as Date).
-- [`brreg_board_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_summary.md)
-  now excludes resigned and deregistered roles from all counts and gains
-  `n_employee_elected` (count of board members with a non-NA
-  `elected_by` value).
+- `brreg_board_summary()` now excludes resigned and deregistered roles
+  from all counts and gains `n_employee_elected` (count of board members
+  with a non-NA `elected_by` value).
 
 ### Performance
 
@@ -261,9 +525,9 @@
   per-entity
   [`flatten_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/flatten_roles.md)
   path (4,192 vs 1,028 roles/sec).
-- [`read_roles_json()`](https://sondreskarsten.github.io/tidybrreg/reference/read_roles_json.md)
-  (internal) — dispatches to yyjsonr when available (10× parse speed,
-  70× lower memory vs jsonlite). yyjsonr added to Suggests.
+- `read_roles_json()` (internal) — dispatches to yyjsonr when available
+  (10× parse speed, 70× lower memory vs jsonlite). yyjsonr added to
+  Suggests.
 - [`lookup_role_vec()`](https://sondreskarsten.github.io/tidybrreg/reference/lookup_role_vec.md)
   and
   [`lookup_role_group_vec()`](https://sondreskarsten.github.io/tidybrreg/reference/lookup_role_group_vec.md)
@@ -277,32 +541,25 @@
   `enhet.navn` as a JSON array `["ERNST & YOUNG AS"]`, not a named
   object. jsonlite parses this as an unnamed list, which the old code
   did not handle. Added unnamed list branch.
-- [`read_roles_json()`](https://sondreskarsten.github.io/tidybrreg/reference/read_roles_json.md)
-  now decompresses `.gz` files to a temp file before passing to yyjsonr.
-  yyjsonr cannot read gzipped files directly; the previous code crashed
-  with a buffer allocation error on the 131 MB totalbestand.
-- [`paginate_cdc_bounded()`](https://sondreskarsten.github.io/tidybrreg/reference/paginate_cdc_bounded.md)
-  (internal) caps roller CDC pagination at 5 pages (50K events) when
-  using `roller_method = "bulk"`. The previous unbounded
-  [`paginate_cdc()`](https://sondreskarsten.github.io/tidybrreg/reference/paginate_cdc.md)
-  fetched the entire CDC history (1.1M+ events) from cursor 0 on first
-  bootstrap, causing 30-minute timeouts.
-- [`parse_sync_page()`](https://sondreskarsten.github.io/tidybrreg/reference/parse_sync_page.md)
-  no longer produces tibble column size mismatches when CDC pages
-  contain events without `endringer` (Ny/Sletting).
+- `read_roles_json()` now decompresses `.gz` files to a temp file before
+  passing to yyjsonr. yyjsonr cannot read gzipped files directly; the
+  previous code crashed with a buffer allocation error on the 131 MB
+  totalbestand.
+- `paginate_cdc_bounded()` (internal) caps roller CDC pagination at 5
+  pages (50K events) when using `roller_method = "bulk"`. The previous
+  unbounded `paginate_cdc()` fetched the entire CDC history (1.1M+
+  events) from cursor 0 on first bootstrap, causing 30-minute timeouts.
+- `parse_sync_page()` no longer produces tibble column size mismatches
+  when CDC pages contain events without `endringer` (Ny/Sletting).
   `raw_changes[[i]] <- NULL` was deleting list elements instead of
   preserving NULL placeholders (R double-bracket assignment semantics).
   Fix: [`list()`](https://rdrr.io/r/base/list.html) as empty
   placeholder. Affected all enheter and underenheter sync since v0.3.2.
-- [`add_role_key()`](https://sondreskarsten.github.io/tidybrreg/reference/add_role_key.md)
-  no longer crashes on 0-row tibbles. Previously,
+- `add_role_key()` no longer crashes on 0-row tibbles. Previously,
   `case_when(df$person_id ...)` received NULL instead of NA when passed
   a 0-column tibble from a 404 API response.
-- [`apply_roller_events_cdc()`](https://sondreskarsten.github.io/tidybrreg/reference/apply_roller_events_cdc.md)
-  skips
-  [`diff_roller_state()`](https://sondreskarsten.github.io/tidybrreg/reference/diff_roller_state.md)
-  when both old and new state are empty (entity not in state AND 404
-  from API).
+- `apply_roller_events_cdc()` skips `diff_roller_state()` when both old
+  and new state are empty (entity not in state AND 404 from API).
 
 ## tidybrreg 0.3.3
 
@@ -349,75 +606,65 @@
 
 ### Sync engine
 
-- [`find_state_column()`](https://sondreskarsten.github.io/tidybrreg/reference/find_state_column.md)
-  gains mappings for all 8 new field_dict entries. CDC field changes for
-  audit exemption dates, employee registration dates, VAT registration
-  date in Enhetsregisteret, underenhet start dates, and party register
-  membership are no longer silently skipped during
-  [`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md).
+- `find_state_column()` gains mappings for all 8 new field_dict entries.
+  CDC field changes for audit exemption dates, employee registration
+  dates, VAT registration date in Enhetsregisteret, underenhet start
+  dates, and party register membership are no longer silently skipped
+  during `brreg_sync()`.
 
 ## tidybrreg 0.3.2
 
 ### Event-sourcing sync engine
 
-- [`brreg_sync()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync.md)
-  — maintains a local mirror of the Enhetsregisteret by applying
-  incremental CDC events to persistent parquet state files. On first
-  run, bootstraps from bulk download. Subsequent runs poll from the last
-  cursor position. Write ordering (changelog → state → cursor) ensures
-  crash-safe idempotent replay.
-- [`brreg_sync_status()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_sync_status.md)
-  — displays state file sizes, cursor positions, last sync time, and
-  changelog partition count.
+- `brreg_sync()` — maintains a local mirror of the Enhetsregisteret by
+  applying incremental CDC events to persistent parquet state files. On
+  first run, bootstraps from bulk download. Subsequent runs poll from
+  the last cursor position. Write ordering (changelog → state → cursor)
+  ensures crash-safe idempotent replay.
+- `brreg_sync_status()` — displays state file sizes, cursor positions,
+  last sync time, and changelog partition count.
 - Four state files maintained: `enheter.parquet`,
   `underenheter.parquet`, `roller.parquet`, `paategninger.parquet`.
 - Hive-partitioned changelog under `state/changelog/sync_date=.../` for
-  efficient date-range queries via
-  [`arrow::open_dataset()`](https://arrow.apache.org/docs/r/reference/open_dataset.html).
+  efficient date-range queries via `arrow::open_dataset()`.
 
 ### Registry annotations (påtegninger)
 
-- [`brreg_annotations()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotations.md)
-  — query the påtegninger state table by org_nr and/or infotype code.
-  Påtegninger are registry-level annotations about entity data quality —
-  the earliest formal signal of entity distress, preceding forced
-  dissolution by weeks to months.
-- [`brreg_annotation_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_annotation_summary.md)
-  — count entities with active annotations grouped by infotype.
+- `brreg_annotations()` — query the påtegninger state table by org_nr
+  and/or infotype code. Påtegninger are registry-level annotations about
+  entity data quality — the earliest formal signal of entity distress,
+  preceding forced dissolution by weeks to months.
+- `brreg_annotation_summary()` — count entities with active annotations
+  grouped by infotype.
 - Påtegninger treated as a conceptually distinct fourth data stream
   alongside enheter, underenheter, and roller.
 
 ### Unified change tracking
 
-- [`brreg_changes()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_changes.md)
-  — query the changelog for field-level mutations across all four
-  streams. Filter by track (field names), registry, change_type, date
-  range, and org_nr.
-- [`brreg_change_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_change_summary.md)
-  — count changes by registry, type, field.
-- [`brreg_flows()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_flows.md)
-  now auto-detects the changelog when called with no arguments:
-  [`brreg_flows()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_flows.md)
-  reads from the sync changelog, `brreg_flows(data)` uses the original
-  bulk + CDC path.
+- `brreg_changes()` — query the changelog for field-level mutations
+  across all four streams. Filter by track (field names), registry,
+  change_type, date range, and org_nr.
+- `brreg_change_summary()` — count changes by registry, type, field.
+- `brreg_flows()` now auto-detects the changelog when called with no
+  arguments: `brreg_flows()` reads from the sync changelog,
+  `brreg_flows(data)` uses the original bulk + CDC path.
 
 ## tidybrreg 0.3.1
 
 ### New functions
 
-- [`brreg_network()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_network.md)
-  — build entity ego-network graphs as `tbl_graph` objects. Depth 0
-  (seed only), depth 1 (sub-units, children, roles, legal roles via
-  API), depth 2 (board interlocks via local bulk data). Extensible
-  collector pattern for future relationship types.
+- `brreg_network()` — build entity ego-network graphs as `tbl_graph`
+  objects. Depth 0 (seed only), depth 1 (sub-units, children, roles,
+  legal roles via API), depth 2 (board interlocks via local bulk data).
+  Extensible collector pattern for future relationship types.
 - [`brreg_underenheter()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_underenheter.md)
   — convenience wrapper to get all sub-units (BEDR/AAFY) belonging to a
   parent entity.
 - [`brreg_children()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_children.md)
   — get child enheter in the organisational hierarchy (e.g. Stortinget →
   Riksrevisjonen).
-- [`brreg_status()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_status.md)
-  — check local bulk data availability for all three registry types.
+- `brreg_status()` — check local bulk data availability for all three
+  registry types.
 
 ### Changes
 
@@ -452,12 +699,8 @@
 
 ### Test coverage
 
-- New test files for
-  [`brreg_manifest()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_manifest.md),
-  [`brreg_replay()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_replay.md),
-  [`brreg_series()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_series.md),
-  and
-  [`as_brreg_tsibble()`](https://sondreskarsten.github.io/tidybrreg/reference/as_brreg_tsibble.md).
+- New test files for `brreg_manifest()`, `brreg_replay()`,
+  `brreg_series()`, and `as_brreg_tsibble()`.
 
 ## tidybrreg 0.2.0
 
@@ -465,55 +708,44 @@
 
 #### Snapshot engine
 
-- [`brreg_snapshot()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_snapshot.md)
-  downloads and saves dated bulk register extracts as Hive-partitioned
-  Parquet files. Supports `type = "enheter"`, `"underenheter"`, and
-  `"roller"` (via `/roller/totalbestand`). Raw `.gz` files are preserved
-  alongside processed Parquet for provenance.
-- [`brreg_import()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_import.md)
-  adds user-supplied historical CSVs as snapshot partitions, normalizing
-  column names via `field_dict`.
-- [`brreg_snapshots()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_snapshots.md)
-  lists available snapshots with dates, sizes, and paths.
-- [`brreg_open()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_open.md)
-  opens the partitioned dataset as a lazy Arrow Dataset (requires the
-  arrow package).
-- [`brreg_data_dir()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_data_dir.md)
-  returns the snapshot store path. Override with
+- `brreg_snapshot()` downloads and saves dated bulk register extracts as
+  Hive-partitioned Parquet files. Supports `type = "enheter"`,
+  `"underenheter"`, and `"roller"` (via `/roller/totalbestand`). Raw
+  `.gz` files are preserved alongside processed Parquet for provenance.
+- `brreg_import()` adds user-supplied historical CSVs as snapshot
+  partitions, normalizing column names via `field_dict`.
+- `brreg_snapshots()` lists available snapshots with dates, sizes, and
+  paths.
+- `brreg_open()` opens the partitioned dataset as a lazy Arrow Dataset
+  (requires the arrow package).
+- `brreg_data_dir()` returns the snapshot store path. Override with
   `options(brreg.data_dir = "/custom/path")`.
-- [`brreg_cleanup()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_cleanup.md)
-  prunes old partitions by count or age.
+- `brreg_cleanup()` prunes old partitions by count or age.
 
 #### Provenance manifest
 
-- [`brreg_manifest()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_manifest.md)
-  reads the JSON provenance catalog recording every download: endpoint
-  URL, download timestamp, `Last-Modified` header (data vintage date),
-  ETag, file hash, record count, and file paths. Used to bridge
-  snapshots to CDC updates without gaps.
+- `brreg_manifest()` reads the JSON provenance catalog recording every
+  download: endpoint URL, download timestamp, `Last-Modified` header
+  (data vintage date), ETag, file hash, record count, and file paths.
+  Used to bridge snapshots to CDC updates without gaps.
 
 #### Panel construction
 
-- [`brreg_panel()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_panel.md)
-  constructs firm x period panels at annual, quarterly, monthly, or
-  custom cadence from accumulated snapshots. Uses LOCF (last observation
-  carried forward) date resolution.
-- [`brreg_replay()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_replay.md)
-  reconstructs register state at arbitrary dates from a base snapshot +
-  CDC update stream. Applies Ny/Endring/Sletting events chronologically
-  via
+- `brreg_panel()` constructs firm x period panels at annual, quarterly,
+  monthly, or custom cadence from accumulated snapshots. Uses LOCF (last
+  observation carried forward) date resolution.
+- `brreg_replay()` reconstructs register state at arbitrary dates from a
+  base snapshot + CDC update stream. Applies Ny/Endring/Sletting events
+  chronologically via
   [`dplyr::rows_upsert()`](https://dplyr.tidyverse.org/reference/rows.html)
   pattern.
-- [`brreg_events()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_events.md)
-  diffs two snapshots: entries, exits, field changes with both old and
-  new values.
-- [`brreg_series()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_series.md)
-  computes aggregate time series for any combination of variables
-  (`.vars`), summary functions (`.fns`), and grouping columns (`by`).
-  Output columns named `{variable}_{function}`.
-- [`as_brreg_tsibble()`](https://sondreskarsten.github.io/tidybrreg/reference/as_brreg_tsibble.md)
-  converts panel or series output to tsibble with `regular = FALSE` for
-  the tidyverts ecosystem.
+- `brreg_events()` diffs two snapshots: entries, exits, field changes
+  with both old and new values.
+- `brreg_series()` computes aggregate time series for any combination of
+  variables (`.vars`), summary functions (`.fns`), and grouping columns
+  (`by`). Output columns named `{variable}_{function}`.
+- `as_brreg_tsibble()` converts panel or series output to tsibble with
+  `regular = FALSE` for the tidyverts ecosystem.
 
 #### Entity and sub-entity access
 
@@ -541,20 +773,16 @@
 
 #### Concordance
 
-- [`brreg_harmonize_kommune()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_harmonize_kommune.md)
-  remaps municipality codes across Norway’s 2020 municipal reform and
-  2024 county reversals using SSB KLASS.
-- [`brreg_harmonize_nace()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_harmonize_nace.md)
-  remaps NACE SN2007 to SN2025 via SSB KLASS.
+- `brreg_harmonize_kommune()` remaps municipality codes across Norway’s
+  2020 municipal reform and 2024 county reversals using SSB KLASS.
+- `brreg_harmonize_nace()` remaps NACE SN2007 to SN2025 via SSB KLASS.
 
 #### Governance research
 
-- [`brreg_board_network()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_network.md)
-  builds director interlock networks as `tbl_graph` objects (requires
-  tidygraph).
-- [`brreg_survival_data()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_survival_data.md)
-  prepares firm survival data with time-to-event and right-censoring
-  indicators compatible with
+- `brreg_board_network()` builds director interlock networks as
+  `tbl_graph` objects (requires tidygraph).
+- `brreg_survival_data()` prepares firm survival data with time-to-event
+  and right-censoring indicators compatible with
   [`survival::Surv()`](https://rdrr.io/pkg/survival/man/Surv.html).
 
 #### CDC updates
@@ -577,7 +805,7 @@
   ([`brreg_search()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_search.md)),
   board/officer roles
   ([`brreg_roles()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_roles.md),
-  [`brreg_board_summary()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_board_summary.md)).
+  `brreg_board_summary()`).
 - Full register bulk download
   ([`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md)).
 - Incremental CDC updates

@@ -1,17 +1,17 @@
 # tidybrreg: Tidy Access to Norway's Business Registry ('Enhetsregisteret')
 
-A tidy interface to download, search, and analyze data from the
-Norwegian Central Coordinating Register for Legal Entities
-(Enhetsregisteret), maintained by the Brønnøysund Register Centre.
-Provides access to registration data for approximately 1 million legal
-entities including companies, partnerships, sole proprietorships,
-associations, and government bodies. Returns tibbles with English column
-names mapped via a data-driven dictionary; unknown API fields pass
-through with auto-generated names. Coded values (legal forms, industry
-codes, roles) can be translated to English on demand using bundled
-reference data or live lookups from the SSB Klass API. Data is freely
-available under the Norwegian Licence for Open Government Data (NLOD
-2.0).
+A tidy interface to query and download data from the Norwegian Central
+Coordinating Register for Legal Entities (Enhetsregisteret), maintained
+by the Brønnøysund Register Centre. Looks up entities, sub-entities,
+roles, corporate groups and signing authority, searches the register,
+reads the change data capture feeds, and downloads the bulk register.
+Returns tibbles with English column names mapped via a data-driven
+dictionary; unknown API fields pass through with auto-generated names,
+and only observed fields are emitted. Coded values (legal forms,
+industry codes, roles) can be translated to English or Norwegian using
+bundled reference data or live lookups from the Statistics Norway
+'KLASS' API. Register data is published under the Norwegian Licence for
+Open Government Data (NLOD 2.0).
 
 ## See also
 
@@ -25,8 +25,4 @@ Useful links:
 
 ## Author
 
-**Maintainer**: Sondre Skarsten <sondre.skarsten@example.com>
-
-Authors:
-
-- Sondre Skarsten <sondre.skarsten@example.com>
+**Maintainer**: Sondre Skarsten <sondreskarsten@gmail.com>

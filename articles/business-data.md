@@ -13,8 +13,6 @@ modulus-11 check digit validation:
 ``` r
 
 library(tidybrreg)
-#> tidybrreg: bulk data not yet downloaded for: enheter, underenheter, roller.
-#> Run brreg_snapshot() for full network/panel support. See ?brreg_status for details.
 brreg_validate(c("923609016", "984851006", "123456789"))
 #> [1]  TRUE  TRUE FALSE
 ```
@@ -76,9 +74,8 @@ Key distinctions for research:
 
 The `naeringskode1` field uses the Standard Industrial Classification
 (SN2007, based on NACE Rev. 2). The brreg API switched to SN2025 (NACE
-Rev. 2.1) in September 2025. Use
-[`brreg_harmonize_nace()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_harmonize_nace.md)
-to map between the two.
+Rev. 2.1) in September 2025. Remapping between the two across a panel is
+handled by `brreg_harmonize_nace()` in the tidybrregpanel package.
 
 ``` r
 
@@ -132,18 +129,8 @@ code).
 
 Norway reduced municipalities from 428 to 356 on January 1, 2020 (with
 further changes in 2024 reverting some mergers). Historical data
-contains old codes that no longer exist. Use
-[`brreg_harmonize_kommune()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_harmonize_kommune.md)
-to remap:
-
-``` r
-
-panel <- tibble::tibble(
-  municipality_code = c("0301", "1201", "0602"),  # Oslo, Bergen (old), Drammen (old)
-  year = 2019
-)
-brreg_harmonize_kommune(panel, target_date = "2024-01-01")
-```
+contains old codes that no longer exist. Remapping across the reform is
+handled by `brreg_harmonize_kommune()` in the tidybrregpanel package.
 
 ## Dates
 
@@ -162,22 +149,38 @@ Key date fields and their meaning:
 determining when an entity entered the register — some entities have
 founding dates predating the electronic register.
 
-## CSV vs JSON bulk downloads
+Dates arrive as ISO `YYYY-MM-DD` from the Enhetsregisteret API and as
+`DD.MM.YYYY` from the Fullmakt service; both parse to `Date`. Instants
+(update-feed timestamps, `Last-Modified` headers) are `POSIXct` in UTC
+regardless of the session time zone.
 
-The bulk download endpoints return different column sets:
+## Deleted entities
 
-| Feature | CSV (`/lastned/csv`) | JSON (`/lastned`) |
-|----|----|----|
-| Size (enheter) | 152 MB | 196 MB |
-| Columns | ~90 | ~67 (after flattening) |
-| Extra fields | Dissolution dates, foreign insolvency | `kapital.*`, `vedtektsfestetFormaal`, `paategninger` |
-| Address format | Flat (one column per field) | Nested (array of address lines) |
-| Delimiter | Comma (despite common belief it’s semicolon) | N/A |
+A deleted entity stays retrievable. The register answers either HTTP 410
+or, for most deletions, HTTP 200 with `respons_klasse = "SlettetEnhet"`
+and `slettedato`.
+[`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md)
+sets `deleted = TRUE` and `deletion_date` in both cases and signals a
+`tidybrreg_warning_deleted`; the per-entity endpoints (roles, konsern,
+signatur) return their typed empty tibble with `http_status = 410L`.
 
-Neither format is a superset of the other. The package’s algorithmic
-unnesting produces flat tibbles from both formats. Choose JSON when you
-need share capital data (`kapital.*`) or articles of association text;
-choose CSV when you need dissolution details.
+## The bulk download is JSON
+
+[`brreg_download()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_download.md)
+reads the JSON variant of the bulk endpoints (`/enheter/lastned`,
+`/underenheter/lastned`, `/roller/totalbestand`), the same
+representation the single-entity lookups and the update feeds use. A
+bulk row therefore carries exactly the fields and nesting of
+[`brreg_entity()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_entity.md):
+share capital (`capital_*`), the articles of association text, the full
+annotation array (`annotations`) and the name history
+(`historiske_navn`) as list-columns of tibbles. BRREG also publishes a
+CSV variant with its own flattening (one column per address field, a
+presence flag in place of the annotations, no name history); the package
+does not read it, so every path through the package agrees on every
+field and dictionary-typed column (dates, integers, the numeric
+`capital_*` fields, logicals) has the same type whichever path produced
+it.
 
 ## CDC update stream
 
@@ -190,10 +193,11 @@ The change data capture endpoints track modifications to the register:
   which entities had role changes (no field detail — fetch the entity’s
   roles separately).
 
-Field-level patches provide only new values, not old values. For
-before/after comparisons, use
-[`brreg_events()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_events.md)
-to diff two snapshots.
+Field-level patches provide only new values, not old values; the raw
+JSON pointer of each patch is kept in the `path` column of
+[`brreg_update_fields()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_update_fields.md).
+For before/after comparisons, diff two snapshots with `brreg_events()`
+from the tidybrregpanel package.
 
 ## Data update schedule
 

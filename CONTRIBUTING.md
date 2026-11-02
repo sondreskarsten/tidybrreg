@@ -2,6 +2,22 @@
 
 Thank you for considering contributing to tidybrreg.
 
+## Repository layout
+
+Three packages live here and are versioned and built together:
+
+| Package | Path | What belongs there |
+|----|----|----|
+| tidybrreg | `/` | One function per register endpoint, parsers, dictionaries. Exactly sixteen exports; CRAN-bound. Nothing that persists state. |
+| tidybrregpanel | `tidybrregpanel/` | Snapshots, sync, replay, changelog, panels, series, networks: everything that keeps state on disk or derives quantities over time. |
+| tidybrregmcp | `tidybrregmcp/` | The MCP server. It derives tools from tidybrreg’s namespace and help pages, so per-tool code is almost always the wrong place for a change: fix the help page or the function in tidybrreg instead. `mcp_manifest()` writes the manifest the Node server is built from. |
+| tidybrreg-mcp | `tidybrreg-mcp-node/` | The MCP server without R (npm). Its catalogue is `manifest.json`; regenerate it with `Rscript -e 'tidybrregmcp::mcp_manifest("tidybrreg-mcp-node/manifest.json")'` in a UTF-8 locale after any change to tidybrreg and commit it, or CI fails. Its TypeScript only ports the parsing rules; the endpoint contract comes from `inst/extdata/endpoints.json`, which tidybrreg’s tests hold to the functions. |
+
+A new endpoint wrapper goes in tidybrreg only if it is a thin, typed
+call to one register endpoint; it then appears in the MCP server
+automatically, and `tidybrregmcp/tests` will fail until its help page
+documents every argument. Analytics go in tidybrregpanel.
+
 ## Filing issues
 
 - Use the [GitHub issue
@@ -11,24 +27,48 @@ Thank you for considering contributing to tidybrreg.
 - For feature requests: describe the use case and the API endpoint
   involved.
 - For API changes: include the URL and the actual vs expected response.
+- Weekly API drift reports land in one canonical `api-monitor` issue;
+  accept the drift into the baseline by dispatching the
+  `brreg API monitor` workflow with `update_baseline` and merging its
+  PR.
 
 ## Pull requests
 
 1.  Fork and clone the repository.
 2.  Create a branch: `git checkout -b feature/my-feature`.
-3.  Install dev dependencies: `pak::pak(".", dependencies = TRUE)`.
-4.  Make changes and add tests in `tests/testthat/`.
+3.  Install dev dependencies: `pak::pak(".", dependencies = TRUE)` (and
+    the same in the companion directory you touch).
+4.  Make changes and add tests in `tests/testthat/`. Network calls are
+    mocked with `local_brreg_responses()` from
+    `tests/testthat/helper-mock.R`; the offline suite never reaches
+    BRREG or SSB.
 5.  Run `devtools::check()` — must pass with 0 errors and 0 warnings.
+    For tidybrreg also run `R CMD check --as-cran` on the built tarball.
 6.  Update `NEWS.md` with a bullet under the development version.
+    tidybrregmcp’s, tidybrregpanel’s and tidybrreg-mcp-node’s versions
+    must equal tidybrreg’s; a `v*` tag on main publishes the npm package
+    and a GitHub release.
 7.  Push and open a pull request.
 
 ## Code style
 
 - Follow the [tidyverse style guide](https://style.tidyverse.org/).
 - Use `|>` (base pipe), not `%>%`.
-- Use
-  [`cli::cli_abort()`](https://cli.r-lib.org/reference/cli_abort.html)
-  for errors with informative bullets.
+- Signal conditions through
+  [`brreg_abort()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_abort.md)
+  /
+  [`brreg_warn()`](https://sondreskarsten.github.io/tidybrreg/reference/brreg_warn.md)
+  with a class listed in
+  [`?tidybrreg_conditions`](https://sondreskarsten.github.io/tidybrreg/reference/tidybrreg_conditions.md);
+  never return a silently partial result.
+- Return typed zero-row tibbles for valid empty results.
+- Parse dates with
+  [`parse_brreg_date()`](https://sondreskarsten.github.io/tidybrreg/reference/parse_brreg_date.md)
+  and instants with
+  [`parse_brreg_instant()`](https://sondreskarsten.github.io/tidybrreg/reference/parse_brreg_instant.md);
+  never [`as.Date()`](https://rdrr.io/r/base/as.Date.html) without a
+  format or [`as.POSIXct()`](https://rdrr.io/r/base/as.POSIXlt.html)
+  without `tz = "UTC"`.
 - Gate optional dependencies with
   [`rlang::check_installed()`](https://rlang.r-lib.org/reference/is_installed.html).
 - New exports need `@param`, `@returns`, `@export`, `@family`,
@@ -38,13 +78,10 @@ Thank you for considering contributing to tidybrreg.
 
 ``` r
 
-devtools::test()                    # offline tests
-Sys.setenv(NOT_CRAN = "true")
-devtools::test()                    # includes API tests
+devtools::test()                    # offline tests (mocked)
+Sys.setenv(NOT_CRAN = "true", TIDYBRREG_LIVE_API = "true")
+devtools::test()                    # includes live API tests; outages fail
 ```
-
-API tests use a `safely()` wrapper that skips on network errors. Add
-`skip_if_offline()` at the start of any new API test.
 
 ## Documentation
 
@@ -55,6 +92,10 @@ After changing roxygen comments or adding functions:
 roxygen2::roxygenise()
 rmarkdown::render("README.Rmd", output_format = "github_document")
 ```
+
+Bundled tables are regenerated with `data-raw/build_dictionaries.R`;
+record the run date in
+[`?tidybrreg_provenance`](https://sondreskarsten.github.io/tidybrreg/reference/tidybrreg_provenance.md).
 
 ## Code of conduct
 

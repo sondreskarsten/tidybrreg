@@ -1,9 +1,10 @@
 # Build an httr2 request with the shared tidybrreg configuration
 
-Centralises the user agent, transient-retry policy, and per-host
-throttle so every request the package makes is constructed identically.
-Host-specific concerns (base URL, throttle realm, Accept header, error
-body extractor) are supplied by the caller.
+Centralises the user agent, transient-retry policy
+([`is_transient_response()`](https://sondreskarsten.github.io/tidybrreg/reference/is_transient_response.md)),
+and per-host throttle so every request the package makes is constructed
+identically. Host-specific concerns (base URL, throttle realm, Accept
+header, error body extractor) are supplied by the caller.
 
 ## Usage
 

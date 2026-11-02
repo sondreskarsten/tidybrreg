@@ -1,6 +1,6 @@
-# Drop HAL \_links columns (metadata, not data)
+# Drop HAL link columns at any nesting depth (metadata, not data)
 
-Drop HAL \_links columns (metadata, not data)
+Drop HAL link columns at any nesting depth (metadata, not data)
 
 ## Usage
 

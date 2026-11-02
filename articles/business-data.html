@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">tidybrreg</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,11 +36,6 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/tidybrreg.html">Getting started</a></li>
     <li><a class="dropdown-item" href="../articles/business-data.html">Norwegian business data</a></li>
-    <li><a class="dropdown-item" href="../articles/panels.html">Building firm panels</a></li>
-    <li><a class="dropdown-item" href="../articles/governance.html">Governance research</a></li>
-    <li><a class="dropdown-item" href="../articles/roller-cdc.html">Tracking role changes</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/architecture.html">Architecture</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -83,8 +78,6 @@ number (organisasjonsnummer) upon registration. The number uses
 modulus-11 check digit validation:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://sondreskarsten.github.io/tidybrreg/">tidybrreg</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; tidybrreg: bulk data not yet downloaded for: enheter, underenheter, roller.</span></span>
-<span><span class="co">#&gt; Run brreg_snapshot() for full network/panel support. See ?brreg_status for details.</span></span>
 <span><span class="fu"><a href="../reference/brreg_validate.html">brreg_validate</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"923609016"</span>, <span class="st">"984851006"</span>, <span class="st">"123456789"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1]  TRUE  TRUE FALSE</span></span></code></pre></div>
 <p>Numbers starting with 8 are assigned to sub-entities (underenheter),
@@ -148,8 +141,9 @@ offices of foreign companies. Limited data available.</li>
 </h2>
 <p>The <code>naeringskode1</code> field uses the Standard Industrial
 Classification (SN2007, based on NACE Rev. 2). The brreg API switched to
-SN2025 (NACE Rev. 2.1) in September 2025. Use
-<code><a href="../reference/brreg_harmonize_nace.html">brreg_harmonize_nace()</a></code> to map between the two.</p>
+SN2025 (NACE Rev. 2.1) in September 2025. Remapping between the two
+across a panel is handled by <code>brreg_harmonize_nace()</code> in the
+tidybrregpanel package.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Translate NACE codes to English descriptions</span></span>
 <span><span class="fu"><a href="../reference/brreg_entity.html">brreg_entity</a></span><span class="op">(</span><span class="st">"923609016"</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="../reference/brreg_label.html">brreg_label</a></span><span class="op">(</span>code <span class="op">=</span> <span class="st">"nace_1"</span><span class="op">)</span></span>
@@ -209,14 +203,9 @@ address) instead of forretningsadresse.</p>
 </h2>
 <p>Norway reduced municipalities from 428 to 356 on January 1, 2020
 (with further changes in 2024 reverting some mergers). Historical data
-contains old codes that no longer exist. Use
-<code><a href="../reference/brreg_harmonize_kommune.html">brreg_harmonize_kommune()</a></code> to remap:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">panel</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
-<span>  municipality_code <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"0301"</span>, <span class="st">"1201"</span>, <span class="st">"0602"</span><span class="op">)</span>,  <span class="co"># Oslo, Bergen (old), Drammen (old)</span></span>
-<span>  year <span class="op">=</span> <span class="fl">2019</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/brreg_harmonize_kommune.html">brreg_harmonize_kommune</a></span><span class="op">(</span><span class="va">panel</span>, target_date <span class="op">=</span> <span class="st">"2024-01-01"</span><span class="op">)</span></span></code></pre></div>
+contains old codes that no longer exist. Remapping across the reform is
+handled by <code>brreg_harmonize_kommune()</code> in the tidybrregpanel
+package.</p>
 </div>
 <div class="section level2">
 <h2 id="dates">Dates<a class="anchor" aria-label="anchor" href="#dates"></a>
@@ -270,57 +259,42 @@ contains old codes that no longer exist. Use
 <code>founding_date</code> for determining when an entity entered the
 register — some entities have founding dates predating the electronic
 register.</p>
+<p>Dates arrive as ISO <code>YYYY-MM-DD</code> from the Enhetsregisteret
+API and as <code>DD.MM.YYYY</code> from the Fullmakt service; both parse
+to <code>Date</code>. Instants (update-feed timestamps,
+<code>Last-Modified</code> headers) are <code>POSIXct</code> in UTC
+regardless of the session time zone.</p>
 </div>
 <div class="section level2">
-<h2 id="csv-vs-json-bulk-downloads">CSV vs JSON bulk downloads<a class="anchor" aria-label="anchor" href="#csv-vs-json-bulk-downloads"></a>
+<h2 id="deleted-entities">Deleted entities<a class="anchor" aria-label="anchor" href="#deleted-entities"></a>
 </h2>
-<p>The bulk download endpoints return different column sets:</p>
-<table class="table">
-<colgroup>
-<col width="33%">
-<col width="33%">
-<col width="33%">
-</colgroup>
-<thead><tr class="header">
-<th>Feature</th>
-<th>CSV (<code>/lastned/csv</code>)</th>
-<th>JSON (<code>/lastned</code>)</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>Size (enheter)</td>
-<td>152 MB</td>
-<td>196 MB</td>
-</tr>
-<tr class="even">
-<td>Columns</td>
-<td>~90</td>
-<td>~67 (after flattening)</td>
-</tr>
-<tr class="odd">
-<td>Extra fields</td>
-<td>Dissolution dates, foreign insolvency</td>
-<td>
-<code>kapital.*</code>, <code>vedtektsfestetFormaal</code>,
-<code>paategninger</code>
-</td>
-</tr>
-<tr class="even">
-<td>Address format</td>
-<td>Flat (one column per field)</td>
-<td>Nested (array of address lines)</td>
-</tr>
-<tr class="odd">
-<td>Delimiter</td>
-<td>Comma (despite common belief it’s semicolon)</td>
-<td>N/A</td>
-</tr>
-</tbody>
-</table>
-<p>Neither format is a superset of the other. The package’s algorithmic
-unnesting produces flat tibbles from both formats. Choose JSON when you
-need share capital data (<code>kapital.*</code>) or articles of
-association text; choose CSV when you need dissolution details.</p>
+<p>A deleted entity stays retrievable. The register answers either HTTP
+410 or, for most deletions, HTTP 200 with
+<code>respons_klasse = "SlettetEnhet"</code> and
+<code>slettedato</code>. <code><a href="../reference/brreg_entity.html">brreg_entity()</a></code> sets
+<code>deleted = TRUE</code> and <code>deletion_date</code> in both cases
+and signals a <code>tidybrreg_warning_deleted</code>; the per-entity
+endpoints (roles, konsern, signatur) return their typed empty tibble
+with <code>http_status = 410L</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="the-bulk-download-is-json">The bulk download is JSON<a class="anchor" aria-label="anchor" href="#the-bulk-download-is-json"></a>
+</h2>
+<p><code><a href="../reference/brreg_download.html">brreg_download()</a></code> reads the JSON variant of the bulk
+endpoints (<code>/enheter/lastned</code>,
+<code>/underenheter/lastned</code>, <code>/roller/totalbestand</code>),
+the same representation the single-entity lookups and the update feeds
+use. A bulk row therefore carries exactly the fields and nesting of
+<code><a href="../reference/brreg_entity.html">brreg_entity()</a></code>: share capital (<code>capital_*</code>), the
+articles of association text, the full annotation array
+(<code>annotations</code>) and the name history
+(<code>historiske_navn</code>) as list-columns of tibbles. BRREG also
+publishes a CSV variant with its own flattening (one column per address
+field, a presence flag in place of the annotations, no name history);
+the package does not read it, so every path through the package agrees
+on every field and dictionary-typed column (dates, integers, the numeric
+<code>capital_*</code> fields, logicals) has the same type whichever
+path produced it.</p>
 </div>
 <div class="section level2">
 <h2 id="cdc-update-stream">CDC update stream<a class="anchor" aria-label="anchor" href="#cdc-update-stream"></a>
@@ -338,9 +312,11 @@ September 2025).</li>
 CloudEvents indicating which entities had role changes (no field detail
 — fetch the entity’s roles separately).</li>
 </ul>
-<p>Field-level patches provide only new values, not old values. For
-before/after comparisons, use <code><a href="../reference/brreg_events.html">brreg_events()</a></code> to diff two
-snapshots.</p>
+<p>Field-level patches provide only new values, not old values; the raw
+JSON pointer of each patch is kept in the <code>path</code> column of
+<code><a href="../reference/brreg_update_fields.html">brreg_update_fields()</a></code>. For before/after comparisons, diff
+two snapshots with <code>brreg_events()</code> from the tidybrregpanel
+package.</p>
 </div>
 <div class="section level2">
 <h2 id="data-update-schedule">Data update schedule<a class="anchor" aria-label="anchor" href="#data-update-schedule"></a>

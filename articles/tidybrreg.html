@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">tidybrreg</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,11 +36,6 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/tidybrreg.html">Getting started</a></li>
     <li><a class="dropdown-item" href="../articles/business-data.html">Norwegian business data</a></li>
-    <li><a class="dropdown-item" href="../articles/panels.html">Building firm panels</a></li>
-    <li><a class="dropdown-item" href="../articles/governance.html">Governance research</a></li>
-    <li><a class="dropdown-item" href="../articles/roller-cdc.html">Tracking role changes</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/architecture.html">Architecture</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -76,48 +71,56 @@ Register for Legal Entities (Enhetsregisteret), maintained by the
 Brønnøysund Register Centre at <a href="https://data.brreg.no" class="external-link">data.brreg.no</a>. The register contains
 approximately 1 million active entities — companies, partnerships, sole
 proprietorships, associations, and government bodies.</p>
+<p>The package is a thin, typed client: fifteen functions that each wrap
+one register endpoint and return a tibble with English column names.
+Persistence, synchronisation and panel construction live in the
+companion package tidybrregpanel.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Recommended</span></span>
-<span><span class="co"># install.packages("pak")</span></span>
-<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"sondreskarsten/tidybrreg"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Or from r-universe (pre-built binaries)</span></span>
+<code class="sourceCode R"><span><span class="co"># From r-universe (pre-built binaries)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"tidybrreg"</span>,</span>
 <span>  repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://sondreskarsten.r-universe.dev"</span>,</span>
-<span>            <span class="st">"https://cloud.r-project.org"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>For snapshot and panel features, also install a parquet backend:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"nanoparquet"</span><span class="op">)</span>  <span class="co"># lightweight, read/write only</span></span>
-<span><span class="co"># OR</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"arrow"</span><span class="op">)</span>       <span class="co"># full-featured, lazy queries</span></span></code></pre></div>
+<span>            <span class="st">"https://cloud.r-project.org"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Or from GitHub</span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"sondreskarsten/tidybrreg"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="look-up-a-single-entity">Look up a single entity<a class="anchor" aria-label="anchor" href="#look-up-a-single-entity"></a>
 </h2>
 <p>Every Norwegian legal entity has a unique 9-digit organization number
 (organisasjonsnummer). Look up Equinor ASA:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://sondreskarsten.github.io/tidybrreg/">tidybrreg</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/brreg_entity.html">brreg_entity</a></span><span class="op">(</span><span class="st">"923609016"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; # A tibble: 1 × 65</span></span>
+<span><span class="co">#&gt; # A tibble: 1 × 63</span></span>
 <span><span class="co">#&gt;   org_nr    name        legal_form founding_date employees nace_1</span></span>
 <span><span class="co">#&gt;   &lt;chr&gt;     &lt;chr&gt;       &lt;chr&gt;      &lt;date&gt;            &lt;int&gt; &lt;chr&gt;</span></span>
 <span><span class="co">#&gt; 1 923609016 EQUINOR ASA ASA        1972-09-18        21408 06.100</span></span></code></pre></div>
 <p>The result is a tibble with English column names mapped from the
-Norwegian API via the package’s <code>field_dict</code>. All 49
-dictionary-mapped columns are present in every output, filled with typed
-<code>NA</code> when the API omits a field.</p>
+Norwegian API via the package’s <code>field_dict</code>. Only the fields
+the register emitted for that entity are present: a sole proprietorship
+carries no <code>employees</code> or <code>founding_date</code>, a
+foreign branch no <code>municipality_code</code>. Test for a column with
+<code>%in% names()</code> rather than assuming it. Two columns are
+always present: <code>registry</code> (which registry answered) and
+<code>deleted</code>.</p>
+<p>A deleted entity is returned, not hidden. Both of the register’s
+signals (HTTP 410, and HTTP 200 with
+<code>respons_klasse = "SlettetEnhet"</code>) yield
+<code>deleted = TRUE</code>, a parsed <code>deletion_date</code>, the
+remaining observed fields, and a
+<code>tidybrreg_warning_deleted</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="translate-codes-to-labels">Translate codes to labels<a class="anchor" aria-label="anchor" href="#translate-codes-to-labels"></a>
 </h2>
 <p>By default, functions return raw codes (<code>ASA</code>,
-<code>06.100</code>). Two ways to get English labels:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code>06.100</code>). Two ways to get labels:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Option 1: inline via type = "label"</span></span>
 <span><span class="fu"><a href="../reference/brreg_entity.html">brreg_entity</a></span><span class="op">(</span><span class="st">"923609016"</span>, type <span class="op">=</span> <span class="st">"label"</span><span class="op">)</span></span>
 <span></span>
@@ -127,17 +130,24 @@ dictionary-mapped columns are present in every output, filled with typed
 <span><span class="co">#&gt; legal_form      = "Public limited company"</span></span>
 <span><span class="co">#&gt; legal_form_code = "ASA"  (original code preserved)</span></span>
 <span><span class="co">#&gt; nace_1          = "Extraction of crude petroleum"</span></span>
-<span><span class="co">#&gt; nace_1_code     = "06.100"</span></span></code></pre></div>
+<span><span class="co">#&gt; nace_1_code     = "06.100"</span></span>
+<span></span>
+<span><span class="co"># Norwegian labels</span></span>
+<span><span class="fu"><a href="../reference/brreg_label.html">brreg_label</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AS"</span>, <span class="st">"ENK"</span><span class="op">)</span>, dic <span class="op">=</span> <span class="st">"legal_form"</span>, lang <span class="op">=</span> <span class="st">"no"</span><span class="op">)</span></span></code></pre></div>
 <p>The <code>code =</code> argument keeps the original code in a
 <code>_code</code> suffixed column alongside the label — following the
-eurostat package’s pattern.</p>
+eurostat package’s pattern. Legal-form and role labels are bundled; NACE
+and sector labels come from the SSB KLASS API on first use and are
+cached for the session. Set
+<code>options(tidybrreg.offline = TRUE)</code> to stay on the bundled
+English dictionaries; see <code><a href="../reference/get_brreg_dic.html">?get_brreg_dic</a></code>.</p>
 </div>
 <div class="section level2">
 <h2 id="search-for-entities">Search for entities<a class="anchor" aria-label="anchor" href="#search-for-entities"></a>
 </h2>
 <p>Query by name, legal form, geography, industry, employee count, or
 any combination:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Large private companies in Oslo</span></span>
 <span><span class="fu"><a href="../reference/brreg_search.html">brreg_search</a></span><span class="op">(</span></span>
 <span>  legal_form <span class="op">=</span> <span class="st">"AS"</span>,</span>
@@ -146,7 +156,14 @@ any combination:</p>
 <span>  max_results <span class="op">=</span> <span class="fl">10</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Search results are paginated automatically up to
-<code>max_results</code> or the API’s 10,000-result ceiling. For larger
+<code>max_results</code>. The register’s search window is 10,000
+results: when a query matches more than that and you ask for more than
+the window, the call aborts with a
+<code>tidybrreg_error_result_window</code> instead of returning a
+partial population. When fewer rows are returned than matched, the
+result carries <code>attr(x, "complete") == FALSE</code> and
+<code>attr(x, "total_matches")</code> and a
+<code>tidybrreg_warning_truncated</code> is signalled. For larger
 extractions, use <code><a href="../reference/brreg_download.html">brreg_download()</a></code>.</p>
 <div class="section level3">
 <h3 id="sub-entities-establishments">Sub-entities (establishments)<a class="anchor" aria-label="anchor" href="#sub-entities-establishments"></a>
@@ -154,49 +171,87 @@ extractions, use <code><a href="../reference/brreg_download.html">brreg_download
 <p>Use <code>registry = "underenheter"</code> to search sub-entities —
 branch offices, plants, and establishments linked to a parent
 entity:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/brreg_search.html">brreg_search</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"Equinor"</span>, registry <span class="op">=</span> <span class="st">"underenheter"</span>, max_results <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/brreg_search.html">brreg_search</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"Equinor"</span>, registry <span class="op">=</span> <span class="st">"underenheter"</span>, max_results <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/brreg_underenheter.html">brreg_underenheter</a></span><span class="op">(</span><span class="st">"923609016"</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
-<h2 id="retrieve-roles">Retrieve roles<a class="anchor" aria-label="anchor" href="#retrieve-roles"></a>
+<h2 id="retrieve-roles-groups-and-signing-authority">Retrieve roles, groups and signing authority<a class="anchor" aria-label="anchor" href="#retrieve-roles-groups-and-signing-authority"></a>
 </h2>
 <p>Board members, officers, and auditors for any entity:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">roles</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/brreg_roles.html">brreg_roles</a></span><span class="op">(</span><span class="st">"923609016"</span><span class="op">)</span></span>
 <span><span class="va">roles</span></span>
-<span><span class="co">#&gt; # A tibble: 25 × 14</span></span>
+<span><span class="co">#&gt; # A tibble: 25 × 17</span></span>
 <span><span class="co">#&gt;   org_nr    role_group        role              first_name last_name birth_date</span></span>
 <span><span class="co">#&gt;   &lt;chr&gt;     &lt;chr&gt;             &lt;chr&gt;             &lt;chr&gt;      &lt;chr&gt;     &lt;date&gt;</span></span>
 <span><span class="co">#&gt; 1 923609016 Board of Directors Chair of the Board Jon Erik   Reinhardsen 1960-07-14</span></span>
-<span><span class="co">#&gt; 2 923609016 Board of Directors Board member      ...</span></span></code></pre></div>
-<p>Derive board-level summary covariates:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/brreg_board_summary.html">brreg_board_summary</a></span><span class="op">(</span><span class="va">roles</span><span class="op">)</span></span>
-<span><span class="co">#&gt; # A tibble: 1 × 10</span></span>
-<span><span class="co">#&gt;   org_nr    board_size n_chair n_members has_ceo has_auditor auditor_org_nr</span></span></code></pre></div>
+<span><span class="co">#&gt; 2 923609016 Board of Directors Board member      ...</span></span>
+<span></span>
+<span><span class="co"># Roles Equinor holds in other entities</span></span>
+<span><span class="fu"><a href="../reference/brreg_roles_legal.html">brreg_roles_legal</a></span><span class="op">(</span><span class="st">"923609016"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># The corporate group tree</span></span>
+<span><span class="fu"><a href="../reference/brreg_konsern.html">brreg_konsern</a></span><span class="op">(</span><span class="st">"923609016"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Who may sign for the entity, and procuration holders</span></span>
+<span><span class="fu"><a href="../reference/brreg_signatur.html">brreg_signatur</a></span><span class="op">(</span><span class="st">"923609016"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/brreg_prokura.html">brreg_prokura</a></span><span class="op">(</span><span class="st">"923609016"</span><span class="op">)</span></span></code></pre></div>
+<p>These per-entity endpoints share one status contract (see
+<code><a href="../reference/brreg_roles.html">?brreg_roles</a></code>): HTTP 404 returns the typed zero-row tibble
+with attribute <code>http_status = 404L</code> and no warning (the
+ordinary case for a company that is in no group), HTTP 410 warns about
+deletion, and any other failure is a
+<code>tidybrreg_error_http</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="follow-changes">Follow changes<a class="anchor" aria-label="anchor" href="#follow-changes"></a>
+</h2>
+<p>The change data capture feeds report what changed since an
+instant:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/brreg_updates.html">brreg_updates</a></span><span class="op">(</span>since <span class="op">=</span> <span class="st">"2026-03-01T00:00:00Z"</span>, size <span class="op">=</span> <span class="fl">1000</span>, max_pages <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/brreg_update_fields.html">brreg_update_fields</a></span><span class="op">(</span>since <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span>, size <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/brreg_updates.html">brreg_updates</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"roller"</span>, since <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><code>since</code> is sent as a UTC instant and timestamps come back
+as UTC <code>POSIXct</code>. The result carries <code>complete</code>,
+<code>pages_fetched</code> and <code>cursor</code> attributes; pass
+<code>cursor + 1</code> to resume.</p>
 </div>
 <div class="section level2">
 <h2 id="bulk-download-the-full-register">Bulk download the full register<a class="anchor" aria-label="anchor" href="#bulk-download-the-full-register"></a>
 </h2>
 <p>Three registries available:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Main entities: ~152 MB CSV or ~196 MB JSON</span></span>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Main entities: ~196 MB JSON</span></span>
 <span><span class="va">entities</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/brreg_download.html">brreg_download</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"enheter"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># JSON captures additional fields not in CSV</span></span>
-<span><span class="va">entities_json</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/brreg_download.html">brreg_download</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"enheter"</span>, format <span class="op">=</span> <span class="st">"json"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Sub-entities: ~59 MB</span></span>
+<span><span class="co"># Sub-entities: ~75 MB JSON</span></span>
 <span><span class="va">sub_entities</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/brreg_download.html">brreg_download</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"underenheter"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># All roles for all entities: ~131 MB JSON</span></span>
-<span><span class="va">all_roles</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/brreg_download.html">brreg_download</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"roller"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">all_roles</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/brreg_download.html">brreg_download</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"roller"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Only the file</span></span>
+<span><span class="va">path</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/brreg_download.html">brreg_download</a></span><span class="op">(</span>type_output <span class="op">=</span> <span class="st">"path"</span><span class="op">)</span></span></code></pre></div>
 <p>Downloads are cached in
 <code>tools::R_user_dir("tidybrreg", "cache")</code>. Use
 <code>refresh = TRUE</code> to force re-download, or
-<code>refresh = "auto"</code> to re-download only when the server has a
-newer version (ETag-based).</p>
+<code>refresh = "auto"</code> to re-download only when the server’s
+validators (ETag, Last-Modified) differ from the cached copy’s.</p>
+</div>
+<div class="section level2">
+<h2 id="conditions">Conditions<a class="anchor" aria-label="anchor" href="#conditions"></a>
+</h2>
+<p>Every error and warning the package raises has a class you can catch
+or silence selectively; see <code><a href="../reference/tidybrreg_conditions.html">?tidybrreg_conditions</a></code>.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/brreg_search.html">brreg_search</a></span><span class="op">(</span>municipality_code <span class="op">=</span> <span class="st">"4601"</span>, max_results <span class="op">=</span> <span class="fl">20000</span><span class="op">)</span>,</span>
+<span>  tidybrreg_error_result_window <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="va">e</span><span class="op">$</span><span class="va">total_matches</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="../reference/brreg_konsern.html">brreg_konsern</a></span><span class="op">(</span><span class="st">"923609016"</span><span class="op">)</span>, classes <span class="op">=</span> <span class="st">"tidybrreg_warning_deleted"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="function-api-endpoint-mapping">Function → API endpoint mapping<a class="anchor" aria-label="anchor" href="#function-api-endpoint-mapping"></a>
@@ -234,39 +289,75 @@ newer version (ETag-based).</p>
 <td>N-row tibble</td>
 </tr>
 <tr class="odd">
+<td>
+<code>brreg_underenheter(org_nr)</code>,
+<code>brreg_children(org_nr)</code>
+</td>
+<td>
+<code>/underenheter?overordnetEnhet=</code>,
+<code>/enheter?overordnetEnhet=</code>
+</td>
+<td>N-row tibble</td>
+</tr>
+<tr class="even">
 <td><code>brreg_roles(org_nr)</code></td>
 <td><code>/enheter/{orgnr}/roller</code></td>
 <td>N-row tibble</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>brreg_roles_legal(org_nr)</code></td>
 <td><code>/roller/enheter/{orgnr}/juridiskeroller</code></td>
 <td>N-row tibble</td>
 </tr>
+<tr class="even">
+<td><code>brreg_konsern(org_nr)</code></td>
+<td><code>/konsernstruktur/{orgnr}</code></td>
+<td>N-row tibble</td>
+</tr>
 <tr class="odd">
-<td><code>brreg_download("enheter")</code></td>
-<td><code>/enheter/lastned/csv</code></td>
-<td>Full register tibble</td>
+<td>
+<code>brreg_signatur(org_nr)</code>,
+<code>brreg_prokura(org_nr)</code>
+</td>
+<td>
+<code>fullmakt/enheter/{orgnr}/signatur</code>,
+<code>.../prokura</code>
+</td>
+<td>N-row tibble</td>
 </tr>
 <tr class="even">
-<td><code>brreg_download("enheter", format = "json")</code></td>
+<td><code>brreg_download("enheter")</code></td>
 <td><code>/enheter/lastned</code></td>
 <td>Full register tibble</td>
 </tr>
 <tr class="odd">
+<td><code>brreg_download("underenheter")</code></td>
+<td><code>/underenheter/lastned</code></td>
+<td>Full sub-entity tibble</td>
+</tr>
+<tr class="even">
 <td><code>brreg_download("roller")</code></td>
 <td><code>/roller/totalbestand</code></td>
 <td>Full roles tibble</td>
 </tr>
-<tr class="even">
-<td><code>brreg_updates(type = "enheter")</code></td>
+<tr class="odd">
+<td>
+<code>brreg_updates(type = "enheter")</code>,
+<code><a href="../reference/brreg_update_fields.html">brreg_update_fields()</a></code>
+</td>
 <td><code>/oppdateringer/enheter</code></td>
 <td>Change events tibble</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>brreg_updates(type = "roller")</code></td>
 <td><code>/oppdateringer/roller</code></td>
 <td>Change events tibble</td>
+</tr>
+<tr class="odd">
+<td><code>get_brreg_dic("nace")</code></td>
+<td>SSB KLASS <code>classifications/6/codesAt</code>
+</td>
+<td>Dictionary tibble</td>
 </tr>
 </tbody>
 </table>
@@ -278,12 +369,10 @@ newer version (ETag-based).</p>
 <li>
 <code><a href="../articles/business-data.html">vignette("business-data")</a></code> — Norwegian legal forms, NACE
 codes, and data quirks</li>
-<li>
-<code><a href="../articles/panels.html">vignette("panels")</a></code> — Building firm-period panels and
-time series from snapshots</li>
-<li>
-<code><a href="../articles/governance.html">vignette("governance")</a></code> — Board networks and survival
-analysis</li>
+<li>The tidybrregpanel package — snapshots, synchronisation, panels,
+flows, networks</li>
+<li>The tidybrregmcp package — the same fifteen functions as Model
+Context Protocol tools</li>
 </ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

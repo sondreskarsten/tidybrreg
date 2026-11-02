@@ -2,9 +2,8 @@
 
 Collector-based with pre-allocated vectors. Used by
 [`parse_updates_page()`](https://sondreskarsten.github.io/tidybrreg/reference/parse_updates_page.md)
-and the sync engine. For the flat-output path,
-[`flatten_page_patches()`](https://sondreskarsten.github.io/tidybrreg/reference/flatten_page_patches.md)
-is used instead.
+and
+[`flatten_page_patches()`](https://sondreskarsten.github.io/tidybrreg/reference/flatten_page_patches.md).
 
 ## Usage
 
@@ -20,7 +19,7 @@ parse_patch(endringer)
 
 ## Value
 
-A tibble with columns `operation`, `field`, `new_value`.
+A tibble with columns `operation`, `field`, `path`, `new_value`.
 
 ## Details
 

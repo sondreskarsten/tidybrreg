@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">tidybrreg</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -21,11 +21,6 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/tidybrreg.html">Getting started</a></li>
     <li><a class="dropdown-item" href="../articles/business-data.html">Norwegian business data</a></li>
-    <li><a class="dropdown-item" href="../articles/panels.html">Building firm panels</a></li>
-    <li><a class="dropdown-item" href="../articles/governance.html">Governance research</a></li>
-    <li><a class="dropdown-item" href="../articles/roller-cdc.html">Tracking role changes</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/architecture.html">Architecture</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -43,34 +38,86 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.0" id="tidybrreg-060">tidybrreg 0.6.0<a class="anchor" aria-label="anchor" href="#tidybrreg-060"></a></h2>
+<div class="section level3">
+<h3 id="the-split-0-6-0">The split<a class="anchor" aria-label="anchor" href="#the-split-0-6-0"></a></h3>
+<p>tidybrreg is now the narrow, typed client to the register: exactly sixteen exports, each wrapping one endpoint of Enhetsregisteret, the Fullmakt service, Regnskapsregisteret, or SSB KLASS.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">brreg_entity</span>()  <span class="fu">brreg_search</span>()  <span class="fu">brreg_underenheter</span>()  <span class="fu">brreg_children</span>()</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">brreg_roles</span>()   <span class="fu">brreg_roles_legal</span>()  <span class="fu">brreg_konsern</span>()</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">brreg_signatur</span>()  <span class="fu">brreg_prokura</span>()</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">brreg_regnskap</span>()</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">brreg_updates</span>()  <span class="fu">brreg_update_fields</span>()</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="fu">brreg_download</span>()</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="fu">brreg_label</span>()  <span class="fu">get_brreg_dic</span>()  <span class="fu">brreg_validate</span>()</span></code></pre></div>
+<p>The managed-state subsystem (snapshot store, <code>brreg_sync()</code>, replay, changelog queries, flows, panels, series, tsibble conversion, events, annotations, name history, harmonisation, director networks, survival data, <code>brreg_board_summary()</code>, <code>diff_roller_state()</code>, <code>brreg_status()</code>) has moved, unchanged in behaviour, to the companion package <strong>tidybrregpanel</strong> in the <code>tidybrregpanel/</code> directory of this repository. It depends on tidybrreg and is built alongside it on r-universe. The pre-split implementation remains at commit <code>c9bd992</code>.</p>
+<p>The Model Context Protocol server <strong>tidybrregmcp</strong> (<code>tidybrregmcp/</code>) exposes the sixteen exports as MCP tools, deriving every tool’s documentation and schema from this package’s help pages, and writes a manifest (<code>mcp_manifest()</code>) from which <strong>tidybrreg-mcp</strong> (<code>tidybrreg-mcp-node/</code>, on npm) serves the same catalogue without R. The package ships <code>inst/extdata/endpoints.json</code>, a machine-readable contract of every export’s endpoint, query mapping and status handling, held to the functions by <code>tests/testthat/test-endpoints.R</code>.</p>
+</div>
+<div class="section level3">
+<h3 id="tidy-shape-0-6-0">Tidy shape<a class="anchor" aria-label="anchor" href="#tidy-shape-0-6-0"></a></h3>
+<ul><li>Every tibble the package returns is now tidy in Wickham’s sense, with no cell holding more than one value. Arrays of objects the register nests inside an entity (<code>historiskeNavn</code>, <code>paategninger</code>) were serialized to JSON text in one cell; <code><a href="../reference/brreg_entity.html">brreg_entity()</a></code>, <code><a href="../reference/brreg_search.html">brreg_search()</a></code> and the JSON bulk of <code><a href="../reference/brreg_download.html">brreg_download()</a></code> now return them as list-columns of tibbles (<code>historiske_navn</code>, <code>annotations</code>), one row per element with snake_case columns, <code>NULL</code> for an entity without them, so <code><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">tidyr::unnest()</a></code> gives the table of the other unit. An empty array emits no column. Arrays of strings (addresses, <code>purpose</code>, <code>activity</code>) are line fragments of one value and keep the <code>"\n"</code> join. <code><a href="../reference/brreg_regnskap.html">brreg_regnskap()</a></code>’s <code>inconsistencies</code> is a list-column of the failing identity names (zero-length when none) instead of a newline-joined string. The Node MCP server returns the same nesting as JSON arrays. tidybrregpanel’s bootstrap reads both the nested column and the JSON text of older snapshots.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-annual-accounts-0-6-0">New: annual accounts<a class="anchor" aria-label="anchor" href="#new-annual-accounts-0-6-0"></a></h3>
+<ul><li>New <code><a href="../reference/brreg_regnskap.html">brreg_regnskap()</a></code> retrieves an entity’s annual accounts from the Regnskapsregisteret open API (<code>GET /regnskapsregisteret/regnskap/{orgnr}</code>, optional <code>year</code> and <code>account_type</code>). The result is nested: one row per filing with its identity, period, currency, legal form and audit flags as scalar columns, and the figures as an <code>items</code> tibble per filing that keeps the API’s structure (<code>statement</code>, <code>group</code>, <code>item</code>, <code>path</code>, <code>level</code>, <code>is_sum</code>, <code>value</code>), so totals and components are never added together by accident; <code><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">tidyr::unnest()</a></code> gives the long form. Every filing is flagged for the accounting identities it fails (<code>consistent</code>, <code>inconsistencies</code>; balance sheet balances, totals equal their components, results follow from their parts, within 1 unit of currency), since the register publishes filings as filed. The field, group and identity maps are published under <code>brreg_regnskap</code> in <code>endpoints.json</code> for the MCP servers, and the flattening is verified against every structural shape of the 1,129,601 filings in the brreg-json-fetcher <code>data-2026-10</code> release (<code>data-raw/regnskap/</code>). The maps are bundled datasets built in <code>data-raw/build_dictionaries.R</code> the way the entity and role dictionaries are: <code>regnskap_dict</code> (as <code>field_dict</code>, applied by the same rename and coercion rule), <code>regnskap_groups</code> and <code>regnskap_items</code> (as <code>role_groups</code> and <code>role_types</code>, with <code>name_en</code> and <code>name_no</code>). <code>brreg_regnskap(type = "label")</code> and <code><a href="../reference/brreg_label.html">brreg_label()</a></code> translate <code>item</code>, <code>group</code>, <code>statement</code> and <code>legal_form</code> in English or Norwegian, inside the nested <code>items</code> as well as after <code><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">tidyr::unnest()</a></code>; <code><a href="../reference/brreg_label.html">brreg_label()</a></code> accepts the dictionaries <code>"regnskap_item"</code> and <code>"regnskap_group"</code> for vectors. Entities whose accounting plan the API does not serve (banks, insurers, pension funds) return the typed empty with <code>unsupported_plan</code> and a new <code>tidybrreg_warning_unsupported_plan</code> instead of an error.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="breaking-changes-0-6-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-6-0"></a></h3>
+<ul><li><p><code><a href="../reference/brreg_download.html">brreg_download()</a></code> reads the JSON bulk only: the <code>format</code> argument is gone and <code>/enheter/lastned/csv</code> and <code>/underenheter/lastned/csv</code> are no longer requested. The JSON bulk is the representation the single-entity lookups and the update feeds use, so a bulk row, a lookup and a patch now agree on every field, nested arrays included; the CSV was BRREG’s own flattening with its own separators and a presence flag in place of the annotation array. The cache file is <code>{type}_bulk.json.gz</code>. <code>field_dict</code> loses the two CSV-only spellings (<code>registreringsdatoIEnhetsregisteret</code>, <code>registreringsdatoAntallAnsatteNavAaregisteret</code>). The array is read in batches of complete objects (<code><a href="../reference/read_json_objects.html">read_json_objects()</a></code>), each parsed on its own, so the whole decoded tree of a million entities is never in memory at once, and a sample is read without touching the rest of the file (<code>parse_bulk_json(n_max = )</code>). The batches are bound one column at a time (<code><a href="../reference/bind_batches.html">bind_batches()</a></code>) rather than with <code><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">dplyr::bind_rows()</a></code>, which held every batch and the result together. On the live register (2026-11-02) the full <code>enheter</code> parse takes 14.6 minutes and peaks at 4.0 GB for a 1.6 GB tibble of 1,179,853 rows; <code>underenheter</code> 7.1 minutes and 2.0 GB for 870,571 rows. The roller bulk (<code>/roller/totalbestand</code>) is streamed the same way: <code><a href="../reference/parse_roles_bulk.html">parse_roles_bulk()</a></code> decodes and flattens one batch of entities at a time instead of holding the decoded tree of the whole register, which exceeded 7 GB: 3,426,438 roles in 11.1 minutes at a 2.3 GB peak. <code><a href="../reference/brreg_download.html">brreg_download()</a></code> documents the memory and time of the full parse. tidybrregpanel’s parquet layer carries the nested columns on both backends: arrow’s <code>list_of</code> vectors are read back as plain lists so state binds with fresh <code><a href="../reference/brreg_entity.html">brreg_entity()</a></code> rows (the replay sync failed on the type clash), and nanoparquet, which writes no nested types, stores them as JSON text named in the file metadata and restores the tibbles on read. Before arrow writes a list-column its tibbles are widened to the union of their fields in one order, since arrow derives the struct from the first element and a row added by a sync carries the response’s key order. tidybrregpanel follows: <code>brreg_snapshot()</code> and <code>brreg_sync()</code> lose <code>format</code>, <code>brreg_import()</code> takes a JSON bulk file, and the CSV flag-then-fetch bootstrap of annotations is gone.</p></li>
+<li><p><code><a href="../reference/brreg_download.html">brreg_download()</a></code> supports <code>type_output = "tibble"</code> and <code>"path"</code> only. The Arrow backend is withdrawn: BRREG’s CSV fails in <code>arrow::read_csv_arrow()</code> on embedded newlines in quoted addresses, its JSON bulk is a pretty-printed array rather than NDJSON, and the path bypassed the dictionary. arrow, nanoparquet and duckdb are no longer Suggests.</p></li>
+<li><p><code><a href="../reference/get_brreg_dic.html">get_brreg_dic()</a></code> returns columns <code>code</code>, <code>name</code>, <code>level</code> (<code>name</code> replaces <code>name_en</code>, which was wrong for <code>lang = "no"</code>), with attributes <code>source</code>, <code>lang</code> and <code>vintage</code>, and gains <code>source = c("auto", "klass", "bundled")</code> and <code>refresh</code>.</p></li>
+<li><p><code><a href="../reference/brreg_update_fields.html">brreg_update_fields()</a></code> and the <code>changes</code> column of <code><a href="../reference/brreg_updates.html">brreg_updates()</a></code> gain a <code>path</code> column holding the raw JSON pointer of each patch leaf.</p></li>
+<li><p>Timestamps from the update feeds are <code>POSIXct</code> in UTC (previously parsed as local time); <code>since</code> keeps the precision of a <code>POSIXct</code> and is sent as a UTC instant; a <code>Date</code> means midnight UTC.</p></li>
+<li><p><code><a href="../reference/brreg_entity.html">brreg_entity()</a></code> always carries <code>deleted</code> (logical) and <code>registry</code>.</p></li>
+<li><p>Valid empty results are typed zero-row tibbles everywhere (previously zero-column <code>tibble()</code>): search results carry <code>org_nr</code>, <code>name</code>, <code>legal_form</code>; roles, legal roles, konsern, signatur and prokura carry their full documented column set; update feeds carry their four (or seven) columns.</p></li>
+<li><p>The per-entity endpoints (<code><a href="../reference/brreg_roles.html">brreg_roles()</a></code>, <code><a href="../reference/brreg_roles_legal.html">brreg_roles_legal()</a></code>, <code><a href="../reference/brreg_konsern.html">brreg_konsern()</a></code>, <code><a href="../reference/brreg_signatur.html">brreg_signatur()</a></code>, <code><a href="../reference/brreg_prokura.html">brreg_prokura()</a></code>) no longer warn on HTTP 404; they return the typed empty with attribute <code>http_status = 404L</code>. HTTP 410 warns about deletion; other HTTP errors abort.</p></li>
+<li><p>Loading or attaching the package performs no filesystem or network access: the startup message about missing bulk data and the undocumented <code>.onLoad</code> override of bundled dictionaries from RDS files are gone.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="typed-conditions-0-6-0">Typed conditions<a class="anchor" aria-label="anchor" href="#typed-conditions-0-6-0"></a></h3>
+<p>Every error and warning now carries a class and fields; see <code><a href="../reference/tidybrreg_conditions.html">?tidybrreg_conditions</a></code>. Errors: <code>tidybrreg_error_invalid_org_nr</code>, <code>_invalid_filter</code>, <code>_not_found</code>, <code>_http</code>, <code>_result_window</code>, <code>_invalid_since</code>, <code>_no_bundled_dictionary</code>, <code>_rate_limited</code>, <code>_connection</code>. Warnings: <code>tidybrreg_warning_deleted</code>, <code>_partial</code>, <code>_truncated</code>, <code>_unknown_member</code>, <code>_bundled_fallback</code>, <code>_parse</code>, <code>_unresolved</code>, <code>_unsupported_plan</code>.</p>
+</div>
+<div class="section level3">
+<h3 id="request-layer-0-6-0">Request layer<a class="anchor" aria-label="anchor" href="#request-layer-0-6-0"></a></h3>
+<p>The retry rule follows what the brreg-json-fetcher collector observed live. 500, 502 and 504 are transient like 429 and 503 (three tries, exponential pause), except the Regnskapsregisteret 500 that names an unsupported accounting plan, which is a property of the entity and is final. The register’s rate limit sometimes arrives as HTTP 200 with a <code>text/plain</code> body <code>Too many requests</code>; it was an unreadable-body crash and is now retried and, when it persists, a typed <code>tidybrreg_error_rate_limited</code>. A connection failure (DNS, TCP, TLS, dropped connection) is retried the same number of times and then a <code>tidybrreg_error_connection</code>; the bulk download goes through the same rule, so a connection reset mid-download is retried and a server error aborts with the typed <code>tidybrreg_error_http</code>. The live audit probes the fetcher’s two deleted controls (931264338, 991128972) as deleted here too. The Node server applies the same rule from <code>endpoints.json</code>.</p>
+</div>
+<div class="section level3">
+<h3 id="fixes-to-the-retained-core-0-6-0">Fixes to the retained core<a class="anchor" aria-label="anchor" href="#fixes-to-the-retained-core-0-6-0"></a></h3>
+<ul><li><p><code><a href="../reference/brreg_entity.html">brreg_entity()</a></code> models deletion consistently: HTTP 200 with <code>respons_klasse = "SlettetEnhet"</code> (the form BRREG uses for nearly all deletions) and HTTP 410 both yield <code>deleted = TRUE</code>, a parsed <code>deletion_date</code>, every other observed field, and a warning. A vector of several organization numbers is rejected instead of silently querying the first. Nested HAL <code>_links</code> blocks (<code>organisasjonsform._links.self.href</code>) are stripped at any depth on both the live and bulk paths.</p></li>
+<li><p><code><a href="../reference/brreg_search.html">brreg_search()</a></code> aborts on unsupported filters (<code>bankrupt</code> for underenheter), aborts with <code>tidybrreg_error_result_window</code> before returning a partial population when a query exceeds BRREG’s 10,000 result window, reports truncation with <code>complete = FALSE</code> and a warning, aborts on a first-page HTTP failure, and warns on a later one instead of returning a silently partial result.</p></li>
+<li><p><code><a href="../reference/brreg_updates.html">brreg_updates()</a></code> and <code><a href="../reference/brreg_update_fields.html">brreg_update_fields()</a></code> share one paginator: first-page failures abort, later failures warn and return the pages read with <code>complete = FALSE</code>; stopping on <code>max_pages</code> with a full last page warns; results carry <code>complete</code>, <code>pages_fetched</code> and <code>cursor</code>. Members of an update object the package does not model pass through as columns with a <code>tidybrreg_warning_unknown_member</code>. The roller feed honours <code>max_pages</code> and <code>verbose</code> (paginating on <code>afterId</code>) and rejects <code>include_changes</code>. Patch flattening handles any nesting depth identically on the flat and list-column paths.</p></li>
+<li><p><code><a href="../reference/brreg_download.html">brreg_download()</a></code> validates <code>refresh</code> (<code>TRUE</code>, <code>FALSE</code>, <code>"auto"</code>) and <code>cache</code>; <code>cache = FALSE</code> uses a temporary file instead of writing the payload to the cache directory anyway; <code>refresh = "auto"</code> revalidates against both <code>ETag</code> and <code>Last-Modified</code> and re-downloads when nothing can prove the cache current; download metadata (<code>last_modified</code> as UTC <code>POSIXct</code>) is attached as <code>attr(x, "brreg_download")</code> and written to a sidecar.</p></li>
+<li><p>Dictionary coercion is one rule on every path: the four numeric <code>capital_*</code> fields are numeric on bulk CSV as well as live JSON; parse failures are reported for every type, never abort the parse (the diagnostics table used to break on more than twenty failures), and the <code>brreg_parse_problems</code> table carries <code>n_failed</code>. A field the dictionary lists under two spellings keeps both observed values; a snake_case collision between unmapped fields is made unique rather than dropping the second.</p></li>
+<li><p>Dates and instants: konsern relation dates and Fullmakt birth dates accept both ISO and <code>DD.MM.YYYY</code>; <code>Last-Modified</code> headers parse in any locale.</p></li>
+<li><p><code><a href="../reference/brreg_label.html">brreg_label()</a></code> honours <code>lang = "no"</code> for every dictionary, is idempotent, leaves no stray <code>names</code> attribute on labelled columns, and preserves the input’s attributes (<code>total_matches</code> survives <code>code =</code>). <code>options(tidybrreg.offline = TRUE)</code> keeps labelling off the network; KLASS failures fall back to the bundled dictionaries with a warning stating their vintage.</p></li>
+<li><p><code>DESCRIPTION</code> carries the maintainer’s real address. Provenance, licence and vintage of every bundled table are documented in <code><a href="../reference/tidybrreg_provenance.html">?tidybrreg_provenance</a></code>.</p></li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0" id="tidybrreg-050">tidybrreg 0.5.0<a class="anchor" aria-label="anchor" href="#tidybrreg-050"></a></h2>
 <div class="section level3">
 <h3 id="breaking-changes-0-5-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-5-0"></a></h3>
-<ul><li><p>Parsers no longer fabricate <code>field_dict</code> columns that the payload did not carry. <code><a href="../reference/rename_and_coerce.html">rename_and_coerce()</a></code> and <code><a href="../reference/rename_from_dict.html">rename_from_dict()</a></code> previously materialized every dictionary column as typed <code>NA</code> when absent, asserting the full schema regardless of what the register emitted and making a removed upstream field indistinguishable from a present-null one. Emission is now batch-scoped, matching the <code>resigned</code> rule: a column appears when the field is observed anywhere in the batch, <code>NA</code> for records in that batch lacking it, absent entirely when unobserved. <code><a href="../reference/parse_entities.html">parse_entities()</a></code> unions across the batch via <code><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows()</a></code>, so multi-entity results are unchanged except that never-observed columns are gone. Single-entity <code><a href="../reference/brreg_entity.html">brreg_entity()</a></code> now returns roughly 61-63 columns instead of a fixed 104. This also stops the enheter bulk parse from stamping twelve underenheter-only columns (<code>beliggenhetsadresse.*</code>, <code>oppstartsdato</code>, <code>datoEierskifte</code>, <code>nedleggelsesdato</code>) onto every enhet row.</p></li>
+<ul><li><p>Parsers no longer fabricate <code>field_dict</code> columns that the payload did not carry. <code><a href="../reference/rename_and_coerce.html">rename_and_coerce()</a></code> and <code><a href="../reference/rename_from_dict.html">rename_from_dict()</a></code> previously materialized every dictionary column as typed <code>NA</code> when absent, asserting the full schema regardless of what the register emitted and making a removed upstream field indistinguishable from a present-null one. Emission is now batch-scoped, matching the <code>resigned</code> rule: a column appears when the field is observed anywhere in the batch, <code>NA</code> for records in that batch lacking it, absent entirely when unobserved. <code><a href="../reference/parse_entities.html">parse_entities()</a></code> unions across the batch via <code>bind_rows()</code>, so multi-entity results are unchanged except that never-observed columns are gone. Single-entity <code><a href="../reference/brreg_entity.html">brreg_entity()</a></code> now returns roughly 61-63 columns instead of a fixed 104. This also stops the enheter bulk parse from stamping twelve underenheter-only columns (<code>beliggenhetsadresse.*</code>, <code>oppstartsdato</code>, <code>datoEierskifte</code>, <code>nedleggelsesdato</code>) onto every enhet row.</p></li>
 <li><p>Array-valued fields now join on <code>"\n"</code> instead of <code>"; "</code> (bulk JSON) or <code>", "</code> (live JSON). Element text routinely contains commas and semicolons but never newlines, so only <code>"\n"</code> can be split back into the observed elements. Arrays of objects are serialized to JSON rather than pasted, which fixes <code>historiskeNavn</code> arriving as unusable text from <code><a href="../reference/brreg_entity.html">brreg_entity()</a></code> on the ~18% of enheter that have name history. The two JSON paths now agree with each other and with BRREG’s own CSV rendering of addresses; note that the CSV joins wrapped-text fields such as <code>vedtektsfestetFormaal</code> with a space, so those remain non-identical across formats and cannot be reconciled without a per-field rule.</p></li>
-<li><p><code><a href="../reference/brreg_roles.html">brreg_roles()</a></code>, <code><a href="../reference/brreg_roles_legal.html">brreg_roles_legal()</a></code>, and the roller bulk parser no longer fabricate a <code>resigned</code> column. BRREG removed the underlying <code>fratraadt</code> field from the roles REST endpoint, <code>juridiskeroller</code>, and the totalbestand bulk on 2026-06-16, which had left <code>resigned</code> constant <code>FALSE</code> for every role. The column now appears only when a payload actually carries <code>fratraadt</code> (replays of pre-June data), with within-payload absence keeping the old <code>FALSE</code> semantics. <code><a href="../reference/diff_roller_state.html">diff_roller_state()</a></code> already intersects its comparison set with the columns present on both sides, so mixed old/new states diff cleanly. <code><a href="../reference/brreg_board_summary.html">brreg_board_summary()</a></code> gains a column-tolerant active filter; the previous pre-guard collapsed to a scalar when <code>resigned</code> was absent and silently disabled the deregistered filter.</p></li>
+<li><p><code><a href="../reference/brreg_roles.html">brreg_roles()</a></code>, <code><a href="../reference/brreg_roles_legal.html">brreg_roles_legal()</a></code>, and the roller bulk parser no longer fabricate a <code>resigned</code> column. BRREG removed the underlying <code>fratraadt</code> field from the roles REST endpoint, <code>juridiskeroller</code>, and the totalbestand bulk on 2026-06-16, which had left <code>resigned</code> constant <code>FALSE</code> for every role. The column now appears only when a payload actually carries <code>fratraadt</code> (replays of pre-June data), with within-payload absence keeping the old <code>FALSE</code> semantics. <code>diff_roller_state()</code> already intersects its comparison set with the columns present on both sides, so mixed old/new states diff cleanly. <code>brreg_board_summary()</code> gains a column-tolerant active filter; the previous pre-guard collapsed to a scalar when <code>resigned</code> was absent and silently disabled the deregistered filter.</p></li>
 </ul></div>
 <div class="section level3">
 <h3 id="new-features-0-5-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-5-0"></a></h3>
 <ul><li><p>New <code><a href="../reference/brreg_konsern.html">brreg_konsern()</a></code> retrieves the hierarchical corporate group structure from the konsernstruktur endpoint BRREG added 2026-06-24. One row per node at any depth (live ASA groups nest six levels), root synthesized at level 0 as <code>KKKK</code> “Øverste mor” to match the endpoint’s CSV variant, children carrying observed <code>knytningsform</code>, <code>grunnlag</code>, and relation dates. The endpoint returns 404 both for nonexistent organization numbers and for live entities in no group; <code>in_corporate_group</code> from <code><a href="../reference/brreg_entity.html">brreg_entity()</a></code> disambiguates.</p></li>
-<li><p>Name history (<code>historiskeNavn</code>, added by BRREG 2026-06-16/18) is captured. <code><a href="../reference/brreg_sync.html">brreg_sync()</a></code> ingests the <code>add /historiskeNavn/-</code> CDC patches for both enheter and underenheter into a <code>historiske_navn</code> state table, read by the new <code><a href="../reference/brreg_historical_names.html">brreg_historical_names()</a></code>. Rename events land in the changelog as <code>registry = "historiske_navn"</code>, <code>change_type = "name_history_added"</code>, carrying the superseded name and its validity interval.</p></li>
-<li><p><code><a href="../reference/brreg_sync.html">brreg_sync()</a></code> gains a <code>format</code> argument (default <code>"csv"</code>, behaviour-preserving) forwarded to the bootstrap bulk download. <code>historiskeNavn</code> has no CSV column and no presence flag, so history predating the first sync exists only in the JSON bulk; <code>format = "json"</code> backfills it at bootstrap.</p></li>
+<li><p>Name history (<code>historiskeNavn</code>, added by BRREG 2026-06-16/18) is captured. <code>brreg_sync()</code> ingests the <code>add /historiskeNavn/-</code> CDC patches for both enheter and underenheter into a <code>historiske_navn</code> state table, read by the new <code>brreg_historical_names()</code>. Rename events land in the changelog as <code>registry = "historiske_navn"</code>, <code>change_type = "name_history_added"</code>, carrying the superseded name and its validity interval.</p></li>
+<li><p><code>brreg_sync()</code> gains a <code>format</code> argument (default <code>"csv"</code>, behaviour-preserving) forwarded to the bootstrap bulk download. <code>historiskeNavn</code> has no CSV column and no presence flag, so history predating the first sync exists only in the JSON bulk; <code>format = "json"</code> backfills it at bootstrap.</p></li>
 </ul></div>
 <div class="section level3">
 <h3 id="minor-improvements-and-fixes-0-5-0">Minor improvements and fixes<a class="anchor" aria-label="anchor" href="#minor-improvements-and-fixes-0-5-0"></a></h3>
-<ul><li><p><code><a href="../reference/extract_paategninger.html">extract_paategninger()</a></code> parses inline annotation arrays on the JSON bulk path. Previously the boolean-flag matcher never fired on the serialized arrays, so a JSON-format bootstrap silently produced an empty påtegninger state; the CSV flag-then-fetch path is unchanged.</p></li>
+<ul><li><p><code>extract_paategninger()</code> parses inline annotation arrays on the JSON bulk path. Previously the boolean-flag matcher never fired on the serialized arrays, so a JSON-format bootstrap silently produced an empty påtegninger state; the CSV flag-then-fetch path is unchanged.</p></li>
 <li><p>Documentation corrected against the live bulk files: the enheter and underenheter CSVs are comma-delimited (not semicolon), and <code>kapital</code>, <code>vedtektsfestetFormaal</code>, and <code>paategninger</code> all have CSV columns today. <code>historiskeNavn</code> is the JSON-only field, and CSV carries påtegninger only as a <code>true</code>/<code>false</code> presence flag.</p></li>
-<li><p>The API monitor’s schema probe also samples the per-entity roles endpoint and the konsernstruktur endpoint (ASA census guarantees group members in the sample), so roller field removals like <code>fratraadt</code> and new endpoints are visible to drift detection.</p></li>
+<li><p>The API monitor’s schema probe also samples the per-entity roles endpoint and the konsernstruktur endpoint (ASA census guarantees group members in the sample), so roller field removals like <code>fratraadt</code> and new endpoints are visible to drift detection. # tidybrreg 0.4.0</p></li>
 </ul></div>
-</div>
-    <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.4.0" id="tidybrreg-040">tidybrreg 0.4.0<a class="anchor" aria-label="anchor" href="#tidybrreg-040"></a></h2>
 <div class="section level3">
-<h3 id="new-features-0-4-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-4-0"></a></h3>
+<h3 id="new-features-0-5-0-1">New features<a class="anchor" aria-label="anchor" href="#new-features-0-5-0-1"></a></h3>
 <ul><li>New <code><a href="../reference/brreg_signatur.html">brreg_signatur()</a></code> and <code><a href="../reference/brreg_prokura.html">brreg_prokura()</a></code> retrieve signature (signaturrett) and procuration (prokura) authority from the Brønnøysund Fullmakt service (<code>data.brreg.no/fullmakt</code>). Signing authority — who may bind the entity, and under which combination rule — is held in a separate service from the roles in <code><a href="../reference/brreg_roles.html">brreg_roles()</a></code>, which report only who holds a seat. Each returns one row per person per registered combination, with <code>rule_status</code>/<code>rule_text</code>, birth date, and an English <code>role</code> looked up from <code>role_types</code> (which gains the six signing-mode codes <code>SIGN</code>, <code>SIFE</code>, <code>SIHV</code>, <code>PROK</code>, <code>POFE</code>, <code>POHV</code>).</li>
 </ul></div>
 <div class="section level3">
-<h3 id="minor-improvements-and-fixes-0-4-0">Minor improvements and fixes<a class="anchor" aria-label="anchor" href="#minor-improvements-and-fixes-0-4-0"></a></h3>
+<h3 id="minor-improvements-and-fixes-0-5-0-1">Minor improvements and fixes<a class="anchor" aria-label="anchor" href="#minor-improvements-and-fixes-0-5-0-1"></a></h3>
 <ul><li>Request construction is consolidated behind a single internal factory (<code><a href="../reference/brreg_http_req.html">brreg_http_req()</a></code>). The SSB KLASS request in <code><a href="../reference/fetch_klass.html">fetch_klass()</a></code> now flows through it — gaining the shared user agent, transient retry, and a <code>data.ssb.no</code>-scoped throttle — instead of being hand-built, and <code><a href="../reference/brreg_req.html">brreg_req()</a></code> gains a <code>service</code> argument so the Enhetsregisteret and Fullmakt path roots share one configured request. No change to the Enhetsregisteret-facing API.</li>
 </ul></div>
 </div>
@@ -79,7 +126,7 @@
 <div class="section level3">
 <h3 id="bug-fixes-0-3-8">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-3-8"></a></h3>
 <ul><li>
-<code><a href="../reference/brreg_sync.html">brreg_sync()</a></code> now populates <code>paategninger</code> state. The enheter bulk download (CSV) only carries påtegninger as a boolean presence flag, not the annotation content, so <code><a href="../reference/extract_paategninger.html">extract_paategninger()</a></code> previously always produced empty state and <code><a href="../reference/brreg_annotations.html">brreg_annotations()</a></code> returned nothing after a sync. The bootstrap now reads the flag (column <code>annotations</code>) and fetches the actual annotation content per flagged entity from the enheter endpoint. New internal helper <code><a href="../reference/fetch_entity_paategninger.html">fetch_entity_paategninger()</a></code>.</li>
+<code>brreg_sync()</code> now populates <code>paategninger</code> state. The enheter bulk download (CSV) only carries påtegninger as a boolean presence flag, not the annotation content, so <code>extract_paategninger()</code> previously always produced empty state and <code>brreg_annotations()</code> returned nothing after a sync. The bootstrap now reads the flag (column <code>annotations</code>) and fetches the actual annotation content per flagged entity from the enheter endpoint. New internal helper <code>fetch_entity_paategninger()</code>.</li>
 </ul></div>
 </div>
     <div class="section level2">
@@ -88,7 +135,7 @@
 <h3 id="new-features-0-3-7">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-7"></a></h3>
 <ul><li>New bundled dataset [annotation_infotypes]: maps brreg påtegning <code>infotype</code> codes to English descriptions. Sourced from the brreg API reference (<code>NAVN</code>, <code>FADR</code>) and codes observed in live data (role codes used for missing-role annotations); unknown codes pass through.</li>
 <li>
-<code><a href="../reference/brreg_annotations.html">brreg_annotations()</a></code> gains a <code>translate</code> argument. With <code>translate = TRUE</code> an <code>infotype_desc</code> column with English descriptions (from <code>annotation_infotypes</code>) is added after <code>infotype</code>. Default <code>FALSE</code>, so existing behaviour is unchanged.</li>
+<code>brreg_annotations()</code> gains a <code>translate</code> argument. With <code>translate = TRUE</code> an <code>infotype_desc</code> column with English descriptions (from <code>annotation_infotypes</code>) is added after <code>infotype</code>. Default <code>FALSE</code>, so existing behaviour is unchanged.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="documentation-0-3-7">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-3-7"></a></h3>
@@ -107,7 +154,7 @@
 <div class="section level3">
 <h3 id="internal-0-3-6">Internal<a class="anchor" aria-label="anchor" href="#internal-0-3-6"></a></h3>
 <ul><li>
-<code><a href="../reference/read_changelog.html">read_changelog()</a></code>: the arrow branch now references the partition column as <code>.data$sync_date</code> and imports the <code><a href="https://rlang.r-lib.org/reference/dot-data.html" class="external-link">rlang::.env</a></code> pronoun, removing the “no visible binding for global variable” check note. Runtime behaviour is unchanged.</li>
+<code>read_changelog()</code>: the arrow branch now references the partition column as <code>.data$sync_date</code> and imports the <code><a href="https://rlang.r-lib.org/reference/dot-data.html" class="external-link">rlang::.env</a></code> pronoun, removing the “no visible binding for global variable” check note. Runtime behaviour is unchanged.</li>
 <li>Tests: <code>field_dict</code> invariants aligned with the v0.3.5 dictionary — <code>api_path</code> is the unique key (multiple API-spelling variants map to a single <code>col_name</code>), and <code>numeric</code> is an accepted type.</li>
 </ul></div>
 </div>
@@ -116,13 +163,13 @@
 <div class="section level3">
 <h3 id="roller-cdc-field-level-change-detection-0-3-4">Roller CDC: field-level change detection<a class="anchor" aria-label="anchor" href="#roller-cdc-field-level-change-detection-0-3-4"></a></h3>
 <ul><li>
-<code><a href="../reference/bootstrap_state.html">bootstrap_state()</a></code> now initializes the CDC cursor to the current tip (max event ID) at bootstrap time via <code><a href="../reference/get_cdc_tip.html">get_cdc_tip()</a></code>. Previously the cursor remained at 0 after bootstrap, causing the first CDC poll to replay the entire event history (~4.4M roller events, ~24M enheter events). This caused OOM and timeout failures on Cloud Run.</li>
+<code>bootstrap_state()</code> now initializes the CDC cursor to the current tip (max event ID) at bootstrap time via <code>get_cdc_tip()</code>. Previously the cursor remained at 0 after bootstrap, causing the first CDC poll to replay the entire event history (~4.4M roller events, ~24M enheter events). This caused OOM and timeout failures on Cloud Run.</li>
 <li>
 <code>bootstrap_state(roller_method = "cdc")</code> skips the roller totalbestand download entirely. Writes an empty state table and builds state incrementally via per-org <code><a href="../reference/brreg_roles.html">brreg_roles()</a></code> calls. Reduces bootstrap from 32 GiB RAM / 30+ minutes to &lt;10 seconds and negligible memory.</li>
 <li>
-<code><a href="../reference/paginate_cdc.html">paginate_cdc()</a></code> gains a <code>max_pages</code> parameter and a safety guard: if <code>cursor_id == 0</code> (no prior sync), pagination caps at 5 pages and emits a <code><a href="https://cli.r-lib.org/reference/cli_abort.html" class="external-link">cli::cli_warn()</a></code>. Belt-and-suspenders — should never trigger after a correct bootstrap.</li>
+<code>paginate_cdc()</code> gains a <code>max_pages</code> parameter and a safety guard: if <code>cursor_id == 0</code> (no prior sync), pagination caps at 5 pages and emits a <code><a href="https://cli.r-lib.org/reference/cli_abort.html" class="external-link">cli::cli_warn()</a></code>. Belt-and-suspenders — should never trigger after a correct bootstrap.</li>
 <li>
-<code><a href="../reference/diff_roller_state.html">diff_roller_state()</a></code> (new, exported) — computes field-level diffs between two flattened roller state tibbles. Returns a long-format changelog with <code>change_type</code> (entry/exit/change), <code>field</code>, <code>value_from</code>, <code>value_to</code>. Roles are keyed by a composite of <code>(org_nr, role_group_code, role_code, holder_id)</code> where holder_id is derived from <code>person_id</code> (person-held) or <code>entity:{org_nr}</code> (entity-held).</li>
+<code>diff_roller_state()</code> (new, exported) — computes field-level diffs between two flattened roller state tibbles. Returns a long-format changelog with <code>change_type</code> (entry/exit/change), <code>field</code>, <code>value_from</code>, <code>value_to</code>. Roles are keyed by a composite of <code>(org_nr, role_group_code, role_code, holder_id)</code> where holder_id is derived from <code>person_id</code> (person-held) or <code>entity:{org_nr}</code> (entity-held).</li>
 <li>
 <code>brreg_sync(roller_method = "bulk")</code> — new default strategy for roller CDC. Downloads the full totalbestand (~131 MB), diffs against stored state, and writes a field-level changelog. Replaces the per-org API pattern for full-register syncs.</li>
 <li>
@@ -130,14 +177,14 @@
 <li>
 <code><a href="../reference/flatten_roles.html">flatten_roles()</a></code> gains 4 new columns: <code>deregistered</code> (avregistrert), <code>ordering</code> (rekkefolge), <code>elected_by</code> (valgtAv$kode), <code>group_modified</code> (sistEndret as Date).</li>
 <li>
-<code><a href="../reference/brreg_board_summary.html">brreg_board_summary()</a></code> now excludes resigned and deregistered roles from all counts and gains <code>n_employee_elected</code> (count of board members with a non-NA <code>elected_by</code> value).</li>
+<code>brreg_board_summary()</code> now excludes resigned and deregistered roles from all counts and gains <code>n_employee_elected</code> (count of board members with a non-NA <code>elected_by</code> value).</li>
 </ul></div>
 <div class="section level3">
 <h3 id="performance-0-3-4">Performance<a class="anchor" aria-label="anchor" href="#performance-0-3-4"></a></h3>
 <ul><li>
 <code><a href="../reference/flatten_roles_bulk_fast.html">flatten_roles_bulk_fast()</a></code> (internal) — vectorized two-pass flatten for bulk totalbestand. Pre-allocates vectors and fills by index. 4.1× faster than the per-entity <code><a href="../reference/flatten_roles.html">flatten_roles()</a></code> path (4,192 vs 1,028 roles/sec).</li>
 <li>
-<code><a href="../reference/read_roles_json.html">read_roles_json()</a></code> (internal) — dispatches to yyjsonr when available (10× parse speed, 70× lower memory vs jsonlite). yyjsonr added to Suggests.</li>
+<code>read_roles_json()</code> (internal) — dispatches to yyjsonr when available (10× parse speed, 70× lower memory vs jsonlite). yyjsonr added to Suggests.</li>
 <li>
 <code><a href="../reference/lookup_role_vec.html">lookup_role_vec()</a></code> and <code><a href="../reference/lookup_role_group_vec.html">lookup_role_group_vec()</a></code> (internal) — vectorized code-to-label lookups replacing per-row <code><a href="https://rdrr.io/r/base/match.html" class="external-link">match()</a></code>.</li>
 </ul></div>
@@ -146,15 +193,15 @@
 <ul><li>
 <code><a href="../reference/extract_entity_name.html">extract_entity_name()</a></code> no longer returns NA for entity-held roles. The brreg API returns <code>enhet.navn</code> as a JSON array <code>["ERNST &amp; YOUNG AS"]</code>, not a named object. jsonlite parses this as an unnamed list, which the old code did not handle. Added unnamed list branch.</li>
 <li>
-<code><a href="../reference/read_roles_json.html">read_roles_json()</a></code> now decompresses <code>.gz</code> files to a temp file before passing to yyjsonr. yyjsonr cannot read gzipped files directly; the previous code crashed with a buffer allocation error on the 131 MB totalbestand.</li>
+<code>read_roles_json()</code> now decompresses <code>.gz</code> files to a temp file before passing to yyjsonr. yyjsonr cannot read gzipped files directly; the previous code crashed with a buffer allocation error on the 131 MB totalbestand.</li>
 <li>
-<code><a href="../reference/paginate_cdc_bounded.html">paginate_cdc_bounded()</a></code> (internal) caps roller CDC pagination at 5 pages (50K events) when using <code>roller_method = "bulk"</code>. The previous unbounded <code><a href="../reference/paginate_cdc.html">paginate_cdc()</a></code> fetched the entire CDC history (1.1M+ events) from cursor 0 on first bootstrap, causing 30-minute timeouts.</li>
+<code>paginate_cdc_bounded()</code> (internal) caps roller CDC pagination at 5 pages (50K events) when using <code>roller_method = "bulk"</code>. The previous unbounded <code>paginate_cdc()</code> fetched the entire CDC history (1.1M+ events) from cursor 0 on first bootstrap, causing 30-minute timeouts.</li>
 <li>
-<code><a href="../reference/parse_sync_page.html">parse_sync_page()</a></code> no longer produces tibble column size mismatches when CDC pages contain events without <code>endringer</code> (Ny/Sletting). <code>raw_changes[[i]] &lt;- NULL</code> was deleting list elements instead of preserving NULL placeholders (R double-bracket assignment semantics). Fix: <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code> as empty placeholder. Affected all enheter and underenheter sync since v0.3.2.</li>
+<code>parse_sync_page()</code> no longer produces tibble column size mismatches when CDC pages contain events without <code>endringer</code> (Ny/Sletting). <code>raw_changes[[i]] &lt;- NULL</code> was deleting list elements instead of preserving NULL placeholders (R double-bracket assignment semantics). Fix: <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code> as empty placeholder. Affected all enheter and underenheter sync since v0.3.2.</li>
 <li>
-<code><a href="../reference/add_role_key.html">add_role_key()</a></code> no longer crashes on 0-row tibbles. Previously, <code>case_when(df$person_id ...)</code> received NULL instead of NA when passed a 0-column tibble from a 404 API response.</li>
+<code>add_role_key()</code> no longer crashes on 0-row tibbles. Previously, <code>case_when(df$person_id ...)</code> received NULL instead of NA when passed a 0-column tibble from a 404 API response.</li>
 <li>
-<code><a href="../reference/apply_roller_events_cdc.html">apply_roller_events_cdc()</a></code> skips <code><a href="../reference/diff_roller_state.html">diff_roller_state()</a></code> when both old and new state are empty (entity not in state AND 404 from API).</li>
+<code>apply_roller_events_cdc()</code> skips <code>diff_roller_state()</code> when both old and new state are empty (entity not in state AND 404 from API).</li>
 </ul></div>
 </div>
     <div class="section level2">
@@ -192,7 +239,7 @@
 <div class="section level3">
 <h3 id="sync-engine-0-3-3">Sync engine<a class="anchor" aria-label="anchor" href="#sync-engine-0-3-3"></a></h3>
 <ul><li>
-<code><a href="../reference/find_state_column.html">find_state_column()</a></code> gains mappings for all 8 new field_dict entries. CDC field changes for audit exemption dates, employee registration dates, VAT registration date in Enhetsregisteret, underenhet start dates, and party register membership are no longer silently skipped during <code><a href="../reference/brreg_sync.html">brreg_sync()</a></code>.</li>
+<code>find_state_column()</code> gains mappings for all 8 new field_dict entries. CDC field changes for audit exemption dates, employee registration dates, VAT registration date in Enhetsregisteret, underenhet start dates, and party register membership are no longer silently skipped during <code>brreg_sync()</code>.</li>
 </ul></div>
 </div>
     <div class="section level2">
@@ -200,28 +247,28 @@
 <div class="section level3">
 <h3 id="event-sourcing-sync-engine-0-3-2">Event-sourcing sync engine<a class="anchor" aria-label="anchor" href="#event-sourcing-sync-engine-0-3-2"></a></h3>
 <ul><li>
-<code><a href="../reference/brreg_sync.html">brreg_sync()</a></code> — maintains a local mirror of the Enhetsregisteret by applying incremental CDC events to persistent parquet state files. On first run, bootstraps from bulk download. Subsequent runs poll from the last cursor position. Write ordering (changelog → state → cursor) ensures crash-safe idempotent replay.</li>
+<code>brreg_sync()</code> — maintains a local mirror of the Enhetsregisteret by applying incremental CDC events to persistent parquet state files. On first run, bootstraps from bulk download. Subsequent runs poll from the last cursor position. Write ordering (changelog → state → cursor) ensures crash-safe idempotent replay.</li>
 <li>
-<code><a href="../reference/brreg_sync_status.html">brreg_sync_status()</a></code> — displays state file sizes, cursor positions, last sync time, and changelog partition count.</li>
+<code>brreg_sync_status()</code> — displays state file sizes, cursor positions, last sync time, and changelog partition count.</li>
 <li>Four state files maintained: <code>enheter.parquet</code>, <code>underenheter.parquet</code>, <code>roller.parquet</code>, <code>paategninger.parquet</code>.</li>
-<li>Hive-partitioned changelog under <code>state/changelog/sync_date=.../</code> for efficient date-range queries via <code><a href="https://arrow.apache.org/docs/r/reference/open_dataset.html" class="external-link">arrow::open_dataset()</a></code>.</li>
+<li>Hive-partitioned changelog under <code>state/changelog/sync_date=.../</code> for efficient date-range queries via <code>arrow::open_dataset()</code>.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="registry-annotations-påtegninger-0-3-2">Registry annotations (påtegninger)<a class="anchor" aria-label="anchor" href="#registry-annotations-p%C3%A5tegninger-0-3-2"></a></h3>
 <ul><li>
-<code><a href="../reference/brreg_annotations.html">brreg_annotations()</a></code> — query the påtegninger state table by org_nr and/or infotype code. Påtegninger are registry-level annotations about entity data quality — the earliest formal signal of entity distress, preceding forced dissolution by weeks to months.</li>
+<code>brreg_annotations()</code> — query the påtegninger state table by org_nr and/or infotype code. Påtegninger are registry-level annotations about entity data quality — the earliest formal signal of entity distress, preceding forced dissolution by weeks to months.</li>
 <li>
-<code><a href="../reference/brreg_annotation_summary.html">brreg_annotation_summary()</a></code> — count entities with active annotations grouped by infotype.</li>
+<code>brreg_annotation_summary()</code> — count entities with active annotations grouped by infotype.</li>
 <li>Påtegninger treated as a conceptually distinct fourth data stream alongside enheter, underenheter, and roller.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="unified-change-tracking-0-3-2">Unified change tracking<a class="anchor" aria-label="anchor" href="#unified-change-tracking-0-3-2"></a></h3>
 <ul><li>
-<code><a href="../reference/brreg_changes.html">brreg_changes()</a></code> — query the changelog for field-level mutations across all four streams. Filter by track (field names), registry, change_type, date range, and org_nr.</li>
+<code>brreg_changes()</code> — query the changelog for field-level mutations across all four streams. Filter by track (field names), registry, change_type, date range, and org_nr.</li>
 <li>
-<code><a href="../reference/brreg_change_summary.html">brreg_change_summary()</a></code> — count changes by registry, type, field.</li>
+<code>brreg_change_summary()</code> — count changes by registry, type, field.</li>
 <li>
-<code><a href="../reference/brreg_flows.html">brreg_flows()</a></code> now auto-detects the changelog when called with no arguments: <code><a href="../reference/brreg_flows.html">brreg_flows()</a></code> reads from the sync changelog, <code>brreg_flows(data)</code> uses the original bulk + CDC path.</li>
+<code>brreg_flows()</code> now auto-detects the changelog when called with no arguments: <code>brreg_flows()</code> reads from the sync changelog, <code>brreg_flows(data)</code> uses the original bulk + CDC path.</li>
 </ul></div>
 </div>
     <div class="section level2">
@@ -229,13 +276,13 @@
 <div class="section level3">
 <h3 id="new-functions-0-3-1">New functions<a class="anchor" aria-label="anchor" href="#new-functions-0-3-1"></a></h3>
 <ul><li>
-<code><a href="../reference/brreg_network.html">brreg_network()</a></code> — build entity ego-network graphs as <code>tbl_graph</code> objects. Depth 0 (seed only), depth 1 (sub-units, children, roles, legal roles via API), depth 2 (board interlocks via local bulk data). Extensible collector pattern for future relationship types.</li>
+<code>brreg_network()</code> — build entity ego-network graphs as <code>tbl_graph</code> objects. Depth 0 (seed only), depth 1 (sub-units, children, roles, legal roles via API), depth 2 (board interlocks via local bulk data). Extensible collector pattern for future relationship types.</li>
 <li>
 <code><a href="../reference/brreg_underenheter.html">brreg_underenheter()</a></code> — convenience wrapper to get all sub-units (BEDR/AAFY) belonging to a parent entity.</li>
 <li>
 <code><a href="../reference/brreg_children.html">brreg_children()</a></code> — get child enheter in the organisational hierarchy (e.g. Stortinget → Riksrevisjonen).</li>
 <li>
-<code><a href="../reference/brreg_status.html">brreg_status()</a></code> — check local bulk data availability for all three registry types.</li>
+<code>brreg_status()</code> — check local bulk data availability for all three registry types.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="changes-0-3-1">Changes<a class="anchor" aria-label="anchor" href="#changes-0-3-1"></a></h3>
@@ -263,7 +310,7 @@
 </ul></div>
 <div class="section level3">
 <h3 id="test-coverage-0-3-0">Test coverage<a class="anchor" aria-label="anchor" href="#test-coverage-0-3-0"></a></h3>
-<ul><li>New test files for <code><a href="../reference/brreg_manifest.html">brreg_manifest()</a></code>, <code><a href="../reference/brreg_replay.html">brreg_replay()</a></code>, <code><a href="../reference/brreg_series.html">brreg_series()</a></code>, and <code><a href="../reference/as_brreg_tsibble.html">as_brreg_tsibble()</a></code>.</li>
+<ul><li>New test files for <code>brreg_manifest()</code>, <code>brreg_replay()</code>, <code>brreg_series()</code>, and <code>as_brreg_tsibble()</code>.</li>
 </ul></div>
 </div>
     <div class="section level2">
@@ -273,35 +320,35 @@
 <div class="section level4">
 <h4 id="snapshot-engine-0-2-0">Snapshot engine<a class="anchor" aria-label="anchor" href="#snapshot-engine-0-2-0"></a></h4>
 <ul><li>
-<code><a href="../reference/brreg_snapshot.html">brreg_snapshot()</a></code> downloads and saves dated bulk register extracts as Hive-partitioned Parquet files. Supports <code>type = "enheter"</code>, <code>"underenheter"</code>, and <code>"roller"</code> (via <code>/roller/totalbestand</code>). Raw <code>.gz</code> files are preserved alongside processed Parquet for provenance.</li>
+<code>brreg_snapshot()</code> downloads and saves dated bulk register extracts as Hive-partitioned Parquet files. Supports <code>type = "enheter"</code>, <code>"underenheter"</code>, and <code>"roller"</code> (via <code>/roller/totalbestand</code>). Raw <code>.gz</code> files are preserved alongside processed Parquet for provenance.</li>
 <li>
-<code><a href="../reference/brreg_import.html">brreg_import()</a></code> adds user-supplied historical CSVs as snapshot partitions, normalizing column names via <code>field_dict</code>.</li>
+<code>brreg_import()</code> adds user-supplied historical CSVs as snapshot partitions, normalizing column names via <code>field_dict</code>.</li>
 <li>
-<code><a href="../reference/brreg_snapshots.html">brreg_snapshots()</a></code> lists available snapshots with dates, sizes, and paths.</li>
+<code>brreg_snapshots()</code> lists available snapshots with dates, sizes, and paths.</li>
 <li>
-<code><a href="../reference/brreg_open.html">brreg_open()</a></code> opens the partitioned dataset as a lazy Arrow Dataset (requires the arrow package).</li>
+<code>brreg_open()</code> opens the partitioned dataset as a lazy Arrow Dataset (requires the arrow package).</li>
 <li>
-<code><a href="../reference/brreg_data_dir.html">brreg_data_dir()</a></code> returns the snapshot store path. Override with <code>options(brreg.data_dir = "/custom/path")</code>.</li>
+<code>brreg_data_dir()</code> returns the snapshot store path. Override with <code>options(brreg.data_dir = "/custom/path")</code>.</li>
 <li>
-<code><a href="../reference/brreg_cleanup.html">brreg_cleanup()</a></code> prunes old partitions by count or age.</li>
+<code>brreg_cleanup()</code> prunes old partitions by count or age.</li>
 </ul></div>
 <div class="section level4">
 <h4 id="provenance-manifest-0-2-0">Provenance manifest<a class="anchor" aria-label="anchor" href="#provenance-manifest-0-2-0"></a></h4>
 <ul><li>
-<code><a href="../reference/brreg_manifest.html">brreg_manifest()</a></code> reads the JSON provenance catalog recording every download: endpoint URL, download timestamp, <code>Last-Modified</code> header (data vintage date), ETag, file hash, record count, and file paths. Used to bridge snapshots to CDC updates without gaps.</li>
+<code>brreg_manifest()</code> reads the JSON provenance catalog recording every download: endpoint URL, download timestamp, <code>Last-Modified</code> header (data vintage date), ETag, file hash, record count, and file paths. Used to bridge snapshots to CDC updates without gaps.</li>
 </ul></div>
 <div class="section level4">
 <h4 id="panel-construction-0-2-0">Panel construction<a class="anchor" aria-label="anchor" href="#panel-construction-0-2-0"></a></h4>
 <ul><li>
-<code><a href="../reference/brreg_panel.html">brreg_panel()</a></code> constructs firm x period panels at annual, quarterly, monthly, or custom cadence from accumulated snapshots. Uses LOCF (last observation carried forward) date resolution.</li>
+<code>brreg_panel()</code> constructs firm x period panels at annual, quarterly, monthly, or custom cadence from accumulated snapshots. Uses LOCF (last observation carried forward) date resolution.</li>
 <li>
-<code><a href="../reference/brreg_replay.html">brreg_replay()</a></code> reconstructs register state at arbitrary dates from a base snapshot + CDC update stream. Applies Ny/Endring/Sletting events chronologically via <code><a href="https://dplyr.tidyverse.org/reference/rows.html" class="external-link">dplyr::rows_upsert()</a></code> pattern.</li>
+<code>brreg_replay()</code> reconstructs register state at arbitrary dates from a base snapshot + CDC update stream. Applies Ny/Endring/Sletting events chronologically via <code><a href="https://dplyr.tidyverse.org/reference/rows.html" class="external-link">dplyr::rows_upsert()</a></code> pattern.</li>
 <li>
-<code><a href="../reference/brreg_events.html">brreg_events()</a></code> diffs two snapshots: entries, exits, field changes with both old and new values.</li>
+<code>brreg_events()</code> diffs two snapshots: entries, exits, field changes with both old and new values.</li>
 <li>
-<code><a href="../reference/brreg_series.html">brreg_series()</a></code> computes aggregate time series for any combination of variables (<code>.vars</code>), summary functions (<code>.fns</code>), and grouping columns (<code>by</code>). Output columns named <code>{variable}_{function}</code>.</li>
+<code>brreg_series()</code> computes aggregate time series for any combination of variables (<code>.vars</code>), summary functions (<code>.fns</code>), and grouping columns (<code>by</code>). Output columns named <code>{variable}_{function}</code>.</li>
 <li>
-<code><a href="../reference/as_brreg_tsibble.html">as_brreg_tsibble()</a></code> converts panel or series output to tsibble with <code>regular = FALSE</code> for the tidyverts ecosystem.</li>
+<code>as_brreg_tsibble()</code> converts panel or series output to tsibble with <code>regular = FALSE</code> for the tidyverts ecosystem.</li>
 </ul></div>
 <div class="section level4">
 <h4 id="entity-and-sub-entity-access-0-2-0">Entity and sub-entity access<a class="anchor" aria-label="anchor" href="#entity-and-sub-entity-access-0-2-0"></a></h4>
@@ -321,16 +368,16 @@
 <div class="section level4">
 <h4 id="concordance-0-2-0">Concordance<a class="anchor" aria-label="anchor" href="#concordance-0-2-0"></a></h4>
 <ul><li>
-<code><a href="../reference/brreg_harmonize_kommune.html">brreg_harmonize_kommune()</a></code> remaps municipality codes across Norway’s 2020 municipal reform and 2024 county reversals using SSB KLASS.</li>
+<code>brreg_harmonize_kommune()</code> remaps municipality codes across Norway’s 2020 municipal reform and 2024 county reversals using SSB KLASS.</li>
 <li>
-<code><a href="../reference/brreg_harmonize_nace.html">brreg_harmonize_nace()</a></code> remaps NACE SN2007 to SN2025 via SSB KLASS.</li>
+<code>brreg_harmonize_nace()</code> remaps NACE SN2007 to SN2025 via SSB KLASS.</li>
 </ul></div>
 <div class="section level4">
 <h4 id="governance-research-0-2-0">Governance research<a class="anchor" aria-label="anchor" href="#governance-research-0-2-0"></a></h4>
 <ul><li>
-<code><a href="../reference/brreg_board_network.html">brreg_board_network()</a></code> builds director interlock networks as <code>tbl_graph</code> objects (requires tidygraph).</li>
+<code>brreg_board_network()</code> builds director interlock networks as <code>tbl_graph</code> objects (requires tidygraph).</li>
 <li>
-<code><a href="../reference/brreg_survival_data.html">brreg_survival_data()</a></code> prepares firm survival data with time-to-event and right-censoring indicators compatible with <code><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">survival::Surv()</a></code>.</li>
+<code>brreg_survival_data()</code> prepares firm survival data with time-to-event and right-censoring indicators compatible with <code><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">survival::Surv()</a></code>.</li>
 </ul></div>
 <div class="section level4">
 <h4 id="cdc-updates-0-2-0">CDC updates<a class="anchor" aria-label="anchor" href="#cdc-updates-0-2-0"></a></h4>
@@ -348,7 +395,7 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="tidybrreg-010">tidybrreg 0.1.0<a class="anchor" aria-label="anchor" href="#tidybrreg-010"></a></h2>
 <ul><li>Initial release.</li>
-<li>Entity lookup (<code><a href="../reference/brreg_entity.html">brreg_entity()</a></code>), filtered search (<code><a href="../reference/brreg_search.html">brreg_search()</a></code>), board/officer roles (<code><a href="../reference/brreg_roles.html">brreg_roles()</a></code>, <code><a href="../reference/brreg_board_summary.html">brreg_board_summary()</a></code>).</li>
+<li>Entity lookup (<code><a href="../reference/brreg_entity.html">brreg_entity()</a></code>), filtered search (<code><a href="../reference/brreg_search.html">brreg_search()</a></code>), board/officer roles (<code><a href="../reference/brreg_roles.html">brreg_roles()</a></code>, <code>brreg_board_summary()</code>).</li>
 <li>Full register bulk download (<code><a href="../reference/brreg_download.html">brreg_download()</a></code>).</li>
 <li>Incremental CDC updates (<code><a href="../reference/brreg_updates.html">brreg_updates()</a></code>).</li>
 <li>Code-to-label translation (<code><a href="../reference/brreg_label.html">brreg_label()</a></code>, <code><a href="../reference/get_brreg_dic.html">get_brreg_dic()</a></code>).</li>

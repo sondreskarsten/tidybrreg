@@ -16,7 +16,7 @@ flatten_roles_bulk_fast(entities)
 - entities:
 
   List of entity objects from
-  [`read_roles_json()`](https://sondreskarsten.github.io/tidybrreg/reference/read_roles_json.md).
+  [`parse_roles_text()`](https://sondreskarsten.github.io/tidybrreg/reference/parse_roles_text.md).
 
 ## Value
 

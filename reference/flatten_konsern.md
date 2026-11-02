@@ -7,7 +7,8 @@ walks recursively, reusing the recursive-helper + emit-callback shape of
 Observed values win over derived ones: `nivaa`,
 `parentOrganisasjonsnummer`, and `parentNavn` are taken from the node
 when present and only filled from recursion context when absent (the
-root).
+root). `dato` is accepted in both ISO and `DD.MM.YYYY` form via
+[`parse_brreg_date()`](https://sondreskarsten.github.io/tidybrreg/reference/parse_brreg_date.md).
 
 ## Usage
 

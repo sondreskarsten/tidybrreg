@@ -13,7 +13,7 @@ legal entity that operates a business has one or more sub-units
 
     <a class="navbar-brand me-2" href="../index.html">tidybrreg</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -27,11 +27,6 @@ legal entity that operates a business has one or more sub-units
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/tidybrreg.html">Getting started</a></li>
     <li><a class="dropdown-item" href="../articles/business-data.html">Norwegian business data</a></li>
-    <li><a class="dropdown-item" href="../articles/panels.html">Building firm panels</a></li>
-    <li><a class="dropdown-item" href="../articles/governance.html">Governance research</a></li>
-    <li><a class="dropdown-item" href="../articles/roller-cdc.html">Tracking role changes</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/architecture.html">Architecture</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -71,7 +66,9 @@ parent entity (hovedenhet).</p></dd>
 
 
 <dt id="arg-max-results">max_results<a class="anchor" aria-label="anchor" href="#arg-max-results"></a></dt>
-<dd><p>Integer. Maximum sub-units to return (default 200).</p></dd>
+<dd><p>Integer. Maximum sub-units to return (default 200).
+When the parent has more, the result carries <code>complete = FALSE</code>
+and a <code>tidybrreg_warning_truncated</code> is signalled.</p></dd>
 
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
@@ -80,20 +77,20 @@ parent entity (hovedenhet).</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A tibble with one row per sub-unit. Same column schema as
-<code><a href="brreg_search.html">brreg_search()</a></code> with <code>registry = "underenheter"</code>.</p>
+    <p>A tibble with one row per sub-unit. Same column schema and
+attributes as <code><a href="brreg_search.html">brreg_search()</a></code> with <code>registry = "underenheter"</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="brreg_entity.html">brreg_entity()</a></code> for the parent entity,
 <code><a href="brreg_children.html">brreg_children()</a></code> for child enheter in the ORGL hierarchy.</p>
 <p>Other tidybrreg entity functions:
-<code><a href="brreg_board_summary.html">brreg_board_summary()</a></code>,
 <code><a href="brreg_children.html">brreg_children()</a></code>,
 <code><a href="brreg_download.html">brreg_download()</a></code>,
 <code><a href="brreg_entity.html">brreg_entity()</a></code>,
 <code><a href="brreg_konsern.html">brreg_konsern()</a></code>,
 <code><a href="brreg_prokura.html">brreg_prokura()</a></code>,
+<code><a href="brreg_regnskap.html">brreg_regnskap()</a></code>,
 <code><a href="brreg_roles.html">brreg_roles()</a></code>,
 <code><a href="brreg_roles_legal.html">brreg_roles_legal()</a></code>,
 <code><a href="brreg_search.html">brreg_search()</a></code>,
