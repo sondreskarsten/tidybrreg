@@ -47,7 +47,7 @@ test_that("flatten_konsern parent linkage is internally consistent", {
   expect_true(all(energy_kids$parent_name == "EQUINOR ENERGY AS"))
 })
 
-test_that("brreg_konsern warns and returns empty tibble on 404", {
+test_that("brreg_konsern returns a typed empty tibble on 404 without warning", {
   testthat::local_mocked_bindings(
     brreg_req = function(...) structure(list(), class = "httr2_request")
   )
@@ -57,7 +57,9 @@ test_that("brreg_konsern warns and returns empty tibble on 404", {
     resp_status = function(resp) 404L,
     .package = "httr2"
   )
-  expect_warning(res <- brreg_konsern("810034882"), "No konsernstruktur")
+  expect_no_warning(res <- brreg_konsern("810034882"))
   expect_s3_class(res, "tbl_df")
   expect_equal(nrow(res), 0L)
+  expect_equal(attr(res, "http_status"), 404L)
+  expect_named(res, names(tidybrreg:::empty_konsern()))
 })

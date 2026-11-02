@@ -4,14 +4,19 @@
 \alias{brreg_req}
 \title{Build an httr2 request to a brreg API service}
 \usage{
-brreg_req(path, query = list(), service = c("enhetsregisteret", "fullmakt"))
+brreg_req(
+  path,
+  query = list(),
+  service = c("enhetsregisteret", "fullmakt", "regnskapsregisteret")
+)
 }
 \arguments{
 \item{path}{URL path appended to the base URL.}
 
 \item{query}{Named list of query parameters.}
 
-\item{service}{One of \code{"enhetsregisteret"} or \code{"fullmakt"}.}
+\item{service}{One of \code{"enhetsregisteret"}, \code{"fullmakt"} or
+\code{"regnskapsregisteret"}.}
 }
 \description{
 Build an httr2 request to a brreg API service

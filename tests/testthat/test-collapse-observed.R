@@ -10,7 +10,7 @@ test_that("collapse_observed joins atomic arrays reversibly", {
   expect_equal(strsplit(out, "\n")[[1]], unlist(v))
 })
 
-test_that("collapse_observed serializes object arrays instead of joining", {
+test_that("collapse_observed nests object arrays as one row per element", {
   hist <- list(
     list(navn = "STATOIL ASA", fraDato = "2001-05-11 08:32:09",
          tilDato = "2007-10-01 06:44:33"),
@@ -18,11 +18,11 @@ test_that("collapse_observed serializes object arrays instead of joining", {
          fraDato = "1995-03-12 16:23:00", tilDato = "2001-05-11 08:32:09")
   )
   out <- collapse_observed(hist)
-  parsed <- jsonlite::fromJSON(out)
-  expect_s3_class(parsed, "data.frame")
-  expect_equal(nrow(parsed), 2L)
-  expect_equal(parsed$navn[1], "STATOIL ASA")
-  expect_equal(parsed$tilDato[2], "2001-05-11 08:32:09")
+  expect_s3_class(out, "tbl_df")
+  expect_named(out, c("navn", "fra_dato", "til_dato"))
+  expect_equal(nrow(out), 2L)
+  expect_equal(out$navn[1], "STATOIL ASA")
+  expect_equal(out$til_dato[2], "2001-05-11 08:32:09")
 })
 
 test_that("collapse_observed handles empty and all-NULL inputs", {
@@ -31,19 +31,51 @@ test_that("collapse_observed handles empty and all-NULL inputs", {
   expect_true(is.na(collapse_observed(list(NULL, NULL))))
 })
 
-test_that("flatten_json no longer mangles historiskeNavn", {
+test_that("an array of objects becomes a list-column of tibbles on the entity row", {
   raw <- list(
     organisasjonsnummer = "923609016",
     navn = "EQUINOR ASA",
     historiskeNavn = list(
       list(navn = "STATOIL ASA", fraDato = "2001-05-11 08:32:09",
            tilDato = "2007-10-01 06:44:33")
+    ),
+    paategninger = list(
+      list(infotype = "KONT", tekst = "Kontaktperson mangler", innfoertDato = "2025-05-05"),
+      list(infotype = "FADR", tekst = "Adresse mangler", innfoertDato = "2025-06-06")
     )
   )
   flat <- flatten_json(raw)
-  parsed <- jsonlite::fromJSON(flat$historiskeNavn)
-  expect_equal(parsed$navn, "STATOIL ASA")
-  expect_false(grepl("^STATOIL ASA, ", flat$historiskeNavn))
+  expect_s3_class(flat$historiskeNavn, "tbl_df")
+  res <- parse_entity(raw)
+  expect_equal(nrow(res), 1L)
+  expect_type(res$historiske_navn, "list")
+  expect_equal(res$historiske_navn[[1]]$navn, "STATOIL ASA")
+  expect_type(res$annotations, "list")
+  expect_equal(nrow(res$annotations[[1]]), 2L)
+  expect_named(res$annotations[[1]], c("infotype", "tekst", "innfoert_dato"))
+  unnested <- tidyr::unnest(res[, c("org_nr", "annotations")], "annotations")
+  expect_equal(nrow(unnested), 2L)
+  expect_equal(unnested$infotype, c("KONT", "FADR"))
+})
+
+test_that("an empty array emits no column, so a batch binds with and without it", {
+  with_hist <- list(organisasjonsnummer = "1", navn = "A",
+                    historiskeNavn = list(list(navn = "OLD", fraDato = "2000-01-01", tilDato = "2001-01-01")))
+  without <- list(organisasjonsnummer = "2", navn = "B", historiskeNavn = list())
+  expect_false("historiskeNavn" %in% names(flatten_json(without)))
+  res <- parse_entities(list(with_hist, without))
+  expect_equal(nrow(res), 2L)
+  expect_type(res$historiske_navn, "list")
+  expect_equal(res$historiske_navn[[1]]$navn, "OLD")
+  expect_null(res$historiske_navn[[2]])
+})
+
+test_that("a nested list-column is never coerced by the dictionary type", {
+  raw <- list(organisasjonsnummer = "923609016",
+              paategninger = list(list(infotype = "KONT", tekst = "x")))
+  res <- expect_no_warning(parse_entity(raw))
+  expect_type(res$annotations, "list")
+  expect_null(attr(res, "brreg_parse_problems"))
 })
 
 test_that("flatten_json and flatten_cell agree on the same array", {
@@ -59,9 +91,28 @@ test_that("single-element arrays stay bare, not JSON", {
   expect_equal(flatten_cell(list("Gruva 15")), "Gruva 15")
 })
 
-test_that("flatten_cell still serializes single objects and data frames", {
+test_that("flatten_cell nests data frames and serializes single objects", {
   kapital <- list(belop = 1000, valuta = "NOK")
   expect_equal(jsonlite::fromJSON(flatten_cell(kapital))$belop, 1000)
-  df <- data.frame(infotype = "KONT", tekst = "x")
-  expect_equal(jsonlite::fromJSON(flatten_cell(df))$infotype, "KONT")
+  df <- data.frame(infotype = "KONT", tekst = "x", innfoertDato = "2025-01-01")
+  cell <- flatten_cell(df)
+  expect_s3_class(cell, "tbl_df")
+  expect_named(cell, c("infotype", "tekst", "innfoert_dato"))
+})
+
+test_that("the bulk JSON path keeps arrays of objects as a list-column", {
+  dat <- tibble::tibble(
+    organisasjonsnummer = c("1", "2", "3"),
+    paategninger = list(data.frame(infotype = "KONT", tekst = "x"), NULL, list()),
+    forretningsadresse.adresse = list(c("Line 1", "Line 2"), "One", NULL)
+  )
+  out <- flatten_list_columns(dat)
+  expect_type(out$paategninger, "list")
+  expect_equal(out$paategninger[[1]]$infotype, "KONT")
+  expect_null(out$paategninger[[2]])
+  expect_null(out$paategninger[[3]])
+  expect_equal(out$forretningsadresse.adresse, c("Line 1\nLine 2", "One", NA))
+  res <- expect_no_warning(rename_and_coerce(out))
+  expect_type(res$annotations, "list")
+  expect_equal(res$business_address[1], "Line 1\nLine 2")
 })

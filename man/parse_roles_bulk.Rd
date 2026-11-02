@@ -15,8 +15,12 @@ A tibble with one row per role assignment.
 \description{
 The \verb{/roller/totalbestand} endpoint returns a gzipped JSON array where
 each element is an entity with nested rollegrupper/roller structure,
-identical to \verb{/enheter/\{orgnr\}/roller}. This function reads the full
-file, flattens all entities into one tibble matching \code{\link[=brreg_roles]{brreg_roles()}}
-output.
+identical to \verb{/enheter/\{orgnr\}/roller}. The array is streamed in
+batches of complete entities by \code{\link[=read_json_objects]{read_json_objects()}}, each batch is
+decoded and flattened by \code{\link[=flatten_roles_bulk_fast]{flatten_roles_bulk_fast()}} and the batches
+are bound with \code{\link[=bind_batches]{bind_batches()}}, so the decoded tree of the whole
+register (several gigabytes as R lists) is never in memory. The
+output matches \code{\link[=brreg_roles]{brreg_roles()}}: \code{resigned} is kept only when some
+role carried \code{fratraadt}, \code{NA} filled as \code{FALSE}.
 }
 \keyword{internal}

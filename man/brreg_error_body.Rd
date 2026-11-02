@@ -10,6 +10,10 @@ brreg_error_body(resp)
 \item{resp}{An httr2 response object.}
 }
 \description{
-Extract error messages from brreg API error responses
+Enhetsregisteret answers a rejected request with a Norwegian error
+body (\code{feilmelding}, \verb{valideringsfeil[].feilmelding} with the
+offending \code{parametere}); older and other services use
+\verb{validationErrors[].errorMessage}, \code{error} and \code{trace}. Every form
+is read so the \code{tidybrreg_error_http} carries what the register said.
 }
 \keyword{internal}

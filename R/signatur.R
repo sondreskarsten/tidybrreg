@@ -20,7 +20,9 @@
 #' English labels looked up from [role_types], with the original
 #' Norwegian code preserved in `role_code`; the signing-mode designations
 #' (`SIGN`, `SIFE`, `SIHV`, `PROK`, `POFE`, `POHV`) are included in
-#' [role_types] alongside the board roles.
+#' [role_types] alongside the board roles. Birth dates arrive as
+#' `DD.MM.YYYY` from this service and as ISO dates from the roles
+#' endpoint; both are parsed to `Date`, so the two join directly.
 #'
 #' @section Standardised vs registered rule:
 #' `rule` and `combination_code` come from the registry's structured
@@ -31,13 +33,27 @@
 #' read `rule_text` in that case. `rule_text` may be `NA` when no free
 #' text is recorded.
 #'
-#' @param org_nr Character. 9-digit organization number.
+#' @section Rules the service declines to resolve:
+#' For some entities (Equinor ASA among them) the service answers HTTP
+#' 200 with no combinations and a routine status instead: code `NA`,
+#' "Generelle unntak, finnes roller som har status det ikke kan foretas
+#' maskinelt oppslag mot", meaning a rule is registered but cannot be
+#' resolved mechanically. The typed zero-row tibble is then returned
+#' with attributes `http_status = 200L`, `routine_status` and
+#' `routine_text`, and a `tidybrreg_warning_unresolved` is signalled,
+#' so the case is distinguishable from an entity with nothing
+#' registered (no attribute, no warning).
+#'
+#' @inheritSection brreg_roles Status handling
+#'
+#' @param org_nr Character. A single 9-digit organization number.
 #'
 #' @returns A tibble with one row per person per signing combination.
 #'   Columns: `org_nr`, `entity_name`, `signature_type` (`"signature"`),
 #'   `rule_status`, `rule_text`, `combination_id`, `combination_code`,
-#'   `rule`, `name`, `birth_date`, `role_code`, `role`. Returns an empty
-#'   tibble if the entity has no registered signing combination.
+#'   `rule`, `name`, `birth_date` (Date), `role_code`, `role`. A
+#'   zero-row tibble with the same typed columns if the entity has no
+#'   registered signing combination.
 #'
 #' @family tidybrreg entity functions
 #' @seealso [brreg_prokura()] for procuration, [brreg_roles()] for the
@@ -47,15 +63,11 @@
 #' @examplesIf interactive() && curl::has_internet()
 #' brreg_signatur("923609016") # Equinor ASA
 brreg_signatur <- function(org_nr) {
-  org_nr <- as.character(org_nr)
-  resp <- brreg_req(paste0("enheter/", org_nr, "/signatur"),
-                    service = "fullmakt") |>
-    httr2::req_error(is_error = \(resp) FALSE) |>
-    httr2::req_perform()
-  if (httr2::resp_status(resp) >= 400L) {
-    cli::cli_warn("No signatur found for {.val {org_nr}} (HTTP {httr2::resp_status(resp)}).")
-    return(tibble::tibble())
-  }
+  org_nr <- check_org_nr(org_nr)
+  endpoint <- paste0("enheter/", org_nr, "/signatur")
+  resp <- brreg_perform(brreg_req(endpoint, service = "fullmakt"))
+  out <- satellite_status(resp, endpoint, org_nr, empty_signatur())
+  if (!is.null(out)) return(out)
   flatten_signatur(httr2::resp_body_json(resp), org_nr, "signature")
 }
 
@@ -73,12 +85,14 @@ brreg_signatur <- function(org_nr) {
 #' One row is returned per person within each registered combination.
 #'
 #' @inheritSection brreg_signatur Person identification
+#' @inheritSection brreg_signatur Rules the service declines to resolve
+#' @inheritSection brreg_roles Status handling
 #'
-#' @param org_nr Character. 9-digit organization number.
+#' @param org_nr Character. A single 9-digit organization number.
 #'
 #' @returns A tibble with the same columns as [brreg_signatur()], with
-#'   `signature_type` set to `"procuration"`. Returns an empty tibble if
-#'   no procuration is registered.
+#'   `signature_type` set to `"procuration"`. A zero-row tibble with the
+#'   same typed columns if no procuration is registered.
 #'
 #' @family tidybrreg entity functions
 #' @seealso [brreg_signatur()] for general signing authority.
@@ -87,27 +101,66 @@ brreg_signatur <- function(org_nr) {
 #' @examplesIf interactive() && curl::has_internet()
 #' brreg_prokura("923609016") # Equinor ASA
 brreg_prokura <- function(org_nr) {
-  org_nr <- as.character(org_nr)
-  resp <- brreg_req(paste0("enheter/", org_nr, "/prokura"),
-                    service = "fullmakt") |>
-    httr2::req_error(is_error = \(resp) FALSE) |>
-    httr2::req_perform()
-  if (httr2::resp_status(resp) >= 400L) {
-    cli::cli_warn("No prokura found for {.val {org_nr}} (HTTP {httr2::resp_status(resp)}).")
-    return(tibble::tibble())
-  }
+  org_nr <- check_org_nr(org_nr)
+  endpoint <- paste0("enheter/", org_nr, "/prokura")
+  resp <- brreg_perform(brreg_req(endpoint, service = "fullmakt"))
+  out <- satellite_status(resp, endpoint, org_nr, empty_signatur())
+  if (!is.null(out)) return(out)
   flatten_signatur(httr2::resp_body_json(resp), org_nr, "procuration")
 }
 
+#' Typed zero-row tibble for signature and procuration results
+#' @keywords internal
+empty_signatur <- function() {
+  tibble::tibble(
+    org_nr = character(), entity_name = character(),
+    signature_type = character(), rule_status = character(),
+    rule_text = character(), combination_id = character(),
+    combination_code = character(), rule = character(), name = character(),
+    birth_date = as.Date(character()), role_code = character(),
+    role = character()
+  )
+}
+
+
+#' Typed empty for a rule the Fullmakt service declines to resolve
+#'
+#' The service answers HTTP 200 without `signeringsKombinasjon` and
+#' with `status.rutineStatus` (code `NA`, "Generelle unntak, finnes
+#' roller som har status det ikke kan foretas maskinelt oppslag mot")
+#' when a rule is registered but cannot be resolved mechanically. That
+#' is neither "nothing registered" nor an error: the typed empty is
+#' returned with attributes `http_status = 200L`, `routine_status` and
+#' `routine_text`, and a `tidybrreg_warning_unresolved` is signalled.
+#' @keywords internal
+unresolved_signatur <- function(org_nr, signature_type, routine, call = rlang::caller_env()) {
+  code <- routine$kode %||% NA_character_
+  text <- routine$tekstforklaring %||% NA_character_
+  brreg_warn(
+    c("The Fullmakt service declined to resolve the {signature_type} rule of entity {.val {org_nr}} (routine status {.val {code}}).",
+      "i" = text),
+    class = "unresolved", org_nr = org_nr, signature_type = signature_type,
+    routine_status = code, routine_text = text, call = call
+  )
+  out <- empty_signatur()
+  attr(out, "http_status") <- 200L
+  attr(out, "routine_status") <- code
+  attr(out, "routine_text") <- text
+  out
+}
 
 #' Flatten a Fullmakt signature/procuration response to a tibble
 #' @param raw Parsed JSON list from a signatur or prokura endpoint.
 #' @param org_nr Organization number (passed through to output).
-#' @param signature_type `"signatur"` or `"prokura"`.
+#' @param signature_type `"signature"` or `"procuration"`.
 #' @keywords internal
 flatten_signatur <- function(raw, org_nr, signature_type) {
   komb <- raw$signeringsKombinasjon$kombinasjon
-  if (is.null(komb) || length(komb) == 0) return(tibble::tibble())
+  if (is.null(komb) || length(komb) == 0) {
+    routine <- raw$status$rutineStatus
+    if (is.null(routine)) return(empty_signatur())
+    return(unresolved_signatur(org_nr, signature_type, routine))
+  }
   entity_name <- raw$enhet$navn %||% NA_character_
   rule_status <- raw$status$regelStatus$kode %||% NA_character_
   rule_text   <- raw$signeringsGrunnlag$signaturProkuraRoller$signaturProkuraFritekst %||% NA_character_
@@ -115,7 +168,7 @@ flatten_signatur <- function(raw, org_nr, signature_type) {
   k <- 0L
   for (kb in komb) {
     rule    <- kb$tekstforklaring %||% NA_character_
-    kid     <- kb$kombinasjonsId %||% NA_character_
+    kid     <- as.character(kb$kombinasjonsId %||% NA_character_)
     kcode   <- kb$kode %||% NA_character_
     persons <- kb$personRolleKombinasjon
     if (is.null(persons) || length(persons) == 0) {
@@ -154,8 +207,8 @@ flatten_signatur <- function(raw, org_nr, signature_type) {
       )
     }
   }
-  if (k == 0L) return(tibble::tibble())
+  if (k == 0L) return(empty_signatur())
   result <- dplyr::bind_rows(lapply(rows[seq_len(k)], tibble::as_tibble))
-  result$birth_date <- as.Date(result$birth_date, format = "%d.%m.%Y")
+  result$birth_date <- parse_brreg_date(result$birth_date)
   result
 }

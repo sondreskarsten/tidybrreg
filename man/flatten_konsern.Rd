@@ -18,6 +18,7 @@ depth, so this walks recursively, reusing the recursive-helper +
 emit-callback shape of \code{\link[=flatten_value_into]{flatten_value_into()}}. Observed values win
 over derived ones: \code{nivaa}, \code{parentOrganisasjonsnummer}, and
 \code{parentNavn} are taken from the node when present and only filled
-from recursion context when absent (the root).
+from recursion context when absent (the root). \code{dato} is accepted in
+both ISO and \code{DD.MM.YYYY} form via \code{\link[=parse_brreg_date]{parse_brreg_date()}}.
 }
 \keyword{internal}

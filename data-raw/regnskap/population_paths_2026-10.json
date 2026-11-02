@@ -1,0 +1,754 @@
+{
+ "filings": 1129601,
+ "top_level_keys": {
+  "avviklingsregnskap": 1129601,
+  "egenkapitalGjeld": 1129601,
+  "eiendeler": 1129601,
+  "id": 1129601,
+  "journalnr": 1129601,
+  "oppstillingsplan": 1129601,
+  "regnkapsprinsipper": 1129601,
+  "regnskapsperiode": 1129601,
+  "regnskapstype": 1129601,
+  "resultatregnskapResultat": 1129601,
+  "revisjon": 1129601,
+  "valuta": 1129601,
+  "virksomhet": 1129601
+ },
+ "paths": {
+  "avviklingsregnskap": {
+   "n": 1129601,
+   "share": 1.0,
+   "types": {
+    "bool": 1129601
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "False": 1129314,
+    "True": 287
+   }
+  },
+  "egenkapitalGjeld.egenkapital.innskuttEgenkapital": {
+   "n": 3513,
+   "share": 0.00311,
+   "types": {
+    "empty_object": 3513
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "{}": 3513
+   }
+  },
+  "egenkapitalGjeld.egenkapital.innskuttEgenkapital.sumInnskuttEgenkaptial": {
+   "n": 1126088,
+   "share": 0.99689,
+   "types": {
+    "float": 1126088
+   },
+   "min": -1899862000.0,
+   "max": 181104480000.0,
+   "examples": {}
+  },
+  "egenkapitalGjeld.egenkapital.opptjentEgenkapital": {
+   "n": 42088,
+   "share": 0.037259,
+   "types": {
+    "empty_object": 42088
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "{}": 42088
+   }
+  },
+  "egenkapitalGjeld.egenkapital.opptjentEgenkapital.sumOpptjentEgenkapital": {
+   "n": 1087513,
+   "share": 0.962741,
+   "types": {
+    "float": 1087513
+   },
+   "min": -21730047527.0,
+   "max": 1094310912000.0,
+   "examples": {}
+  },
+  "egenkapitalGjeld.egenkapital.sumEgenkapital": {
+   "n": 1128155,
+   "share": 0.99872,
+   "types": {
+    "float": 1128155
+   },
+   "min": -3722000000.0,
+   "max": 1116651728000.0,
+   "examples": {}
+  },
+  "egenkapitalGjeld.gjeldOversikt.kortsiktigGjeld": {
+   "n": 71199,
+   "share": 0.06303,
+   "types": {
+    "empty_object": 71199
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "{}": 71199
+   }
+  },
+  "egenkapitalGjeld.gjeldOversikt.kortsiktigGjeld.sumKortsiktigGjeld": {
+   "n": 1058402,
+   "share": 0.93697,
+   "types": {
+    "float": 1058402
+   },
+   "min": -235797207.0,
+   "max": 631358430000.0,
+   "examples": {}
+  },
+  "egenkapitalGjeld.gjeldOversikt.langsiktigGjeld": {
+   "n": 225766,
+   "share": 0.199863,
+   "types": {
+    "empty_object": 225766
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "{}": 225766
+   }
+  },
+  "egenkapitalGjeld.gjeldOversikt.langsiktigGjeld.sumLangsiktigGjeld": {
+   "n": 903835,
+   "share": 0.800137,
+   "types": {
+    "float": 903835
+   },
+   "min": -33328742.0,
+   "max": 932003000000.0,
+   "examples": {}
+  },
+  "egenkapitalGjeld.gjeldOversikt.sumGjeld": {
+   "n": 1116444,
+   "share": 0.988353,
+   "types": {
+    "float": 1116444
+   },
+   "min": -75115029.0,
+   "max": 964698000000.0,
+   "examples": {}
+  },
+  "egenkapitalGjeld.sumEgenkapitalGjeld": {
+   "n": 1129601,
+   "share": 1.0,
+   "types": {
+    "float": 1129601
+   },
+   "min": -167067905.0,
+   "max": 1540549222000.0,
+   "examples": {}
+  },
+  "eiendeler.anleggsmidler": {
+   "n": 46048,
+   "share": 0.040765,
+   "types": {
+    "empty_object": 46048
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "{}": 46048
+   }
+  },
+  "eiendeler.anleggsmidler.sumAnleggsmidler": {
+   "n": 1083553,
+   "share": 0.959235,
+   "types": {
+    "float": 1083553
+   },
+   "min": -1902906000.0,
+   "max": 1208026676000.0,
+   "examples": {}
+  },
+  "eiendeler.goodwill": {
+   "n": 62623,
+   "share": 0.055438,
+   "types": {
+    "float": 62623
+   },
+   "min": -309933000.0,
+   "max": 57417000000.0,
+   "examples": {}
+  },
+  "eiendeler.omloepsmidler": {
+   "n": 4134,
+   "share": 0.00366,
+   "types": {
+    "empty_object": 4134
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "{}": 4134
+   }
+  },
+  "eiendeler.omloepsmidler.sumOmloepsmidler": {
+   "n": 1125467,
+   "share": 0.99634,
+   "types": {
+    "float": 1125467
+   },
+   "min": -134802000.0,
+   "max": 977877000000.0,
+   "examples": {}
+  },
+  "eiendeler.sumBankinnskuddOgKontanter": {
+   "n": 1082956,
+   "share": 0.958707,
+   "types": {
+    "float": 1082956
+   },
+   "min": -151000000.0,
+   "max": 77813309000.0,
+   "examples": {}
+  },
+  "eiendeler.sumEiendeler": {
+   "n": 1129601,
+   "share": 1.0,
+   "types": {
+    "float": 1129601
+   },
+   "min": -151718000.0,
+   "max": 1540549221000.0,
+   "examples": {}
+  },
+  "eiendeler.sumFordringer": {
+   "n": 942200,
+   "share": 0.8341,
+   "types": {
+    "float": 942200
+   },
+   "min": -58938185.0,
+   "max": 396917423000.0,
+   "examples": {}
+  },
+  "eiendeler.sumInvesteringer": {
+   "n": 479842,
+   "share": 0.424789,
+   "types": {
+    "float": 479842
+   },
+   "min": -154158000.0,
+   "max": 936202000000.0,
+   "examples": {}
+  },
+  "eiendeler.sumVarer": {
+   "n": 309855,
+   "share": 0.274305,
+   "types": {
+    "float": 309855
+   },
+   "min": -43572000.0,
+   "max": 283551167000.0,
+   "examples": {}
+  },
+  "id": {
+   "n": 1129601,
+   "share": 1.0,
+   "types": {
+    "int": 1129601
+   },
+   "min": 4730,
+   "max": 7237878,
+   "examples": {}
+  },
+  "journalnr": {
+   "n": 1129601,
+   "share": 1.0,
+   "types": {
+    "str": 1129601
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "2024732445": 1,
+    "2025757136": 1,
+    "2026313880": 1,
+    "2024334706": 1,
+    "2025302451": 1,
+    "2026408483": 1,
+    "2024323829": 1,
+    "2025453986": 1,
+    "2026314924": 1,
+    "2024579798": 1,
+    "2025578862": 1,
+    "2026756322": 1
+   }
+  },
+  "oppstillingsplan": {
+   "n": 1129601,
+   "share": 1.0,
+   "types": {
+    "str": 1129601
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "store": 1129601
+   }
+  },
+  "regnkapsprinsipper.regnskapsregler": {
+   "n": 1129601,
+   "share": 1.0,
+   "types": {
+    "str": 1129601
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "regnskapslovenAlminneligRegler": 1123548,
+    "forenkletAnvendelseIFRS": 4337,
+    "IFRS": 1716
+   }
+  },
+  "regnkapsprinsipper.smaaForetak": {
+   "n": 1129601,
+   "share": 1.0,
+   "types": {
+    "bool": 1129601
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "True": 1089539,
+    "False": 40062
+   }
+  },
+  "regnskapsperiode.fraDato": {
+   "n": 1129601,
+   "share": 1.0,
+   "types": {
+    "str": 1129601
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "2023-01-01": 206,
+    "2024-01-01": 206,
+    "2025-01-01": 202,
+    "2022-01-01": 5,
+    "2022-11-01": 1,
+    "2023-11-01": 1,
+    "2024-11-01": 1,
+    "2020-01-01": 1,
+    "2021-01-01": 1,
+    "2022-08-01": 1,
+    "2023-08-01": 1,
+    "2024-08-01": 1
+   }
+  },
+  "regnskapsperiode.tilDato": {
+   "n": 1129601,
+   "share": 1.0,
+   "types": {
+    "str": 1129601
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "2023-12-31": 206,
+    "2024-12-31": 206,
+    "2025-12-31": 202,
+    "2022-12-31": 5,
+    "2023-10-31": 1,
+    "2024-10-31": 1,
+    "2025-10-31": 1,
+    "2020-12-31": 1,
+    "2021-12-31": 1,
+    "2023-07-31": 1,
+    "2024-07-31": 1,
+    "2025-07-31": 1
+   }
+  },
+  "regnskapstype": {
+   "n": 1129601,
+   "share": 1.0,
+   "types": {
+    "str": 1129601
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "SELSKAP": 1117371,
+    "KONSERN": 12230
+   }
+  },
+  "resultatregnskapResultat.aarsresultat": {
+   "n": 1129601,
+   "share": 1.0,
+   "types": {
+    "float": 1129601
+   },
+   "min": -343419325000.0,
+   "max": 228928813000.0,
+   "examples": {}
+  },
+  "resultatregnskapResultat.driftsresultat.driftsinntekter": {
+   "n": 242957,
+   "share": 0.215082,
+   "types": {
+    "empty_object": 242957
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "{}": 242957
+   }
+  },
+  "resultatregnskapResultat.driftsresultat.driftsinntekter.salgsinntekter": {
+   "n": 666681,
+   "share": 0.590192,
+   "types": {
+    "float": 666681
+   },
+   "min": -477204000.0,
+   "max": 2946501024000.0,
+   "examples": {}
+  },
+  "resultatregnskapResultat.driftsresultat.driftsinntekter.sumDriftsinntekter": {
+   "n": 871004,
+   "share": 0.771072,
+   "types": {
+    "float": 871004
+   },
+   "min": -2676796114.0,
+   "max": 2948054357000.0,
+   "examples": {}
+  },
+  "resultatregnskapResultat.driftsresultat.driftskostnad": {
+   "n": 16104,
+   "share": 0.014256,
+   "types": {
+    "empty_object": 16104
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "{}": 16104
+   }
+  },
+  "resultatregnskapResultat.driftsresultat.driftskostnad.loennskostnad": {
+   "n": 790018,
+   "share": 0.699378,
+   "types": {
+    "float": 790018
+   },
+   "min": -76215693.0,
+   "max": 404924268000.0,
+   "examples": {}
+  },
+  "resultatregnskapResultat.driftsresultat.driftskostnad.sumDriftskostnad": {
+   "n": 1104115,
+   "share": 0.977438,
+   "types": {
+    "float": 1104115
+   },
+   "min": -11795000000.0,
+   "max": 2653497194000.0,
+   "examples": {}
+  },
+  "resultatregnskapResultat.driftsresultat.driftsresultat": {
+   "n": 1107302,
+   "share": 0.980259,
+   "types": {
+    "float": 1107302
+   },
+   "min": -21265000000.0,
+   "max": 294557163000.0,
+   "examples": {}
+  },
+  "resultatregnskapResultat.ekstraordinaerePoster": {
+   "n": 927,
+   "share": 0.000821,
+   "types": {
+    "float": 927
+   },
+   "min": -3512995921.0,
+   "max": 33932000000.0,
+   "examples": {}
+  },
+  "resultatregnskapResultat.finansresultat.finansinntekt": {
+   "n": 193469,
+   "share": 0.171272,
+   "types": {
+    "empty_object": 193469
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "{}": 193469
+   }
+  },
+  "resultatregnskapResultat.finansresultat.finansinntekt.sumFinansinntekter": {
+   "n": 936132,
+   "share": 0.828728,
+   "types": {
+    "float": 936132
+   },
+   "min": -4045000000.0,
+   "max": 194203746000.0,
+   "examples": {}
+  },
+  "resultatregnskapResultat.finansresultat.finanskostnad": {
+   "n": 207005,
+   "share": 0.183255,
+   "types": {
+    "empty_object": 207005
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "{}": 207005
+   }
+  },
+  "resultatregnskapResultat.finansresultat.finanskostnad.annenRentekostnad": {
+   "n": 696608,
+   "share": 0.616685,
+   "types": {
+    "float": 696608
+   },
+   "min": -27306388611.0,
+   "max": 20580000000.0,
+   "examples": {}
+  },
+  "resultatregnskapResultat.finansresultat.finanskostnad.rentekostnadSammeKonsern": {
+   "n": 104192,
+   "share": 0.092238,
+   "types": {
+    "float": 104192
+   },
+   "min": -230000000.0,
+   "max": 19981879000.0,
+   "examples": {}
+  },
+  "resultatregnskapResultat.finansresultat.finanskostnad.sumFinanskostnad": {
+   "n": 918516,
+   "share": 0.813133,
+   "types": {
+    "float": 918516
+   },
+   "min": -27306388611.0,
+   "max": 437749766000.0,
+   "examples": {}
+  },
+  "resultatregnskapResultat.finansresultat.nettoFinans": {
+   "n": 1034137,
+   "share": 0.915489,
+   "types": {
+    "float": 1034137
+   },
+   "min": -314467462000.0,
+   "max": 182319608000.0,
+   "examples": {}
+  },
+  "resultatregnskapResultat.ordinaertResultatFoerSkattekostnad": {
+   "n": 1122476,
+   "share": 0.993692,
+   "types": {
+    "float": 1122476
+   },
+   "min": -356064436000.0,
+   "max": 293676187000.0,
+   "examples": {}
+  },
+  "resultatregnskapResultat.ordinaertResultatSkattekostnad": {
+   "n": 861834,
+   "share": 0.762954,
+   "types": {
+    "float": 861834
+   },
+   "min": -6389000000.0,
+   "max": 64747374000.0,
+   "examples": {}
+  },
+  "resultatregnskapResultat.skattekostnadEkstraordinaertResultat": {
+   "n": 1363,
+   "share": 0.001207,
+   "types": {
+    "float": 1363
+   },
+   "min": -42804000.0,
+   "max": 487731000.0,
+   "examples": {}
+  },
+  "resultatregnskapResultat.totalresultat": {
+   "n": 583950,
+   "share": 0.516952,
+   "types": {
+    "float": 583950
+   },
+   "min": -343419325000.0,
+   "max": 63717000000.0,
+   "examples": {}
+  },
+  "revisjon.fravalgRevisjon": {
+   "n": 1129601,
+   "share": 1.0,
+   "types": {
+    "bool": 1129601
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "False": 397246,
+    "True": 732355
+   }
+  },
+  "revisjon.ikkeRevidertAarsregnskap": {
+   "n": 1129601,
+   "share": 1.0,
+   "types": {
+    "bool": 1129601
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "False": 1129601
+   }
+  },
+  "valuta": {
+   "n": 1129601,
+   "share": 1.0,
+   "types": {
+    "str": 1129601
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "NOK": 1008339,
+    "EUR": 828,
+    "USD": 1781,
+    "EDT": 13,
+    "GBP": 3,
+    "CHF": 3,
+    "AED": 2,
+    "SEK": 9,
+    "JPY": 6,
+    "CAD": 6,
+    "DKK": 4,
+    "USN": 1
+   }
+  },
+  "virksomhet.morselskap": {
+   "n": 1129601,
+   "share": 1.0,
+   "types": {
+    "bool": 1129601
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "False": 954467,
+    "True": 175134
+   }
+  },
+  "virksomhet.organisasjonsform": {
+   "n": 1129601,
+   "share": 1.0,
+   "types": {
+    "str": 1129601
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "AS": 1128488,
+    "ASA": 1091,
+    "SA": 21,
+    "SE": 1
+   }
+  },
+  "virksomhet.organisasjonsnummer": {
+   "n": 1129601,
+   "share": 1.0,
+   "types": {
+    "str": 1129601
+   },
+   "min": null,
+   "max": null,
+   "examples": {
+    "810034882": 3,
+    "810059672": 3,
+    "810094532": 3,
+    "810098252": 3,
+    "810105372": 3,
+    "810130822": 3,
+    "810182482": 3,
+    "810202572": 3,
+    "810274042": 3,
+    "810359862": 3,
+    "810363142": 3,
+    "810392312": 1
+   }
+  }
+ },
+ "csv_columns_not_in_json_paths": [],
+ "json_paths_not_in_csv_columns": [],
+ "distinct_shapes": 20836,
+ "identities": {
+  "assets_eq_equity_liabilities": {
+   "checked": 1129601,
+   "failed": 70087,
+   "share_failed": 0.062046
+  },
+  "equity_plus_liabilities": {
+   "checked": 1128806,
+   "failed": 172585,
+   "share_failed": 0.152892
+  },
+  "equity_components": {
+   "checked": 1127055,
+   "failed": 32847,
+   "share_failed": 0.029144
+  },
+  "liabilities_components": {
+   "checked": 1116101,
+   "failed": 112079,
+   "share_failed": 0.10042
+  },
+  "assets_components": {
+   "checked": 1127791,
+   "failed": 103931,
+   "share_failed": 0.092154
+  },
+  "operating_result": {
+   "checked": 1105327,
+   "failed": 110188,
+   "share_failed": 0.099688
+  },
+  "net_financial": {
+   "checked": 1017117,
+   "failed": 99382,
+   "share_failed": 0.09771
+  },
+  "pre_tax_result": {
+   "checked": 1109621,
+   "failed": 166999,
+   "share_failed": 0.150501
+  },
+  "net_income": {
+   "checked": 1125103,
+   "failed": 27871,
+   "share_failed": 0.024772
+  }
+ },
+ "filings_by_failed_identity_count": {
+  "0": 554565,
+  "1": 348419,
+  "2": 153463,
+  "3": 55526,
+  "4": 14531,
+  "5": 2700,
+  "6": 360,
+  "7": 34,
+  "8": 3
+ }
+}

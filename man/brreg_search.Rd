@@ -28,15 +28,21 @@ etc. See \link{legal_forms} for valid codes.}
 
 \item{nace_code}{Character. NACE industry code (e.g. \code{"64.190"}).}
 
-\item{min_employees, max_employees}{Integer. Employee count range.}
+\item{min_employees, max_employees}{Integer. Employee count range.
+For privacy the register refuses a range that lies within one to
+four employees (HTTP 400, \code{tidybrreg_error_http} with the
+register's message); ranges starting at 0 or at 5 and above are
+served.}
 
-\item{bankrupt}{Logical. If \code{TRUE}, return only bankrupt entities.}
+\item{bankrupt}{Logical. If \code{TRUE}, return only bankrupt entities.
+Only supported for \code{registry = "enheter"}; supplying it for
+\code{"underenheter"} is an error.}
 
 \item{parent_org_nr}{Character. Filter to subsidiaries of this org.}
 
 \item{max_results}{Integer. Maximum entities to return (default 200).
-The API caps search results at 10,000; use \code{brreg_download()} for
-larger extractions.}
+Values above the 10,000 result window are allowed but abort when the
+register reports more matches than the window can deliver.}
 
 \item{registry}{One of \code{"enheter"} (main entities, default) or
 \code{"underenheter"} (sub-entities / establishments). Sub-entities
@@ -49,13 +55,17 @@ codes, \code{"label"} returns English labels for coded columns.}
 }
 \value{
 A tibble with one row per entity. Column names follow the
-package field dictionary (\link{field_dict}). An attribute \code{total_matches}
-records the total number of matches in the registry.
+package field dictionary (\link{field_dict}); only observed fields are
+emitted (see \code{\link[=brreg_entity]{brreg_entity()}}). Attributes: \code{total_matches}, the
+number of matches the register reported, and \code{complete}, \code{FALSE}
+when fewer rows were returned than matched. A valid empty result is
+a zero-row tibble with character columns \code{org_nr}, \code{name} and
+\code{legal_form}.
 }
 \description{
 Query the Central Coordinating Register by name, legal form, industry,
 geography, and other criteria. Results are paginated automatically up to
-\code{max_results} or the API's 10,000-result ceiling, whichever is lower.
+\code{max_results}.
 }
 \section{Norwegian legal forms}{
 
@@ -70,8 +80,44 @@ Common codes for the \code{legal_form} parameter:
 See \link{legal_forms} for the complete list with English translations.
 }
 
+\section{Result window}{
+
+The search endpoints allow a page size of up to 10,000 but reject any
+page where \code{size * (page + 1)} exceeds 10,000 (observed 2026-08-08:
+a Bergen municipality query reported 57,954 matches; result 10,001
+answered HTTP 400 \verb{size * (page+1) kan ikke overstige 10_000}). A query
+matching more entities than that window cannot be retrieved completely
+through search. When the register reports more matches than the
+window and \code{max_results} asks for more than the window, the call
+aborts with a \code{tidybrreg_error_result_window} before any page is
+returned; narrow the query (for example by \code{municipality_code},
+\code{legal_form} or \code{nace_code}), or use \code{\link[=brreg_download]{brreg_download()}} for the full
+register. When \code{max_results} is at or below the window the first
+\code{max_results} matches are returned and the result carries
+\code{complete = FALSE} plus a \code{tidybrreg_warning_truncated} whenever
+more matches exist.
+}
+
+\section{Tidy shape}{
+
+Every tibble the package returns is tidy in Wickham's sense: one
+observation per row, one variable per column, one observational
+unit per table. The register nests two kinds of array inside an
+entity. Arrays of strings (\code{business_address}, \code{postal_address},
+\code{location_address}, \code{purpose}, \code{activity}) are the line fragments
+of one value and are joined with \code{"\\n"}, which no fragment
+contains, so \code{strsplit(x, "\\n")} recovers the lines. Arrays of
+objects (\code{historiske_navn}, \code{annotations}, any array of objects the
+register adds) are observations of another unit and are nested as a
+list-column of tibbles, one row per element with snake_case
+columns, \code{NULL} for an entity without them; \code{tidyr::unnest()}
+expands them to their own table. An empty array is not an
+observation and emits no column. Nothing is serialized to JSON
+text.
+}
+
 \examples{
-\dontshow{if (interactive() && curl::has_internet()) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive() && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 # Search by name
 brreg_search(name = "Equinor")
 
@@ -82,20 +128,21 @@ brreg_search(legal_form = "AS", municipality_code = "0301",
 }
 \seealso{
 \code{\link[=brreg_entity]{brreg_entity()}} for single lookups,
-\code{\link[=brreg_label]{brreg_label()}} for translating codes to English.
+\code{\link[=brreg_label]{brreg_label()}} for translating codes to English,
+\link{tidybrreg_conditions} for the errors and warnings signalled.
 
-Other tidybrreg entity functions:
-\code{\link[=brreg_board_summary]{brreg_board_summary()}},
-\code{\link[=brreg_children]{brreg_children()}},
-\code{\link[=brreg_download]{brreg_download()}},
-\code{\link[=brreg_entity]{brreg_entity()}},
-\code{\link[=brreg_konsern]{brreg_konsern()}},
-\code{\link[=brreg_prokura]{brreg_prokura()}},
-\code{\link[=brreg_roles]{brreg_roles()}},
-\code{\link[=brreg_roles_legal]{brreg_roles_legal()}},
-\code{\link[=brreg_signatur]{brreg_signatur()}},
-\code{\link[=brreg_underenheter]{brreg_underenheter()}},
-\code{\link[=brreg_update_fields]{brreg_update_fields()}},
-\code{\link[=brreg_updates]{brreg_updates()}}
+Other tidybrreg entity functions: 
+\code{\link{brreg_children}()},
+\code{\link{brreg_download}()},
+\code{\link{brreg_entity}()},
+\code{\link{brreg_konsern}()},
+\code{\link{brreg_prokura}()},
+\code{\link{brreg_regnskap}()},
+\code{\link{brreg_roles}()},
+\code{\link{brreg_roles_legal}()},
+\code{\link{brreg_signatur}()},
+\code{\link{brreg_underenheter}()},
+\code{\link{brreg_update_fields}()},
+\code{\link{brreg_updates}()}
 }
 \concept{tidybrreg entity functions}

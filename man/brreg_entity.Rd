@@ -11,8 +11,9 @@ brreg_entity(
 )
 }
 \arguments{
-\item{org_nr}{Character. A 9-digit Norwegian organization number.
-Validated using \code{\link[=brreg_validate]{brreg_validate()}} before the API call.}
+\item{org_nr}{Character. A single 9-digit Norwegian organization
+number. Validated using \code{\link[=brreg_validate]{brreg_validate()}} before the API call; a
+vector of several numbers is an error (iterate with \code{\link[=lapply]{lapply()}}).}
 
 \item{registry}{One of \code{"auto"} (default, tries enheter then
 underenheter), \code{"enheter"} (main entities only), or
@@ -23,15 +24,17 @@ entity, \code{beliggenhetsadresse} instead of \code{forretningsadresse}).}
 \item{type}{A type of variables: \code{"code"} (default) returns raw
 codes, \code{"label"} returns English labels for coded columns
 (legal form, NACE, sector, etc.), following the eurostat
-package's pattern.}
+package's pattern. Labelling NACE and sector codes consults SSB
+KLASS on first use in a session; see \code{\link[=get_brreg_dic]{get_brreg_dic()}}.}
 }
 \value{
-A tibble with one row and one column per API field. Column
-names follow the package field dictionary. Key columns include
+A tibble with one row and one column per field the API
+returned, named via \link{field_dict}, plus \code{registry} (which registry
+answered) and \code{deleted} (logical). Frequently present columns include
 \code{org_nr}, \code{name}, \code{legal_form}, \code{employees}, \code{founding_date},
-\code{nace_1}, \code{municipality_code}, \code{bankrupt}, and \code{parent_org_nr}.
-For deleted entities (HTTP 410), returns a tibble with columns
-\code{org_nr}, \code{deleted}, and \code{deletion_date}.
+\code{nace_1}, \code{municipality_code}, \code{bankrupt}, and \code{parent_org_nr};
+\code{historiske_navn} and \code{annotations} are list-columns of tibbles
+(see the section on tidy shape).
 }
 \description{
 Retrieve registration details for a legal entity from Norway's Central
@@ -47,8 +50,48 @@ through with auto-generated snake_case names, so new fields added by
 brreg are never silently dropped. Use \code{\link[=brreg_label]{brreg_label()}} to translate
 coded values (legal forms, NACE codes) to English descriptions.
 }
+\section{Observed fields only}{
+
+The register emits only the fields that apply to an entity: a sole
+proprietorship (\code{ENK}) typically carries no \code{founding_date} or
+\code{employees}, a foreign branch (\code{NUF}) no \code{municipality_code}. The
+returned columns are exactly the fields the response carried, so
+every column other than \code{org_nr}, \code{registry} and \code{deleted} is
+conditionally present. Test for a column with \code{"x" \%in\% names(result)}
+rather than assuming it.
+}
+
+\section{Tidy shape}{
+
+Every tibble the package returns is tidy in Wickham's sense: one
+observation per row, one variable per column, one observational
+unit per table. The register nests two kinds of array inside an
+entity. Arrays of strings (\code{business_address}, \code{postal_address},
+\code{location_address}, \code{purpose}, \code{activity}) are the line fragments
+of one value and are joined with \code{"\\n"}, which no fragment
+contains, so \code{strsplit(x, "\\n")} recovers the lines. Arrays of
+objects (\code{historiske_navn}, \code{annotations}, any array of objects the
+register adds) are observations of another unit and are nested as a
+list-column of tibbles, one row per element with snake_case
+columns, \code{NULL} for an entity without them; \code{tidyr::unnest()}
+expands them to their own table. An empty array is not an
+observation and emits no column. Nothing is serialized to JSON
+text.
+}
+
+\section{Deleted entities}{
+
+BRREG reports a deleted entity either as HTTP 410 or, for most
+deletions, as HTTP 200 with \code{respons_klasse = "SlettetEnhet"} and a
+\code{slettedato}. Both are modelled the same way: \code{deleted} is \code{TRUE},
+\code{deletion_date} is the parsed date, every other field the response
+carried is kept, and a \code{tidybrreg_warning_deleted} is signalled
+(silence it with \code{suppressWarnings(classes = "tidybrreg_warning_deleted")}).
+Live entities carry \code{deleted = FALSE}.
+}
+
 \examples{
-\dontshow{if (interactive() && curl::has_internet()) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive() && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 # Equinor ASA — Norway's largest company
 brreg_entity("923609016")
 
@@ -62,20 +105,21 @@ brreg_entity("923609016") |> brreg_label(code = "legal_form")
 \seealso{
 \code{\link[=brreg_search]{brreg_search()}} for querying multiple entities,
 \code{\link[=brreg_label]{brreg_label()}} for translating codes to English,
-\link{field_dict} for the column name mapping.
+\link{field_dict} for the column name mapping,
+\link{tidybrreg_conditions} for the errors and warnings signalled.
 
-Other tidybrreg entity functions:
-\code{\link[=brreg_board_summary]{brreg_board_summary()}},
-\code{\link[=brreg_children]{brreg_children()}},
-\code{\link[=brreg_download]{brreg_download()}},
-\code{\link[=brreg_konsern]{brreg_konsern()}},
-\code{\link[=brreg_prokura]{brreg_prokura()}},
-\code{\link[=brreg_roles]{brreg_roles()}},
-\code{\link[=brreg_roles_legal]{brreg_roles_legal()}},
-\code{\link[=brreg_search]{brreg_search()}},
-\code{\link[=brreg_signatur]{brreg_signatur()}},
-\code{\link[=brreg_underenheter]{brreg_underenheter()}},
-\code{\link[=brreg_update_fields]{brreg_update_fields()}},
-\code{\link[=brreg_updates]{brreg_updates()}}
+Other tidybrreg entity functions: 
+\code{\link{brreg_children}()},
+\code{\link{brreg_download}()},
+\code{\link{brreg_konsern}()},
+\code{\link{brreg_prokura}()},
+\code{\link{brreg_regnskap}()},
+\code{\link{brreg_roles}()},
+\code{\link{brreg_roles_legal}()},
+\code{\link{brreg_search}()},
+\code{\link{brreg_signatur}()},
+\code{\link{brreg_underenheter}()},
+\code{\link{brreg_update_fields}()},
+\code{\link{brreg_updates}()}
 }
 \concept{tidybrreg entity functions}

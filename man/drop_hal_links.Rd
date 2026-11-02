@@ -2,11 +2,11 @@
 % Please edit documentation in R/download.R
 \name{drop_hal_links}
 \alias{drop_hal_links}
-\title{Drop HAL _links columns (metadata, not data)}
+\title{Drop HAL link columns at any nesting depth (metadata, not data)}
 \usage{
 drop_hal_links(dat)
 }
 \description{
-Drop HAL _links columns (metadata, not data)
+Drop HAL link columns at any nesting depth (metadata, not data)
 }
 \keyword{internal}

@@ -1,28 +1,58 @@
 #' Retrieve incremental entity updates
 #'
 #' Query the brreg change data capture (CDC) endpoint for entities
-#' modified since a given date. Each update carries a monotonically
+#' modified since a given instant. Each update carries a monotonically
 #' increasing `update_id` suitable for cursor-based pagination and
 #' deduplication.
 #'
-#' @param since Date or POSIXct. Return updates after this timestamp.
-#'   Defaults to yesterday.
+#' @section Time handling:
+#' `since` is sent to the feed as a UTC instant. A `POSIXct` keeps its
+#' full precision; a `Date` is midnight UTC of that day; an ISO 8601
+#' string (`"2026-03-01"` or `"2026-03-01T14:00:00Z"`) is parsed as UTC.
+#' Timestamps in the result are `POSIXct` in the `UTC` time zone,
+#' whatever the session time zone.
+#'
+#' @section Completeness:
+#' The feed is read page by page until a page is short, the feed is
+#' exhausted, or `max_pages` is reached. The result carries attributes
+#' `complete` (`FALSE` when `max_pages` stopped the read while the last
+#' page was full, or a later page failed), `pages_fetched`, and `cursor`
+#' (the last `update_id` read; pass `update_id + 1` as the next cursor
+#' to resume). Stopping on `max_pages` signals a
+#' `tidybrreg_warning_truncated`; a failure after the first page signals
+#' a `tidybrreg_warning_partial` and returns the pages already read; a
+#' failure on the first page aborts with a `tidybrreg_error_http`.
+#'
+#' @section Unknown members:
+#' Any member of an update object that the package does not model is
+#' passed through as a column named by its snake_case key, and the
+#' result carries attribute `unknown_members` plus a single
+#' `tidybrreg_warning_unknown_member`, so an upstream addition cannot
+#' vanish silently.
+#'
+#' @param since Date, POSIXct, or ISO 8601 string. Return updates at or
+#'   after this instant. Defaults to yesterday (midnight UTC).
 #' @param size Integer. Number of updates per page (max 10000).
 #' @param max_pages Integer. Maximum pages to fetch. Default 1.
 #'   Set higher to paginate through large result sets automatically.
 #' @param include_changes Logical. If `TRUE`, include field-level change
-#'   details per update as a list-column of tibbles.
+#'   details per update as a list-column of tibbles. Not available for
+#'   `type = "roller"`, whose feed carries no field patches; supplying
+#'   `TRUE` there is an error.
 #' @param type One of `"enheter"`, `"underenheter"`, or `"roller"`.
-#'   Roller uses CloudEvents format; `include_changes` is ignored.
+#'   The roller feed uses the CloudEvents format and reports only which
+#'   entity's roles changed; fetch the new state with [brreg_roles()].
 #' @param verbose Logical. Print page-level progress.
 #'
-#' @returns A tibble with columns: `update_id`, `org_nr`,
-#'   `change_type`, `timestamp`. If `include_changes = TRUE`, a
-#'   list-column `changes` with tibbles of `operation`, `field`,
-#'   `new_value`.
+#' @returns A tibble with columns: `update_id` (integer), `org_nr`,
+#'   `change_type`, `timestamp` (POSIXct, UTC). If `include_changes =
+#'   TRUE`, a list-column `changes` with tibbles of `operation`, `field`,
+#'   `path`, `new_value`. An empty feed yields a zero-row tibble with the
+#'   same typed columns.
 #'
 #' @family tidybrreg entity functions
-#' @seealso [brreg_update_fields()] for a flat alternative.
+#' @seealso [brreg_update_fields()] for a flat alternative,
+#'   [tidybrreg_conditions] for the conditions signalled.
 #'
 #' @export
 #' @examplesIf interactive() && curl::has_internet()
@@ -37,44 +67,117 @@ brreg_updates <- function(since = Sys.Date() - 1, size = 100,
                            type = c("enheter", "underenheter", "roller"),
                            verbose = FALSE) {
   type <- match.arg(type)
-  if (type == "roller") return(brreg_updates_roller(since, size))
-
   size <- min(as.integer(size), 10000L)
-  all_pages <- vector("list", max_pages)
+  max_pages <- as.integer(max_pages)
+  if (type == "roller") {
+    if (isTRUE(include_changes)) {
+      brreg_abort(c(
+        "{.arg include_changes} is not available for {.val roller}.",
+        "i" = "The roller feed carries no field patches; fetch the new state with {.fn brreg_roles}."
+      ), class = "invalid_filter", registry = "roller", filter = "include_changes")
+    }
+    return(brreg_updates_roller(since, size, max_pages, verbose))
+  }
+
+  feed <- fetch_update_pages(type, since, size, max_pages,
+                             include_changes = include_changes,
+                             verbose = verbose)
+  pages <- lapply(feed$pages, parse_updates_page, include_changes = include_changes)
+  result <- if (length(pages) == 0) empty_updates(include_changes) else dplyr::bind_rows(pages)
+  unknown <- unique(unlist(lapply(pages, attr, "unknown_members")))
+  finish_updates(result, feed, unknown)
+}
+
+#' Typed zero-row tibble for update feeds
+#' @keywords internal
+empty_updates <- function(include_changes = FALSE) {
+  out <- tibble::tibble(
+    update_id = integer(), org_nr = character(),
+    change_type = character(),
+    timestamp = as.POSIXct(character(), tz = "UTC")
+  )
+  if (include_changes) out$changes <- list()
+  out
+}
+
+#' Attach completeness metadata to a feed result
+#' @keywords internal
+finish_updates <- function(result, feed, unknown = character()) {
+  attr(result, "complete") <- feed$complete
+  attr(result, "pages_fetched") <- feed$pages_fetched
+  attr(result, "cursor") <- feed$cursor
+  if (length(unknown) > 0) {
+    attr(result, "unknown_members") <- unknown
+    brreg_warn(c(
+      "The {feed$type} feed carried member{?s} not modelled by tidybrreg: {.val {unknown}}.",
+      "i" = "They are passed through as columns; see {.code attr(x, \"unknown_members\")}."
+    ), class = "unknown_member", members = unknown)
+  }
+  result
+}
+
+#' Read pages from an enheter/underenheter update feed
+#'
+#' Shared paginator for [brreg_updates()] and [brreg_update_fields()].
+#' The first page is addressed by `dato`, later pages by the exclusive
+#' cursor `oppdateringsid = max(update_id) + 1`.
+#' @returns A list with `pages` (raw update objects per page), `complete`,
+#'   `pages_fetched`, `cursor`, `type`.
+#' @keywords internal
+fetch_update_pages <- function(type, since, size, max_pages,
+                               include_changes = FALSE, verbose = FALSE) {
+  key <- paste0("oppdaterte", tools::toTitleCase(type))
+  endpoint <- paste0("oppdateringer/", type)
+  pages <- list()
   cursor_id <- NULL
+  complete <- TRUE
+  last_full <- FALSE
 
   for (page in seq_len(max_pages)) {
     query <- list(size = size)
     if (is.null(cursor_id)) {
-      query$dato <- format(as.POSIXct(since), "%Y-%m-%dT00:00:00.000Z")
+      query$dato <- format_since(since)
     } else {
       query$oppdateringsid <- cursor_id + 1L
     }
     if (include_changes) query$includeChanges <- "true"
 
-    resp <- brreg_req(paste0("oppdateringer/", type)) |>
-      httr2::req_url_query(!!!query) |>
-      httr2::req_error(is_error = \(resp) FALSE) |>
-      httr2::req_perform()
+    resp <- brreg_perform(brreg_req(endpoint, query = query))
+    status <- httr2::resp_status(resp)
+    if (status >= 400L) {
+      if (length(pages) == 0) abort_http(resp, endpoint)
+      brreg_warn(c(
+        "The {type} feed failed with HTTP {status} after {length(pages)} page{?s}; returning the events read so far.",
+        "i" = "The result carries {.code attr(x, \"complete\") == FALSE}."
+      ), class = "partial", endpoint = endpoint, status = status,
+      pages_fetched = length(pages))
+      complete <- FALSE
+      last_full <- FALSE
+      break
+    }
 
-    if (httr2::resp_status(resp) >= 400L) break
-
-    body <- parse_json_response(resp)
-    key <- paste0("oppdaterte", tools::toTitleCase(type))
+    body <- httr2::resp_body_json(resp)
     raw <- body[["_embedded"]][[key]]
-    if (is.null(raw) || length(raw) == 0) break
+    if (is.null(raw) || length(raw) == 0) { last_full <- FALSE; break }
 
-    rows <- parse_updates_page(raw, include_changes = include_changes)
-    all_pages[[page]] <- rows
-    cursor_id <- max(rows$update_id)
-
-    if (verbose) cli::cli_alert_info("Page {page}: {nrow(rows)} events (cursor {cursor_id})")
-    if (nrow(rows) < size) break
+    pages[[length(pages) + 1L]] <- raw
+    ids <- vapply(raw, function(u) as.integer(u$oppdateringsid %||% NA_integer_), integer(1))
+    cursor_id <- max(ids, na.rm = TRUE)
+    if (verbose) cli::cli_alert_info("Page {page}: {length(raw)} events (cursor {cursor_id})")
+    last_full <- length(raw) >= size
+    if (!last_full) break
   }
 
-  all_pages <- all_pages[!vapply(all_pages, is.null, logical(1))]
-  if (length(all_pages) == 0) return(tibble::tibble())
-  dplyr::bind_rows(all_pages)
+  if (last_full && length(pages) == max_pages) {
+    complete <- FALSE
+    brreg_warn(c(
+      "Stopped after {max_pages} page{?s} with a full last page; more events may follow.",
+      "i" = "Raise {.arg max_pages} or resume from {.code attr(x, \"cursor\") + 1}."
+    ), class = "truncated", endpoint = endpoint, returned = length(pages) * size,
+    total_matches = NA_integer_)
+  }
+  list(pages = pages, complete = complete, pages_fetched = length(pages),
+       cursor = cursor_id, type = type)
 }
 
 
@@ -82,19 +185,30 @@ brreg_updates <- function(since = Sys.Date() - 1, size = 100,
 #'
 #' Returns one row per field-level change, plus one synthetic row for
 #' each event that carries no field patches (Ny, Sletting, Fjernet).
-#' Synthetic rows have `operation = NA`, `field = NA`,
+#' Synthetic rows have `operation = NA`, `field = NA`, `path = NA`,
 #' `new_value = NA`, preserving event-level metadata in the output.
+#'
+#' Patches are RFC 6902 operations. Nested values are flattened to one
+#' row per leaf; `path` keeps the raw JSON pointer of the leaf (for
+#' example `/forretningsadresse/adresse/0`) and `field` its snake_case
+#' rendering, so the register's own representation is never lost. A
+#' `move` emits an add at the destination and a `remove` at the source.
 #'
 #' To retrieve initial field values for newly registered entities
 #' (change_type `"Ny"`), call [brreg_entity()] per org_nr — the CDC
 #' payload for Ny events contains no field-level patches.
 #'
+#' @inheritSection brreg_updates Time handling
+#' @inheritSection brreg_updates Completeness
+#' @inheritSection brreg_updates Unknown members
+#'
 #' @inheritParams brreg_updates
+#' @param type One of `"enheter"` or `"underenheter"`.
 #'
 #' @returns A tibble with columns: `update_id`, `org_nr`, `change_type`,
-#'   `timestamp`, `operation`, `field`, `new_value`. No list-columns.
-#'   Events without field patches (Ny, Sletting, Fjernet) appear as
-#'   rows with `operation`, `field`, and `new_value` all `NA`.
+#'   `timestamp` (POSIXct, UTC), `operation`, `field`, `path`,
+#'   `new_value`. No list-columns. Events without field patches appear
+#'   as rows with `operation`, `field`, `path` and `new_value` all `NA`.
 #'
 #' @family tidybrreg entity functions
 #' @seealso [brreg_updates()] for the event-level view.
@@ -108,234 +222,153 @@ brreg_update_fields <- function(since = Sys.Date() - 1, size = 100,
                                  verbose = FALSE) {
   type <- match.arg(type)
   size <- min(as.integer(size), 10000L)
+  max_pages <- as.integer(max_pages)
 
-  empty <- tibble::tibble(
+  feed <- fetch_update_pages(type, since, size, max_pages,
+                             include_changes = TRUE, verbose = verbose)
+  pages <- lapply(feed$pages, flatten_page_patches)
+  result <- if (length(pages) == 0) empty_update_fields() else dplyr::bind_rows(pages)
+  unknown <- unique(unlist(lapply(pages, attr, "unknown_members")))
+  finish_updates(result, feed, unknown)
+}
+
+#' Typed zero-row tibble for flat field changes
+#' @keywords internal
+empty_update_fields <- function() {
+  tibble::tibble(
     update_id = integer(), org_nr = character(),
-    change_type = character(), timestamp = as.POSIXct(character()),
-    operation = character(), field = character(),
+    change_type = character(),
+    timestamp = as.POSIXct(character(), tz = "UTC"),
+    operation = character(), field = character(), path = character(),
     new_value = character()
   )
-
-  cursor_id <- NULL
-  all_results <- vector("list", max_pages)
-  key <- paste0("oppdaterte", tools::toTitleCase(type))
-
-  for (page in seq_len(max_pages)) {
-    query <- list(size = size, includeChanges = "true")
-    if (is.null(cursor_id)) {
-      query$dato <- format(as.POSIXct(since), "%Y-%m-%dT00:00:00.000Z")
-    } else {
-      query$oppdateringsid <- cursor_id + 1L
-    }
-
-    resp <- brreg_req(paste0("oppdateringer/", type)) |>
-      httr2::req_url_query(!!!query) |>
-      httr2::req_error(is_error = \(resp) FALSE) |>
-      httr2::req_perform()
-
-    if (httr2::resp_status(resp) >= 400L) break
-
-    body <- httr2::resp_body_json(resp)
-    raw <- body[["_embedded"]][[key]]
-    if (is.null(raw) || length(raw) == 0) break
-
-    flat <- flatten_page_patches(raw)
-    all_results[[page]] <- flat
-    cursor_id <- max(flat$update_id, na.rm = TRUE)
-
-    if (verbose) {
-      n_events <- length(raw)
-      cli::cli_alert_info("Page {page}: {n_events} events, {nrow(flat)} fields (cursor {cursor_id})")
-    }
-    if (length(raw) < size) break
-  }
-
-  all_results <- all_results[!vapply(all_results, is.null, logical(1))]
-  if (length(all_results) == 0) return(empty)
-  dplyr::bind_rows(all_results)
 }
 
-
-
-#' Parse JSON from an httr2 response
+#' Members of an update object the package models explicitly
 #' @keywords internal
-parse_json_response <- function(resp) {
-  httr2::resp_body_json(resp)
+known_update_members <- function() {
+  c("oppdateringsid", "organisasjonsnummer", "endringstype", "dato",
+    "endringer", "_links")
 }
 
-
-#' Flatten all patches from a page of CDC events in a single pass
+#' Flatten all patches from a page of CDC events
 #'
-#' No recursion. The brreg CDC nesting depth is bounded at 2 levels:
-#' object -> scalar, or object -> array -> scalar. Inlines the unpack
-#' for both levels. Events with no `endringer` (Ny, Sletting, Fjernet)
-#' emit a single synthetic row with `operation = NA`, `field = NA`,
-#' `new_value = NA`.
+#' One row per patch leaf via [parse_patch()], so nesting of any depth
+#' is handled identically to the `changes` list-column of
+#' [brreg_updates()]. Events with no `endringer` emit one synthetic row.
 #'
 #' @param raw_updates List of raw update objects from the API.
-#' @returns A flat tibble with update_id, org_nr, change_type,
-#'   timestamp, operation, field, new_value.
+#' @returns A flat tibble; see [brreg_update_fields()].
 #' @keywords internal
 flatten_page_patches <- function(raw_updates) {
-  n_est <- length(raw_updates) * 8L
-  r_uid   <- integer(n_est)
-  r_org   <- character(n_est)
-  r_ctype <- character(n_est)
-  r_ts    <- character(n_est)
-  r_op    <- character(n_est)
-  r_field <- character(n_est)
-  r_val   <- character(n_est)
-  k <- 0L
-
-  grow <- function() {
-    n <- length(r_uid)
-    r_uid   <<- c(r_uid, integer(n))
-    r_org   <<- c(r_org, character(n))
-    r_ctype <<- c(r_ctype, character(n))
-    r_ts    <<- c(r_ts, character(n))
-    r_op    <<- c(r_op, character(n))
-    r_field <<- c(r_field, character(n))
-    r_val   <<- c(r_val, character(n))
-  }
-
-  for (u in raw_updates) {
-    uid   <- u$oppdateringsid %||% NA_integer_
-    org   <- u$organisasjonsnummer %||% NA_character_
-    ctype <- u$endringstype %||% NA_character_
-    ts    <- u$dato %||% NA_character_
-
-    endringer <- u$endringer
-    if (is.null(endringer) || length(endringer) == 0) {
-      k <- k + 1L
-      if (k > length(r_uid)) grow()
-      r_uid[k] <- uid; r_org[k] <- org; r_ctype[k] <- ctype; r_ts[k] <- ts
-      r_op[k] <- NA_character_; r_field[k] <- NA_character_; r_val[k] <- NA_character_
-      next
+  if (length(raw_updates) == 0) return(empty_update_fields())
+  head <- parse_updates_page(raw_updates, include_changes = TRUE)
+  per_event <- lapply(seq_len(nrow(head)), function(i) {
+    ch <- head$changes[[i]]
+    meta <- head[i, setdiff(names(head), "changes")]
+    if (nrow(ch) == 0) {
+      ch <- tibble::tibble(operation = NA_character_, field = NA_character_,
+                           path = NA_character_, new_value = NA_character_)
     }
-
-    for (e in endringer) {
-      op <- e$op %||% NA_character_
-      path <- sub("^/", "", e$path %||% "")
-      val <- e$value
-
-      if (op == "remove" || is.null(val)) {
-        k <- k + 1L
-        if (k > length(r_uid)) grow()
-        r_uid[k] <- uid; r_org[k] <- org; r_ctype[k] <- ctype; r_ts[k] <- ts
-        r_op[k] <- op; r_field[k] <- gsub("/", "_", path); r_val[k] <- NA_character_
-        next
-      }
-
-      if (is.atomic(val) && length(val) == 1L) {
-        k <- k + 1L
-        if (k > length(r_uid)) grow()
-        r_uid[k] <- uid; r_org[k] <- org; r_ctype[k] <- ctype; r_ts[k] <- ts
-        r_op[k] <- op; r_field[k] <- gsub("/", "_", path); r_val[k] <- as.character(val)
-      } else if (is.list(val) && !is.null(names(val))) {
-        for (key in names(val)) {
-          child <- val[[key]]
-          child_path <- paste0(path, "_", key)
-
-          if (is.null(child) || (is.atomic(child) && length(child) == 0L)) {
-            k <- k + 1L
-            if (k > length(r_uid)) grow()
-            r_uid[k] <- uid; r_org[k] <- org; r_ctype[k] <- ctype; r_ts[k] <- ts
-            r_op[k] <- op; r_field[k] <- gsub("/", "_", child_path); r_val[k] <- NA_character_
-          } else if (is.list(child) && is.null(names(child))) {
-            for (j in seq_along(child)) {
-              k <- k + 1L
-              if (k > length(r_uid)) grow()
-              r_uid[k] <- uid; r_org[k] <- org; r_ctype[k] <- ctype; r_ts[k] <- ts
-              r_op[k] <- op
-              r_field[k] <- paste0(gsub("/", "_", child_path), "_", j - 1L)
-              r_val[k] <- if (is.null(child[[j]])) NA_character_ else as.character(child[[j]])
-            }
-          } else {
-            k <- k + 1L
-            if (k > length(r_uid)) grow()
-            r_uid[k] <- uid; r_org[k] <- org; r_ctype[k] <- ctype; r_ts[k] <- ts
-            r_op[k] <- op; r_field[k] <- gsub("/", "_", child_path)
-            r_val[k] <- as.character(child)
-          }
-        }
-      } else if (is.list(val) && is.null(names(val))) {
-        for (j in seq_along(val)) {
-          k <- k + 1L
-          if (k > length(r_uid)) grow()
-          r_uid[k] <- uid; r_org[k] <- org; r_ctype[k] <- ctype; r_ts[k] <- ts
-          r_op[k] <- op
-          r_field[k] <- paste0(gsub("/", "_", path), "_", j - 1L)
-          r_val[k] <- if (is.null(val[[j]])) NA_character_ else as.character(val[[j]])
-        }
-      }
-
-      if (op == "move" && !is.null(e$from)) {
-        from_path <- sub("^/", "", e$from)
-        k <- k + 1L
-        if (k > length(r_uid)) grow()
-        r_uid[k] <- uid; r_org[k] <- org; r_ctype[k] <- ctype; r_ts[k] <- ts
-        r_op[k] <- "remove"; r_field[k] <- gsub("/", "_", from_path); r_val[k] <- NA_character_
-      }
-    }
-  }
-
-  if (k == 0L) {
-    return(tibble::tibble(
-      update_id = integer(), org_nr = character(),
-      change_type = character(), timestamp = as.POSIXct(character()),
-      operation = character(), field = character(),
-      new_value = character()
-    ))
-  }
-
-  s <- seq_len(k)
-  tibble::tibble(
-    update_id   = r_uid[s],
-    org_nr      = r_org[s],
-    change_type = r_ctype[s],
-    timestamp   = as.POSIXct(r_ts[s], format = "%Y-%m-%dT%H:%M:%OS"),
-    operation   = r_op[s],
-    field       = r_field[s],
-    new_value   = r_val[s]
-  )
+    dplyr::bind_cols(meta[rep(1L, nrow(ch)), ], ch)
+  })
+  out <- dplyr::bind_rows(per_event)
+  attr(out, "unknown_members") <- attr(head, "unknown_members")
+  out
 }
 
 
 #' Fetch roller updates (CloudEvents format)
+#'
+#' The roller feed is addressed by `afterTime` for the first page and by
+#' `afterId` (the last event id read) for later pages.
 #' @keywords internal
-brreg_updates_roller <- function(since, size) {
-  after_time <- format(as.POSIXct(since), "%Y-%m-%dT00:00:00.000Z")
-  query <- list(afterTime = after_time, size = min(size, 10000L))
+brreg_updates_roller <- function(since, size, max_pages = 1L, verbose = FALSE) {
+  endpoint <- "oppdateringer/roller"
+  pages <- list()
+  cursor_id <- NULL
+  complete <- TRUE
+  last_full <- FALSE
 
-  resp <- brreg_req("oppdateringer/roller") |>
-    httr2::req_url_query(!!!query) |>
-    httr2::req_error(is_error = \(resp) FALSE) |>
-    httr2::req_perform()
-  if (httr2::resp_status(resp) >= 400L) return(tibble::tibble())
+  for (page in seq_len(max_pages)) {
+    query <- list(size = size)
+    if (is.null(cursor_id)) {
+      query$afterTime <- format_since(since)
+    } else {
+      query$afterId <- cursor_id
+    }
+    resp <- brreg_perform(brreg_req(endpoint, query = query))
+    status <- httr2::resp_status(resp)
+    if (status >= 400L) {
+      if (length(pages) == 0) abort_http(resp, endpoint)
+      brreg_warn(c(
+        "The roller feed failed with HTTP {status} after {length(pages)} page{?s}; returning the events read so far.",
+        "i" = "The result carries {.code attr(x, \"complete\") == FALSE}."
+      ), class = "partial", endpoint = endpoint, status = status,
+      pages_fetched = length(pages))
+      complete <- FALSE
+      last_full <- FALSE
+      break
+    }
+    events <- httr2::resp_body_json(resp)
+    if (length(events) == 0) { last_full <- FALSE; break }
+    pages[[length(pages) + 1L]] <- parse_roller_page(events)
+    cursor_id <- max(pages[[length(pages)]]$update_id, na.rm = TRUE)
+    if (verbose) cli::cli_alert_info("Page {page}: {length(events)} events (cursor {cursor_id})")
+    last_full <- length(events) >= size
+    if (!last_full) break
+  }
+  if (last_full && length(pages) == max_pages) {
+    complete <- FALSE
+    brreg_warn(c(
+      "Stopped after {max_pages} page{?s} with a full last page; more events may follow.",
+      "i" = "Raise {.arg max_pages} or resume from {.code attr(x, \"cursor\")}."
+    ), class = "truncated", endpoint = endpoint, returned = length(pages) * size,
+    total_matches = NA_integer_)
+  }
+  result <- if (length(pages) == 0) empty_updates() else dplyr::bind_rows(pages)
+  unknown <- unique(unlist(lapply(pages, attr, "unknown_members")))
+  finish_updates(result, list(complete = complete, pages_fetched = length(pages),
+                              cursor = cursor_id, type = "roller"), unknown)
+}
 
-  events <- parse_json_response(resp)
-  if (length(events) == 0) return(tibble::tibble())
+#' Text of an update member the package does not model
+#'
+#' Scalars as character, arrays joined by newline, objects as JSON
+#' text: the member's shape is unknown, so nothing is asserted about it
+#' beyond its text.
+#' @keywords internal
+member_text <- function(x) {
+  if (is.null(x) || length(x) == 0) return(NA_character_)
+  if (is.list(x) && !is.null(names(x))) return(as.character(jsonlite::toJSON(x, auto_unbox = TRUE)))
+  if (is.list(x) && any(vapply(x, is.list, logical(1)))) return(as.character(jsonlite::toJSON(x, auto_unbox = TRUE)))
+  paste(as.character(unlist(x)), collapse = "\n")
+}
 
+#' Parse one page of roller CloudEvents
+#' @keywords internal
+parse_roller_page <- function(events) {
   n <- length(events)
-  ids <- integer(n)
-  orgs <- character(n)
-  types <- character(n)
-  timestamps <- character(n)
-
+  ids <- integer(n); orgs <- character(n); types <- character(n); ts <- character(n)
+  known <- c("specversion", "id", "source", "type", "time", "data",
+             "datacontenttype", "subject")
+  extra <- list()
   for (i in seq_len(n)) {
     e <- events[[i]]
     ids[i] <- as.integer(e$id %||% NA)
     orgs[i] <- e$data$organisasjonsnummer %||% NA_character_
     types[i] <- sub(".*\\.", "", e$type %||% "")
-    timestamps[i] <- e$time %||% NA_character_
+    ts[i] <- e$time %||% NA_character_
+    for (nm in setdiff(names(e), known)) {
+      if (is.null(extra[[nm]])) extra[[nm]] <- rep(NA_character_, n)
+      extra[[nm]][i] <- member_text(e[[nm]])
+    }
   }
-
-  tibble::tibble(
-    update_id   = ids,
-    org_nr      = orgs,
-    change_type = types,
-    timestamp   = as.POSIXct(timestamps, format = "%Y-%m-%dT%H:%M:%OS")
-  )
+  out <- tibble::tibble(update_id = ids, org_nr = orgs, change_type = types,
+                        timestamp = parse_brreg_instant(ts))
+  for (nm in names(extra)) out[[to_snake(nm)]] <- extra[[nm]]
+  attr(out, "unknown_members") <- names(extra)
+  out
 }
 
 
@@ -345,48 +378,34 @@ brreg_updates_roller <- function(since, size) {
 #' @keywords internal
 parse_updates_page <- function(raw_updates, include_changes = FALSE) {
   n <- length(raw_updates)
-  if (n == 0L) {
-    return(tibble::tibble(
-      update_id = integer(), org_nr = character(),
-      change_type = character(), timestamp = as.POSIXct(character())
-    ))
-  }
+  if (n == 0L) return(empty_updates(include_changes))
 
-  ids <- integer(n)
-  orgs <- character(n)
-  types <- character(n)
-  timestamps <- character(n)
-
+  ids <- integer(n); orgs <- character(n); types <- character(n); ts <- character(n)
+  extra <- list()
   for (i in seq_len(n)) {
     u <- raw_updates[[i]]
-    ids[i] <- u$oppdateringsid %||% NA_integer_
+    ids[i] <- as.integer(u$oppdateringsid %||% NA_integer_)
     orgs[i] <- u$organisasjonsnummer %||% NA_character_
     types[i] <- u$endringstype %||% NA_character_
-    timestamps[i] <- u$dato %||% NA_character_
+    ts[i] <- u$dato %||% NA_character_
+    for (nm in setdiff(names(u), known_update_members())) {
+      if (is.null(extra[[nm]])) extra[[nm]] <- rep(NA_character_, n)
+      extra[[nm]][i] <- member_text(u[[nm]])
+    }
   }
 
   result <- tibble::tibble(
     update_id   = ids,
     org_nr      = orgs,
     change_type = types,
-    timestamp   = as.POSIXct(timestamps, format = "%Y-%m-%dT%H:%M:%OS")
+    timestamp   = parse_brreg_instant(ts)
   )
+  for (nm in names(extra)) result[[to_snake(nm)]] <- extra[[nm]]
 
   if (include_changes) {
-    changes_list <- vector("list", n)
-    for (i in seq_len(n)) {
-      u <- raw_updates[[i]]
-      if (!is.null(u$endringer) && length(u$endringer) > 0) {
-        changes_list[[i]] <- parse_patch(u$endringer)
-      } else {
-        changes_list[[i]] <- tibble::tibble(
-          operation = character(), field = character(), new_value = character()
-        )
-      }
-    }
-    result$changes <- changes_list
+    result$changes <- lapply(raw_updates, function(u) parse_patch(u$endringer))
   }
-
+  attr(result, "unknown_members") <- names(extra)
   result
 }
 
@@ -394,85 +413,70 @@ parse_updates_page <- function(raw_updates, include_changes = FALSE) {
 #' Parse brreg RFC 6902 JSON Patch operations into a tibble
 #'
 #' Collector-based with pre-allocated vectors. Used by
-#' [parse_updates_page()] and the sync engine. For the flat-output
-#' path, [flatten_page_patches()] is used instead.
+#' [parse_updates_page()] and [flatten_page_patches()].
 #'
 #' RFC 6902 `move` operations emit two rows: an add/replace at the
 #' destination path and a `remove` at the source path (from `$from`).
 #' `copy` operations emit one row at the destination.
 #'
 #' @param endringer List of patch operations from the brreg API.
-#' @returns A tibble with columns `operation`, `field`, `new_value`.
+#' @returns A tibble with columns `operation`, `field`, `path`, `new_value`.
 #' @keywords internal
 parse_patch <- function(endringer) {
   empty <- tibble::tibble(
-    operation = character(), field = character(), new_value = character()
+    operation = character(), field = character(), path = character(),
+    new_value = character()
   )
   if (is.null(endringer) || length(endringer) == 0) return(empty)
 
-  ops <- character(length(endringer) * 10L)
-  fields <- character(length(endringer) * 10L)
-  values <- character(length(endringer) * 10L)
+  cap <- length(endringer) * 10L
+  ops <- character(cap); fields <- character(cap); paths <- character(cap)
+  values <- character(cap)
   k <- 0L
+  push <- function(o, p, v) {
+    k <<- k + 1L
+    if (k > length(ops)) {
+      ops <<- c(ops, character(length(ops)))
+      fields <<- c(fields, character(length(fields)))
+      paths <<- c(paths, character(length(paths)))
+      values <<- c(values, character(length(values)))
+    }
+    ops[k] <<- o
+    paths[k] <<- p
+    fields[k] <<- gsub("/", "_", sub("^/", "", p))
+    values[k] <<- v
+  }
 
   for (e in endringer) {
     op <- e$op %||% NA_character_
-    path <- sub("^/", "", e$path %||% "")
-
-    if (op == "remove" || is.null(e$value)) {
-      k <- k + 1L
-      if (k > length(ops)) {
-        ops <- c(ops, character(length(ops)))
-        fields <- c(fields, character(length(fields)))
-        values <- c(values, character(length(values)))
-      }
-      ops[k] <- op
-      fields[k] <- gsub("/", "_", path)
-      values[k] <- NA_character_
+    path <- e$path %||% ""
+    if (identical(op, "remove") || is.null(e$value)) {
+      push(op, path, NA_character_)
       next
     }
-
-    flatten_value_into(op, path, e$value, function(o, f, v) {
-      k <<- k + 1L
-      if (k > length(ops)) {
-        ops <<- c(ops, character(length(ops)))
-        fields <<- c(fields, character(length(fields)))
-        values <<- c(values, character(length(values)))
-      }
-      ops[k] <<- o
-      fields[k] <<- f
-      values[k] <<- v
-    })
-
-    if (op == "move" && !is.null(e$from)) {
-      from_path <- sub("^/", "", e$from)
-      k <- k + 1L
-      if (k > length(ops)) {
-        ops <- c(ops, character(length(ops)))
-        fields <- c(fields, character(length(fields)))
-        values <- c(values, character(length(values)))
-      }
-      ops[k] <- "remove"
-      fields[k] <- gsub("/", "_", from_path)
-      values[k] <- NA_character_
+    flatten_value_into(op, path, e$value, push)
+    if (identical(op, "move") && !is.null(e$from)) {
+      push("remove", e$from, NA_character_)
     }
   }
 
   if (k == 0L) return(empty)
-
   tibble::tibble(
     operation = ops[seq_len(k)],
     field     = fields[seq_len(k)],
+    path      = paths[seq_len(k)],
     new_value = values[seq_len(k)]
   )
 }
 
 
 #' Recursively flatten a patch value, calling emit() for each leaf
+#' @param emit Function of `(op, path, value)` where `path` is the raw
+#'   JSON pointer of the leaf.
 #' @keywords internal
 flatten_value_into <- function(op, path_prefix, value, emit) {
   if (is.null(value) || (is.atomic(value) && length(value) == 0)) {
-    emit(op, gsub("/", "_", path_prefix), NA_character_)
+    emit(op, path_prefix, NA_character_)
   } else if (is.list(value) && !is.null(names(value))) {
     for (key in names(value)) {
       flatten_value_into(op, paste0(path_prefix, "/", key), value[[key]], emit)
@@ -481,7 +485,11 @@ flatten_value_into <- function(op, path_prefix, value, emit) {
     for (i in seq_along(value)) {
       flatten_value_into(op, paste0(path_prefix, "/", i - 1L), value[[i]], emit)
     }
+  } else if (length(value) > 1L) {
+    for (i in seq_along(value)) {
+      emit(op, paste0(path_prefix, "/", i - 1L), as.character(value[[i]]))
+    }
   } else {
-    emit(op, gsub("/", "_", path_prefix), as.character(value))
+    emit(op, path_prefix, as.character(value))
   }
 }

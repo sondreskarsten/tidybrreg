@@ -1,19 +1,36 @@
+# Checks the three packages and builds the MCP server image from the same
+# commit on every run. The image is pushed and deployed only from main, so
+# the MCP server is updated in tandem with each tidybrreg build and never
+# from a different revision than the one that was checked.
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Push the MCP image and deploy to Cloud Run (main only)'
+        type: boolean
+        default: false
 
 name: R-CMD-check
 
-permissions: read-all
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+env:
+  GCP_PROJECT: sondreskarsten-d7d14
+  GCP_REGION: europe-north1
+  AR_IMAGE: europe-north1-docker.pkg.dev/sondreskarsten-d7d14/r-images/tidybrreg-mcp
+  GHCR_IMAGE: ghcr.io/sondreskarsten/tidybrreg-mcp
 
 jobs:
-  R-CMD-check:
+  core:
     runs-on: ${{ matrix.config.os }}
-
-    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
-
+    name: tidybrreg ${{ matrix.config.os }} (${{ matrix.config.r }})
     strategy:
       fail-fast: false
       matrix:
@@ -23,26 +40,287 @@ jobs:
           - {os: ubuntu-latest,  r: 'devel', http-user-agent: 'release'}
           - {os: ubuntu-latest,  r: 'release'}
           - {os: ubuntu-latest,  r: 'oldrel-1'}
-
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
-
     steps:
       - uses: actions/checkout@v4
-
+      - uses: r-lib/actions/setup-pandoc@v2
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
-
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
           needs: check
-
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
+          args: 'c("--no-manual", "--as-cran")'
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+      - name: Assert the exact export surface and version alignment
+        run: |
+          expected <- c("brreg_entity","brreg_search","brreg_underenheter","brreg_children",
+            "brreg_roles","brreg_roles_legal","brreg_konsern","brreg_signatur","brreg_prokura","brreg_regnskap",
+            "brreg_updates","brreg_update_fields","brreg_download","brreg_label","get_brreg_dic",
+            "brreg_validate")
+          ns <- readLines("NAMESPACE")
+          actual <- sub("^export\\((.*)\\)$", "\\1", grep("^export\\(", ns, value = TRUE))
+          stopifnot(identical(sort(actual), sort(expected)))
+          v <- read.dcf("DESCRIPTION", "Version"); m <- read.dcf("tidybrregmcp/DESCRIPTION", "Version")
+          p <- read.dcf("tidybrregpanel/DESCRIPTION", "Version")
+          stopifnot(identical(v, m), identical(v, p))
+          cat("16 exports confirmed; tidybrreg, tidybrregpanel and tidybrregmcp all at", v, "\n")
+        shell: Rscript {0}
+
+  companions:
+    runs-on: ubuntu-latest
+    name: ${{ matrix.pkg }} ubuntu (release)
+    strategy:
+      fail-fast: false
+      matrix:
+        pkg: [tidybrregpanel, tidybrregmcp]
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      # tidybrreg is not on CRAN, so the companion's dependency on it is
+      # satisfied from this checkout before the rest is resolved from RSPM.
+      - name: Install tidybrreg from this checkout, then the companion's dependencies
+        run: |
+          Rscript -e '
+            install.packages(c("pak", "remotes", "rcmdcheck"))
+            pak::local_install(".", dependencies = TRUE)
+            remotes::install_deps("${{ matrix.pkg }}", dependencies = TRUE, upgrade = "never")
+            stopifnot(packageVersion("tidybrreg") == read.dcf("DESCRIPTION", "Version"))'
+        shell: bash
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          working-directory: ${{ matrix.pkg }}
+          args: 'c("--no-manual")'
+          build_args: 'c("--no-manual")'
+          error-on: '"error"'
+
+  node-mcp:
+    name: tidybrreg-mcp (Node; manifest current, build, tests, live smoke)
+    runs-on: ubuntu-latest
+    needs: companions
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - name: Install tidybrreg and tidybrregmcp from this checkout
+        run: |
+          Rscript -e '
+            install.packages(c("pak", "remotes"))
+            pak::local_install(".", dependencies = TRUE)
+            remotes::install_deps("tidybrregmcp", dependencies = TRUE, upgrade = "never")
+            remotes::install_local("tidybrregmcp", upgrade = "never")'
+        shell: bash
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Manifest must equal what this commit's tidybrreg produces
+        working-directory: tidybrreg-mcp-node
+        run: |
+          npm ci
+          npm run check:manifest
+      - name: Build and test
+        working-directory: tidybrreg-mcp-node
+        run: |
+          npm run build
+          npm test
+      - name: Live smoke over stdio (tool catalogue equals the export list, one live lookup)
+        working-directory: tidybrreg-mcp-node
+        run: |
+          printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}' \
+            '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+            '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"brreg_entity","arguments":{"org_nr":"923609016",".columns":["org_nr","name","deleted"]}}}' \
+            '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"brreg_search","arguments":{"name":"Equinor","max_results":3}}}' \
+          | node dist/index.js > out.jsonl
+          python3 - <<'EOF'
+          import json
+          lines = [json.loads(l) for l in open("out.jsonl") if l.strip()]
+          by_id = {l.get("id"): l for l in lines}
+          tools = {t["name"] for t in by_id[2]["result"]["tools"]}
+          ns = open("../NAMESPACE").read().split("\n")
+          exports = {l[7:-1] for l in ns if l.startswith("export(")}
+          assert tools == exports, tools ^ exports
+          ent = by_id[3]["result"]
+          assert not ent["isError"], ent
+          assert ent["structuredContent"]["rows"][0]["name"] == "EQUINOR ASA", ent
+          srch = by_id[4]["result"]
+          assert not srch["isError"] and srch["structuredContent"]["n_rows"] == 3, srch
+          print("node mcp live smoke ok:", len(tools), "tools;", srch["structuredContent"]["attributes"])
+          EOF
+
+  live:
+    name: live API suite (BRREG and SSB, fails on outages)
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      NOT_CRAN: true
+      TIDYBRREG_LIVE_API: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::testthat, any::pkgload
+          needs: check
+      - name: Run the suite against the live register
+        run: |
+          Rscript -e '
+            cat("commit:", Sys.getenv("GITHUB_SHA"), " R:", R.version.string, "\n")
+            res <- testthat::test_local(".", load_package = "source",
+                                        reporter = testthat::ProgressReporter$new(),
+                                        stop_on_failure = FALSE)
+            df <- as.data.frame(res)
+            cat("\nPass:", sum(df$passed), " Fail:", sum(df$failed), " Skip:", sum(df$skipped),
+                " Warn:", sum(df$warning), "\n")
+            if (sum(df$failed) > 0 || sum(df$error) > 0) quit(status = 1)' 2>&1 | tee live-tests.log
+        shell: bash
+      - name: Upload live test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-tests-${{ github.sha }}
+          path: live-tests.log
+
+  mcp-image:
+    name: MCP image (build and smoke test; push on main)
+    runs-on: ubuntu-latest
+    needs: [core, companions, node-mcp]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read the aligned version
+        id: meta
+        run: |
+          echo "version=$(awk -F': ' '/^Version:/{print $2}' DESCRIPTION)" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build the image from this commit
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: tidybrregmcp/Dockerfile
+          load: true
+          push: false
+          tags: tidybrreg-mcp:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test over stdio (tool catalogue equals the export list)
+        run: |
+          printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}' \
+            '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+            '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"brreg_validate","arguments":{"org_nr":["923609016","123"]}}}' \
+          | docker run -i --rm tidybrreg-mcp:ci > out.jsonl
+          python3 - <<'EOF'
+          import json
+          lines = [json.loads(l) for l in open("out.jsonl") if l.strip()]
+          tools = {t["name"] for t in lines[1]["result"]["tools"]}
+          ns = open("NAMESPACE").read().split("\n")
+          exports = {l[7:-1] for l in ns if l.startswith("export(")}
+          assert tools == exports, (tools ^ exports)
+          assert lines[2]["result"]["structuredContent"]["value"] == [True, False]
+          print("stdio ok:", len(tools), "tools")
+          EOF
+
+      - name: Smoke test over streamable HTTP (health, auth, tools/list, a live lookup)
+        run: |
+          docker run -d --rm --name mcp -p 8080:8080 -e MCP_TRANSPORT=http -e MCP_BEARER_TOKEN=ci-token tidybrreg-mcp:ci
+          for i in $(seq 1 30); do curl -fsS http://localhost:8080/health && break; sleep 2; done
+          curl -fsS http://localhost:8080/health | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["tools"]==16, d; print(d)'
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8080/mcp -d '{}')" = "401"
+          curl -fsS -X POST http://localhost:8080/mcp -H 'Authorization: Bearer ci-token' -H 'Content-Type: application/json' \
+            -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | python3 -c 'import json,sys; assert len(json.load(sys.stdin)["result"]["tools"])==16'
+          curl -fsS -X POST http://localhost:8080/mcp -H 'Authorization: Bearer ci-token' -H 'Content-Type: application/json' \
+            -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"brreg_entity","arguments":{"org_nr":"923609016",".columns":["org_nr","name","deleted"]}}}' \
+            | python3 -c 'import json,sys; r=json.load(sys.stdin)["result"]; assert not r["isError"], r; print(r["structuredContent"]["rows"])'
+          docker logs mcp | tail -5
+          docker stop mcp
+
+      - id: auth
+        if: ${{ github.event_name == 'push' || inputs.deploy }}
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          token_format: access_token
+
+      - name: Log in to Artifact Registry
+        if: ${{ github.event_name == 'push' || inputs.deploy }}
+        uses: docker/login-action@v3
+        with:
+          registry: europe-north1-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      - name: Push the checked image
+        if: ${{ github.event_name == 'push' || inputs.deploy }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: tidybrregmcp/Dockerfile
+          push: true
+          tags: |
+            ${{ env.AR_IMAGE }}:${{ steps.meta.outputs.version }}
+            ${{ env.AR_IMAGE }}:${{ github.sha }}
+            ${{ env.AR_IMAGE }}:latest
+            ${{ env.GHCR_IMAGE }}:${{ steps.meta.outputs.version }}
+            ${{ env.GHCR_IMAGE }}:latest
+          cache-from: type=gha
+
+  mcp-deploy:
+    name: Deploy MCP to Cloud Run
+    needs: mcp-image
+    if: ${{ github.event_name == 'push' || inputs.deploy }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Replace the service with the image of this commit
+        run: |
+          sed "s/IMAGE_TAG/${{ github.sha }}/" tidybrregmcp/deploy/cloud-run.yaml > service.yaml
+          gcloud run services replace service.yaml --region "$GCP_REGION" --project "$GCP_PROJECT"
+      - name: Verify the deployed revision answers with this version
+        run: |
+          url=$(gcloud run services describe tidybrreg-mcp --region "$GCP_REGION" --project "$GCP_PROJECT" --format 'value(status.url)')
+          want=$(awk -F': ' '/^Version:/{print $2}' DESCRIPTION)
+          for i in $(seq 1 20); do
+            got=$(curl -fsS "$url/health" | python3 -c 'import json,sys; print(json.load(sys.stdin)["tidybrreg"])' || true)
+            [ "$got" = "$want" ] && { echo "deployed tidybrreg $got"; exit 0; }
+            sleep 10
+          done
+          echo "::error::deployed revision reports tidybrreg '$got', expected '$want'"; exit 1

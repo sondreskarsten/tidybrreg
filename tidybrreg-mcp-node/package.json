@@ -1,0 +1,35 @@
+{
+  "name": "tidybrreg-mcp",
+  "version": "0.6.0",
+  "description": "Model Context Protocol server for Norway's business registry (Enhetsregisteret), derived from the tidybrreg R package: its tool catalogue, schemas, documentation, dictionaries and endpoint contract come from tidybrreg's manifest; no R at run time.",
+  "license": "MIT",
+  "author": "Sondre Skarsten",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sondreskarsten/tidybrreg",
+    "directory": "tidybrreg-mcp-node"
+  },
+  "homepage": "https://github.com/sondreskarsten/tidybrreg/tree/main/tidybrreg-mcp-node",
+  "keywords": ["mcp", "model-context-protocol", "brreg", "enhetsregisteret", "norway", "tidybrreg"],
+  "type": "module",
+  "engines": {"node": ">=20"},
+  "bin": {"tidybrreg-mcp": "dist/index.js"},
+  "main": "dist/server.js",
+  "files": ["dist", "manifest.json", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node -e \"require('fs').chmodSync('dist/index.js', 0o755)\"",
+    "test": "vitest run",
+    "check:manifest": "node scripts/check-manifest.mjs",
+    "start": "node dist/index.js",
+    "start:http": "node dist/index.js --http",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  }
+}

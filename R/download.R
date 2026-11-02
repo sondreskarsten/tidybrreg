@@ -1,7 +1,7 @@
 #' Download the full Norwegian business register
 #'
 #' Download a complete extract of the Central Coordinating Register for
-#' Legal Entities (~1 million entities, ~145 MB gzipped). The bulk endpoint
+#' Legal Entities (~1 million entities, ~150 MB gzipped). The bulk endpoint
 #' does not support server-side filtering — it always returns all entities.
 #' Use [brreg_search()] for filtered queries up to 10,000 results, or
 #' download the full register here and filter locally.
@@ -14,41 +14,74 @@
 #'
 #' - **[brreg_search()]**: JSON API with server-side filtering. Fast for
 #'   small result sets, capped at 10,000. Interactive exploration.
-#' - **`brreg_download()`**: Bulk CSV. Always returns the full register.
-#'   Appropriate for panel construction, spatial joins, or any analysis
-#'   requiring more than 10,000 entities.
+#' - **`brreg_download()`**: Bulk JSON. Always returns the full
+#'   register. Appropriate for any analysis requiring more than 10,000
+#'   entities.
 #'
-#' Results from both paths use the same column names via [field_dict].
+#' Results from both paths use the same column names and types via
+#' [field_dict]; only observed columns are emitted (see
+#' [brreg_entity()]). The bulk is the JSON variant of each endpoint,
+#' the same representation the single-entity lookups and the update
+#' feeds use, so `historiskeNavn` and `paategninger` arrive as the
+#' nested list-columns `historiske_navn` and `annotations` exactly as
+#' from [brreg_entity()]. BRREG's CSV variant is not read: it is the
+#' register's own flattening, with different separators and a presence
+#' flag in place of the annotation array.
+#'
+#' @inheritSection brreg_entity Tidy shape
+#'
+#' @section Memory and time:
+#' The tibble of the full register is built in memory. The gzipped
+#' array is decoded in batches of complete objects and the batches are
+#' bound one column at a time, so the peak is the result plus the
+#' decoder's transient rather than a multiple of the result. Measured
+#' on the live register on 2026-11-02 (2 cores): `enheter`, 1,179,853
+#' rows and 91 columns, 14.6 minutes, a 1.6 GB tibble, 4.0 GB peak
+#' resident memory; `underenheter`, 870,571 rows and 43 columns, 7.1
+#' minutes, 0.9 GB, 2.0 GB peak; `roller`, 3,426,438 roles of 1,154,321
+#' entities, 11.1 minutes, 0.7 GB, 2.3 GB peak with jsonlite (yyjsonr,
+#' when installed, decodes each batch faster). A machine with 8 GB holds
+#' one full `enheter` parse and not two at once. `type_output = "path"` costs
+#' nothing beyond the download, and `parse_bulk_json(path, n_max = )`
+#' (internal) reads the head of the array without inflating the rest.
 #'
 #' @section Caching:
-#' Downloaded files are cached in `tools::R_user_dir("tidybrreg", "cache")`
-#' as gzipped CSV. Use `refresh = TRUE` to force re-download, or
-#' `refresh = "auto"` to re-download only if the cached file is older
-#' than the latest nightly bulk export (checked via ETag headers, following
-#' the cansim `refresh = "auto"` pattern).
+#' With `cache = TRUE` (default) the gzipped payload is stored in
+#' `tools::R_user_dir("tidybrreg", "cache")` together with a sidecar
+#' recording the server's `ETag` and `Last-Modified` validators, and a
+#' later call reuses it. `refresh = TRUE` forces a new download.
+#' `refresh = "auto"` sends a HEAD request and re-downloads when either
+#' validator differs from the sidecar; when the sidecar is missing or the
+#' server sends neither validator, nothing can prove the cache current,
+#' so it is re-downloaded. With `cache = FALSE` the payload goes to a
+#' temporary file that is deleted after parsing; with
+#' `type_output = "path"` that temporary path is returned and the caller
+#' owns it. The cache directory is created only by this function, never
+#' at load time.
 #'
-#' @param type One of `"enheter"` (main entities, default),
-#'   `"underenheter"` (sub-entities / establishments), or
-#'   `"roller"` (all roles for all entities). Roller data is only
-#'   available as JSON via `/roller/totalbestand` (~131 MB).
-#' @param format Download format: `"csv"` (default for enheter/underenheter,
-#'   comma-delimited) or `"json"` (JSON array). Only the JSON bulk
-#'   carries `historiskeNavn`; the CSV has no such column. Roller bulk
-#'   download is always JSON regardless of this parameter.
+#' Metadata of the most recent download (`url`, `etag`, `last_modified`
+#' as a UTC `POSIXct`, `downloaded_at`, `path`) is available as
+#' `attr(result, "brreg_download")` on tibble output.
+#'
+#' @param type One of `"enheter"` (main entities, default, ~196 MB),
+#'   `"underenheter"` (sub-entities / establishments, ~75 MB), or
+#'   `"roller"` (all roles for all entities via `/roller/totalbestand`,
+#'   ~131 MB). All three are gzipped JSON.
 #' @param refresh `FALSE` (default): use cached file if available.
-#'   `TRUE`: force re-download. `"auto"`: check ETag and re-download
-#'   only if server has a newer version.
-#' @param cache Logical. If `TRUE` (default), cache downloaded file
-#'   persistently.
-#' @param type_output One of `"tibble"` (default), `"arrow"` (requires
-#'   the arrow package), or `"path"` (returns the file path without
-#'   parsing).
+#'   `TRUE`: force re-download. `"auto"`: revalidate against the server
+#'   and re-download only when the cached copy cannot be shown current.
+#'   Any other value is an error.
+#' @param cache Logical. If `TRUE` (default), keep the downloaded file in
+#'   the persistent cache directory; if `FALSE`, use a temporary file.
+#' @param type_output One of `"tibble"` (default) or `"path"` (returns
+#'   the file path without parsing).
 #'
 #' @returns Depends on `type_output`:
 #'   - `"tibble"`: A tibble with ~1 million rows. Column names mapped
-#'     via [field_dict].
-#'   - `"arrow"`: An Arrow Table (lazy, not loaded into memory).
-#'   - `"path"`: Character file path to the cached CSV.
+#'     via [field_dict]; arrays of objects are list-columns of tibbles.
+#'     For `type = "roller"`, one row per role assignment with the
+#'     columns of [brreg_roles()].
+#'   - `"path"`: Character file path to the gzipped download.
 #'
 #' @family tidybrreg entity functions
 #' @seealso [brreg_search()] for filtered API queries,
@@ -57,7 +90,7 @@
 #' @export
 #' @examplesIf interactive() && curl::has_internet()
 #' \donttest{
-#' # Download full register as tibble (~145MB download, ~1M rows)
+#' # Download full register as tibble (~196 MB download, ~1M rows)
 #' entities <- brreg_download()
 #'
 #' # Just get the file path (no parsing)
@@ -67,116 +100,138 @@
 #' entities <- brreg_download(refresh = TRUE)
 #' }
 brreg_download <- function(type = c("enheter", "underenheter", "roller"),
-                            format = c("csv", "json"),
                             refresh = FALSE,
                             cache = TRUE,
-                            type_output = c("tibble", "arrow", "path")) {
+                            type_output = c("tibble", "path")) {
   type <- match.arg(type)
-  format <- match.arg(format)
   type_output <- match.arg(type_output)
-
-  if (type == "roller" && format == "csv") {
-    format <- "json"
-    cli::cli_alert_info("Roller only available as JSON. Using {.val json} format.")
+  if (!(isTRUE(refresh) || isFALSE(refresh) || identical(refresh, "auto"))) {
+    brreg_abort("{.arg refresh} must be {.code TRUE}, {.code FALSE}, or {.val auto}.",
+                class = "invalid_filter", registry = type, filter = "refresh")
+  }
+  if (!(isTRUE(cache) || isFALSE(cache))) {
+    brreg_abort("{.arg cache} must be {.code TRUE} or {.code FALSE}.",
+                class = "invalid_filter", registry = type, filter = "cache")
   }
 
-  cache_dir <- tools::R_user_dir("tidybrreg", "cache")
-  dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
-  cache_file <- file.path(cache_dir, paste0(type, "_bulk.", format, ".gz"))
-  etag_file <- file.path(cache_dir, paste0(type, "_bulk.", format, ".etag"))
+  url <- bulk_url(type)
+  sizes <- c(enheter = "~196 MB", underenheter = "~75 MB", roller = "~131 MB")
 
-  needs_download <- !file.exists(cache_file) || identical(refresh, TRUE)
-
-  sizes <- c(enheter = "~152 MB", underenheter = "~59 MB", roller = "~131 MB")
-
-  url <- if (type == "roller") {
-    paste0(brreg_base_url(), "/roller/totalbestand")
-  } else if (format == "json") {
-    paste0(brreg_base_url(), "/", type, "/lastned")
-  } else {
-    paste0(brreg_base_url(), "/", type, "/lastned/", format)
-  }
-
-  if (identical(refresh, "auto") && file.exists(cache_file) && file.exists(etag_file)) {
-    cached_etag <- readLines(etag_file, n = 1, warn = FALSE)
-    server_etag <- tryCatch({
-      resp <- httr2::request(url) |>
-        httr2::req_method("HEAD") |>
-        httr2::req_user_agent("tidybrreg (R package)") |>
-        httr2::req_perform()
-      httr2::resp_header(resp, "ETag")
-    }, error = \(e) NULL)
-    if (!is.null(server_etag) && !identical(cached_etag, server_etag)) {
-      needs_download <- TRUE
+  if (cache) {
+    cache_dir <- tools::R_user_dir("tidybrreg", "cache")
+    dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
+    cache_file <- file.path(cache_dir, paste0(type, "_bulk.json.gz"))
+    meta_file <- paste0(cache_file, ".meta.json")
+    needs_download <- !file.exists(cache_file) || isTRUE(refresh)
+    if (identical(refresh, "auto") && file.exists(cache_file)) {
+      needs_download <- !cache_is_current(url, meta_file)
     }
+  } else {
+    cache_file <- tempfile(pattern = paste0(type, "_bulk_"), fileext = ".json.gz")
+    meta_file <- NULL
+    needs_download <- TRUE
+    if (type_output == "tibble") on.exit(unlink(cache_file), add = TRUE)
   }
 
   if (needs_download) {
     cli::cli_progress_step("Downloading full {type} register ({sizes[type]})")
-    resp <- httr2::request(url) |>
-      httr2::req_user_agent("tidybrreg (https://github.com/sondreskarsten/tidybrreg; R package)") |>
-      httr2::req_perform(path = cache_file)
-    etag <- httr2::resp_header(resp, "ETag")
-    if (!is.null(etag) && cache) {
-      writeLines(etag, etag_file)
-    }
-    fsize <- file.size(cache_file)
+    resp <- brreg_http_req(url, path = "", realm = "data.brreg.no",
+                           accept = "*/*") |>
+      brreg_perform(path = cache_file)
+    if (httr2::resp_status(resp) >= 400L) abort_http(resp, paste0(type, "/lastned"))
+    meta <- download_meta(resp, url, cache_file)
+    if (!is.null(meta_file)) write_download_meta(meta, meta_file)
     cli::cli_progress_done()
-    cli::cli_alert_success("Downloaded {round(fsize / 1024^2, 1)} MB to cache.")
+    cli::cli_alert_success("Downloaded {round(file.size(cache_file) / 1024^2, 1)} MB.")
     assign("last_download_resp", resp, envir = .brregEnv)
     assign("last_download_url", url, envir = .brregEnv)
-  } else if (file.exists(cache_file)) {
-    fsize <- file.size(cache_file)
+    assign("last_download_meta", meta, envir = .brregEnv)
+  } else {
+    meta <- read_download_meta(meta_file) %||%
+      list(url = url, etag = NA_character_, last_modified = as.POSIXct(NA, tz = "UTC"),
+           downloaded_at = as.POSIXct(file.mtime(cache_file), tz = "UTC"),
+           path = cache_file)
     mtime <- format(file.mtime(cache_file), "%Y-%m-%d %H:%M")
-    cli::cli_alert_info("Using cached file ({round(fsize / 1024^2, 1)} MB, {mtime}).")
+    cli::cli_alert_info("Using cached file ({round(file.size(cache_file) / 1024^2, 1)} MB, {mtime}).")
   }
 
   if (identical(type_output, "path")) return(cache_file)
 
-  if (identical(type_output, "arrow")) {
-    if (!requireNamespace("arrow", quietly = TRUE)) {
-      cli::cli_abort(c(
-        "The {.pkg arrow} package is required for {.code type_output = \"arrow\"}.",
-        "i" = "Install it with {.code install.packages(\"arrow\")}."
-      ))
-    }
-    if (format == "json" || type == "roller") {
-      return(arrow::read_json_arrow(cache_file, as_data_frame = FALSE))
-    }
-    return(arrow::read_csv_arrow(cache_file,
-      as_data_frame = FALSE,
-      read_options = arrow::CsvReadOptions$create(encoding = "UTF-8")))
+  result <- if (type == "roller") {
+    parse_roles_bulk(cache_file)
+  } else {
+    parse_bulk_json(cache_file, type = type)
   }
-
-  if (type == "roller") return(parse_roles_bulk(cache_file))
-  if (format == "json") return(parse_bulk_json(cache_file, type = type))
-  parse_bulk_csv(cache_file, type = type)
+  attr(result, "brreg_download") <- meta
+  result
 }
 
-
-#' Parse a brreg bulk CSV into a tibble using the field dictionary
-#'
-#' The bulk CSV uses `,` (comma) delimiter with `.` notation for nested fields
-#' (e.g. `forretningsadresse.kommune`). This function reads all columns
-#' as character, then applies [rename_and_coerce()] for field_dict
-#' mapping and type coercion — the same rename/coerce pipeline used
-#' by [parse_bulk_json()].
-#'
-#' @param path Path to the gzipped CSV file.
-#' @param type Entity type for column selection.
-#' @param n_max Maximum rows to read (default: all).
-#'
-#' @returns A tibble with columns mapped via [field_dict].
+#' Bulk endpoint URL for a registry
 #' @keywords internal
-parse_bulk_csv <- function(path, type = "enheter", n_max = Inf) {
-  dat <- readr::read_csv(path,
-    locale = readr::locale(encoding = "UTF-8"),
-    show_col_types = FALSE, progress = TRUE,
-    n_max = n_max,
-    col_types = readr::cols(.default = readr::col_character())
-  )
+bulk_url <- function(type) {
+  if (type == "roller") return(paste0(brreg_base_url(), "/roller/totalbestand"))
+  paste0(brreg_base_url(), "/", type, "/lastned")
+}
 
-  rename_and_coerce(dat)
+#' Collect validators and timing of a completed download
+#' @keywords internal
+download_meta <- function(resp, url, path) {
+  list(
+    url           = url,
+    etag          = httr2::resp_header(resp, "ETag") %||% NA_character_,
+    last_modified = parse_http_date(httr2::resp_header(resp, "Last-Modified")),
+    downloaded_at = as.POSIXct(Sys.time(), tz = "UTC"),
+    path          = path
+  )
+}
+
+#' @keywords internal
+write_download_meta <- function(meta, meta_file) {
+  out <- meta
+  out$last_modified <- format(meta$last_modified, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+  out$downloaded_at <- format(meta$downloaded_at, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+  writeLines(jsonlite::toJSON(out, auto_unbox = TRUE, na = "null"), meta_file)
+}
+
+#' @keywords internal
+read_download_meta <- function(meta_file) {
+  if (is.null(meta_file) || !file.exists(meta_file)) return(NULL)
+  meta <- tryCatch(jsonlite::fromJSON(meta_file), error = \(e) NULL)
+  if (is.null(meta)) return(NULL)
+  meta$etag <- meta$etag %||% NA_character_
+  meta$last_modified <- parse_brreg_instant(meta$last_modified %||% NA_character_)
+  meta$downloaded_at <- parse_brreg_instant(meta$downloaded_at %||% NA_character_)
+  meta
+}
+
+#' Decide whether a cached bulk file is provably current
+#'
+#' Sends a HEAD request and compares `ETag` and `Last-Modified` with the
+#' sidecar written at download time. `TRUE` only when at least one
+#' validator is present on both sides and every validator present on
+#' both sides matches; a missing sidecar, a server that sends no
+#' validator, or a failed HEAD all yield `FALSE` (re-download).
+#' @keywords internal
+cache_is_current <- function(url, meta_file) {
+  meta <- read_download_meta(meta_file)
+  if (is.null(meta)) return(FALSE)
+  resp <- tryCatch(
+    brreg_http_req(url, path = "", realm = "data.brreg.no", accept = "*/*") |>
+      httr2::req_method("HEAD") |>
+      httr2::req_perform(),
+    error = \(e) NULL
+  )
+  if (is.null(resp)) return(FALSE)
+  server_etag <- httr2::resp_header(resp, "ETag")
+  server_lm <- parse_http_date(httr2::resp_header(resp, "Last-Modified"))
+  checks <- logical()
+  if (!is.null(server_etag) && !is.na(meta$etag)) {
+    checks <- c(checks, identical(server_etag, meta$etag))
+  }
+  if (!is.na(server_lm) && !is.na(meta$last_modified)) {
+    checks <- c(checks, isTRUE(server_lm == meta$last_modified))
+  }
+  length(checks) > 0 && all(checks)
 }
 
 
@@ -185,11 +240,18 @@ parse_bulk_csv <- function(path, type = "enheter", n_max = Inf) {
 #' The `/enheter/lastned` and `/underenheter/lastned` endpoints return
 #' gzipped JSON arrays with nested objects. `jsonlite::fromJSON(flatten = TRUE)`
 #' expands nested objects to dot-notation columns but leaves arrays as list
-#' columns. This function algorithmically flattens all list columns to
-#' atomic types:
+#' columns. The array is read in batches of complete objects
+#' ([read_json_objects()]) and each batch parsed on its own, so the
+#' whole decoded tree is never in memory at once; with a finite `n_max`
+#' only the first `n_max` elements are read, which is how a sample of
+#' the register is parsed. Every list column gets the tidy shape of the
+#' live path ([collapse_observed()]):
 #'
-#' - Character vectors (addresses, activities): collapsed with separator
-#' - Data frames (paategninger): serialized to JSON strings
+#' - Character vectors (addresses, activities): line fragments of one
+#'   value, joined with `"\n"`
+#' - Data frames (`paategninger`, `historiskeNavn`): kept as a
+#'   list-column of tibbles, one row per element, `NULL` where the
+#'   entity has none
 #' - Empty lists (HAL links): dropped
 #' - NULL elements: `NA_character_`
 #'
@@ -199,120 +261,293 @@ parse_bulk_csv <- function(path, type = "enheter", n_max = Inf) {
 #'
 #' @param path Path to the gzipped JSON file.
 #' @param type Entity type (for column context).
-#' @returns A tibble with atomic columns only, mapped via [field_dict].
+#' @param n_max Maximum number of array elements to read (default: all).
+#' @returns A tibble mapped via [field_dict]; arrays of objects are
+#'   nested list-columns, everything else atomic.
 #' @keywords internal
-parse_bulk_json <- function(path, type = "enheter") {
-  dat <- jsonlite::fromJSON(path, flatten = TRUE)
-  dat <- tibble::as_tibble(dat)
+parse_bulk_json <- function(path, type = "enheter", n_max = Inf) {
+  batches <- list()
+  read_json_objects(path, n_max = n_max, emit = function(text) {
+    dat <- jsonlite::fromJSON(text, flatten = TRUE)
+    if (length(dat) == 0) return(invisible())
+    dat <- drop_hal_links(flatten_list_columns(tibble::as_tibble(dat)))
+    batches[[length(batches) + 1L]] <<- dat
+  })
+  if (length(batches) == 0) return(empty_entities())
+  rename_and_coerce(bind_batches(batches))
+}
 
-  dat <- flatten_list_columns(dat)
-  dat <- drop_hal_links(dat)
-  dat <- rename_and_coerce(dat)
-  dat
+#' Bind parsed batches into one tibble, one column at a time
+#'
+#' `dplyr::bind_rows()` holds every batch and the bound result at once,
+#' so the peak is twice the data. Binding column by column keeps one
+#' extra column alive instead: each column is concatenated across the
+#' batches with [vctrs::vec_c()] under their common type, batches that
+#' did not carry the column (no entity in them had the field) contribute
+#' a typed `NA` run, and the batches release the column as soon as it is
+#' bound. List-columns of nested tibbles bind as lists, `NULL` where the
+#' batch had no element. On the 1.1 million entity register this takes
+#' about a fifth off the peak compared with `bind_rows()`.
+#'
+#' @param batches A list of tibbles with compatible columns.
+#' @returns One tibble with the union of the columns.
+#' @keywords internal
+bind_batches <- function(batches) {
+  cols <- unique(unlist(lapply(batches, names)))
+  n <- vapply(batches, nrow, integer(1))
+  out <- vector("list", length(cols))
+  names(out) <- cols
+  for (col in cols) {
+    parts <- lapply(batches, function(b) b[[col]])
+    ptype <- vctrs::vec_ptype_common(!!!parts)
+    missing <- vapply(parts, is.null, logical(1))
+    parts[missing] <- lapply(n[missing], function(k) vctrs::vec_init(ptype, k))
+    out[[col]] <- vctrs::vec_c(!!!parts, .ptype = ptype)
+    for (i in seq_along(batches)) batches[[i]][[col]] <- NULL
+  }
+  tibble::new_tibble(out, nrow = sum(n))
 }
 
 
-#' Algorithmically flatten all list columns to atomic types
+#' Stream the objects of a gzipped JSON array in batches
+#'
+#' The bulk is a JSON array of more than a million objects; parsing it
+#' in one call holds the whole decoded tree in memory, which is what
+#' exhausted the stress-test runners. This reader walks the file in
+#' fixed-size byte chunks and emits the array in batches of
+#' `batch_size` complete top-level objects, each as its own JSON array
+#' text, so the caller parses one batch at a time. Object boundaries
+#' are found with a vectorised scan: unescaped quotes delimit string
+#' literals, braces outside them change the depth, and an object ends
+#' where the depth returns to zero. Nothing beyond `n_max` objects is
+#' read, so a sample of a 200 MB bulk costs a few megabytes. The batch
+#' size bounds the transient the JSON decoder needs: 5,000 objects keep
+#' it near 1 GB where 25,000 took 1.7 GB, at the same speed.
+#'
+#' @param path Path to a gzipped (or plain) JSON array file.
+#' @param emit Function called with the JSON text of each batch.
+#' @param n_max Maximum number of objects to read (default: all).
+#' @param batch_size Objects per batch.
+#' @param chunk_size Bytes read from the file per step.
+#' @returns The number of objects emitted, invisibly.
+#' @keywords internal
+read_json_objects <- function(path, emit, n_max = Inf, batch_size = 5000L,
+                              chunk_size = 16777216L) {
+  con <- gzfile(path, open = "rb")
+  on.exit(close(con))
+  buf <- raw()
+  state <- list(depth = 0L, in_string = FALSE, scanned = 0L, bs_run = 0L)
+  pending <- integer()
+  emitted <- 0L
+  started <- FALSE
+  flush <- function(k) {
+    end <- pending[k]
+    probe <- buf[seq_len(min(end, 256L))]
+    lead <- which(!(probe %in% as.raw(c(0x20, 0x09, 0x0a, 0x0d, 0x2c))))[1]
+    text <- rawToChar(buf[seq.int(lead, end)])
+    Encoding(text) <- "UTF-8"
+    emit(paste0("[", text, "]"))
+    buf <<- buf[-seq_len(end)]
+    pending <<- pending[-seq_len(k)] - end
+    state$scanned <<- state$scanned - end
+    emitted <<- emitted + k
+  }
+  repeat {
+    chunk <- readBin(con, what = "raw", n = chunk_size)
+    eof <- length(chunk) == 0L
+    if (!eof) {
+      if (!started) {
+        lead <- which(chunk == as.raw(0x5b))[1]
+        if (is.na(lead)) {
+          if (all(chunk %in% as.raw(c(0x20, 0x09, 0x0a, 0x0d)))) next
+          stop("not a JSON array", call. = FALSE)
+        }
+        chunk <- chunk[-seq_len(lead)]
+        started <- TRUE
+      }
+      buf <- c(buf, chunk)
+      scan <- scan_json_objects(buf, state)
+      state <- scan$state
+      pending <- c(pending, scan$ends)
+    }
+    while (length(pending) >= batch_size || (eof && length(pending) > 0L)) {
+      k <- min(length(pending), batch_size, n_max - emitted)
+      if (k <= 0L) break
+      flush(k)
+    }
+    if (eof || emitted >= n_max) break
+  }
+  invisible(emitted)
+}
+
+#' Find the top-level object ends in the unscanned part of a buffer
+#'
+#' Vectorised: the positions of quotes not preceded by an odd run of
+#' backslashes toggle the string state; braces outside strings move the
+#' depth; a `}` that brings the depth back to zero ends an object. The
+#' state (depth, string flag, bytes already scanned) carries across
+#' calls so each byte is examined once.
+#' @keywords internal
+scan_json_objects <- function(buf, state) {
+  n <- length(buf)
+  if (state$scanned >= n) return(list(ends = integer(), state = state))
+  idx <- seq.int(state$scanned + 1L, n)
+  seg <- buf[idx]
+  is_bs <- seg == as.raw(0x5c)
+  pos <- seq_along(seg)
+  run <- pos - cummax(pos * !is_bs)
+  if (state$bs_run > 0L) run <- run + (run == pos) * state$bs_run
+  bs_run <- if (is_bs[length(seg)]) run[length(seg)] else 0L
+  quotes <- which(seg == as.raw(0x22))
+  if (length(quotes) > 0L) {
+    before <- quotes - 1L
+    escaped <- ifelse(before >= 1L, run[pmax(before, 1L)] %% 2L == 1L, state$bs_run %% 2L == 1L)
+    quotes <- quotes[!escaped]
+  }
+  in_string <- state$in_string
+  opens <- which(seg == as.raw(0x7b))
+  closes <- which(seg == as.raw(0x7d))
+  if (length(quotes) == 0L && in_string) {
+    opens <- integer()
+    closes <- integer()
+  }
+  if (length(quotes) > 0L) {
+    bounds <- c(if (in_string) 0L, quotes)
+    if (length(bounds) %% 2L == 1L) bounds <- c(bounds, n + 1L)
+    starts <- bounds[seq(1L, length(bounds), by = 2L)]
+    stops <- bounds[seq(2L, length(bounds), by = 2L)]
+    inside <- function(p) {
+      i <- findInterval(p, starts)
+      i > 0L & p < stops[pmax(i, 1L)]
+    }
+    opens <- opens[!inside(opens)]
+    closes <- closes[!inside(closes)]
+    in_string <- (length(quotes) + as.integer(state$in_string)) %% 2L == 1L
+  }
+  events <- c(opens, closes)
+  ends <- integer()
+  depth <- state$depth
+  if (length(events) > 0L) {
+    ord <- order(events)
+    delta <- c(rep(1L, length(opens)), rep(-1L, length(closes)))[ord]
+    events <- events[ord]
+    depths <- depth + cumsum(delta)
+    ends <- events[delta == -1L & depths == 0L] + state$scanned
+    depth <- depths[length(depths)]
+  }
+  list(ends = ends, state = list(depth = depth, in_string = in_string, scanned = n, bs_run = bs_run))
+}
+
+#' Read the first elements of a gzipped JSON array as JSON text
+#' @param path Path to a gzipped (or plain) JSON array file.
+#' @param n Number of elements to read.
+#' @returns A length-1 character JSON array.
+#' @keywords internal
+read_json_head <- function(path, n) {
+  parts <- character()
+  read_json_objects(path, function(text) parts <<- c(parts, text), n_max = n, batch_size = n)
+  if (length(parts) == 0L) return("[]")
+  paste0("[", paste(vapply(parts, function(t) substr(t, 2L, nchar(t) - 1L), character(1)), collapse = ","), "]")
+}
+
+#' Give every list column its tidy shape
 #'
 #' Dispatches on the runtime type of each list column's elements:
-#' character/numeric vectors are collapsed, data.frames are serialized
-#' to JSON, NULLs become `NA_character_`.
+#' character/numeric vectors are collapsed, NULLs become
+#' `NA_character_`, and a column whose elements are data frames stays a
+#' list-column of tibbles (`NULL` where the entity has none). A list
+#' column with no observed value at all (every array empty) is dropped,
+#' as an empty array emits no key on the live path, so batches with and
+#' without the array bind.
 #'
 #' @param dat A tibble potentially containing list columns.
-#' @returns The same tibble with all list columns converted to character.
+#' @returns The same tibble with list columns converted to character or
+#'   to list-columns of tibbles.
 #' @keywords internal
 flatten_list_columns <- function(dat) {
   list_cols <- names(dat)[vapply(dat, is.list, logical(1))]
   for (col in list_cols) {
-    dat[[col]] <- vapply(dat[[col]], flatten_cell, character(1))
+    cells <- lapply(dat[[col]], flatten_cell)
+    nested <- vapply(cells, is.data.frame, logical(1))
+    if (any(nested)) {
+      dat[[col]] <- lapply(cells, function(v) if (is.data.frame(v)) v else NULL)
+    } else {
+      values <- vapply(cells, function(v) v, character(1))
+      if (all(is.na(values))) dat[[col]] <- NULL else dat[[col]] <- values
+    }
   }
   dat
 }
 
-#' Flatten a single list-column cell to an atomic character value
+#' Flatten a single list-column cell to its tidy value
+#'
+#' A character scalar, or a tibble for an array of objects; a single
+#' named object (not an array) is serialized to JSON text.
 #' @keywords internal
 flatten_cell <- function(x) {
   if (is.null(x) || length(x) == 0) return(NA_character_)
   if (is.data.frame(x)) {
     if (nrow(x) == 0) return(NA_character_)
-    return(jsonlite::toJSON(x, auto_unbox = TRUE))
+    return(nest_records(x))
   }
   if (is.list(x) && is.null(names(x)) && all(vapply(x, is.null, logical(1)))) {
     return(NA_character_)
   }
   if (is.list(x) && !is.null(names(x))) {
-    return(jsonlite::toJSON(x, auto_unbox = TRUE))
+    return(as.character(jsonlite::toJSON(x, auto_unbox = TRUE)))
   }
   collapse_observed(x)
 }
 
-#' Drop HAL _links columns (metadata, not data)
+#' Drop HAL link columns at any nesting depth (metadata, not data)
 #' @keywords internal
 drop_hal_links <- function(dat) {
-  link_cols <- grep("\\.?links$", names(dat), value = TRUE)
-  if (length(link_cols) > 0) dat <- dat[, !names(dat) %in% link_cols, drop = FALSE]
-  dat
+  dat[, !is_hal_link_path(names(dat)), drop = FALSE]
 }
 
 #' Rename columns via field_dict and coerce types
 #'
-#' Shared between CSV and JSON parsing. Known dot-notation paths
-#' map to English names; unknown paths get auto snake_case.
-#' Type coercion follows `field_dict$type`. Parse failures are
-#' tracked and attached as a `brreg_parse_problems` attribute.
+#' Used by [parse_bulk_json()]. Known dot-notation paths
+#' map to English names; unknown paths get auto snake_case, made unique
+#' on collision. Type coercion follows `field_dict$type` through
+#' [coerce_column()], the same rule the live path uses, so every
+#' dictionary type (including `numeric`) is invariant across sources.
+#' Parse failures are attached as a `brreg_parse_problems` attribute.
 #'
 #' @keywords internal
 rename_and_coerce <- function(dat) {
-  dict_map <- stats::setNames(field_dict$col_name, tolower(field_dict$api_path))
+  dat <- drop_hal_links(dat)
+  dict <- field_dict
+  dict_map <- stats::setNames(dict$col_name, tolower(dict$api_path))
   old_names <- names(dat)
 
-  new_names <- vapply(old_names, function(cn) {
-    lcn <- tolower(cn)
-    if (lcn %in% names(dict_map)) return(dict_map[[lcn]])
-    to_snake(cn)
-  }, character(1), USE.NAMES = FALSE)
-
-  names(dat) <- new_names
+  type_map <- stats::setNames(dict$type, tolower(dict$api_path))
+  new_names <- character(length(old_names))
+  col_types <- rep(NA_character_, length(old_names))
+  taken <- character()
+  for (i in seq_along(old_names)) {
+    lcn <- tolower(old_names[i])
+    cand <- if (lcn %in% names(dict_map) && !dict_map[[lcn]] %in% taken) {
+      dict_map[[lcn]]
+    } else {
+      to_snake(old_names[i])
+    }
+    if (lcn %in% names(type_map)) col_types[i] <- type_map[[lcn]]
+    new_names[i] <- cand
+    taken <- c(taken, cand)
+  }
+  names(dat) <- make.unique(new_names, sep = "_")
 
   problems <- list()
-
-  for (i in seq_len(nrow(field_dict))) {
-    col <- field_dict$col_name[i]
-    target <- field_dict$type[i]
-    if (!col %in% names(dat)) {
-      next
+  for (i in which(!is.na(col_types))) {
+    col <- names(dat)[i]
+    coerced <- coerce_column(dat[[col]], col_types[i])
+    if (length(coerced$failed) > 0) {
+      problems[[col]] <- parse_problem_rows(col, col_types[i], dat[[col]], coerced$failed)
     }
-    if (target == "integer") {
-      original <- dat[[col]]
-      parsed <- suppressWarnings(as.integer(original))
-      failed <- !is.na(original) & original != "" & is.na(parsed)
-      if (any(failed)) {
-        problems[[col]] <- tibble::tibble(
-          column = col, row = which(failed),
-          expected = "integer",
-          actual = as.character(original[failed])[seq_len(min(sum(failed), 20))]
-        )
-      }
-      dat[[col]] <- parsed
-    } else {
-      dat[[col]] <- switch(target,
-        Date      = as.Date(as.character(dat[[col]])),
-        logical   = as.logical(dat[[col]]),
-        character = as.character(dat[[col]]),
-        dat[[col]]
-      )
-    }
+    dat[[col]] <- coerced$value
   }
-
-  if (length(problems) > 0) {
-    prob_tbl <- dplyr::bind_rows(problems)
-    attr(dat, "brreg_parse_problems") <- prob_tbl
-    cli::cli_warn(c(
-      "{nrow(prob_tbl)} parse failure{?s} in {length(problems)} column{?s}.",
-      "i" = "Use {.code attr(result, \"brreg_parse_problems\")} to inspect."
-    ))
-  }
-  dat
+  attach_parse_problems(dat, problems)
 }
 
 
@@ -320,59 +555,49 @@ rename_and_coerce <- function(dat) {
 #'
 #' The `/roller/totalbestand` endpoint returns a gzipped JSON array where
 #' each element is an entity with nested rollegrupper/roller structure,
-#' identical to `/enheter/{orgnr}/roller`. This function reads the full
-#' file, flattens all entities into one tibble matching [brreg_roles()]
-#' output.
+#' identical to `/enheter/{orgnr}/roller`. The array is streamed in
+#' batches of complete entities by [read_json_objects()], each batch is
+#' decoded and flattened by [flatten_roles_bulk_fast()] and the batches
+#' are bound with [bind_batches()], so the decoded tree of the whole
+#' register (several gigabytes as R lists) is never in memory. The
+#' output matches [brreg_roles()]: `resigned` is kept only when some
+#' role carried `fratraadt`, `NA` filled as `FALSE`.
 #'
 #' @param path Path to the gzipped JSON file.
 #' @returns A tibble with one row per role assignment.
 #' @keywords internal
 parse_roles_bulk <- function(path) {
-  raw <- read_roles_json(path)
-  flatten_roles_bulk_fast(raw)
+  batches <- list()
+  read_json_objects(path, emit = function(text) {
+    batches[[length(batches) + 1L]] <<- flatten_roles_bulk_fast(parse_roles_text(text))
+  })
+  batches <- batches[vapply(batches, nrow, integer(1)) > 0L]
+  if (length(batches) == 0) return(empty_roles())
+  result <- bind_batches(batches)
+  if ("resigned" %in% names(result)) {
+    result$resigned[is.na(result$resigned)] <- FALSE
+  }
+  result
 }
 
 
-#' Read roller totalbestand JSON with best available parser
+#' Decode one batch of roller entities with the best available parser
 #'
-#' Dispatches to yyjsonr (7x faster, 70x less memory) when
-#' available, falling back to jsonlite. Both produce nested
-#' lists compatible with [flatten_roles_bulk_fast()].
+#' Dispatches to yyjsonr when available, falling back to jsonlite. Both
+#' produce nested lists compatible with [flatten_roles_bulk_fast()].
 #'
-#' @param path Path to the gzipped JSON file.
+#' @param text JSON text of an array of entity objects.
 #' @returns A list of entity objects.
 #' @keywords internal
-read_roles_json <- function(path) {
-  is_gz <- grepl("\\.gz$", path)
-
+parse_roles_text <- function(text) {
   if (requireNamespace("yyjsonr", quietly = TRUE)) {
     opts <- yyjsonr::opts_read_json(
       obj_of_arrs_to_df = FALSE,
       arr_of_objs_to_df = FALSE
     )
-    if (is_gz) {
-      json_path <- tempfile(fileext = ".json")
-      on.exit(unlink(json_path), add = TRUE)
-      con_in  <- gzfile(path, open = "rb")
-      con_out <- file(json_path, open = "wb")
-      on.exit(close(con_in), add = TRUE)
-      on.exit(close(con_out), add = TRUE)
-      while (length(chunk <- readBin(con_in, "raw", n = 2^20)) > 0) {
-        writeBin(chunk, con_out)
-      }
-      close(con_out)
-      close(con_in)
-      on.exit(NULL)
-      on.exit(unlink(json_path), add = TRUE)
-      return(yyjsonr::read_json_file(json_path, opts = opts))
-    }
-    return(yyjsonr::read_json_file(path, opts = opts))
+    return(yyjsonr::read_json_str(text, opts = opts))
   }
-
-  cli::cli_alert_info(
-    "Install {.pkg yyjsonr} for 7x faster JSON parsing and 70x lower memory."
-  )
-  jsonlite::fromJSON(path, simplifyVector = FALSE)
+  jsonlite::fromJSON(text, simplifyVector = FALSE)
 }
 
 
@@ -383,7 +608,7 @@ read_roles_json <- function(path) {
 #' list construction and the O(n^2) cost of incremental
 #' `bind_rows()` on thousands of small tibbles.
 #'
-#' @param entities List of entity objects from [read_roles_json()].
+#' @param entities List of entity objects from [parse_roles_text()].
 #' @returns A tibble matching [flatten_roles()] output schema.
 #' @keywords internal
 flatten_roles_bulk_fast <- function(entities) {
@@ -396,7 +621,7 @@ flatten_roles_bulk_fast <- function(entities) {
     }
   }
 
-  if (n_total == 0L) return(tibble::tibble())
+  if (n_total == 0L) return(empty_roles())
 
   # --- Pre-allocate ---
   v_org_nr          <- character(n_total)
@@ -455,7 +680,7 @@ flatten_roles_bulk_fast <- function(entities) {
     first_name      = v_first_name,
     middle_name     = v_middle_name,
     last_name       = v_last_name,
-    birth_date      = as.Date(v_birth_date),
+    birth_date      = parse_brreg_date(v_birth_date),
     deceased        = v_deceased,
     entity_org_nr   = v_entity_org_nr,
     entity_name     = v_entity_name,
@@ -463,17 +688,10 @@ flatten_roles_bulk_fast <- function(entities) {
     deregistered    = v_deregistered,
     ordering        = v_ordering,
     elected_by      = v_elected_by,
-    group_modified  = as.Date(v_group_modified)
+    group_modified  = parse_brreg_date(v_group_modified)
   )
 
-  result$person_id <- ifelse(
-    !is.na(result$birth_date) & !is.na(result$last_name),
-    paste(result$birth_date, tolower(result$last_name),
-          tolower(result$first_name),
-          tolower(ifelse(is.na(result$middle_name), "", result$middle_name)),
-          sep = "_"),
-    NA_character_
-  )
+  result$person_id <- make_person_id(result)
   if (any_fratraadt) {
     result$resigned[is.na(result$resigned)] <- FALSE
   } else {

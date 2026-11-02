@@ -10,12 +10,11 @@ parse_patch(endringer)
 \item{endringer}{List of patch operations from the brreg API.}
 }
 \value{
-A tibble with columns \code{operation}, \code{field}, \code{new_value}.
+A tibble with columns \code{operation}, \code{field}, \code{path}, \code{new_value}.
 }
 \description{
 Collector-based with pre-allocated vectors. Used by
-\code{\link[=parse_updates_page]{parse_updates_page()}} and the sync engine. For the flat-output
-path, \code{\link[=flatten_page_patches]{flatten_page_patches()}} is used instead.
+\code{\link[=parse_updates_page]{parse_updates_page()}} and \code{\link[=flatten_page_patches]{flatten_page_patches()}}.
 }
 \details{
 RFC 6902 \code{move} operations emit two rows: an add/replace at the

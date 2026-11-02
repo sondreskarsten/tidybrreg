@@ -1,17 +1,20 @@
 #' Base URL for a brreg API service
 #'
-#' Both services share the `data.brreg.no` host but live under different
-#' path roots: the Enhetsregisteret REST API and the Fullmakt (signature
-#' and procuration) service.
+#' The services share the `data.brreg.no` host but live under different
+#' path roots: the Enhetsregisteret REST API, the Fullmakt (signature
+#' and procuration) service and the Regnskapsregisteret accounts API.
 #'
-#' @param service One of `"enhetsregisteret"` or `"fullmakt"`.
+#' @param service One of `"enhetsregisteret"`, `"fullmakt"` or
+#'   `"regnskapsregisteret"`.
 #' @keywords internal
-brreg_base_url <- function(service = c("enhetsregisteret", "fullmakt")) {
+brreg_base_url <- function(service = c("enhetsregisteret", "fullmakt",
+                                       "regnskapsregisteret")) {
   service <- match.arg(service)
   switch(
     service,
-    enhetsregisteret = "https://data.brreg.no/enhetsregisteret/api",
-    fullmakt         = "https://data.brreg.no/fullmakt"
+    enhetsregisteret    = "https://data.brreg.no/enhetsregisteret/api",
+    fullmakt            = "https://data.brreg.no/fullmakt",
+    regnskapsregisteret = "https://data.brreg.no/regnskapsregisteret/regnskap"
   )
 }
 
@@ -19,11 +22,17 @@ brreg_base_url <- function(service = c("enhetsregisteret", "fullmakt")) {
 #' @keywords internal
 compact <- function(x) x[!vapply(x, is.null, logical(1))]
 
+#' The user agent every tidybrreg request carries
+#' @keywords internal
+brreg_user_agent <- function() {
+  "tidybrreg (https://github.com/sondreskarsten/tidybrreg; R package)"
+}
+
 #' Build an httr2 request with the shared tidybrreg configuration
 #'
-#' Centralises the user agent, transient-retry policy, and per-host
-#' throttle so every request the package makes is constructed
-#' identically. Host-specific concerns (base URL, throttle realm, Accept
+#' Centralises the user agent, transient-retry policy
+#' ([is_transient_response()]), and per-host throttle so every request
+#' the package makes is constructed identically. Host-specific concerns (base URL, throttle realm, Accept
 #' header, error body extractor) are supplied by the caller.
 #'
 #' @param base_url Host base URL.
@@ -43,11 +52,11 @@ brreg_http_req <- function(base_url, path, query = list(), realm,
   req <- httr2::request(base_url) |>
     httr2::req_url_path_append(path) |>
     httr2::req_url_query(!!!compact(query)) |>
-    httr2::req_user_agent("tidybrreg (https://github.com/sondreskarsten/tidybrreg; R package)") |>
+    httr2::req_user_agent(brreg_user_agent()) |>
     httr2::req_headers(Accept = accept) |>
     httr2::req_retry(
       max_tries = 3,
-      is_transient = \(resp) httr2::resp_status(resp) %in% c(429, 503)
+      is_transient = is_transient_response
     ) |>
     httr2::req_throttle(rate = rate, realm = realm)
   if (!is.null(error_body)) {
@@ -59,10 +68,12 @@ brreg_http_req <- function(base_url, path, query = list(), realm,
 #' Build an httr2 request to a brreg API service
 #' @param path URL path appended to the base URL.
 #' @param query Named list of query parameters.
-#' @param service One of `"enhetsregisteret"` or `"fullmakt"`.
+#' @param service One of `"enhetsregisteret"`, `"fullmakt"` or
+#'   `"regnskapsregisteret"`.
 #' @keywords internal
 brreg_req <- function(path, query = list(),
-                      service = c("enhetsregisteret", "fullmakt")) {
+                      service = c("enhetsregisteret", "fullmakt",
+                                  "regnskapsregisteret")) {
   service <- match.arg(service)
   brreg_http_req(
     base_url   = brreg_base_url(service),
@@ -72,6 +83,77 @@ brreg_req <- function(path, query = list(),
     rate       = 5,
     error_body = brreg_error_body
   )
+}
+
+#' Is a response one the register will answer differently next time?
+#'
+#' The retry rule shared by every request: HTTP 429 and 503, the
+#' server errors 500, 502 and 504, and the register's rate limit when
+#' it arrives as HTTP 200 with a `text/plain` body `Too many requests`
+#' (observed by brreg-json-fetcher and reproduced here). A 500 whose
+#' message says the accounting plan is unsupported
+#' ([unsupported_plan_message()]) is a property of the entity, not a
+#' transient failure, and is not retried.
+#' @param resp An httr2 response.
+#' @returns Logical scalar.
+#' @keywords internal
+is_transient_response <- function(resp) {
+  status <- httr2::resp_status(resp)
+  if (status %in% c(429L, 503L)) return(TRUE)
+  if (status %in% c(500L, 502L, 504L)) return(is.na(unsupported_plan_message(resp)))
+  status == 200L && is_rate_limit_text(resp)
+}
+
+#' Is this the register's rate limit disguised as a 200?
+#' @keywords internal
+is_rate_limit_text <- function(resp) {
+  if (!inherits(resp, "httr2_response") || httr2::resp_status(resp) != 200L) return(FALSE)
+  type <- httr2::resp_content_type(resp)
+  if (is.null(type) || is.na(type) || !startsWith(type, "text/plain")) return(FALSE)
+  grepl("Too many requests", httr2::resp_body_string(resp), fixed = TRUE)
+}
+
+#' Perform a brreg request without raising on HTTP error status
+#'
+#' Every endpoint wrapper inspects the status itself so that 404, 410 and
+#' server errors can be mapped to the typed conditions documented in
+#' [tidybrreg_conditions]. The retry policy of [brreg_http_req()] still
+#' applies to HTTP responses; a connection failure (`httr2_failure`:
+#' DNS, TCP, TLS or a dropped connection) is retried here with the same
+#' number of attempts and an exponential pause, then aborts with a
+#' `tidybrreg_error_connection`. The register's rate limit answered as
+#' HTTP 200 (`text/plain` `Too many requests`), still present after the
+#' retries, aborts with a `tidybrreg_error_rate_limited` instead of
+#' failing later as an unreadable body.
+#' @param req An httr2 request.
+#' @param path Optional file path; the body is streamed to it as
+#'   [httr2::req_perform()] does, so a bulk download that drops its
+#'   connection is retried like any other request.
+#' @keywords internal
+brreg_perform <- function(req, call = rlang::caller_env(), path = NULL) {
+  req <- httr2::req_error(req, is_error = \(resp) FALSE)
+  tries <- req$policies$retry_max_tries %||% 1L
+  for (i in seq_len(tries)) {
+    resp <- tryCatch(
+      if (is.null(path)) httr2::req_perform(req) else httr2::req_perform(req, path = path),
+      httr2_failure = \(e) e
+    )
+    if (!inherits(resp, "httr2_failure")) break
+    if (i == tries) {
+      brreg_abort(c(
+        "Could not reach {.url {req$url}} after {tries} attempt{?s}.",
+        "x" = conditionMessage(resp)
+      ), class = "connection", url = req$url, attempts = tries, call = call)
+    }
+    Sys.sleep(min(2^(i - 1), 30))
+  }
+  if (is_rate_limit_text(resp)) {
+    brreg_abort(c(
+      "The Norwegian Business Registry rate-limited the request to {.url {req$url}} ({tries} attempt{?s}).",
+      "i" = "The register answers its rate limit as HTTP 200 with the text {.val Too many requests}; wait and retry."
+    ), class = "rate_limited", url = req$url, status = 200L, attempts = tries, call = call)
+  }
+  resp
 }
 
 #' Build an httr2 request to the SSB KLASS API
@@ -90,13 +172,26 @@ klass_req <- function(path, query = list()) {
 }
 
 #' Extract error messages from brreg API error responses
+#'
+#' Enhetsregisteret answers a rejected request with a Norwegian error
+#' body (`feilmelding`, `valideringsfeil[].feilmelding` with the
+#' offending `parametere`); older and other services use
+#' `validationErrors[].errorMessage`, `error` and `trace`. Every form
+#' is read so the `tidybrreg_error_http` carries what the register said.
 #' @param resp An httr2 response object.
 #' @keywords internal
 brreg_error_body <- function(resp) {
   body <- tryCatch(httr2::resp_body_json(resp), error = \(e) list())
   msgs <- character()
+  if (!is.null(body$valideringsfeil))
+    msgs <- vapply(body$valideringsfeil, \(e) {
+      params <- paste(unlist(e$parametere), collapse = ", ")
+      if (nzchar(params)) paste0(e$feilmelding, " (", params, ")") else e$feilmelding
+    }, character(1))
   if (!is.null(body$validationErrors))
-    msgs <- vapply(body$validationErrors, \(e) e$errorMessage, character(1))
+    msgs <- c(msgs, vapply(body$validationErrors, \(e) e$errorMessage, character(1)))
+  if (!is.null(body$feilmelding) && length(msgs) == 0)
+    msgs <- c(msgs, body$feilmelding)
   if (!is.null(body$error))
     msgs <- c(msgs, body$error)
   if (!is.null(body$trace))
@@ -111,4 +206,218 @@ to_snake <- function(x) {
   x <- gsub("([a-z0-9])([A-Z])", "\\1_\\2", x)
   x <- gsub("\\.", "_", x)
   tolower(x)
+}
+
+# ---------------------------------------------------------------------------
+# Conditions
+# ---------------------------------------------------------------------------
+
+#' Conditions signalled by tidybrreg
+#'
+#' Every error and warning raised by the package carries a class that can
+#' be caught with [tryCatch()] or silenced with [suppressWarnings()]
+#' selectively, and a set of fields describing the request that produced
+#' it. All classes inherit from `tidybrreg_error` or `tidybrreg_warning`.
+#'
+#' @section Errors:
+#' - `tidybrreg_error_invalid_org_nr`: the organization number failed
+#'   [brreg_validate()]. Field `org_nr`.
+#' - `tidybrreg_error_invalid_filter`: a filter is not supported by the
+#'   requested registry (for example `bankrupt` on `underenheter`). Fields
+#'   `registry`, `filter`.
+#' - `tidybrreg_error_not_found`: the endpoint answered HTTP 404 for an
+#'   organization number. Fields `org_nr`, `endpoint`, `status`.
+#' - `tidybrreg_error_http`: any other HTTP status of 400 or above, or a
+#'   failure on the first page of a paginated request. Fields `endpoint`,
+#'   `status`, `messages` (as extracted from the BRREG error body).
+#'   429, 503, 500, 502 and 504 are retried up to three times first
+#'   (except the Regnskapsregisteret 500 for an unsupported accounting
+#'   plan, which is final).
+#' - `tidybrreg_error_rate_limited`: the register answered its rate
+#'   limit as HTTP 200 with the text `Too many requests` on every retry.
+#'   Fields `url`, `status` (200), `attempts`.
+#' - `tidybrreg_error_connection`: the host could not be reached (DNS,
+#'   TCP, TLS or a dropped connection) on every retry. Fields `url`,
+#'   `attempts`.
+#' - `tidybrreg_error_result_window`: the query matches more entities than
+#'   BRREG's search window can deliver and the request asked for more than
+#'   the window. Fields `endpoint`, `total_matches`, `retrieval_limit`,
+#'   `filters`. See [brreg_search()].
+#'
+#' @section Warnings:
+#' - `tidybrreg_warning_deleted`: the entity has been deleted from the
+#'   register (HTTP 410, or HTTP 200 with `respons_klasse`
+#'   `"SlettetEnhet"`). Fields `org_nr`, `deletion_date`.
+#' - `tidybrreg_warning_partial`: a paginated request failed after at least
+#'   one page was retrieved; the partial result is returned with
+#'   attribute `complete = FALSE`. Fields `endpoint`, `status`,
+#'   `pages_fetched`.
+#' - `tidybrreg_warning_truncated`: more results exist than were returned
+#'   because of `max_results` or `max_pages`; the result carries attribute
+#'   `complete = FALSE`. Fields `endpoint`, `returned`, `total_matches`.
+#' - `tidybrreg_warning_unknown_member`: an update feed carried a member
+#'   the package does not model; it is passed through unchanged. Field
+#'   `members`.
+#' - `tidybrreg_warning_bundled_fallback`: SSB KLASS was unreachable and a
+#'   bundled dictionary was used instead. Fields `dictname`, `vintage`.
+#' - `tidybrreg_warning_unresolved`: the Fullmakt service answered HTTP
+#'   200 but declined to resolve the signature or procuration rule
+#'   mechanically (`status.rutineStatus`); the typed empty result carries
+#'   `http_status = 200L`, `routine_status` and `routine_text`. Fields
+#'   `org_nr`, `signature_type`, `routine_status`, `routine_text`. See
+#'   [brreg_signatur()].
+#' - `tidybrreg_warning_unsupported_plan`: Regnskapsregisteret does not
+#'   serve the entity's accounting plan (banks, insurers, pension funds);
+#'   the typed empty result carries `http_status = 500L` and
+#'   `unsupported_plan`. Fields `org_nr`, `plan`, `api_message`. See
+#'   [brreg_regnskap()].
+#' - `tidybrreg_warning_parse`: values could not be coerced to the type
+#'   declared in [field_dict]; the result carries attribute
+#'   `brreg_parse_problems`. Field `n`.
+#'
+#' @name tidybrreg_conditions
+#' @family tidybrreg utilities
+#' @examples
+#' tryCatch(
+#'   brreg_entity("123456789"),
+#'   tidybrreg_error_invalid_org_nr = function(e) e$org_nr
+#' )
+NULL
+
+#' Signal a typed tidybrreg error
+#' @param message A cli-formatted message vector.
+#' @param class Condition subclass (without the `tidybrreg_error_` prefix).
+#' @param ... Fields stored on the condition object.
+#' @param call Calling environment reported by cli.
+#' @param .envir Environment in which the message's `{}` expressions are
+#'   evaluated; defaults to the caller of this helper.
+#' @keywords internal
+brreg_abort <- function(message, class, ..., call = rlang::caller_env(),
+                        .envir = parent.frame()) {
+  cli::cli_abort(
+    message,
+    class = c(paste0("tidybrreg_error_", class), "tidybrreg_error"),
+    ...,
+    call = call,
+    .envir = .envir
+  )
+}
+
+#' Signal a typed tidybrreg warning
+#' @inheritParams brreg_abort
+#' @keywords internal
+brreg_warn <- function(message, class, ..., call = rlang::caller_env(),
+                       .envir = parent.frame()) {
+  cli::cli_warn(
+    message,
+    class = c(paste0("tidybrreg_warning_", class), "tidybrreg_warning"),
+    ...,
+    call = call,
+    .envir = .envir
+  )
+}
+
+#' Abort on an HTTP error response
+#' @param resp An httr2 response with status 400 or above.
+#' @param endpoint Path that was requested (for the condition fields).
+#' @keywords internal
+abort_http <- function(resp, endpoint, call = rlang::caller_env()) {
+  status <- httr2::resp_status(resp)
+  msgs <- brreg_error_body(resp)
+  brreg_abort(
+    c("Norwegian Business Registry API error: HTTP {status} for {.path {endpoint}}.",
+      stats::setNames(msgs, rep("x", length(msgs)))),
+    class = "http", endpoint = endpoint, status = status, messages = msgs,
+    call = call
+  )
+}
+
+# ---------------------------------------------------------------------------
+# Dates and instants
+# ---------------------------------------------------------------------------
+
+#' Parse a BRREG calendar date
+#'
+#' BRREG emits dates as ISO `YYYY-MM-DD` on the Enhetsregisteret API and
+#' as `DD.MM.YYYY` on the Fullmakt service and in the CSV variant of the
+#' konsernstruktur endpoint. Both forms are accepted; anything else
+#' becomes `NA` and is counted by the caller as a parse problem.
+#'
+#' @param x Character vector.
+#' @returns A `Date` vector of the same length.
+#' @keywords internal
+parse_brreg_date <- function(x) {
+  x <- as.character(x)
+  x <- trimws(x)
+  out <- rep(as.Date(NA), length(x))
+  iso <- grepl("^\\d{4}-\\d{2}-\\d{2}", x)
+  out[iso] <- as.Date(substr(x[iso], 1L, 10L), format = "%Y-%m-%d")
+  dotted <- grepl("^\\d{2}\\.\\d{2}\\.\\d{4}$", x)
+  out[dotted] <- as.Date(x[dotted], format = "%d.%m.%Y")
+  out
+}
+
+#' Parse an ISO 8601 instant as UTC
+#'
+#' BRREG timestamps (`dato` on the enheter/underenheter update feeds,
+#' `time` on the roller CloudEvents feed) are UTC instants, with or
+#' without fractional seconds and with or without a trailing `Z`. They
+#' are parsed as UTC regardless of the session time zone so a value
+#' round-trips identically on every machine.
+#'
+#' @param x Character vector.
+#' @returns A `POSIXct` vector in the `UTC` time zone.
+#' @keywords internal
+parse_brreg_instant <- function(x) {
+  x <- as.character(x)
+  x <- sub("Z$", "", x)
+  x <- sub("([+-]\\d{2}):?(\\d{2})$", "", x)
+  out <- as.POSIXct(x, format = "%Y-%m-%dT%H:%M:%OS", tz = "UTC")
+  date_only <- is.na(out) & grepl("^\\d{4}-\\d{2}-\\d{2}$", x)
+  out[date_only] <- as.POSIXct(x[date_only], format = "%Y-%m-%d", tz = "UTC")
+  out
+}
+
+#' Format a `since` argument for the update feeds
+#'
+#' A `POSIXct` keeps its full precision and is rendered in UTC; a `Date`
+#' is the start of that day in UTC; a character value is parsed with
+#' [parse_brreg_instant()] (ISO date or date-time). The result is the
+#' `YYYY-MM-DDTHH:MM:SS.sssZ` form the feeds expect.
+#'
+#' @param since Date, POSIXct, or character.
+#' @returns A length-1 character string.
+#' @keywords internal
+format_since <- function(since) {
+  if (inherits(since, "POSIXt")) {
+    inst <- as.POSIXct(since)
+  } else if (inherits(since, "Date")) {
+    inst <- as.POSIXct(format(since, "%Y-%m-%d"), format = "%Y-%m-%d", tz = "UTC")
+  } else {
+    inst <- parse_brreg_instant(since)
+    if (is.na(inst)) {
+      brreg_abort(
+        "{.arg since} must be a Date, POSIXct, or ISO 8601 string, not {.val {since}}.",
+        class = "invalid_since", since = since
+      )
+    }
+  }
+  format(inst, "%Y-%m-%dT%H:%M:%OS3Z", tz = "UTC")
+}
+
+#' Parse an HTTP-date header as UTC
+#'
+#' `Last-Modified` and `Date` headers use the RFC 7231 IMF-fixdate form,
+#' which is always GMT. Parsed with the `C` locale so weekday and month
+#' names are recognised regardless of the session locale.
+#'
+#' @param x Character vector of header values.
+#' @returns A `POSIXct` vector in the `UTC` time zone.
+#' @keywords internal
+parse_http_date <- function(x) {
+  if (is.null(x)) return(as.POSIXct(NA, tz = "UTC"))
+  old <- Sys.getlocale("LC_TIME")
+  on.exit(Sys.setlocale("LC_TIME", old), add = TRUE)
+  Sys.setlocale("LC_TIME", "C")
+  as.POSIXct(as.character(x), format = "%a, %d %b %Y %H:%M:%S", tz = "UTC")
 }

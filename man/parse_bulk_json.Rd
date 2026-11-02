@@ -4,27 +4,37 @@
 \alias{parse_bulk_json}
 \title{Parse a brreg bulk JSON download into a flat tibble}
 \usage{
-parse_bulk_json(path, type = "enheter")
+parse_bulk_json(path, type = "enheter", n_max = Inf)
 }
 \arguments{
 \item{path}{Path to the gzipped JSON file.}
 
 \item{type}{Entity type (for column context).}
+
+\item{n_max}{Maximum number of array elements to read (default: all).}
 }
 \value{
-A tibble with atomic columns only, mapped via \link{field_dict}.
+A tibble mapped via \link{field_dict}; arrays of objects are
+nested list-columns, everything else atomic.
 }
 \description{
 The \verb{/enheter/lastned} and \verb{/underenheter/lastned} endpoints return
 gzipped JSON arrays with nested objects. \code{jsonlite::fromJSON(flatten = TRUE)}
 expands nested objects to dot-notation columns but leaves arrays as list
-columns. This function algorithmically flattens all list columns to
-atomic types:
+columns. The array is read in batches of complete objects
+(\code{\link[=read_json_objects]{read_json_objects()}}) and each batch parsed on its own, so the
+whole decoded tree is never in memory at once; with a finite \code{n_max}
+only the first \code{n_max} elements are read, which is how a sample of
+the register is parsed. Every list column gets the tidy shape of the
+live path (\code{\link[=collapse_observed]{collapse_observed()}}):
 }
 \details{
 \itemize{
-\item Character vectors (addresses, activities): collapsed with separator
-\item Data frames (paategninger): serialized to JSON strings
+\item Character vectors (addresses, activities): line fragments of one
+value, joined with \code{"\\n"}
+\item Data frames (\code{paategninger}, \code{historiskeNavn}): kept as a
+list-column of tibbles, one row per element, \code{NULL} where the
+entity has none
 \item Empty lists (HAL links): dropped
 \item NULL elements: \code{NA_character_}
 }

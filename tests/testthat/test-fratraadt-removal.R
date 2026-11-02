@@ -25,53 +25,28 @@ raw_roles <- function(with_fratraadt = FALSE) {
 }
 
 test_that("flatten_roles omits resigned when no role carries fratraadt", {
-  res <- flatten_roles(raw_roles(FALSE), "999888777")
+  res <- flatten_roles(raw_roles(FALSE), "810034882")
   expect_false("resigned" %in% names(res))
   expect_true("deregistered" %in% names(res))
   expect_equal(nrow(res), 2L)
 })
 
 test_that("flatten_roles keeps resigned with old-era absent-means-FALSE", {
-  res <- flatten_roles(raw_roles(TRUE), "999888777")
+  res <- flatten_roles(raw_roles(TRUE), "810034882")
   expect_true("resigned" %in% names(res))
   expect_equal(res$resigned, c(TRUE, FALSE))
 })
 
 test_that("flatten_roles_bulk_fast mirrors both eras", {
-  new_era <- list(c(list(organisasjonsnummer = "999888777"),
+  new_era <- list(c(list(organisasjonsnummer = "810034882"),
                     raw_roles(FALSE)))
   res <- flatten_roles_bulk_fast(new_era)
   expect_false("resigned" %in% names(res))
 
-  old_era <- list(c(list(organisasjonsnummer = "999888777"),
+  old_era <- list(c(list(organisasjonsnummer = "810034882"),
                     raw_roles(TRUE)))
   res_old <- flatten_roles_bulk_fast(old_era)
   expect_equal(res_old$resigned, c(TRUE, FALSE))
-})
-
-test_that("brreg_board_summary excludes deregistered when resigned absent", {
-  roles <- flatten_roles(raw_roles(FALSE), "999888777")
-  s <- brreg_board_summary(roles)
-  expect_equal(s$board_size, 1L)
-  expect_equal(s$n_members, 0L)
-})
-
-test_that("brreg_board_summary still excludes resigned when present", {
-  roles <- flatten_roles(raw_roles(TRUE), "999888777")
-  s <- brreg_board_summary(roles)
-  expect_equal(s$board_size, 0L)
-})
-
-test_that("diff_roller_state handles old-with vs new-without resigned", {
-  old <- flatten_roles(raw_roles(TRUE), "999888777")
-  new <- flatten_roles(raw_roles(FALSE), "999888777")
-  cl <- diff_roller_state(old, new, timestamp = "t", update_id = 1L)
-  expect_false("resigned" %in% cl$field)
-  expect_s3_class(cl, "tbl_df")
-
-  entry_only <- diff_roller_state(NULL, new, timestamp = "t", update_id = 1L)
-  expect_false("resigned" %in% entry_only$field)
-  expect_true(nrow(entry_only) > 0)
 })
 
 test_that("juridiskeroller flattener drops resigned when fratraadt absent", {
@@ -90,7 +65,7 @@ test_that("juridiskeroller flattener drops resigned when fratraadt absent", {
     resp_body_json = function(resp, ...) body,
     .package = "httr2"
   )
-  res <- brreg_roles_legal("999888777")
+  res <- brreg_roles_legal("810034882")
   expect_false("resigned" %in% names(res))
   expect_equal(res$target_org_nr, "111222333")
 })

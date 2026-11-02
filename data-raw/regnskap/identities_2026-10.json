@@ -1,0 +1,106 @@
+{
+ "filings": 1129601,
+ "identities": {
+  "balance": {
+   "checked": 1129601,
+   "share_checked": 1.0,
+   "failed_tol0": 70087,
+   "failed_tol1": 11559,
+   "failed_tol2": 7908,
+   "share_tol0": 0.06205,
+   "share_tol1": 0.01023,
+   "share_tol2": 0.007
+  },
+  "equity_liabilities": {
+   "checked": 1115793,
+   "share_checked": 0.9878,
+   "failed_tol0": 172004,
+   "failed_tol1": 1521,
+   "failed_tol2": 1487,
+   "share_tol0": 0.15415,
+   "share_tol1": 0.00136,
+   "share_tol2": 0.00133
+  },
+  "equity": {
+   "checked": 1085199,
+   "share_checked": 0.9607,
+   "failed_tol0": 32216,
+   "failed_tol1": 3808,
+   "failed_tol2": 3804,
+   "share_tol0": 0.02969,
+   "share_tol1": 0.00351,
+   "share_tol2": 0.00351
+  },
+  "liabilities": {
+   "checked": 845952,
+   "share_checked": 0.7489,
+   "failed_tol0": 53156,
+   "failed_tol1": 10077,
+   "failed_tol2": 10068,
+   "share_tol0": 0.06284,
+   "share_tol1": 0.01191,
+   "share_tol2": 0.0119
+  },
+  "assets": {
+   "checked": 1081229,
+   "share_checked": 0.9572,
+   "failed_tol0": 103827,
+   "failed_tol1": 1194,
+   "failed_tol2": 1169,
+   "share_tol0": 0.09603,
+   "share_tol1": 0.0011,
+   "share_tol2": 0.00108
+  },
+  "operating": {
+   "checked": 868950,
+   "share_checked": 0.7693,
+   "failed_tol0": 110024,
+   "failed_tol1": 2388,
+   "failed_tol2": 2381,
+   "share_tol0": 0.12662,
+   "share_tol1": 0.00275,
+   "share_tol2": 0.00274
+  },
+  "financial": {
+   "checked": 836745,
+   "share_checked": 0.7407,
+   "failed_tol0": 98952,
+   "failed_tol1": 20891,
+   "failed_tol2": 20824,
+   "share_tol0": 0.11826,
+   "share_tol1": 0.02497,
+   "share_tol2": 0.02489
+  },
+  "pre_tax": {
+   "checked": 1025245,
+   "share_checked": 0.9076,
+   "failed_tol0": 166709,
+   "failed_tol1": 2919,
+   "failed_tol2": 2892,
+   "share_tol0": 0.1626,
+   "share_tol1": 0.00285,
+   "share_tol2": 0.00282
+  },
+  "net_income": {
+   "checked": 859207,
+   "share_checked": 0.7606,
+   "failed_tol0": 26212,
+   "failed_tol1": 1498,
+   "failed_tol2": 1495,
+   "share_tol0": 0.03051,
+   "share_tol1": 0.00174,
+   "share_tol2": 0.00174
+  }
+ },
+ "by_fail_count": {
+  "0": 582112,
+  "1": 340803,
+  "2": 144054,
+  "3": 48684,
+  "4": 11778,
+  "5": 1934,
+  "6": 211,
+  "7": 24,
+  "8": 1
+ }
+}

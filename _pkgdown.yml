@@ -14,15 +14,6 @@ navbar:
         href: articles/tidybrreg.html
       - text: Norwegian business data
         href: articles/business-data.html
-      - text: Building firm panels
-        href: articles/panels.html
-      - text: Governance research
-        href: articles/governance.html
-      - text: Tracking role changes
-        href: articles/roller-cdc.html
-      - text: "---"
-      - text: Architecture
-        href: articles/architecture.html
 
 reference:
 - title: Entity lookup
@@ -33,7 +24,6 @@ reference:
   - brreg_entity
   - brreg_underenheter
   - brreg_children
-  - brreg_konsern
   - brreg_validate
 
 - title: Search
@@ -43,95 +33,59 @@ reference:
   contents:
   - brreg_search
 
-- title: Roles and governance
+- title: Roles, groups and signing authority
   desc: >
-    Board members, officers, auditors, and inter-company role
-    relationships. See `vignette("governance")` for network analysis
-    and `vignette("roller-cdc")` for change detection.
+    Board members, officers, auditors, reverse role lookups, the
+    corporate group tree, and signature and procuration authority.
   contents:
   - brreg_roles
   - brreg_roles_legal
+  - brreg_konsern
   - brreg_signatur
   - brreg_prokura
-  - brreg_board_summary
-  - brreg_board_network
-  - brreg_network
-  - brreg_survival_data
-  - diff_roller_state
 
-- title: Bulk downloads
+- title: Annual accounts
   desc: >
-    Download the full register as CSV or JSON. Three registries:
-    enheter (~1M entities), underenheter (~950K sub-entities),
-    roller (~3.4M role records).
+    Key figures of the annual accounts filed with Regnskapsregisteret,
+    one row per filing.
   contents:
-  - brreg_download
-  - brreg_status
-  - brreg_sync
-  - brreg_sync_status
-
-- title: Snapshot engine
-  desc: >
-    Save dated bulk downloads as Hive-partitioned Parquet files
-    for panel construction and historical analysis.
-    See `vignette("panels")` for workflows.
-  contents:
-  - brreg_snapshot
-  - brreg_import
-  - brreg_snapshots
-  - brreg_open
-  - brreg_cleanup
-  - brreg_data_dir
-  - brreg_manifest
-
-- title: Panel construction and time series
-  desc: >
-    Build firm-period panels from snapshots, reconstruct state
-    via CDC replay, compute aggregate time series, and convert
-    to tsibble for the tidyverts ecosystem.
-  contents:
-  - brreg_panel
-  - brreg_flows
-  - brreg_changes
-  - brreg_change_summary
-  - brreg_replay
-  - brreg_events
-  - brreg_series
-  - as_brreg_tsibble
-  - brreg_annotations
-  - brreg_annotation_summary
-  - brreg_historical_names
+  - brreg_regnskap
 
 - title: Incremental updates (CDC)
   desc: >
     Fetch change events from the brreg API's change data capture
-    stream. Supports enheter, underenheter, and roller.
+    streams for enheter, underenheter, and roller.
   contents:
   - brreg_updates
   - brreg_update_fields
 
-- title: Labels and translation
+- title: Bulk download
   desc: >
-    Translate Norwegian codes to English descriptions.
+    Download the full register as CSV or JSON. Three registries:
+    enheter, underenheter, roller.
+  contents:
+  - brreg_download
+
+- title: Labels and dictionaries
+  desc: >
+    Translate Norwegian codes to English or Norwegian descriptions.
     Follows the eurostat package's `type = "label"` pattern.
   contents:
   - brreg_label
   - get_brreg_dic
 
-- title: Harmonization
+- title: Reference data and conditions
   desc: >
-    Remap codes across classification changes (municipality
-    boundary reforms, NACE reclassifications) using SSB KLASS.
-  contents:
-  - brreg_harmonize_kommune
-  - brreg_harmonize_nace
-
-- title: Reference data
-  desc: >
-    Bundled datasets mapping Norwegian codes to English names.
+    Bundled datasets, their provenance, and the condition classes the
+    package signals.
   contents:
   - field_dict
   - legal_forms
   - role_types
   - role_groups
-  - annotation_infotypes
+  - regnskap_dict
+  - regnskap_groups
+  - regnskap_items
+  - tidybrreg_provenance
+  - tidybrreg_conditions
+  - tidybrreg_endpoints

@@ -1,0 +1,49 @@
+# Cloud Run service for the tidybrreg MCP server (streamable HTTP).
+#
+# Deployed by .github/workflows/mcp-image.yaml after every push to main
+# that builds the image. The image tag is substituted by the workflow.
+#
+#   gcloud run services replace tidybrregmcp/deploy/cloud-run.yaml \
+#     --region europe-north1 --project sondreskarsten-d7d14
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: tidybrreg-mcp
+  annotations:
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "3"
+        run.googleapis.com/cpu-throttling: "true"
+    spec:
+      containerConcurrency: 8
+      timeoutSeconds: 300
+      serviceAccountName: s1sfreracct@sondreskarsten-d7d14.iam.gserviceaccount.com
+      containers:
+        - image: europe-north1-docker.pkg.dev/sondreskarsten-d7d14/r-images/tidybrreg-mcp:IMAGE_TAG
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MCP_TRANSPORT
+              value: http
+            - name: TIDYBRREG_MCP_EXCLUDE
+              value: ""
+            - name: MCP_BEARER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: tidybrreg-mcp-token
+                  key: latest
+          resources:
+            limits:
+              cpu: "2"
+              memory: 4Gi
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 12

@@ -85,10 +85,45 @@ jobs:
             data-raw/api_monitor/last_report.md
             data-raw/api_monitor/news_snippet.md
 
-      - name: Open issue on drift
+      # One canonical open issue carries the drift report. A run that finds
+      # drift updates that issue's body (and comments with the run link)
+      # instead of opening a new one; a run that finds no drift leaves it
+      # alone so the maintainer closes it after accepting the baseline.
+      - name: Find the canonical drift issue
+        id: canonical
         if: ${{ steps.monitor.outcome == 'failure' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          n=$(gh issue list --repo "$GITHUB_REPOSITORY" --label api-monitor --state open \
+                --search 'brreg API drift detected in:title' --json number --jq 'map(.number) | min // empty')
+          echo "number=${n}" >> "$GITHUB_OUTPUT"
+
+      - name: Prepend the comparison baseline to the report
+        if: ${{ steps.monitor.outcome == 'failure' }}
+        run: |
+          {
+            echo "Baseline: \`data-raw/api_monitor/state/\` as of $(git log -1 --format='%cs (%h)' -- data-raw/api_monitor/state)"
+            echo "Sampling window since: ${{ steps.since.outputs.since }}"
+            echo "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo
+            cat data-raw/api_monitor/last_report.md
+          } > /tmp/drift_issue.md
+
+      - name: Open the canonical drift issue
+        if: ${{ steps.monitor.outcome == 'failure' && steps.canonical.outputs.number == '' }}
         uses: peter-evans/create-issue-from-file@v5
         with:
           title: 'brreg API drift detected'
-          content-filepath: data-raw/api_monitor/last_report.md
+          content-filepath: /tmp/drift_issue.md
           labels: api-monitor
+
+      - name: Update the canonical drift issue
+        if: ${{ steps.monitor.outcome == 'failure' && steps.canonical.outputs.number != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue edit "${{ steps.canonical.outputs.number }}" --repo "$GITHUB_REPOSITORY" \
+            --body-file /tmp/drift_issue.md
+          gh issue comment "${{ steps.canonical.outputs.number }}" --repo "$GITHUB_REPOSITORY" \
+            --body "Drift still present on $(date -u +%Y-%m-%d); report refreshed. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

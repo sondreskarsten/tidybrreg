@@ -1,0 +1,5 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^Dockerfile$
+^deploy$
+^LICENSE\.md$

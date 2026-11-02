@@ -13,13 +13,19 @@ A tibble with 44 rows and 4 columns:
 \item{name_en}{English translation.}
 }
 }
+\source{
+Brønnøysund Register Centre,
+\url{https://data.brreg.no/enhetsregisteret/api/organisasjonsformer},
+NLOD 2.0, retrieved 2026-06-16; see \link{tidybrreg_provenance}.
+}
 \usage{
 legal_forms
 }
 \description{
 All organisasjonsformer registered with the Brønnøysund Register
-Centre, with English translations. Fetched from the brreg API during
-package build and supplemented with manual English translations.
+Centre, with English translations. Codes and Norwegian names are
+fetched from the brreg API during package build; the English names
+are manual translations by the package author.
 }
 \examples{
 legal_forms
@@ -28,11 +34,14 @@ legal_forms[legal_forms$code == "AS", ]
 \seealso{
 \code{\link[=brreg_label]{brreg_label()}} to translate legal form codes in entity data.
 
-Other tidybrreg reference data:
-\code{\link{annotation_infotypes}},
+Other tidybrreg reference data: 
 \code{\link{field_dict}},
+\code{\link{regnskap_dict}},
+\code{\link{regnskap_groups}},
+\code{\link{regnskap_items}},
 \code{\link{role_groups}},
-\code{\link{role_types}}
+\code{\link{role_types}},
+\code{\link{tidybrreg_provenance}}
 }
 \concept{tidybrreg reference data}
 \keyword{datasets}

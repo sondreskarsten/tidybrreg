@@ -2,7 +2,7 @@
 % Please edit documentation in R/updates.R
 \name{flatten_page_patches}
 \alias{flatten_page_patches}
-\title{Flatten all patches from a page of CDC events in a single pass}
+\title{Flatten all patches from a page of CDC events}
 \usage{
 flatten_page_patches(raw_updates)
 }
@@ -10,14 +10,11 @@ flatten_page_patches(raw_updates)
 \item{raw_updates}{List of raw update objects from the API.}
 }
 \value{
-A flat tibble with update_id, org_nr, change_type,
-timestamp, operation, field, new_value.
+A flat tibble; see \code{\link[=brreg_update_fields]{brreg_update_fields()}}.
 }
 \description{
-No recursion. The brreg CDC nesting depth is bounded at 2 levels:
-object -> scalar, or object -> array -> scalar. Inlines the unpack
-for both levels. Events with no \code{endringer} (Ny, Sletting, Fjernet)
-emit a single synthetic row with \code{operation = NA}, \code{field = NA},
-\code{new_value = NA}.
+One row per patch leaf via \code{\link[=parse_patch]{parse_patch()}}, so nesting of any depth
+is handled identically to the \code{changes} list-column of
+\code{\link[=brreg_updates]{brreg_updates()}}. Events with no \code{endringer} emit one synthetic row.
 }
 \keyword{internal}
