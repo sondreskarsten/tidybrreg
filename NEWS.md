@@ -101,9 +101,10 @@ held to the functions by `tests/testthat/test-endpoints.R`.
   memory at once, and a sample is read without touching the rest of the
   file (`parse_bulk_json(n_max = )`). The batches are bound one column
   at a time (`bind_batches()`) rather than with `dplyr::bind_rows()`,
-  which held every batch and the result together; on a synthetic
-  register of 1.1 million entities the peak fell from 3.5 GB to 2.8 GB
-  for a 1 GB result in about 11 minutes. `brreg_download()` documents
+  which held every batch and the result together. On the live register
+  (2026-11-02) the full `enheter` parse takes 14.6 minutes and peaks at
+  4.0 GB for a 1.6 GB tibble of 1,179,853 rows; `underenheter` 7.1
+  minutes and 2.0 GB for 870,571 rows. `brreg_download()` documents
   the memory and time of the full parse. tidybrregpanel follows:
   `brreg_snapshot()` and `brreg_sync()` lose `format`, `brreg_import()`
   takes a JSON bulk file, and the CSV flag-then-fetch bootstrap of

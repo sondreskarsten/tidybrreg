@@ -31,18 +31,17 @@
 #' @inheritSection brreg_entity Tidy shape
 #'
 #' @section Memory and time:
-#' The tibble of the full `enheter` register (about 1.1 million rows,
-#' nested list-columns included) is built in memory. The gzipped array
-#' is decoded in batches of complete objects and the batches are bound
-#' one column at a time, so the peak is the result plus about one
-#' gigabyte of decoder transient rather than a multiple of the result;
-#' on a synthetic register of 1.1 million entities the peak was 2.8 GB
-#' for a 1 GB result, and real data with its distinct names, addresses
-#' and purposes gives a larger result. Expect 10 to 15 minutes for the
-#' full `enheter` parse. A machine with 8 GB may not have the headroom;
-#' `type_output = "path"` costs nothing beyond the download, and
-#' `parse_bulk_json(path, n_max = )` (internal) reads the head of the
-#' array without inflating the rest.
+#' The tibble of the full register is built in memory. The gzipped
+#' array is decoded in batches of complete objects and the batches are
+#' bound one column at a time, so the peak is the result plus the
+#' decoder's transient rather than a multiple of the result. Measured
+#' on the live register on 2026-11-02 (2 cores): `enheter`, 1,179,853
+#' rows and 91 columns, 14.6 minutes, a 1.6 GB tibble, 4.0 GB peak
+#' resident memory; `underenheter`, 870,571 rows and 43 columns, 7.1
+#' minutes, 0.9 GB, 2.0 GB peak. A machine with 8 GB holds one full
+#' `enheter` parse and not two at once. `type_output = "path"` costs
+#' nothing beyond the download, and `parse_bulk_json(path, n_max = )`
+#' (internal) reads the head of the array without inflating the rest.
 #'
 #' @section Caching:
 #' With `cache = TRUE` (default) the gzipped payload is stored in
