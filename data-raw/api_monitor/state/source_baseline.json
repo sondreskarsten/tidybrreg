@@ -1,9 +1,9 @@
 {
-  "collected_at": "2026-06-17 14:06:42 UTC",
+  "collected_at": "2026-11-02 19:09:08 UTC",
   "openapi": {
     "enhetsregisteret": {
       "version": "1.0.0",
-      "hash": "779a90e94d2d99b5",
+      "hash": "b010dfa7a1a7413f",
       "changelog": [
         {
           "versjon": "1.1.0",
@@ -98,6 +98,36 @@
   "rss": [
     {
       "feed": "nyheter",
+      "item_id": "https://www.brreg.no/nyhet/varsler-sletting-av-rundt-3-500-ansvarlige-selskaper/",
+      "title": "Varsler sletting av rundt 3 500 ansvarlige selskaper",
+      "pubdate": "Tue, 27 Oct 2026 12:07:26 +0000"
+    },
+    {
+      "feed": "nyheter",
+      "item_id": "https://www.brreg.no/nyhet/digital-selskapsetablering-vant-fyrlyktprisen-2026/",
+      "title": "Digital selskapsetablering vant Fyrlyktprisen 2026",
+      "pubdate": "Thu, 22 Oct 2026 13:46:14 +0000"
+    },
+    {
+      "feed": "nyheter",
+      "item_id": "https://www.brreg.no/nyhet/vaer-oppmerksom-pa-falske-e-poster/",
+      "title": "Vær oppmerksom på falske e-poster",
+      "pubdate": "Tue, 20 Oct 2026 13:37:29 +0000"
+    },
+    {
+      "feed": "nyheter",
+      "item_id": "https://www.brreg.no/nyhet/har-du-mottatt-dagboter-tvangsmulkt-fra-register-over-reelle-rettighetshavere/",
+      "title": "Har du mottatt dagbøter (tvangsmulkt) fra Register over reelle rettighetshavere?",
+      "pubdate": "Fri, 11 Sep 2026 10:04:54 +0000"
+    },
+    {
+      "feed": "nyheter",
+      "item_id": "https://www.brreg.no/nyhet/registrering-i-foretaksregisteret-innan-utgangen-av-2026/",
+      "title": "Registrering i Føretaksregisteret innan utgangen av 2026",
+      "pubdate": "Thu, 03 Sep 2026 07:33:44 +0000"
+    },
+    {
+      "feed": "nyheter",
       "item_id": "https://www.brreg.no/nyhet/nye-og-enklere-tjenester-for-foreninger-og-sameier/",
       "title": "Nye og enklere tjenester for foreninger og sameier",
       "pubdate": "Mon, 08 Jun 2026 07:02:22 +0000"
@@ -125,36 +155,6 @@
       "item_id": "https://www.brreg.no/nyhet/2-837-virksomheter-har-ikke-levert-arsregnskap-og-kan-bli-tvangsopplost/",
       "title": "2 837 virksomheter har ikke levert årsregnskap og kan bli tvangsoppløst",
       "pubdate": "Fri, 20 Mar 2026 07:17:28 +0000"
-    },
-    {
-      "feed": "nyheter",
-      "item_id": "https://www.brreg.no/nyhet/na-lanseres-nytt-vapenregister/",
-      "title": "Nå lanseres nytt våpenregister",
-      "pubdate": "Mon, 09 Feb 2026 11:44:26 +0000"
-    },
-    {
-      "feed": "nyheter",
-      "item_id": "https://www.brreg.no/nyhet/medlemskap-i-tros-og-livssynssamfunn-tilgjengelig-pa-min-side/",
-      "title": "Medlemskap i tros- og livssynssamfunn tilgjengelig på Min side",
-      "pubdate": "Thu, 18 Dec 2025 09:16:29 +0000"
-    },
-    {
-      "feed": "nyheter",
-      "item_id": "https://www.brreg.no/nyhet/nestledere-skal-ikke-lenger-registreres-i-enhetsregisteret-og-foretaksregisteret/",
-      "title": "Nestledere skal ikke lenger registreres i Enhetsregisteret og Foretaksregisteret",
-      "pubdate": "Tue, 09 Dec 2025 09:00:41 +0000"
-    },
-    {
-      "feed": "nyheter",
-      "item_id": "https://www.brreg.no/nyhet/vi-har-gjort-opplysningar-om-kapital-lettare-tilgjengeleg/",
-      "title": "Vi har gjort opplysningar om kapital lettare tilgjengeleg",
-      "pubdate": "Fri, 05 Dec 2025 08:16:41 +0000"
-    },
-    {
-      "feed": "nyheter",
-      "item_id": "https://www.brreg.no/nyhet/registrering-i-foretaksregisteret-innan-utgangen-av-2025/",
-      "title": "Registrering i Føretaksregisteret innan utgangen av 2025",
-      "pubdate": "Thu, 04 Sep 2025 06:30:14 +0000"
     }
   ]
 }
