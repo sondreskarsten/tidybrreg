@@ -110,7 +110,12 @@ held to the functions by `tests/testthat/test-endpoints.R`.
   holding the decoded tree of the whole register, which exceeded 7 GB:
   3,426,438 roles in 11.1 minutes at a 2.3 GB peak.
   `brreg_download()` documents the memory and time of the full parse.
-  tidybrregpanel follows:
+  tidybrregpanel's parquet layer carries the nested columns on both
+  backends: arrow's `list_of` vectors are read back as plain lists so
+  state binds with fresh `brreg_entity()` rows (the replay sync failed
+  on the type clash), and nanoparquet, which writes no nested types,
+  stores them as JSON text named in the file metadata and restores the
+  tibbles on read. tidybrregpanel follows:
   `brreg_snapshot()` and `brreg_sync()` lose `format`, `brreg_import()`
   takes a JSON bulk file, and the CSV flag-then-fetch bootstrap of
   annotations is gone.

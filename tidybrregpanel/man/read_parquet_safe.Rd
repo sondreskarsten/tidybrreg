@@ -13,6 +13,10 @@ read_parquet_safe(path)
 A tibble.
 }
 \description{
-Read a parquet file to tibble
+Nested list-columns come back as plain lists of tibbles whichever
+writer produced the file: arrow's \code{list_of} vectors are unclassed so
+they bind with the plain lists \code{\link[tidybrreg:brreg_entity]{tidybrreg::brreg_entity()}} returns,
+and columns a nanoparquet writer serialized to JSON text are parsed
+back into tibbles.
 }
 \keyword{internal}
