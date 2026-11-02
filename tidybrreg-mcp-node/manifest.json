@@ -4258,7 +4258,7 @@
         "type": "Date"
       },
       {
-        "api_path": "registreringsdatoAntallAnsatteNavAaregisteret",
+        "api_path": "registreringsdatoAntallAnsatteNAVAaregisteret",
         "col_name": "employee_reg_date_nav",
         "type": "Date"
       },

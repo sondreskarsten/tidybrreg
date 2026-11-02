@@ -95,7 +95,7 @@ held to the functions by `tests/testthat/test-endpoints.R`.
   presence flag in place of the annotation array. The cache file is
   `{type}_bulk.json.gz`. `field_dict` loses the two CSV-only spellings
   (`registreringsdatoIEnhetsregisteret`,
-  `registreringsdatoAntallAnsatteNAVAaregisteret`). The array is read
+  `registreringsdatoAntallAnsatteNavAaregisteret`). The array is read
   in batches of complete objects (`read_json_objects()`), each parsed on
   its own, so the whole decoded tree of a million entities is never in
   memory at once, and a sample is read without touching the rest of the
