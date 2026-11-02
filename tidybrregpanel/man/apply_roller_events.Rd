@@ -21,7 +21,7 @@ List with \code{state} (updated tibble) and \code{changelog}
 }
 \description{
 Downloads the full roller totalbestand (~131 MB), parses it via
-\code{tidybrreg:::read_roles_json()} + \code{tidybrreg:::flatten_roles_bulk_fast()}, and computes a
+\code{tidybrreg:::parse_roles_bulk()} (streamed in batches), and computes a
 field-level diff against stored state using \code{\link[=diff_roller_state]{diff_roller_state()}}.
 Roller CDC events are bare notifications (\code{rolle.oppdatert} with
 only org_nr) — they carry no field-level changes, so the bulk diff
