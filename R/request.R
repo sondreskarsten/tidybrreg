@@ -126,12 +126,15 @@ is_rate_limit_text <- function(resp) {
 #' retries, aborts with a `tidybrreg_error_rate_limited` instead of
 #' failing later as an unreadable body.
 #' @param req An httr2 request.
+#' @param path Optional file path; the body is streamed to it as
+#'   [httr2::req_perform()] does, so a bulk download that drops its
+#'   connection is retried like any other request.
 #' @keywords internal
-brreg_perform <- function(req, call = rlang::caller_env()) {
+brreg_perform <- function(req, call = rlang::caller_env(), path = NULL) {
   req <- httr2::req_error(req, is_error = \(resp) FALSE)
   tries <- req$policies$retry_max_tries %||% 1L
   for (i in seq_len(tries)) {
-    resp <- tryCatch(httr2::req_perform(req), httr2_failure = \(e) e)
+    resp <- tryCatch(httr2::req_perform(req, path = path), httr2_failure = \(e) e)
     if (!inherits(resp, "httr2_failure")) break
     if (i == tries) {
       brreg_abort(c(

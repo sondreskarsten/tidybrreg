@@ -111,3 +111,24 @@ test_that("brreg_error_body extracts validation errors from JSON", {
   expect_true(any(grepl("Bad Request", msgs)))
   expect_true(any(grepl("trace:", msgs)))
 })
+
+test_that("the bulk download retries a dropped connection and then aborts typed", {
+  calls <- 0L
+  httr2::local_mocked_responses(function(req) {
+    calls <<- calls + 1L
+    rlang::abort("Recv failure: Connection reset by peer", class = "httr2_failure")
+  })
+  testthat::local_mocked_bindings(Sys.sleep = function(time) NULL, .package = "base")
+  err <- expect_error(brreg_download("underenheter", cache = FALSE, type_output = "path"),
+                      class = "tidybrreg_error_connection")
+  expect_equal(calls, 3L)
+  expect_match(err$url, "underenheter/lastned")
+})
+
+test_that("the bulk download aborts with the typed HTTP error on a server failure", {
+  httr2::local_mocked_responses(function(req) httr2::response(status_code = 503))
+  testthat::local_mocked_bindings(Sys.sleep = function(time) NULL, .package = "base")
+  err <- expect_error(brreg_download("underenheter", cache = FALSE, type_output = "path"),
+                      class = "tidybrreg_error_http")
+  expect_equal(err$status, 503L)
+})

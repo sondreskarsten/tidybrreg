@@ -4,10 +4,14 @@
 \alias{brreg_perform}
 \title{Perform a brreg request without raising on HTTP error status}
 \usage{
-brreg_perform(req, call = rlang::caller_env())
+brreg_perform(req, call = rlang::caller_env(), path = NULL)
 }
 \arguments{
 \item{req}{An httr2 request.}
+
+\item{path}{Optional file path; the body is streamed to it as
+\code{\link[httr2:req_perform]{httr2::req_perform()}} does, so a bulk download that drops its
+connection is retried like any other request.}
 }
 \description{
 Every endpoint wrapper inspects the status itself so that 404, 410 and

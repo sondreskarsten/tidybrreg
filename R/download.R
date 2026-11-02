@@ -137,7 +137,8 @@ brreg_download <- function(type = c("enheter", "underenheter", "roller"),
     cli::cli_progress_step("Downloading full {type} register ({sizes[type]})")
     resp <- brreg_http_req(url, path = "", realm = "data.brreg.no",
                            accept = "*/*") |>
-      httr2::req_perform(path = cache_file)
+      brreg_perform(path = cache_file)
+    if (httr2::resp_status(resp) >= 400L) abort_http(resp, paste0(type, "/lastned"))
     meta <- download_meta(resp, url, cache_file)
     if (!is.null(meta_file)) write_download_meta(meta, meta_file)
     cli::cli_progress_done()

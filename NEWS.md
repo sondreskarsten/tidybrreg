@@ -182,7 +182,9 @@ final. The register's rate limit sometimes arrives as HTTP 200 with a
 crash and is now retried and, when it persists, a typed
 `tidybrreg_error_rate_limited`. A connection failure (DNS, TCP, TLS,
 dropped connection) is retried the same number of times and then a
-`tidybrreg_error_connection`. The live audit probes the fetcher's two
+`tidybrreg_error_connection`; the bulk download goes through the same
+  rule, so a connection reset mid-download is retried and a server
+  error aborts with the typed `tidybrreg_error_http`. The live audit probes the fetcher's two
 deleted controls (931264338, 991128972) as deleted here too. The Node
 server applies the same rule from `endpoints.json`.
 
