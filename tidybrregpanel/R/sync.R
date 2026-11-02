@@ -720,7 +720,7 @@ apply_slett_events <- function(state, paat_state, hist_state, slett_events, type
 #' Apply roller CDC events via bulk totalbestand diff
 #'
 #' Downloads the full roller totalbestand (~131 MB), parses it via
-#' `tidybrreg:::read_roles_json()` + `tidybrreg:::flatten_roles_bulk_fast()`, and computes a
+#' `tidybrreg:::parse_roles_bulk()` (streamed in batches), and computes a
 #' field-level diff against stored state using [diff_roller_state()].
 #' Roller CDC events are bare notifications (`rolle.oppdatert` with
 #' only org_nr) — they carry no field-level changes, so the bulk diff

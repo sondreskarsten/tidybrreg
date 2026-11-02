@@ -92,3 +92,48 @@ test_that("bind_batches binds like bind_rows, filling columns a batch did not ca
   expect_equal(out$nested[[5]]$v, "e")
   expect_equal(nrow(bind_batches(list(a))), 2L)
 })
+
+roles_fixture <- function(n, fratraadt_at = integer()) {
+  f <- withr::local_tempfile(fileext = ".json.gz", .local_envir = parent.frame())
+  con <- gzfile(f, "w")
+  arr <- lapply(seq_len(n), function(i) {
+    role <- list(type = list(kode = "LEDE"), person = list(navn = list(fornavn = "A", etternavn = paste0("B", i)),
+                 fodselsdato = "1970-01-01", erDoed = FALSE), rekkefolge = 0L)
+    if (i %in% fratraadt_at) role$fratraadt <- TRUE
+    list(organisasjonsnummer = sprintf("9%08d", i),
+         rollegrupper = if (i %% 5 == 0) list() else list(list(type = list(kode = "STYR"), sistEndret = "2025-01-01", roller = list(role))))
+  })
+  writeLines(jsonlite::toJSON(arr, auto_unbox = TRUE), con)
+  close(con)
+  f
+}
+
+test_that("parse_roles_bulk streams the roller array in batches and matches the whole-file flattener", {
+  f <- roles_fixture(60L)
+  whole <- flatten_roles_bulk_fast(jsonlite::fromJSON(f, simplifyVector = FALSE))
+  batched <- local({
+    out <- list()
+    read_json_objects(f, function(text) out[[length(out) + 1L]] <<- flatten_roles_bulk_fast(parse_roles_text(text)),
+                      batch_size = 7L, chunk_size = 512L)
+    bind_batches(out)
+  })
+  expect_equal(batched, whole)
+  expect_equal(parse_roles_bulk(f), whole)
+  expect_equal(nrow(whole), 48L)
+  expect_false("resigned" %in% names(whole))
+})
+
+test_that("parse_roles_bulk keeps resigned when any batch carries fratraadt, FALSE elsewhere", {
+  f <- roles_fixture(30L, fratraadt_at = 29L)
+  out <- local({
+    batches <- list()
+    read_json_objects(f, function(text) batches[[length(batches) + 1L]] <<- flatten_roles_bulk_fast(parse_roles_text(text)),
+                      batch_size = 10L)
+    expect_false("resigned" %in% names(batches[[1]]))
+    expect_true("resigned" %in% names(batches[[3]]))
+    parse_roles_bulk(f)
+  })
+  expect_type(out$resigned, "logical")
+  expect_equal(sum(out$resigned), 1L)
+  expect_false(anyNA(out$resigned))
+})

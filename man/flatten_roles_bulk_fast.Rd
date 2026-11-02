@@ -7,7 +7,7 @@
 flatten_roles_bulk_fast(entities)
 }
 \arguments{
-\item{entities}{List of entity objects from \code{\link[=read_roles_json]{read_roles_json()}}.}
+\item{entities}{List of entity objects from \code{\link[=parse_roles_text]{parse_roles_text()}}.}
 }
 \value{
 A tibble matching \code{\link[=flatten_roles]{flatten_roles()}} output schema.

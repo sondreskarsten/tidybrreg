@@ -552,55 +552,49 @@ rename_and_coerce <- function(dat) {
 #'
 #' The `/roller/totalbestand` endpoint returns a gzipped JSON array where
 #' each element is an entity with nested rollegrupper/roller structure,
-#' identical to `/enheter/{orgnr}/roller`. This function reads the full
-#' file, flattens all entities into one tibble matching [brreg_roles()]
-#' output.
+#' identical to `/enheter/{orgnr}/roller`. The array is streamed in
+#' batches of complete entities by [read_json_objects()], each batch is
+#' decoded and flattened by [flatten_roles_bulk_fast()] and the batches
+#' are bound with [bind_batches()], so the decoded tree of the whole
+#' register (several gigabytes as R lists) is never in memory. The
+#' output matches [brreg_roles()]: `resigned` is kept only when some
+#' role carried `fratraadt`, `NA` filled as `FALSE`.
 #'
 #' @param path Path to the gzipped JSON file.
 #' @returns A tibble with one row per role assignment.
 #' @keywords internal
 parse_roles_bulk <- function(path) {
-  raw <- read_roles_json(path)
-  flatten_roles_bulk_fast(raw)
+  batches <- list()
+  read_json_objects(path, emit = function(text) {
+    batches[[length(batches) + 1L]] <<- flatten_roles_bulk_fast(parse_roles_text(text))
+  })
+  batches <- batches[vapply(batches, nrow, integer(1)) > 0L]
+  if (length(batches) == 0) return(empty_roles())
+  result <- bind_batches(batches)
+  if ("resigned" %in% names(result)) {
+    result$resigned[is.na(result$resigned)] <- FALSE
+  }
+  result
 }
 
 
-#' Read roller totalbestand JSON with best available parser
+#' Decode one batch of roller entities with the best available parser
 #'
-#' Dispatches to yyjsonr (7x faster, 70x less memory) when
-#' available, falling back to jsonlite. Both produce nested
-#' lists compatible with [flatten_roles_bulk_fast()].
+#' Dispatches to yyjsonr when available, falling back to jsonlite. Both
+#' produce nested lists compatible with [flatten_roles_bulk_fast()].
 #'
-#' @param path Path to the gzipped JSON file.
+#' @param text JSON text of an array of entity objects.
 #' @returns A list of entity objects.
 #' @keywords internal
-read_roles_json <- function(path) {
-  is_gz <- grepl("\\.gz$", path)
-
+parse_roles_text <- function(text) {
   if (requireNamespace("yyjsonr", quietly = TRUE)) {
     opts <- yyjsonr::opts_read_json(
       obj_of_arrs_to_df = FALSE,
       arr_of_objs_to_df = FALSE
     )
-    if (is_gz) {
-      json_path <- tempfile(fileext = ".json")
-      on.exit(unlink(json_path), add = TRUE)
-      con_in  <- gzfile(path, open = "rb")
-      con_out <- file(json_path, open = "wb")
-      while (length(chunk <- readBin(con_in, "raw", n = 2^20)) > 0) {
-        writeBin(chunk, con_out)
-      }
-      close(con_out)
-      close(con_in)
-      return(yyjsonr::read_json_file(json_path, opts = opts))
-    }
-    return(yyjsonr::read_json_file(path, opts = opts))
+    return(yyjsonr::read_json_str(text, opts = opts))
   }
-
-  cli::cli_alert_info(
-    "Install {.pkg yyjsonr} for 7x faster JSON parsing and 70x lower memory; jsonlite needs well over 4 GB for the roller bulk."
-  )
-  jsonlite::fromJSON(path, simplifyVector = FALSE)
+  jsonlite::fromJSON(text, simplifyVector = FALSE)
 }
 
 
@@ -611,7 +605,7 @@ read_roles_json <- function(path) {
 #' list construction and the O(n^2) cost of incremental
 #' `bind_rows()` on thousands of small tibbles.
 #'
-#' @param entities List of entity objects from [read_roles_json()].
+#' @param entities List of entity objects from [parse_roles_text()].
 #' @returns A tibble matching [flatten_roles()] output schema.
 #' @keywords internal
 flatten_roles_bulk_fast <- function(entities) {

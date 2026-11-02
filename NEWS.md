@@ -104,8 +104,12 @@ held to the functions by `tests/testthat/test-endpoints.R`.
   which held every batch and the result together. On the live register
   (2026-11-02) the full `enheter` parse takes 14.6 minutes and peaks at
   4.0 GB for a 1.6 GB tibble of 1,179,853 rows; `underenheter` 7.1
-  minutes and 2.0 GB for 870,571 rows. `brreg_download()` documents
-  the memory and time of the full parse. tidybrregpanel follows:
+  minutes and 2.0 GB for 870,571 rows. The roller bulk
+  (`/roller/totalbestand`) is streamed the same way: `parse_roles_bulk()`
+  decodes and flattens one batch of entities at a time instead of
+  holding the decoded tree of the whole register, which exceeded 7 GB.
+  `brreg_download()` documents the memory and time of the full parse.
+  tidybrregpanel follows:
   `brreg_snapshot()` and `brreg_sync()` lose `format`, `brreg_import()`
   takes a JSON bulk file, and the CSV flag-then-fetch bootstrap of
   annotations is gone.
