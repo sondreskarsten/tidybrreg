@@ -48,3 +48,40 @@ test_that("write_parquet_safe writes a nested column with whichever backend is i
   back <- read_parquet_safe(f)
   expect_equal(back$annotations[[1]]$tekst, "x")
 })
+
+test_that("align_nested widens and reorders the tibbles of a list-column", {
+  df <- tibble::tibble(
+    org_nr = c("1", "2", "3", "4"),
+    historiske_navn = list(
+      tibble::tibble(navn = "A", fra_dato = "2001-01-01", til_dato = "2002-01-01"),
+      NULL,
+      tibble::tibble(fra_dato = "2003-01-01", navn = "C"),
+      tibble::tibble(navn = c("D", "E"))
+    )
+  )
+  out <- align_nested(df)
+  expect_null(out$historiske_navn[[2]])
+  for (i in c(1, 3, 4)) expect_equal(names(out$historiske_navn[[i]]), c("navn", "fra_dato", "til_dato"))
+  expect_equal(out$historiske_navn[[3]]$navn, "C")
+  expect_true(is.na(out$historiske_navn[[3]]$til_dato))
+  expect_type(out$historiske_navn[[4]]$fra_dato, "character")
+  expect_equal(nrow(out$historiske_navn[[4]]), 2L)
+  expect_identical(align_nested(df[1, ]), df[1, ])
+})
+
+test_that("a list-column with differing element shapes survives write_parquet_safe", {
+  skip_if_not_installed("arrow")
+  df <- tibble::tibble(
+    org_nr = c("1", "2"),
+    historiske_navn = list(
+      tibble::tibble(navn = "A", fra_dato = "2001-01-01", til_dato = "2002-01-01"),
+      tibble::tibble(fra_dato = "2003-01-01", navn = "C")
+    )
+  )
+  f <- withr::local_tempfile(fileext = ".parquet")
+  expect_error(arrow::write_parquet(df, f))
+  write_parquet_safe(df, f)
+  back <- read_parquet_safe(f)
+  expect_equal(back$historiske_navn[[2]]$navn, "C")
+  expect_true(is.na(back$historiske_navn[[2]]$til_dato))
+})

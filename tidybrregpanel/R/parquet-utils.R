@@ -22,7 +22,7 @@ write_parquet_safe <- function(df, path) {
   on.exit(unlink(tmp), add = TRUE)
   tier <- parquet_tier()
   if (tier == "arrow") {
-    arrow::write_parquet(df, tmp)
+    arrow::write_parquet(align_nested(df), tmp)
   } else {
     flat <- nested_to_json(df)
     meta <- if (length(flat$columns) > 0) {
@@ -31,6 +31,43 @@ write_parquet_safe <- function(df, path) {
     nanoparquet::write_parquet(flat$df, tmp, metadata = meta)
   }
   file.rename(tmp, path)
+}
+
+#' Give every tibble in a list-column the same columns, in the same order
+#'
+#' arrow writes a list-column of tibbles as `list<struct>` and derives
+#' the struct from the first element, so a later element with the
+#' fields in another order, or without a field the register did not
+#' emit for that entity, fails the write. State built from the bulk is
+#' uniform; rows a sync adds from [tidybrreg::brreg_entity()] follow
+#' the key order of that response. Each element is widened to the
+#' union of the fields seen in the column, typed `NA` where absent, in
+#' first-seen order. `NULL` elements stay `NULL`.
+#' @param df A data frame.
+#' @returns `df` with aligned list-columns.
+#' @keywords internal
+align_nested <- function(df) {
+  for (col in names(df)[vapply(df, is.list, logical(1))]) {
+    x <- df[[col]]
+    is_df <- vapply(x, is.data.frame, logical(1))
+    if (!any(is_df)) next
+    fields <- unique(unlist(lapply(x[is_df], names), use.names = FALSE))
+    ptypes <- lapply(fields, function(f) {
+      vals <- lapply(x[is_df], function(d) d[[f]])
+      vals <- vals[!vapply(vals, is.null, logical(1))]
+      vctrs::vec_ptype_common(!!!vals)
+    })
+    names(ptypes) <- fields
+    same <- vapply(x[is_df], function(d) identical(names(d), fields), logical(1))
+    if (all(same)) next
+    fix <- which(is_df)[!same]
+    x[fix] <- lapply(x[fix], function(d) {
+      for (f in setdiff(fields, names(d))) d[[f]] <- vctrs::vec_init(ptypes[[f]], nrow(d))
+      d[fields]
+    })
+    df[[col]] <- x
+  }
+  df
 }
 
 #' Serialize nested list-columns to JSON text for a flat parquet writer

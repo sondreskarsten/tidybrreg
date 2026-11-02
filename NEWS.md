@@ -115,7 +115,10 @@ held to the functions by `tests/testthat/test-endpoints.R`.
   state binds with fresh `brreg_entity()` rows (the replay sync failed
   on the type clash), and nanoparquet, which writes no nested types,
   stores them as JSON text named in the file metadata and restores the
-  tibbles on read. tidybrregpanel follows:
+  tibbles on read. Before arrow writes a list-column its tibbles are
+  widened to the union of their fields in one order, since arrow derives
+  the struct from the first element and a row added by a sync carries
+  the response's key order. tidybrregpanel follows:
   `brreg_snapshot()` and `brreg_sync()` lose `format`, `brreg_import()`
   takes a JSON bulk file, and the CSV flag-then-fetch bootstrap of
   annotations is gone.
