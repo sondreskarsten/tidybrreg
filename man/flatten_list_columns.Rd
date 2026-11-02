@@ -17,6 +17,9 @@ to list-columns of tibbles.
 Dispatches on the runtime type of each list column's elements:
 character/numeric vectors are collapsed, NULLs become
 \code{NA_character_}, and a column whose elements are data frames stays a
-list-column of tibbles (\code{NULL} where the entity has none).
+list-column of tibbles (\code{NULL} where the entity has none). A list
+column with no observed value at all (every array empty) is dropped,
+as an empty array emits no key on the live path, so batches with and
+without the array bind.
 }
 \keyword{internal}

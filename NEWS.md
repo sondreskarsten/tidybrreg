@@ -95,9 +95,11 @@ held to the functions by `tests/testthat/test-endpoints.R`.
   presence flag in place of the annotation array. The cache file is
   `{type}_bulk.json.gz`. `field_dict` loses the two CSV-only spellings
   (`registreringsdatoIEnhetsregisteret`,
-  `registreringsdatoAntallAnsatteNAVAaregisteret`). A sample of the
-  bulk is read without parsing the whole file through the internal
-  `parse_bulk_json(n_max = )`. tidybrregpanel follows:
+  `registreringsdatoAntallAnsatteNAVAaregisteret`). The array is read
+  in batches of complete objects (`read_json_objects()`), each parsed on
+  its own, so the whole decoded tree of a million entities is never in
+  memory at once, and a sample is read without touching the rest of the
+  file (`parse_bulk_json(n_max = )`). tidybrregpanel follows:
   `brreg_snapshot()` and `brreg_sync()` lose `format`, `brreg_import()`
   takes a JSON bulk file, and the CSV flag-then-fetch bootstrap of
   annotations is gone.

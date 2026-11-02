@@ -224,11 +224,12 @@ cache_is_current <- function(url, meta_file) {
 #' The `/enheter/lastned` and `/underenheter/lastned` endpoints return
 #' gzipped JSON arrays with nested objects. `jsonlite::fromJSON(flatten = TRUE)`
 #' expands nested objects to dot-notation columns but leaves arrays as list
-#' columns. With a finite `n_max` only the first `n_max` elements of the
-#' array are read ([read_json_head()]), which is how a sample of the
-#' register is parsed without holding the whole file. This function
-#' gives every list column the tidy shape of the live path
-#' ([collapse_observed()]):
+#' columns. The array is read in batches of complete objects
+#' ([read_json_objects()]) and each batch parsed on its own, so the
+#' whole decoded tree is never in memory at once; with a finite `n_max`
+#' only the first `n_max` elements are read, which is how a sample of
+#' the register is parsed. Every list column gets the tidy shape of the
+#' live path ([collapse_observed()]):
 #'
 #' - Character vectors (addresses, activities): line fragments of one
 #'   value, joined with `"\n"`
@@ -249,73 +250,155 @@ cache_is_current <- function(url, meta_file) {
 #'   nested list-columns, everything else atomic.
 #' @keywords internal
 parse_bulk_json <- function(path, type = "enheter", n_max = Inf) {
-  dat <- if (is.finite(n_max)) {
-    jsonlite::fromJSON(read_json_head(path, n_max), flatten = TRUE)
-  } else {
-    jsonlite::fromJSON(path, flatten = TRUE)
-  }
-  if (length(dat) == 0) return(empty_entities())
-  dat <- tibble::as_tibble(dat)
-
-  dat <- flatten_list_columns(dat)
-  dat <- drop_hal_links(dat)
-  dat <- rename_and_coerce(dat)
-  dat
+  batches <- list()
+  read_json_objects(path, n_max = n_max, emit = function(text) {
+    dat <- jsonlite::fromJSON(text, flatten = TRUE)
+    if (length(dat) == 0) return(invisible())
+    dat <- drop_hal_links(flatten_list_columns(tibble::as_tibble(dat)))
+    batches[[length(batches) + 1L]] <<- dat
+  })
+  if (length(batches) == 0) return(empty_entities())
+  rename_and_coerce(dplyr::bind_rows(batches))
 }
 
 
-#' Read the first elements of a gzipped JSON array as JSON text
+#' Stream the objects of a gzipped JSON array in batches
 #'
-#' Scans the file in chunks, tracking brace depth outside string
-#' literals, until `n` top-level objects have closed, and returns the
-#' array prefix closed with `]`. Nothing beyond the `n`-th object is
+#' The bulk is a JSON array of more than a million objects; parsing it
+#' in one call holds the whole decoded tree in memory, which is what
+#' exhausted the stress-test runners. This reader walks the file in
+#' fixed-size byte chunks and emits the array in batches of
+#' `batch_size` complete top-level objects, each as its own JSON array
+#' text, so the caller parses one batch at a time. Object boundaries
+#' are found with a vectorised scan: unescaped quotes delimit string
+#' literals, braces outside them change the depth, and an object ends
+#' where the depth returns to zero. Nothing beyond `n_max` objects is
 #' read, so a sample of a 200 MB bulk costs a few megabytes.
+#'
+#' @param path Path to a gzipped (or plain) JSON array file.
+#' @param emit Function called with the JSON text of each batch.
+#' @param n_max Maximum number of objects to read (default: all).
+#' @param batch_size Objects per batch.
+#' @param chunk_size Bytes read from the file per step.
+#' @returns The number of objects emitted, invisibly.
+#' @keywords internal
+read_json_objects <- function(path, emit, n_max = Inf, batch_size = 25000L,
+                              chunk_size = 16777216L) {
+  con <- gzfile(path, open = "rb")
+  on.exit(close(con))
+  buf <- raw()
+  state <- list(depth = 0L, in_string = FALSE, scanned = 0L, bs_run = 0L)
+  pending <- integer()
+  emitted <- 0L
+  started <- FALSE
+  flush <- function(k) {
+    end <- pending[k]
+    probe <- buf[seq_len(min(end, 256L))]
+    lead <- which(!(probe %in% as.raw(c(0x20, 0x09, 0x0a, 0x0d, 0x2c))))[1]
+    text <- rawToChar(buf[seq.int(lead, end)])
+    Encoding(text) <- "UTF-8"
+    emit(paste0("[", text, "]"))
+    buf <<- buf[-seq_len(end)]
+    pending <<- pending[-seq_len(k)] - end
+    state$scanned <<- state$scanned - end
+    emitted <<- emitted + k
+  }
+  repeat {
+    chunk <- readBin(con, what = "raw", n = chunk_size)
+    eof <- length(chunk) == 0L
+    if (!eof) {
+      if (!started) {
+        lead <- which(chunk == as.raw(0x5b))[1]
+        if (is.na(lead)) {
+          if (all(chunk %in% as.raw(c(0x20, 0x09, 0x0a, 0x0d)))) next
+          stop("not a JSON array", call. = FALSE)
+        }
+        chunk <- chunk[-seq_len(lead)]
+        started <- TRUE
+      }
+      buf <- c(buf, chunk)
+      scan <- scan_json_objects(buf, state)
+      state <- scan$state
+      pending <- c(pending, scan$ends)
+    }
+    while (length(pending) >= batch_size || (eof && length(pending) > 0L)) {
+      k <- min(length(pending), batch_size, n_max - emitted)
+      if (k <= 0L) break
+      flush(k)
+    }
+    if (eof || emitted >= n_max) break
+  }
+  invisible(emitted)
+}
+
+#' Find the top-level object ends in the unscanned part of a buffer
+#'
+#' Vectorised: the positions of quotes not preceded by an odd run of
+#' backslashes toggle the string state; braces outside strings move the
+#' depth; a `}` that brings the depth back to zero ends an object. The
+#' state (depth, string flag, bytes already scanned) carries across
+#' calls so each byte is examined once.
+#' @keywords internal
+scan_json_objects <- function(buf, state) {
+  n <- length(buf)
+  if (state$scanned >= n) return(list(ends = integer(), state = state))
+  idx <- seq.int(state$scanned + 1L, n)
+  seg <- buf[idx]
+  is_bs <- seg == as.raw(0x5c)
+  pos <- seq_along(seg)
+  run <- pos - cummax(pos * !is_bs)
+  if (state$bs_run > 0L) run <- run + (run == pos) * state$bs_run
+  bs_run <- if (is_bs[length(seg)]) run[length(seg)] else 0L
+  quotes <- which(seg == as.raw(0x22))
+  if (length(quotes) > 0L) {
+    before <- quotes - 1L
+    escaped <- ifelse(before >= 1L, run[pmax(before, 1L)] %% 2L == 1L, state$bs_run %% 2L == 1L)
+    quotes <- quotes[!escaped]
+  }
+  in_string <- state$in_string
+  opens <- which(seg == as.raw(0x7b))
+  closes <- which(seg == as.raw(0x7d))
+  if (length(quotes) == 0L && in_string) {
+    opens <- integer()
+    closes <- integer()
+  }
+  if (length(quotes) > 0L) {
+    bounds <- c(if (in_string) 0L, quotes)
+    if (length(bounds) %% 2L == 1L) bounds <- c(bounds, n + 1L)
+    starts <- bounds[seq(1L, length(bounds), by = 2L)]
+    stops <- bounds[seq(2L, length(bounds), by = 2L)]
+    inside <- function(p) {
+      i <- findInterval(p, starts)
+      i > 0L & p < stops[pmax(i, 1L)]
+    }
+    opens <- opens[!inside(opens)]
+    closes <- closes[!inside(closes)]
+    in_string <- (length(quotes) + as.integer(state$in_string)) %% 2L == 1L
+  }
+  events <- c(opens, closes)
+  ends <- integer()
+  depth <- state$depth
+  if (length(events) > 0L) {
+    ord <- order(events)
+    delta <- c(rep(1L, length(opens)), rep(-1L, length(closes)))[ord]
+    events <- events[ord]
+    depths <- depth + cumsum(delta)
+    ends <- events[delta == -1L & depths == 0L] + state$scanned
+    depth <- depths[length(depths)]
+  }
+  list(ends = ends, state = list(depth = depth, in_string = in_string, scanned = n, bs_run = bs_run))
+}
+
+#' Read the first elements of a gzipped JSON array as JSON text
 #' @param path Path to a gzipped (or plain) JSON array file.
 #' @param n Number of elements to read.
 #' @returns A length-1 character JSON array.
 #' @keywords internal
-read_json_head <- function(path, n, chunk_size = 1048576L) {
-  con <- gzfile(path, open = "rb")
-  on.exit(close(con))
-  out <- character()
-  depth <- 0L
-  in_string <- FALSE
-  escaped <- FALSE
-  closed <- 0L
-  repeat {
-    chunk <- readChar(con, chunk_size, useBytes = TRUE)
-    if (length(chunk) == 0 || !nzchar(chunk)) break
-    bytes <- charToRaw(chunk)
-    cut <- NA_integer_
-    for (i in seq_along(bytes)) {
-      b <- bytes[i]
-      if (in_string) {
-        if (escaped) escaped <- FALSE
-        else if (b == as.raw(0x5c)) escaped <- TRUE
-        else if (b == as.raw(0x22)) in_string <- FALSE
-      } else if (b == as.raw(0x22)) {
-        in_string <- TRUE
-      } else if (b == as.raw(0x7b)) {
-        depth <- depth + 1L
-      } else if (b == as.raw(0x7d)) {
-        depth <- depth - 1L
-        if (depth == 0L) {
-          closed <- closed + 1L
-          if (closed >= n) { cut <- i; break }
-        }
-      }
-    }
-    if (!is.na(cut)) {
-      out <- c(out, rawToChar(bytes[seq_len(cut)]))
-      break
-    }
-    out <- c(out, chunk)
-  }
-  text <- paste(out, collapse = "")
-  text <- sub("^\\s*\\[", "", text)
-  text <- sub("\\]\\s*$", "", text)
-  Encoding(text) <- "UTF-8"
-  paste0("[", text, "]")
+read_json_head <- function(path, n) {
+  parts <- character()
+  read_json_objects(path, function(text) parts <<- c(parts, text), n_max = n, batch_size = n)
+  if (length(parts) == 0L) return("[]")
+  paste0("[", paste(vapply(parts, function(t) substr(t, 2L, nchar(t) - 1L), character(1)), collapse = ","), "]")
 }
 
 #' Give every list column its tidy shape
@@ -323,7 +406,10 @@ read_json_head <- function(path, n, chunk_size = 1048576L) {
 #' Dispatches on the runtime type of each list column's elements:
 #' character/numeric vectors are collapsed, NULLs become
 #' `NA_character_`, and a column whose elements are data frames stays a
-#' list-column of tibbles (`NULL` where the entity has none).
+#' list-column of tibbles (`NULL` where the entity has none). A list
+#' column with no observed value at all (every array empty) is dropped,
+#' as an empty array emits no key on the live path, so batches with and
+#' without the array bind.
 #'
 #' @param dat A tibble potentially containing list columns.
 #' @returns The same tibble with list columns converted to character or
@@ -334,10 +420,11 @@ flatten_list_columns <- function(dat) {
   for (col in list_cols) {
     cells <- lapply(dat[[col]], flatten_cell)
     nested <- vapply(cells, is.data.frame, logical(1))
-    dat[[col]] <- if (any(nested)) {
-      lapply(cells, function(v) if (is.data.frame(v)) v else NULL)
+    if (any(nested)) {
+      dat[[col]] <- lapply(cells, function(v) if (is.data.frame(v)) v else NULL)
     } else {
-      vapply(cells, function(v) v, character(1))
+      values <- vapply(cells, function(v) v, character(1))
+      if (all(is.na(values))) dat[[col]] <- NULL else dat[[col]] <- values
     }
   }
   dat

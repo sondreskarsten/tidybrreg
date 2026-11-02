@@ -4,7 +4,7 @@
 \alias{read_json_head}
 \title{Read the first elements of a gzipped JSON array as JSON text}
 \usage{
-read_json_head(path, n, chunk_size = 1048576L)
+read_json_head(path, n)
 }
 \arguments{
 \item{path}{Path to a gzipped (or plain) JSON array file.}
@@ -15,9 +15,6 @@ read_json_head(path, n, chunk_size = 1048576L)
 A length-1 character JSON array.
 }
 \description{
-Scans the file in chunks, tracking brace depth outside string
-literals, until \code{n} top-level objects have closed, and returns the
-array prefix closed with \verb{]}. Nothing beyond the \code{n}-th object is
-read, so a sample of a 200 MB bulk costs a few megabytes.
+Read the first elements of a gzipped JSON array as JSON text
 }
 \keyword{internal}
