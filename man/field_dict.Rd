@@ -5,7 +5,7 @@
 \alias{field_dict}
 \title{Field dictionary: Norwegian API paths to English column names}
 \format{
-A tibble with 103 rows and 3 columns:
+A tibble with 101 rows and 3 columns:
 \describe{
 \item{api_path}{Dot-notation path in the brreg JSON response
 (e.g. \code{"organisasjonsnummer"}, \code{"forretningsadresse.kommune"}).}
@@ -23,14 +23,10 @@ field_dict
 }
 \description{
 A tibble mapping brreg JSON field paths to English column names and
-R types. Used internally by the parse engine. API fields absent from
-this dictionary pass through with auto-generated snake_case names
-rather than being silently dropped. A few fields appear twice because
-the JSON API and the CSV bulk spell them differently
-(\code{registreringsdatoEnhetsregisteret} /
-\code{registreringsdatoIEnhetsregisteret}); the first observed spelling
-takes the English name and a second one, if ever observed in the same
-payload, keeps its snake_case name.
+R types. Used internally by the parse engine, on the single-entity
+lookups, the searches and the JSON bulk alike. API fields absent
+from this dictionary pass through with auto-generated snake_case
+names rather than being silently dropped.
 }
 \examples{
 field_dict

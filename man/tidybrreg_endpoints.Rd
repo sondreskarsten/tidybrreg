@@ -26,7 +26,7 @@ Base URL \verb{https://data.brreg.no/enhetsregisteret/api}.\tabular{lllll}{
    \code{GET /konsernstruktur/{orgnr}} \tab \code{\link[=brreg_konsern]{brreg_konsern()}} \tab none (recursive tree) \tab 404 both for unknown numbers and for entities in no group; depth observed to 6 \tab documented; depth observed (ASA census, 2026-10) \cr
    \code{GET /oppdateringer/enheter}, \verb{/oppdateringer/underenheter} \tab \code{\link[=brreg_updates]{brreg_updates()}}, \code{\link[=brreg_update_fields]{brreg_update_fields()}} \tab cursor: \code{dato} for the first page, \code{oppdateringsid} (exclusive) thereafter; \code{size} at most 10,000 \tab no documented window; field patches (\code{includeChanges}) available from 2025-09 \tab documented; cursor semantics observed \cr
    \code{GET /oppdateringer/roller} \tab \code{\link[=brreg_updates]{brreg_updates()}} with \code{type = "roller"} \tab \code{afterTime} for the first page, \code{afterId} thereafter; \code{size} at most 10,000 \tab CloudEvents without field detail \tab documented; \code{afterId} pagination not yet probed live \cr
-   \code{GET /enheter/lastned/csv}, \verb{/enheter/lastned}, \verb{/underenheter/lastned/csv}, \verb{/underenheter/lastned}, \verb{/roller/totalbestand} \tab \code{\link[=brreg_download]{brreg_download()}} \tab none (one gzipped file) \tab regenerated nightly; \code{ETag} and \code{Last-Modified} sent \tab documented; sizes observed 2026-08 (152 / 196 / 59 / 75 / 131 MB) \cr
+   \code{GET /enheter/lastned}, \verb{/underenheter/lastned}, \verb{/roller/totalbestand} \tab \code{\link[=brreg_download]{brreg_download()}} \tab none (one gzipped JSON file) \tab regenerated nightly; \code{ETag} and \code{Last-Modified} sent; the CSV variants (\verb{/lastned/csv}) are not read \tab documented; sizes observed 2026-08 (196 / 75 / 131 MB) \cr
    \code{GET /organisasjonsformer} \tab build script only \tab none \tab 44 codes \tab observed 2026-06-16 \cr
 }
 }
@@ -60,8 +60,13 @@ Base URL \verb{https://data.ssb.no/api/klass/v1}.\tabular{lllll}{
 \section{Rate limiting}{
 
 BRREG publishes no rate limit or rate-limit headers; the package
-throttles itself to 5 requests per second per host and retries 429
-and 503 up to three times. Request timeouts are httr2's defaults.
+throttles itself to 5 requests per second per host and retries 429,
+503, 500, 502 and 504 up to three times, as well as connection
+failures and the register's rate limit when it arrives as HTTP 200
+with the text \verb{Too many requests} (then a
+\code{tidybrreg_error_rate_limited}). The Regnskapsregisteret 500 for an
+unsupported accounting plan is final. Request timeouts are httr2's
+defaults.
 }
 
 \seealso{

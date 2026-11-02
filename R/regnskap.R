@@ -313,10 +313,8 @@ check_identities <- function(items) {
 #'   `tidybrreg_warning_unsupported_plan`.
 #' @keywords internal
 regnskap_unsupported <- function(resp, org_nr, empty, call = rlang::caller_env()) {
-  if (httr2::resp_status(resp) != 500L) return(NULL)
-  body <- tryCatch(httr2::resp_body_json(resp), error = \(e) list())
-  message <- body$message %||% ""
-  if (!grepl("oppstillingsplan som ikke er st", message, fixed = TRUE)) return(NULL)
+  message <- unsupported_plan_message(resp)
+  if (is.na(message)) return(NULL)
   plan <- regmatches(message, regexpr("\\(([A-Z]+)\\)", message))
   plan <- if (length(plan) == 1L) gsub("[()]", "", plan) else NA_character_
   brreg_warn(
@@ -327,6 +325,20 @@ regnskap_unsupported <- function(resp, org_nr, empty, call = rlang::caller_env()
   attr(empty, "http_status") <- 500L
   attr(empty, "unsupported_plan") <- plan
   empty
+}
+
+#' The unsupported-accounting-plan message of an HTTP 500, or `NA`
+#'
+#' Shared by [regnskap_unsupported()] and the retry rule
+#' [is_transient_response()], so the one 500 that is a property of the
+#' entity is neither retried nor reported as a server error.
+#' @keywords internal
+unsupported_plan_message <- function(resp) {
+  if (httr2::resp_status(resp) != 500L) return(NA_character_)
+  body <- tryCatch(httr2::resp_body_json(resp), error = \(e) list())
+  message <- body$message %||% ""
+  if (!is.character(message) || length(message) != 1L) return(NA_character_)
+  if (grepl("oppstillingsplan som ikke er st", message, fixed = TRUE)) message else NA_character_
 }
 
 #' Flatten a Regnskapsregisteret response to one nested row per filing

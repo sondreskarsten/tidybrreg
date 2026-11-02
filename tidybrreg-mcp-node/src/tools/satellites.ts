@@ -2,7 +2,7 @@ import { type ToolContext, type ToolResult, fnSpec, checkOrgNr, satelliteStatus,
 import { parseBrregDate } from "../dates.js";
 import { flattenJson, renameThrough, coerceRows, isHalLinkPath, toSnake, type Row, type FieldMap } from "../parse.js";
 import type { FunctionSpec } from "../manifest.js";
-import type { BrregResponse } from "../http.js";
+import { UNSUPPORTED_PLAN, type BrregResponse } from "../http.js";
 import { labelRows } from "./label.js";
 
 function emptyColumns(spec: ReturnType<typeof fnSpec>): string[] {
@@ -272,7 +272,6 @@ export function flattenRegnskap(spec: FunctionSpec, raw: any, org_nr: string): {
   return { rows, types, problems };
 }
 
-const UNSUPPORTED_PLAN = "oppstillingsplan som ikke er st";
 
 export async function brreg_regnskap(ctx: ToolContext, args: Record<string, unknown>): Promise<ToolResult> {
   const spec = fnSpec(ctx.m, "brreg_regnskap");

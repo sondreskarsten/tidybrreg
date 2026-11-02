@@ -17,7 +17,7 @@ Resolution order:
 \enumerate{
 \item Session cache in \code{.brregEnv} (keyed by type + snapshot date)
 \item Parquet snapshot — Arrow Table if arrow installed, else tibble
-\item Download cache — raw JSON/CSV parsed to tibble
+\item Download cache — raw JSON parsed to tibble
 }
 }
 \details{

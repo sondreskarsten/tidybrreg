@@ -64,7 +64,7 @@ export interface Manifest {
   shaping: Record<string, JsonSchema>;
   endpoints: {
     services: Record<string, string>;
-    http: { user_agent: string; accept: string; throttle_per_second_per_host: number; retry_statuses: number[]; retry_max_tries: number };
+    http: { user_agent: string; accept: string; throttle_per_second_per_host: number; retry_statuses: number[]; retry_max_tries: number; retry_on_connection_failure?: boolean; not_transient?: string; rate_limit_in_200?: string };
     org_nr: { pattern: string; check: string };
     functions: Record<string, FunctionSpec>;
   };

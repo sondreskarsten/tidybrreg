@@ -1,19 +1,19 @@
 // brreg_download without R: the gzipped payload is fetched into the
 // cache directory with the same refresh/cache contract, and the result is
 // the path. A 1-million-row tibble cannot travel over MCP, so
-// type_output = "tibble" answers with the path plus a short CSV preview
-// and a message saying so.
+// type_output = "tibble" answers with the path plus a short preview of
+// the JSON array and a message saying so. The bulk is JSON only, as in
+// tidybrreg.
 import { createWriteStream, existsSync, mkdirSync, readFileSync, statSync, unlinkSync, writeFileSync, createReadStream } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { Readable } from "node:stream";
 import { createGunzip } from "node:zlib";
-import { createInterface } from "node:readline";
 import { type ToolContext, type ToolResult, fnSpec } from "./common.js";
 import { TidybrregError } from "../conditions.js";
 import { parseHttpDate } from "../dates.js";
-import { renameFromDict, coerceRows, type Row } from "../parse.js";
+import { renameFromDict, coerceRows, flattenJson, type Row } from "../parse.js";
 
 export function cacheDir(): string {
   const env = process.env.TIDYBRREG_CACHE_DIR;
@@ -38,20 +38,38 @@ async function cacheIsCurrent(ctx: ToolContext, urlStr: string, metaFile: string
   return checks.length > 0 && checks.every(Boolean);
 }
 
-async function previewCsv(ctx: ToolContext, file: string, n: number): Promise<Row[]> {
-  const rl = createInterface({ input: createReadStream(file).pipe(createGunzip()), crlfDelay: Infinity });
-  const lines: string[] = [];
-  for await (const line of rl) { lines.push(line); if (lines.length > n) break; }
-  rl.close();
-  if (lines.length === 0) return [];
-  const header = splitCsv(lines[0]);
+/** The first `n` elements of a gzipped JSON array, read without inflating the whole file (tidybrreg's read_json_head). */
+export async function readJsonHead(file: string, n: number): Promise<unknown[]> {
+  const stream = createReadStream(file).pipe(createGunzip());
+  const parts: string[] = [];
+  let depth = 0; let inString = false; let escaped = false; let closed = 0; let done = false;
+  for await (const chunk of stream) {
+    const text = (chunk as Buffer).toString("utf8");
+    let cut = -1;
+    for (let i = 0; i < text.length; i += 1) {
+      const c = text[i];
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (c === "\\") escaped = true;
+        else if (c === '"') inString = false;
+      } else if (c === '"') inString = true;
+      else if (c === "{") depth += 1;
+      else if (c === "}") { depth -= 1; if (depth === 0) { closed += 1; if (closed >= n) { cut = i + 1; break; } } }
+    }
+    if (cut >= 0) { parts.push(text.slice(0, cut)); done = true; break; }
+    parts.push(text);
+  }
+  if (!done && parts.length === 0) return [];
+  const body = parts.join("").replace(/^\s*\[/, "").replace(/\]\s*$/, "");
+  return body.trim() === "" ? [] : (JSON.parse(`[${body}]`) as unknown[]);
+}
+
+async function previewJson(ctx: ToolContext, file: string, n: number): Promise<Row[]> {
+  const raws = await readJsonHead(file, n);
   const rows: Row[] = [];
   const types = new Map<string, string>();
-  for (const line of lines.slice(1, n + 1)) {
-    const cells = splitCsv(line);
-    const flat: Record<string, unknown> = {};
-    header.forEach((h, i) => { flat[h] = cells[i] === "" ? null : cells[i]; });
-    const r = renameFromDict(ctx.m, flat);
+  for (const raw of raws) {
+    const r = renameFromDict(ctx.m, flattenJson(raw as Record<string, unknown>));
     rows.push(r.row);
     for (const [k, v] of r.types) if (!types.has(k)) types.set(k, v);
   }
@@ -59,28 +77,9 @@ async function previewCsv(ctx: ToolContext, file: string, n: number): Promise<Ro
   return rows;
 }
 
-function splitCsv(line: string): string[] {
-  const out: string[] = [];
-  let cur = "";
-  let inQ = false;
-  for (let i = 0; i < line.length; i += 1) {
-    const c = line[i];
-    if (inQ) {
-      if (c === '"' && line[i + 1] === '"') { cur += '"'; i += 1; }
-      else if (c === '"') inQ = false;
-      else cur += c;
-    } else if (c === '"') inQ = true;
-    else if (c === ",") { out.push(cur); cur = ""; }
-    else cur += c;
-  }
-  out.push(cur);
-  return out;
-}
-
 export async function brreg_download(ctx: ToolContext, args: Record<string, unknown>): Promise<ToolResult> {
   const spec = fnSpec(ctx.m, "brreg_download");
   const type = String(args.type ?? "enheter");
-  let format = String(args.format ?? "csv");
   const refresh = args.refresh ?? false;
   const cache = args.cache ?? true;
   const type_output = String(args.type_output ?? "tibble");
@@ -91,9 +90,8 @@ export async function brreg_download(ctx: ToolContext, args: Record<string, unkn
   if (!(spec.output_modes as string[]).includes(type_output)) {
     throw new TidybrregError("invalid_filter", `type_output must be one of ${(spec.output_modes as string[]).join(", ")}.`, { registry: type, filter: "type_output" });
   }
-  if (type === "roller" && format === "csv") { format = "json"; ctx.cond.inform('Roller only available as JSON. Using "json" format.'); }
-  const route = spec.routes!.find((r) => r.type === type && r.format === format);
-  if (!route) throw new TidybrregError("invalid_filter", `No bulk route for ${type}/${format}.`, { registry: type, filter: "format" });
+  const route = spec.routes!.find((r) => r.type === type);
+  if (!route) throw new TidybrregError("invalid_filter", `No bulk route for ${type}.`, { registry: type, filter: "type" });
   const urlStr = ctx.m.endpoints.services.enhetsregisteret.replace(/\/$/, "") + route.path;
 
   let file: string;
@@ -102,12 +100,12 @@ export async function brreg_download(ctx: ToolContext, args: Record<string, unkn
   if (cache) {
     const dir = cacheDir();
     mkdirSync(dir, { recursive: true });
-    file = join(dir, `${type}_bulk.${format}.gz`);
+    file = join(dir, `${type}_bulk.json.gz`);
     metaFile = `${file}.meta.json`;
     needs = !existsSync(file) || refresh === true;
     if (refresh === "auto" && existsSync(file)) needs = !(await cacheIsCurrent(ctx, urlStr, metaFile));
   } else {
-    file = join(tmpdir(), `${type}_bulk_${process.pid}_${Date.now()}.${format}.gz`);
+    file = join(tmpdir(), `${type}_bulk_${process.pid}_${Date.now()}.json.gz`);
   }
 
   let meta: Meta;
@@ -125,9 +123,8 @@ export async function brreg_download(ctx: ToolContext, args: Record<string, unkn
 
   if (type_output === "path") return { kind: "scalar", value: file, attributes: { brreg_download: meta } };
 
-  let preview: Row[] = [];
-  if (format === "csv") preview = await previewCsv(ctx, file, 20);
-  ctx.cond.inform(`This server runs without R: the full ${type} extract is at ${file}; the rows returned are a ${preview.length}-row preview. Parse the file with tidybrreg::brreg_download() in R, or any CSV/JSON reader, for the complete table.`);
+  const preview: Row[] = type === "roller" ? [] : await previewJson(ctx, file, 20);
+  ctx.cond.inform(`This server runs without R: the full ${type} extract is at ${file}; the rows returned are a ${preview.length}-row preview. Parse the file with tidybrreg::brreg_download() in R, or any JSON reader, for the complete table.`);
   const attributes: Record<string, unknown> = { brreg_download: meta, path: file, preview: true };
   if (!cache) { try { unlinkSync(file); } catch { /* ignore */ } }
   return { kind: "table", rows: preview, columns: ["org_nr", "name", "legal_form"], attributes };

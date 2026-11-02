@@ -86,6 +86,22 @@ held to the functions by `tests/testthat/test-endpoints.R`.
 
 ## Breaking changes
 
+* `brreg_download()` reads the JSON bulk only: the `format` argument
+  is gone and `/enheter/lastned/csv` and `/underenheter/lastned/csv`
+  are no longer requested. The JSON bulk is the representation the
+  single-entity lookups and the update feeds use, so a bulk row, a
+  lookup and a patch now agree on every field, nested arrays included;
+  the CSV was BRREG's own flattening with its own separators and a
+  presence flag in place of the annotation array. The cache file is
+  `{type}_bulk.json.gz`. `field_dict` loses the two CSV-only spellings
+  (`registreringsdatoIEnhetsregisteret`,
+  `registreringsdatoAntallAnsatteNAVAaregisteret`). A sample of the
+  bulk is read without parsing the whole file through the internal
+  `parse_bulk_json(n_max = )`. tidybrregpanel follows:
+  `brreg_snapshot()` and `brreg_sync()` lose `format`, `brreg_import()`
+  takes a JSON bulk file, and the CSV flag-then-fetch bootstrap of
+  annotations is gone.
+
 * `brreg_download()` supports `type_output = "tibble"` and `"path"`
   only. The Arrow backend is withdrawn: BRREG's CSV fails in
   `arrow::read_csv_arrow()` on embedded newlines in quoted addresses,
@@ -129,9 +145,25 @@ held to the functions by `tests/testthat/test-endpoints.R`.
 Every error and warning now carries a class and fields; see
 `?tidybrreg_conditions`. Errors: `tidybrreg_error_invalid_org_nr`,
 `_invalid_filter`, `_not_found`, `_http`, `_result_window`,
-`_invalid_since`, `_no_bundled_dictionary`. Warnings:
-`tidybrreg_warning_deleted`, `_partial`, `_truncated`,
-`_unknown_member`, `_bundled_fallback`, `_parse`.
+`_invalid_since`, `_no_bundled_dictionary`, `_rate_limited`,
+`_connection`. Warnings: `tidybrreg_warning_deleted`, `_partial`,
+`_truncated`, `_unknown_member`, `_bundled_fallback`, `_parse`,
+`_unresolved`, `_unsupported_plan`.
+
+## Request layer
+
+The retry rule follows what the brreg-json-fetcher collector observed
+live. 500, 502 and 504 are transient like 429 and 503 (three tries,
+exponential pause), except the Regnskapsregisteret 500 that names an
+unsupported accounting plan, which is a property of the entity and is
+final. The register's rate limit sometimes arrives as HTTP 200 with a
+`text/plain` body `Too many requests`; it was an unreadable-body
+crash and is now retried and, when it persists, a typed
+`tidybrreg_error_rate_limited`. A connection failure (DNS, TCP, TLS,
+dropped connection) is retried the same number of times and then a
+`tidybrreg_error_connection`. The live audit probes the fetcher's two
+deleted controls (931264338, 991128972) as deleted here too. The Node
+server applies the same rule from `endpoints.json`.
 
 ## Fixes to the retained core
 

@@ -14,16 +14,19 @@
 #'
 #' - **[brreg_search()]**: JSON API with server-side filtering. Fast for
 #'   small result sets, capped at 10,000. Interactive exploration.
-#' - **`brreg_download()`**: Bulk CSV or JSON. Always returns the full
+#' - **`brreg_download()`**: Bulk JSON. Always returns the full
 #'   register. Appropriate for any analysis requiring more than 10,000
 #'   entities.
 #'
 #' Results from both paths use the same column names and types via
 #' [field_dict]; only observed columns are emitted (see
-#' [brreg_entity()]). The JSON bulk carries the arrays the CSV lacks:
-#' `historiskeNavn` and the full `paategninger` array arrive as the
-#' nested list-columns `historiske_navn` and `annotations`, while the
-#' CSV's `annotations` is BRREG's own presence flag.
+#' [brreg_entity()]). The bulk is the JSON variant of each endpoint,
+#' the same representation the single-entity lookups and the update
+#' feeds use, so `historiskeNavn` and `paategninger` arrive as the
+#' nested list-columns `historiske_navn` and `annotations` exactly as
+#' from [brreg_entity()]. BRREG's CSV variant is not read: it is the
+#' register's own flattening, with different separators and a presence
+#' flag in place of the annotation array.
 #'
 #' @inheritSection brreg_entity Tidy shape
 #'
@@ -45,14 +48,10 @@
 #' as a UTC `POSIXct`, `downloaded_at`, `path`) is available as
 #' `attr(result, "brreg_download")` on tibble output.
 #'
-#' @param type One of `"enheter"` (main entities, default),
-#'   `"underenheter"` (sub-entities / establishments), or
-#'   `"roller"` (all roles for all entities). Roller data is only
-#'   available as JSON via `/roller/totalbestand` (~131 MB).
-#' @param format Download format: `"csv"` (default for enheter/underenheter,
-#'   comma-delimited) or `"json"` (JSON array). Only the JSON bulk
-#'   carries `historiskeNavn`; the CSV has no such column. Roller bulk
-#'   download is always JSON regardless of this parameter.
+#' @param type One of `"enheter"` (main entities, default, ~196 MB),
+#'   `"underenheter"` (sub-entities / establishments, ~75 MB), or
+#'   `"roller"` (all roles for all entities via `/roller/totalbestand`,
+#'   ~131 MB). All three are gzipped JSON.
 #' @param refresh `FALSE` (default): use cached file if available.
 #'   `TRUE`: force re-download. `"auto"`: revalidate against the server
 #'   and re-download only when the cached copy cannot be shown current.
@@ -64,9 +63,9 @@
 #'
 #' @returns Depends on `type_output`:
 #'   - `"tibble"`: A tibble with ~1 million rows. Column names mapped
-#'     via [field_dict]; with `format = "json"` the arrays of objects
-#'     are list-columns of tibbles. For `type = "roller"`, one row per
-#'     role assignment with the columns of [brreg_roles()].
+#'     via [field_dict]; arrays of objects are list-columns of tibbles.
+#'     For `type = "roller"`, one row per role assignment with the
+#'     columns of [brreg_roles()].
 #'   - `"path"`: Character file path to the gzipped download.
 #'
 #' @family tidybrreg entity functions
@@ -76,7 +75,7 @@
 #' @export
 #' @examplesIf interactive() && curl::has_internet()
 #' \donttest{
-#' # Download full register as tibble (~150MB download, ~1M rows)
+#' # Download full register as tibble (~196 MB download, ~1M rows)
 #' entities <- brreg_download()
 #'
 #' # Just get the file path (no parsing)
@@ -86,12 +85,10 @@
 #' entities <- brreg_download(refresh = TRUE)
 #' }
 brreg_download <- function(type = c("enheter", "underenheter", "roller"),
-                            format = c("csv", "json"),
                             refresh = FALSE,
                             cache = TRUE,
                             type_output = c("tibble", "path")) {
   type <- match.arg(type)
-  format <- match.arg(format)
   type_output <- match.arg(type_output)
   if (!(isTRUE(refresh) || isFALSE(refresh) || identical(refresh, "auto"))) {
     brreg_abort("{.arg refresh} must be {.code TRUE}, {.code FALSE}, or {.val auto}.",
@@ -102,26 +99,20 @@ brreg_download <- function(type = c("enheter", "underenheter", "roller"),
                 class = "invalid_filter", registry = type, filter = "cache")
   }
 
-  if (type == "roller" && format == "csv") {
-    format <- "json"
-    cli::cli_alert_info("Roller only available as JSON. Using {.val json} format.")
-  }
-
-  url <- bulk_url(type, format)
-  sizes <- c(enheter = "~152 MB", underenheter = "~59 MB", roller = "~131 MB")
+  url <- bulk_url(type)
+  sizes <- c(enheter = "~196 MB", underenheter = "~75 MB", roller = "~131 MB")
 
   if (cache) {
     cache_dir <- tools::R_user_dir("tidybrreg", "cache")
     dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
-    cache_file <- file.path(cache_dir, paste0(type, "_bulk.", format, ".gz"))
+    cache_file <- file.path(cache_dir, paste0(type, "_bulk.json.gz"))
     meta_file <- paste0(cache_file, ".meta.json")
     needs_download <- !file.exists(cache_file) || isTRUE(refresh)
     if (identical(refresh, "auto") && file.exists(cache_file)) {
       needs_download <- !cache_is_current(url, meta_file)
     }
   } else {
-    cache_file <- tempfile(pattern = paste0(type, "_bulk_"),
-                           fileext = paste0(".", format, ".gz"))
+    cache_file <- tempfile(pattern = paste0(type, "_bulk_"), fileext = ".json.gz")
     meta_file <- NULL
     needs_download <- TRUE
     if (type_output == "tibble") on.exit(unlink(cache_file), add = TRUE)
@@ -152,21 +143,18 @@ brreg_download <- function(type = c("enheter", "underenheter", "roller"),
 
   result <- if (type == "roller") {
     parse_roles_bulk(cache_file)
-  } else if (format == "json") {
-    parse_bulk_json(cache_file, type = type)
   } else {
-    parse_bulk_csv(cache_file, type = type)
+    parse_bulk_json(cache_file, type = type)
   }
   attr(result, "brreg_download") <- meta
   result
 }
 
-#' Bulk endpoint URL for a registry and format
+#' Bulk endpoint URL for a registry
 #' @keywords internal
-bulk_url <- function(type, format) {
+bulk_url <- function(type) {
   if (type == "roller") return(paste0(brreg_base_url(), "/roller/totalbestand"))
-  if (format == "json") return(paste0(brreg_base_url(), "/", type, "/lastned"))
-  paste0(brreg_base_url(), "/", type, "/lastned/", format)
+  paste0(brreg_base_url(), "/", type, "/lastned")
 }
 
 #' Collect validators and timing of a completed download
@@ -231,39 +219,16 @@ cache_is_current <- function(url, meta_file) {
 }
 
 
-#' Parse a brreg bulk CSV into a tibble using the field dictionary
-#'
-#' The bulk CSV uses `,` (comma) delimiter with `.` notation for nested fields
-#' (e.g. `forretningsadresse.kommune`). This function reads all columns
-#' as character, then applies [rename_and_coerce()] for field_dict
-#' mapping and type coercion — the same rename/coerce pipeline used
-#' by [parse_bulk_json()].
-#'
-#' @param path Path to the gzipped CSV file.
-#' @param type Entity type for column selection.
-#' @param n_max Maximum rows to read (default: all).
-#'
-#' @returns A tibble with columns mapped via [field_dict].
-#' @keywords internal
-parse_bulk_csv <- function(path, type = "enheter", n_max = Inf) {
-  dat <- readr::read_csv(path,
-    locale = readr::locale(encoding = "UTF-8"),
-    show_col_types = FALSE, progress = TRUE,
-    n_max = n_max,
-    col_types = readr::cols(.default = readr::col_character())
-  )
-
-  rename_and_coerce(dat)
-}
-
-
 #' Parse a brreg bulk JSON download into a flat tibble
 #'
 #' The `/enheter/lastned` and `/underenheter/lastned` endpoints return
 #' gzipped JSON arrays with nested objects. `jsonlite::fromJSON(flatten = TRUE)`
 #' expands nested objects to dot-notation columns but leaves arrays as list
-#' columns. This function gives every list column the tidy shape of the
-#' live path ([collapse_observed()]):
+#' columns. With a finite `n_max` only the first `n_max` elements of the
+#' array are read ([read_json_head()]), which is how a sample of the
+#' register is parsed without holding the whole file. This function
+#' gives every list column the tidy shape of the live path
+#' ([collapse_observed()]):
 #'
 #' - Character vectors (addresses, activities): line fragments of one
 #'   value, joined with `"\n"`
@@ -279,11 +244,17 @@ parse_bulk_csv <- function(path, type = "enheter", n_max = Inf) {
 #'
 #' @param path Path to the gzipped JSON file.
 #' @param type Entity type (for column context).
+#' @param n_max Maximum number of array elements to read (default: all).
 #' @returns A tibble mapped via [field_dict]; arrays of objects are
 #'   nested list-columns, everything else atomic.
 #' @keywords internal
-parse_bulk_json <- function(path, type = "enheter") {
-  dat <- jsonlite::fromJSON(path, flatten = TRUE)
+parse_bulk_json <- function(path, type = "enheter", n_max = Inf) {
+  dat <- if (is.finite(n_max)) {
+    jsonlite::fromJSON(read_json_head(path, n_max), flatten = TRUE)
+  } else {
+    jsonlite::fromJSON(path, flatten = TRUE)
+  }
+  if (length(dat) == 0) return(empty_entities())
   dat <- tibble::as_tibble(dat)
 
   dat <- flatten_list_columns(dat)
@@ -292,6 +263,60 @@ parse_bulk_json <- function(path, type = "enheter") {
   dat
 }
 
+
+#' Read the first elements of a gzipped JSON array as JSON text
+#'
+#' Scans the file in chunks, tracking brace depth outside string
+#' literals, until `n` top-level objects have closed, and returns the
+#' array prefix closed with `]`. Nothing beyond the `n`-th object is
+#' read, so a sample of a 200 MB bulk costs a few megabytes.
+#' @param path Path to a gzipped (or plain) JSON array file.
+#' @param n Number of elements to read.
+#' @returns A length-1 character JSON array.
+#' @keywords internal
+read_json_head <- function(path, n, chunk_size = 1048576L) {
+  con <- gzfile(path, open = "rb")
+  on.exit(close(con))
+  out <- character()
+  depth <- 0L
+  in_string <- FALSE
+  escaped <- FALSE
+  closed <- 0L
+  repeat {
+    chunk <- readChar(con, chunk_size, useBytes = TRUE)
+    if (length(chunk) == 0 || !nzchar(chunk)) break
+    bytes <- charToRaw(chunk)
+    cut <- NA_integer_
+    for (i in seq_along(bytes)) {
+      b <- bytes[i]
+      if (in_string) {
+        if (escaped) escaped <- FALSE
+        else if (b == as.raw(0x5c)) escaped <- TRUE
+        else if (b == as.raw(0x22)) in_string <- FALSE
+      } else if (b == as.raw(0x22)) {
+        in_string <- TRUE
+      } else if (b == as.raw(0x7b)) {
+        depth <- depth + 1L
+      } else if (b == as.raw(0x7d)) {
+        depth <- depth - 1L
+        if (depth == 0L) {
+          closed <- closed + 1L
+          if (closed >= n) { cut <- i; break }
+        }
+      }
+    }
+    if (!is.na(cut)) {
+      out <- c(out, rawToChar(bytes[seq_len(cut)]))
+      break
+    }
+    out <- c(out, chunk)
+  }
+  text <- paste(out, collapse = "")
+  text <- sub("^\\s*\\[", "", text)
+  text <- sub("\\]\\s*$", "", text)
+  Encoding(text) <- "UTF-8"
+  paste0("[", text, "]")
+}
 
 #' Give every list column its tidy shape
 #'
@@ -346,7 +371,7 @@ drop_hal_links <- function(dat) {
 
 #' Rename columns via field_dict and coerce types
 #'
-#' Shared between CSV and JSON parsing. Known dot-notation paths
+#' Used by [parse_bulk_json()]. Known dot-notation paths
 #' map to English names; unknown paths get auto snake_case, made unique
 #' on collision. Type coercion follows `field_dict$type` through
 #' [coerce_column()], the same rule the live path uses, so every

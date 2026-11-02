@@ -4,12 +4,14 @@
 \alias{parse_bulk_json}
 \title{Parse a brreg bulk JSON download into a flat tibble}
 \usage{
-parse_bulk_json(path, type = "enheter")
+parse_bulk_json(path, type = "enheter", n_max = Inf)
 }
 \arguments{
 \item{path}{Path to the gzipped JSON file.}
 
 \item{type}{Entity type (for column context).}
+
+\item{n_max}{Maximum number of array elements to read (default: all).}
 }
 \value{
 A tibble mapped via \link{field_dict}; arrays of objects are
@@ -19,8 +21,11 @@ nested list-columns, everything else atomic.
 The \verb{/enheter/lastned} and \verb{/underenheter/lastned} endpoints return
 gzipped JSON arrays with nested objects. \code{jsonlite::fromJSON(flatten = TRUE)}
 expands nested objects to dot-notation columns but leaves arrays as list
-columns. This function gives every list column the tidy shape of the
-live path (\code{\link[=collapse_observed]{collapse_observed()}}):
+columns. With a finite \code{n_max} only the first \code{n_max} elements of the
+array are read (\code{\link[=read_json_head]{read_json_head()}}), which is how a sample of the
+register is parsed without holding the whole file. This function
+gives every list column the tidy shape of the live path
+(\code{\link[=collapse_observed]{collapse_observed()}}):
 }
 \details{
 \itemize{

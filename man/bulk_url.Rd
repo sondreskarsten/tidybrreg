@@ -2,11 +2,11 @@
 % Please edit documentation in R/download.R
 \name{bulk_url}
 \alias{bulk_url}
-\title{Bulk endpoint URL for a registry and format}
+\title{Bulk endpoint URL for a registry}
 \usage{
-bulk_url(type, format)
+bulk_url(type)
 }
 \description{
-Bulk endpoint URL for a registry and format
+Bulk endpoint URL for a registry
 }
 \keyword{internal}

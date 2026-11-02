@@ -6,7 +6,6 @@
 \usage{
 brreg_snapshot(
   type = c("enheter", "underenheter", "roller"),
-  format = c("csv", "json"),
   date = Sys.Date(),
   force = FALSE,
   ask = interactive()
@@ -18,15 +17,6 @@ brreg_snapshot(
 \code{"roller"} (all roles for all entities, via
 \verb{/roller/totalbestand}). Roller snapshots parse the nested
 JSON into a flat tibble matching \code{\link[tidybrreg:brreg_roles]{tidybrreg::brreg_roles()}} output.}
-
-\item{format}{Download format: \code{"csv"} (default for enheter/underenheter)
-or \code{"json"}. \code{historiskeNavn} is absent from the CSV entirely and
-only the JSON bulk carries it; \code{paategninger} is present in CSV
-but degraded to a \code{true}/\code{false} presence flag, while JSON
-carries the full annotation array inline. Array-valued text
-fields (addresses, \code{vedtektsfestetFormaal}, \code{aktivitet}) differ
-in join separator between the two formats.
-Roller is always JSON regardless of this parameter.}
 
 \item{date}{Date for this snapshot (default: today). Used as the
 partition key, not as an API parameter — the brreg bulk endpoint
@@ -58,7 +48,7 @@ brreg_snapshots()
 \dontshow{\}) # examplesIf}
 }
 \seealso{
-\code{\link[=brreg_import]{brreg_import()}} to add historical snapshots from CSV files,
+\code{\link[=brreg_import]{brreg_import()}} to add historical snapshots from bulk JSON files,
 \code{\link[=brreg_snapshots]{brreg_snapshots()}} to list available snapshots,
 \code{\link[=brreg_panel]{brreg_panel()}} to construct panels from accumulated snapshots.
 

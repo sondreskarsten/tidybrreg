@@ -7,7 +7,7 @@
 rename_and_coerce(dat)
 }
 \description{
-Shared between CSV and JSON parsing. Known dot-notation paths
+Used by \code{\link[=parse_bulk_json]{parse_bulk_json()}}. Known dot-notation paths
 map to English names; unknown paths get auto snake_case, made unique
 on collision. Type coercion follows \code{field_dict$type} through
 \code{\link[=coerce_column]{coerce_column()}}, the same rule the live path uses, so every

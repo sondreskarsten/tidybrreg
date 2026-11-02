@@ -7,6 +7,8 @@ import { callTool, IMPLEMENTATIONS } from "../src/execute.js";
 import { parsePatch } from "../src/tools/updates.js";
 import { flattenRoles, flattenKonsern, flattenSignatur, flattenRegnskap } from "../src/tools/satellites.js";
 import { labelRows } from "../src/tools/label.js";
+import { readJsonHead } from "../src/tools/download.js";
+import { tmpdir } from "node:os";
 import { parseBrregDate, parseBrregInstant, formatSince } from "../src/dates.js";
 import { renameFromDict, flattenJson, coerceRows, toSnake } from "../src/parse.js";
 import { validateOrgNr } from "../src/tools/common.js";
@@ -122,6 +124,53 @@ describe("fixtures shared with the R test suite", () => {
   });
 });
 
+describe("the request layer", () => {
+  const textResp = (status: number, text: string, type = "text/plain;charset=UTF-8") =>
+    new Response(text, { status, headers: { "content-type": type } });
+  it("retries the rate limit answered as HTTP 200 and then raises tidybrreg_error_rate_limited", async () => {
+    let calls = 0;
+    const http = new Http(m, async () => { calls += 1; return calls < 2 ? textResp(200, "Too many requests") : new Response('{"a":1}', { status: 200, headers: { "content-type": "application/json" } }); });
+    const r = await http.get("https://data.brreg.no/enhetsregisteret/api/enheter/923609016");
+    expect(r.status).toBe(200);
+    expect(await r.json()).toEqual({ a: 1 });
+    expect(calls).toBe(2);
+    calls = 0;
+    const limited = new Http(m, async () => { calls += 1; return textResp(200, "Too many requests"); });
+    await expect(limited.get("https://data.brreg.no/enhetsregisteret/api/enheter/923609016")).rejects.toMatchObject({ cls: "tidybrreg_error_rate_limited", fields: { status: 200, attempts: 3 } });
+    expect(calls).toBe(3);
+  });
+  it("retries 500/502/504 but returns the unsupported-plan 500 at once", async () => {
+    let calls = 0;
+    const flaky = new Http(m, async () => { calls += 1; return calls < 3 ? new Response("{}", { status: 502 }) : new Response("[]", { status: 200, headers: { "content-type": "application/json" } }); });
+    expect((await flaky.get("https://data.brreg.no/x")).status).toBe(200);
+    expect(calls).toBe(3);
+    calls = 0;
+    const plan = new Http(m, async () => { calls += 1; return new Response(JSON.stringify({ status: 500, message: "Regnskap har oppstillingsplan som ikke er st\u00f8ttet (BANK)" }), { status: 500, headers: { "content-type": "application/json" } }); });
+    const r = await plan.get("https://data.brreg.no/regnskapsregisteret/regnskap/1");
+    expect(r.status).toBe(500);
+    expect((await r.json()).message).toContain("BANK");
+    expect(calls).toBe(1);
+  });
+  it("retries connection failures and then raises tidybrreg_error_connection", async () => {
+    let calls = 0;
+    const down = new Http(m, async () => { calls += 1; throw new Error("getaddrinfo ENOTFOUND"); });
+    await expect(down.get("https://data.brreg.no/x")).rejects.toMatchObject({ cls: "tidybrreg_error_connection", fields: { attempts: 3 } });
+    expect(calls).toBe(3);
+  });
+  it("reads the head of a gzipped JSON array without the rest of the file", async () => {
+    const { gzipSync } = await import("node:zlib");
+    const { writeFileSync, mkdtempSync } = await import("node:fs");
+    const dir = mkdtempSync(join(tmpdir(), "tidybrreg-head-"));
+    const file = join(dir, "enheter_bulk.json.gz");
+    const arr = Array.from({ length: 50 }, (_, i) => ({ organisasjonsnummer: String(900000000 + i), navn: `Firma {"x"} ${i}`, organisasjonsform: { kode: "AS" }, paategninger: [{ infotype: "KONT", tekst: "x" }] }));
+    writeFileSync(file, gzipSync(JSON.stringify(arr, null, 2)));
+    const head = await readJsonHead(file, 3);
+    expect(head).toHaveLength(3);
+    expect((head[2] as any).organisasjonsnummer).toBe("900000002");
+    expect(await readJsonHead(file, 100)).toHaveLength(50);
+  });
+});
+
 describe("tools over a mocked register", () => {
   it("brreg_entity nests arrays of objects and joins line fragments like the R package", async () => {
     const body = entity("923609016", {
@@ -195,7 +244,7 @@ describe("tools over a mocked register", () => {
     q = queue([{ status: 410, body: { slettedato: "2026-02-01" } }]);
     r = await callTool(m, q.http, tool("brreg_roles"), { org_nr: "923609016" });
     expect((r.structuredContent.conditions as any[])[0].class).toBe("tidybrreg_warning_deleted");
-    q = queue([{ status: 500, body: { error: "boom" } }]);
+    q = queue([{ status: 500, body: { error: "boom" } }, { status: 500, body: { error: "boom" } }, { status: 500, body: { error: "boom" } }]);
     r = await callTool(m, q.http, tool("brreg_signatur"), { org_nr: "923609016" });
     expect((r.structuredContent.error as any).class).toBe("tidybrreg_error_http");
     expect((r.structuredContent.error as any).fields.messages).toEqual(["boom"]);
@@ -260,7 +309,7 @@ describe("tools over a mocked register", () => {
     expect((r.structuredContent.conditions as any[])[0].class).toBe("tidybrreg_warning_unsupported_plan");
     expect((r.structuredContent.columns as any[]).map((c) => c.name)).toEqual(spec.result!.empty);
 
-    q = queue([{ status: 500, body: { error: "boom" } }]);
+    q = queue([{ status: 500, body: { error: "boom" } }, { status: 500, body: { error: "boom" } }, { status: 500, body: { error: "boom" } }]);
     r = await callTool(m, q.http, tool("brreg_regnskap"), { org_nr: "923609016" });
     expect((r.structuredContent.error as any).class).toBe("tidybrreg_error_http");
     expect((r.structuredContent.error as any).fields.messages).toEqual(["boom"]);

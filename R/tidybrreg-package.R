@@ -18,8 +18,8 @@ NULL
 #' @section Exported datasets (`data/`):
 #' \describe{
 #'   \item{[field_dict]}{**Package-authored.** A mapping from BRREG JSON
-#'     paths and CSV column headers to English column names and R
-#'     types, written by the package author from the Enhetsregisteret
+#'     paths to English column names and R types, written by the
+#'     package author from the Enhetsregisteret
 #'     API documentation (<https://data.brreg.no/enhetsregisteret/api/dokumentasjon/>)
 #'     and from fields observed on live responses. The Norwegian paths
 #'     are BRREG's identifiers; the English names and types are the
@@ -96,16 +96,12 @@ NULL
 #' Field dictionary: Norwegian API paths to English column names
 #'
 #' A tibble mapping brreg JSON field paths to English column names and
-#' R types. Used internally by the parse engine. API fields absent from
-#' this dictionary pass through with auto-generated snake_case names
-#' rather than being silently dropped. A few fields appear twice because
-#' the JSON API and the CSV bulk spell them differently
-#' (`registreringsdatoEnhetsregisteret` /
-#' `registreringsdatoIEnhetsregisteret`); the first observed spelling
-#' takes the English name and a second one, if ever observed in the same
-#' payload, keeps its snake_case name.
+#' R types. Used internally by the parse engine, on the single-entity
+#' lookups, the searches and the JSON bulk alike. API fields absent
+#' from this dictionary pass through with auto-generated snake_case
+#' names rather than being silently dropped.
 #'
-#' @format A tibble with 103 rows and 3 columns:
+#' @format A tibble with 101 rows and 3 columns:
 #' \describe{
 #'   \item{api_path}{Dot-notation path in the brreg JSON response
 #'     (e.g. `"organisasjonsnummer"`, `"forretningsadresse.kommune"`).}
@@ -300,7 +296,7 @@ NULL
 #' | `GET /konsernstruktur/{orgnr}` | [brreg_konsern()] | none (recursive tree) | 404 both for unknown numbers and for entities in no group; depth observed to 6 | documented; depth observed (ASA census, 2026-10) |
 #' | `GET /oppdateringer/enheter`, `/oppdateringer/underenheter` | [brreg_updates()], [brreg_update_fields()] | cursor: `dato` for the first page, `oppdateringsid` (exclusive) thereafter; `size` at most 10,000 | no documented window; field patches (`includeChanges`) available from 2025-09 | documented; cursor semantics observed |
 #' | `GET /oppdateringer/roller` | [brreg_updates()] with `type = "roller"` | `afterTime` for the first page, `afterId` thereafter; `size` at most 10,000 | CloudEvents without field detail | documented; `afterId` pagination not yet probed live |
-#' | `GET /enheter/lastned/csv`, `/enheter/lastned`, `/underenheter/lastned/csv`, `/underenheter/lastned`, `/roller/totalbestand` | [brreg_download()] | none (one gzipped file) | regenerated nightly; `ETag` and `Last-Modified` sent | documented; sizes observed 2026-08 (152 / 196 / 59 / 75 / 131 MB) |
+#' | `GET /enheter/lastned`, `/underenheter/lastned`, `/roller/totalbestand` | [brreg_download()] | none (one gzipped JSON file) | regenerated nightly; `ETag` and `Last-Modified` sent; the CSV variants (`/lastned/csv`) are not read | documented; sizes observed 2026-08 (196 / 75 / 131 MB) |
 #' | `GET /organisasjonsformer` | build script only | none | 44 codes | observed 2026-06-16 |
 #'
 #' @section Fullmakt service:
@@ -328,8 +324,13 @@ NULL
 #'
 #' @section Rate limiting:
 #' BRREG publishes no rate limit or rate-limit headers; the package
-#' throttles itself to 5 requests per second per host and retries 429
-#' and 503 up to three times. Request timeouts are httr2's defaults.
+#' throttles itself to 5 requests per second per host and retries 429,
+#' 503, 500, 502 and 504 up to three times, as well as connection
+#' failures and the register's rate limit when it arrives as HTTP 200
+#' with the text `Too many requests` (then a
+#' `tidybrreg_error_rate_limited`). The Regnskapsregisteret 500 for an
+#' unsupported accounting plan is final. Request timeouts are httr2's
+#' defaults.
 #'
 #' @name tidybrreg_endpoints
 #' @family tidybrreg utilities

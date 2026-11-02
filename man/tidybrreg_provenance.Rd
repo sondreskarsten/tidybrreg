@@ -14,8 +14,8 @@ touched each table, taken from the repository history.
 
 \describe{
 \item{\link{field_dict}}{\strong{Package-authored.} A mapping from BRREG JSON
-paths and CSV column headers to English column names and R
-types, written by the package author from the Enhetsregisteret
+paths to English column names and R types, written by the
+package author from the Enhetsregisteret
 API documentation (\url{https://data.brreg.no/enhetsregisteret/api/dokumentasjon/})
 and from fields observed on live responses. The Norwegian paths
 are BRREG's identifiers; the English names and types are the

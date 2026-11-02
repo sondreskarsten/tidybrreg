@@ -153,24 +153,21 @@ TRUE` and `deletion_date` in both cases and signals a
 `tidybrreg_warning_deleted`; the per-entity endpoints (roles, konsern,
 signatur) return their typed empty tibble with `http_status = 410L`.
 
-## CSV vs JSON bulk downloads
+## The bulk download is JSON
 
-The bulk download endpoints return different column sets:
-
-| Feature | CSV (`/lastned/csv`) | JSON (`/lastned`) |
-|---|---|---|
-| Size (enheter) | 152 MB | 196 MB |
-| Columns | ~90 | ~67 (after flattening) |
-| Extra fields | Dissolution dates, foreign insolvency | `kapital.*`, `vedtektsfestetFormaal`, `paategninger` |
-| Address format | Flat (one column per field) | Nested (array of address lines) |
-| Delimiter | Comma (despite common belief it's semicolon) | N/A |
-
-Neither format is a superset of the other. The package's algorithmic
-unnesting produces flat tibbles from both formats, and every
-dictionary-typed column (dates, integers, the numeric `capital_*`
-fields, logicals) has the same type whichever path produced it. Choose
-JSON when you need share capital data (`kapital.*`) or articles of
-association text; choose CSV when you need dissolution details.
+`brreg_download()` reads the JSON variant of the bulk endpoints
+(`/enheter/lastned`, `/underenheter/lastned`, `/roller/totalbestand`),
+the same representation the single-entity lookups and the update feeds
+use. A bulk row therefore carries exactly the fields and nesting of
+`brreg_entity()`: share capital (`capital_*`), the articles of
+association text, the full annotation array (`annotations`) and the
+name history (`historiske_navn`) as list-columns of tibbles. BRREG also
+publishes a CSV variant with its own flattening (one column per address
+field, a presence flag in place of the annotations, no name history);
+the package does not read it, so every path through the package agrees
+on every field and dictionary-typed column (dates, integers, the
+numeric `capital_*` fields, logicals) has the same type whichever path
+produced it.
 
 ## CDC update stream
 

@@ -32,9 +32,9 @@ not share a rate limit.}
 messages, passed to \code{\link[httr2:req_error]{httr2::req_error()}}.}
 }
 \description{
-Centralises the user agent, transient-retry policy, and per-host
-throttle so every request the package makes is constructed
-identically. Host-specific concerns (base URL, throttle realm, Accept
+Centralises the user agent, transient-retry policy
+(\code{\link[=is_transient_response]{is_transient_response()}}), and per-host throttle so every request
+the package makes is constructed identically. Host-specific concerns (base URL, throttle realm, Accept
 header, error body extractor) are supplied by the caller.
 }
 \keyword{internal}

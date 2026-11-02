@@ -6,22 +6,16 @@
 \usage{
 brreg_download(
   type = c("enheter", "underenheter", "roller"),
-  format = c("csv", "json"),
   refresh = FALSE,
   cache = TRUE,
   type_output = c("tibble", "path")
 )
 }
 \arguments{
-\item{type}{One of \code{"enheter"} (main entities, default),
-\code{"underenheter"} (sub-entities / establishments), or
-\code{"roller"} (all roles for all entities). Roller data is only
-available as JSON via \verb{/roller/totalbestand} (~131 MB).}
-
-\item{format}{Download format: \code{"csv"} (default for enheter/underenheter,
-comma-delimited) or \code{"json"} (JSON array). Only the JSON bulk
-carries \code{historiskeNavn}; the CSV has no such column. Roller bulk
-download is always JSON regardless of this parameter.}
+\item{type}{One of \code{"enheter"} (main entities, default, ~196 MB),
+\code{"underenheter"} (sub-entities / establishments, ~75 MB), or
+\code{"roller"} (all roles for all entities via \verb{/roller/totalbestand},
+~131 MB). All three are gzipped JSON.}
 
 \item{refresh}{\code{FALSE} (default): use cached file if available.
 \code{TRUE}: force re-download. \code{"auto"}: revalidate against the server
@@ -38,9 +32,9 @@ the file path without parsing).}
 Depends on \code{type_output}:
 \itemize{
 \item \code{"tibble"}: A tibble with ~1 million rows. Column names mapped
-via \link{field_dict}; with \code{format = "json"} the arrays of objects
-are list-columns of tibbles. For \code{type = "roller"}, one row per
-role assignment with the columns of \code{\link[=brreg_roles]{brreg_roles()}}.
+via \link{field_dict}; arrays of objects are list-columns of tibbles.
+For \code{type = "roller"}, one row per role assignment with the
+columns of \code{\link[=brreg_roles]{brreg_roles()}}.
 \item \code{"path"}: Character file path to the gzipped download.
 }
 }
@@ -60,17 +54,20 @@ pattern of auto-routing within one function:
 \itemize{
 \item \strong{\code{\link[=brreg_search]{brreg_search()}}}: JSON API with server-side filtering. Fast for
 small result sets, capped at 10,000. Interactive exploration.
-\item \strong{\code{brreg_download()}}: Bulk CSV or JSON. Always returns the full
+\item \strong{\code{brreg_download()}}: Bulk JSON. Always returns the full
 register. Appropriate for any analysis requiring more than 10,000
 entities.
 }
 
 Results from both paths use the same column names and types via
 \link{field_dict}; only observed columns are emitted (see
-\code{\link[=brreg_entity]{brreg_entity()}}). The JSON bulk carries the arrays the CSV lacks:
-\code{historiskeNavn} and the full \code{paategninger} array arrive as the
-nested list-columns \code{historiske_navn} and \code{annotations}, while the
-CSV's \code{annotations} is BRREG's own presence flag.
+\code{\link[=brreg_entity]{brreg_entity()}}). The bulk is the JSON variant of each endpoint,
+the same representation the single-entity lookups and the update
+feeds use, so \code{historiskeNavn} and \code{paategninger} arrive as the
+nested list-columns \code{historiske_navn} and \code{annotations} exactly as
+from \code{\link[=brreg_entity]{brreg_entity()}}. BRREG's CSV variant is not read: it is the
+register's own flattening, with different separators and a presence
+flag in place of the annotation array.
 }
 
 \section{Caching}{
@@ -114,7 +111,7 @@ text.
 \examples{
 \dontshow{if (interactive() && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
-# Download full register as tibble (~150MB download, ~1M rows)
+# Download full register as tibble (~196 MB download, ~1M rows)
 entities <- brreg_download()
 
 # Just get the file path (no parsing)

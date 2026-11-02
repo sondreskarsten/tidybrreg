@@ -30,9 +30,9 @@ brreg_user_agent <- function() {
 
 #' Build an httr2 request with the shared tidybrreg configuration
 #'
-#' Centralises the user agent, transient-retry policy, and per-host
-#' throttle so every request the package makes is constructed
-#' identically. Host-specific concerns (base URL, throttle realm, Accept
+#' Centralises the user agent, transient-retry policy
+#' ([is_transient_response()]), and per-host throttle so every request
+#' the package makes is constructed identically. Host-specific concerns (base URL, throttle realm, Accept
 #' header, error body extractor) are supplied by the caller.
 #'
 #' @param base_url Host base URL.
@@ -56,7 +56,7 @@ brreg_http_req <- function(base_url, path, query = list(), realm,
     httr2::req_headers(Accept = accept) |>
     httr2::req_retry(
       max_tries = 3,
-      is_transient = \(resp) httr2::resp_status(resp) %in% c(429, 503)
+      is_transient = is_transient_response
     ) |>
     httr2::req_throttle(rate = rate, realm = realm)
   if (!is.null(error_body)) {
@@ -85,18 +85,69 @@ brreg_req <- function(path, query = list(),
   )
 }
 
+#' Is a response one the register will answer differently next time?
+#'
+#' The retry rule shared by every request: HTTP 429 and 503, the
+#' server errors 500, 502 and 504, and the register's rate limit when
+#' it arrives as HTTP 200 with a `text/plain` body `Too many requests`
+#' (observed by brreg-json-fetcher and reproduced here). A 500 whose
+#' message says the accounting plan is unsupported
+#' ([unsupported_plan_message()]) is a property of the entity, not a
+#' transient failure, and is not retried.
+#' @param resp An httr2 response.
+#' @returns Logical scalar.
+#' @keywords internal
+is_transient_response <- function(resp) {
+  status <- httr2::resp_status(resp)
+  if (status %in% c(429L, 503L)) return(TRUE)
+  if (status %in% c(500L, 502L, 504L)) return(is.na(unsupported_plan_message(resp)))
+  status == 200L && is_rate_limit_text(resp)
+}
+
+#' Is this the register's rate limit disguised as a 200?
+#' @keywords internal
+is_rate_limit_text <- function(resp) {
+  if (!inherits(resp, "httr2_response") || httr2::resp_status(resp) != 200L) return(FALSE)
+  type <- httr2::resp_content_type(resp)
+  if (is.null(type) || is.na(type) || !startsWith(type, "text/plain")) return(FALSE)
+  grepl("Too many requests", httr2::resp_body_string(resp), fixed = TRUE)
+}
+
 #' Perform a brreg request without raising on HTTP error status
 #'
 #' Every endpoint wrapper inspects the status itself so that 404, 410 and
 #' server errors can be mapped to the typed conditions documented in
 #' [tidybrreg_conditions]. The retry policy of [brreg_http_req()] still
-#' applies.
+#' applies to HTTP responses; a connection failure (`httr2_failure`:
+#' DNS, TCP, TLS or a dropped connection) is retried here with the same
+#' number of attempts and an exponential pause, then aborts with a
+#' `tidybrreg_error_connection`. The register's rate limit answered as
+#' HTTP 200 (`text/plain` `Too many requests`), still present after the
+#' retries, aborts with a `tidybrreg_error_rate_limited` instead of
+#' failing later as an unreadable body.
 #' @param req An httr2 request.
 #' @keywords internal
-brreg_perform <- function(req) {
-  req |>
-    httr2::req_error(is_error = \(resp) FALSE) |>
-    httr2::req_perform()
+brreg_perform <- function(req, call = rlang::caller_env()) {
+  req <- httr2::req_error(req, is_error = \(resp) FALSE)
+  tries <- req$policies$retry_max_tries %||% 1L
+  for (i in seq_len(tries)) {
+    resp <- tryCatch(httr2::req_perform(req), httr2_failure = \(e) e)
+    if (!inherits(resp, "httr2_failure")) break
+    if (i == tries) {
+      brreg_abort(c(
+        "Could not reach {.url {req$url}} after {tries} attempt{?s}.",
+        "x" = conditionMessage(resp)
+      ), class = "connection", url = req$url, attempts = tries, call = call)
+    }
+    Sys.sleep(min(2^(i - 1), 30))
+  }
+  if (is_rate_limit_text(resp)) {
+    brreg_abort(c(
+      "The Norwegian Business Registry rate-limited the request to {.url {req$url}} ({tries} attempt{?s}).",
+      "i" = "The register answers its rate limit as HTTP 200 with the text {.val Too many requests}; wait and retry."
+    ), class = "rate_limited", url = req$url, status = 200L, attempts = tries, call = call)
+  }
+  resp
 }
 
 #' Build an httr2 request to the SSB KLASS API
@@ -173,6 +224,15 @@ to_snake <- function(x) {
 #' - `tidybrreg_error_http`: any other HTTP status of 400 or above, or a
 #'   failure on the first page of a paginated request. Fields `endpoint`,
 #'   `status`, `messages` (as extracted from the BRREG error body).
+#'   429, 503, 500, 502 and 504 are retried up to three times first
+#'   (except the Regnskapsregisteret 500 for an unsupported accounting
+#'   plan, which is final).
+#' - `tidybrreg_error_rate_limited`: the register answered its rate
+#'   limit as HTTP 200 with the text `Too many requests` on every retry.
+#'   Fields `url`, `status` (200), `attempts`.
+#' - `tidybrreg_error_connection`: the host could not be reached (DNS,
+#'   TCP, TLS or a dropped connection) on every retry. Fields `url`,
+#'   `attempts`.
 #' - `tidybrreg_error_result_window`: the query matches more entities than
 #'   BRREG's search window can deliver and the request asked for more than
 #'   the window. Fields `endpoint`, `total_matches`, `retrieval_limit`,

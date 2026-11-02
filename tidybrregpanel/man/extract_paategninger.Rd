@@ -8,15 +8,13 @@ extract_paategninger(entities)
 }
 \arguments{
 \item{entities}{A tibble of bulk entity data with \code{org_nr} and the
-\code{annotations} flag or serialized array.}
+\code{annotations} list-column or serialized array.}
 }
 \description{
-The CSV bulk exposes påtegninger only as a boolean presence flag
-(column \code{annotations} after \link[tidybrreg:field_dict]{tidybrreg::field_dict} renaming); annotation
-content is then fetched per entity from the enheter endpoint for
-the entities whose flag is true. The JSON bulk carries the full
-påtegning array inline, serialized to a JSON string by
-\code{tidybrreg:::flatten_cell()} — detected by a leading \code{[} — and is parsed
-directly with no per-entity fetches.
+The JSON bulk carries the full påtegning array inline, which
+tidybrreg nests as a list-column of tibbles (column \code{annotations}
+after \link[tidybrreg:field_dict]{tidybrreg::field_dict} renaming; older snapshots hold it as a
+JSON string, detected by a leading \code{[}); either is read directly
+with no per-entity fetches.
 }
 \keyword{internal}

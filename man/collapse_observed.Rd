@@ -27,11 +27,4 @@ row per element and one column per leaf of the element, named in
 snake_case of the leaf's dot path, so the caller's column is a
 list-column that \code{tidyr::unnest()} expands.
 }
-\details{
-Note that the CSV bulk is BRREG's own flattening and uses
-field-specific separators (newline for addresses, space for
-wrapped text such as \code{vedtektsfestetFormaal}), so CSV-sourced and
-JSON-sourced values for those fields are not byte-identical and
-cannot be made so without imposing a per-field rule.
-}
 \keyword{internal}

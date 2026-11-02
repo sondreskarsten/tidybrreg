@@ -2,7 +2,7 @@
 % Please edit documentation in R/snapshot.R
 \name{brreg_import}
 \alias{brreg_import}
-\title{Import a historical CSV as a snapshot partition}
+\title{Import a historical bulk JSON file as a snapshot partition}
 \usage{
 brreg_import(
   path,
@@ -12,12 +12,14 @@ brreg_import(
 )
 }
 \arguments{
-\item{path}{Path to a brreg CSV file (gzipped or plain).}
+\item{path}{Path to a brreg bulk JSON file (gzipped or plain): the
+entity array of \verb{/enheter/lastned} or \verb{/underenheter/lastned}, or
+the \verb{/roller/totalbestand} array.}
 
-\item{snapshot_date}{The date this CSV represents. Required — the
-CSV itself contains no date metadata.}
+\item{snapshot_date}{The date this file represents. Required — the
+file itself contains no date metadata.}
 
-\item{type}{One of \code{"enheter"} or \code{"underenheter"}.}
+\item{type}{One of \code{"enheter"}, \code{"underenheter"} or \code{"roller"}.}
 
 \item{force}{Logical. Overwrite existing partition.}
 }
@@ -25,14 +27,15 @@ CSV itself contains no date metadata.}
 The file path to the written Parquet partition (invisibly).
 }
 \description{
-Read a brreg bulk CSV file (as downloaded by \code{\link[tidybrreg:brreg_download]{tidybrreg::brreg_download()}} or
-from the brreg website), normalize column names via \link[tidybrreg:field_dict]{tidybrreg::field_dict},
+Read a brreg bulk JSON file (as downloaded by
+\code{\link[tidybrreg:brreg_download]{tidybrreg::brreg_download()}} with \code{type_output = "path"}, or from the
+brreg website), normalize column names via \link[tidybrreg:field_dict]{tidybrreg::field_dict},
 and save as a dated Parquet partition in the snapshot store.
 }
 \examples{
 \dontshow{if (FALSE) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 # Import a historical download
-brreg_import("enheter_2024-12-31.csv.gz", snapshot_date = "2024-12-31")
+brreg_import("enheter_bulk_2024-12-31.json.gz", snapshot_date = "2024-12-31")
 \dontshow{\}) # examplesIf}
 }
 \seealso{

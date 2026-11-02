@@ -57,9 +57,6 @@ test_that("extract_paategninger reads the nested annotations column without fetc
     org_nr = c("111111111", "222222222"),
     annotations = list(tidybrreg:::flatten_cell(p1), NULL)
   )
-  testthat::local_mocked_bindings(
-    fetch_entity_paategninger = function(org_nr) stop("should not fetch")
-  )
   res <- extract_paategninger(entities)
   expect_equal(nrow(res), 2L)
   expect_equal(res$org_nr, c("111111111", "111111111"))
@@ -74,25 +71,12 @@ test_that("extract_paategninger still reads the serialized column of older snaps
     org_nr = c("111111111", "222222222"),
     annotations = c(as.character(jsonlite::toJSON(p1)), NA_character_)
   )
-  testthat::local_mocked_bindings(
-    fetch_entity_paategninger = function(org_nr) stop("should not fetch")
-  )
   res <- extract_paategninger(entities)
   expect_equal(res$org_nr, "111111111")
   expect_equal(res$innfoert_dato, "2025-05-05")
 })
 
-test_that("extract_paategninger flag path is unchanged for CSV bulk", {
-  entities <- tibble::tibble(
-    org_nr = c("111111111", "222222222"),
-    annotations = c("true", "false")
-  )
-  testthat::local_mocked_bindings(
-    fetch_entity_paategninger = function(org_nr) {
-      tibble::tibble(org_nr = org_nr, position = 0L, infotype = "FADR",
-                     tekst = "x", innfoert_dato = "2026-01-01")
-    }
-  )
-  res <- extract_paategninger(entities)
-  expect_equal(res$org_nr, "111111111")
+test_that("extract_paategninger returns empty when the column is missing or holds no arrays", {
+  expect_equal(nrow(extract_paategninger(tibble::tibble(org_nr = "111111111", navn = "x"))), 0L)
+  expect_equal(nrow(extract_paategninger(tibble::tibble(org_nr = "111111111", annotations = list(NULL)))), 0L)
 })

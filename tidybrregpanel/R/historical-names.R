@@ -5,9 +5,8 @@
 #' force. BRREG added the `historiskeNavn` field to enheter and
 #' underenheter on 2026-06-16. Name history accrues through
 #' [brreg_sync()]: every rename in the CDC feed appends the superseded
-#' name here. History predating your first sync exists only in the
-#' JSON bulk download and is backfilled when bootstrapping with
-#' `brreg_sync(format = "json")`.
+#' name here. History predating your first sync comes from the JSON
+#' bulk download and is backfilled when [brreg_sync()] bootstraps.
 #'
 #' Requires [brreg_sync()] to have been run at least once to populate
 #' the local name-history state.

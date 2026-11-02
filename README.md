@@ -112,10 +112,9 @@ brreg_updates(type = "roller", since = Sys.Date() - 1)
 ## Bulk downloads
 
 ``` r
-entities     <- brreg_download(type = "enheter")                   # ~152 MB CSV
-entities     <- brreg_download(type = "enheter", format = "json")  # ~196 MB JSON
-sub_entities <- brreg_download(type = "underenheter")              # ~59 MB
-roles        <- brreg_download(type = "roller")                    # ~131 MB JSON
+entities     <- brreg_download(type = "enheter")       # ~196 MB JSON
+sub_entities <- brreg_download(type = "underenheter")  # ~75 MB JSON
+roles        <- brreg_download(type = "roller")        # ~131 MB JSON
 path         <- brreg_download(type_output = "path")
 ```
 
@@ -144,8 +143,7 @@ results, result-window overflow, unknown feed members,
 bundled-dictionary fallback.
 
 **One coercion rule.** Dictionary types are identical on the live JSON
-path and the bulk CSV/JSON path; parse failures are reported, never
-fatal.
+path and the bulk JSON path; parse failures are reported, never fatal.
 
 **UTC instants.** Feed timestamps and HTTP dates are UTC `POSIXct`
 whatever the session time zone.

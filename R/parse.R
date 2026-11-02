@@ -27,12 +27,6 @@ parse_entity <- function(raw) {
 #' snake_case of the leaf's dot path, so the caller's column is a
 #' list-column that `tidyr::unnest()` expands.
 #'
-#' Note that the CSV bulk is BRREG's own flattening and uses
-#' field-specific separators (newline for addresses, space for
-#' wrapped text such as `vedtektsfestetFormaal`), so CSV-sourced and
-#' JSON-sourced values for those fields are not byte-identical and
-#' cannot be made so without imposing a per-field rule.
-#'
 #' @param val A list, atomic vector or data frame taken from a parsed
 #'   response.
 #' @returns A length-1 character value, or a tibble for an array of
@@ -129,13 +123,12 @@ is_hal_link_path <- function(path) {
 
 #' Rename fields using field_dict; pass through unmapped fields
 #'
-#' Only observed fields are emitted. A dictionary target that two
-#' distinct observed paths map to (the dictionary carries both the JSON
-#' and CSV spellings of a few fields) is filled from the first path in
-#' dictionary order; the second path falls back to its auto-generated
-#' snake_case name, keeping its dictionary type, so no observed value is
-#' lost. Unmapped paths whose snake_case names collide are made unique
-#' with a numeric suffix.
+#' Only observed fields are emitted. Should two distinct observed paths
+#' map to one dictionary target, the first path in dictionary order
+#' fills it and the second falls back to its auto-generated snake_case
+#' name, keeping its dictionary type, so no observed value is lost.
+#' Unmapped paths whose snake_case names collide are made unique with a
+#' numeric suffix.
 #' @param flat A flat named list from [flatten_json()].
 #' @param dict The field map to apply: [field_dict] (default) or
 #'   `regnskap_dict`.

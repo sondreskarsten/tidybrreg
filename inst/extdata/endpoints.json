@@ -10,8 +10,11 @@
     "user_agent": "tidybrreg (https://github.com/sondreskarsten/tidybrreg; R package)",
     "accept": "application/json;charset=UTF-8",
     "throttle_per_second_per_host": 5,
-    "retry_statuses": [429, 503],
+    "retry_statuses": [429, 500, 502, 503, 504],
     "retry_max_tries": 3,
+    "retry_on_connection_failure": true,
+    "not_transient": "an HTTP 500 whose message contains 'oppstillingsplan som ikke er st' (Regnskapsregisteret: unsupported accounting plan) is final",
+    "rate_limit_in_200": "an HTTP 200 with a text/plain body containing 'Too many requests' is the register's rate limit: retried like 429 and, once the retries are spent, tidybrreg_error_rate_limited (fields url, status, attempts); a connection failure on every retry is tidybrreg_error_connection (fields url, attempts)",
     "error_body": "messages are read from valideringsfeil[].feilmelding (+ parametere), validationErrors[].errorMessage, feilmelding, error and trace"
   },
   "org_nr": {
@@ -592,13 +595,11 @@
       "service": "enhetsregisteret",
       "kind": "bulk",
       "routes": [
-        {"type": "enheter", "format": "csv", "method": "GET", "path": "/enheter/lastned/csv"},
         {"type": "enheter", "format": "json", "method": "GET", "path": "/enheter/lastned"},
-        {"type": "underenheter", "format": "csv", "method": "GET", "path": "/underenheter/lastned/csv"},
         {"type": "underenheter", "format": "json", "method": "GET", "path": "/underenheter/lastned"},
         {"type": "roller", "format": "json", "method": "GET", "path": "/roller/totalbestand"}
       ],
-      "cache": {"dir": "tools::R_user_dir('tidybrreg', 'cache')", "file": "{type}_bulk.{format}.gz", "sidecar": "{file}.meta.json with url, etag, last_modified, downloaded_at", "refresh": ["FALSE", "TRUE", "auto (HEAD; re-download unless ETag or Last-Modified matches the sidecar)"]},
+      "cache": {"dir": "tools::R_user_dir('tidybrreg', 'cache')", "file": "{type}_bulk.json.gz", "note": "JSON only; BRREG's CSV variants (/lastned/csv) are not read", "sidecar": "{file}.meta.json with url, etag, last_modified, downloaded_at", "refresh": ["FALSE", "TRUE", "auto (HEAD; re-download unless ETag or Last-Modified matches the sidecar)"]},
       "output_modes": ["tibble", "path"]
     },
     "brreg_label": {"service": null, "kind": "local", "dictionaries": {"legal_form": "legal_forms", "role": "role_types", "role_group": "role_groups", "nace": "get_brreg_dic('nace')", "sector": "get_brreg_dic('sector')"}, "columns": {"legal_form": "legal_form", "nace_1": "nace", "nace_2": "nace", "nace_3": "nace", "sector_code": "sector", "role_code": "role", "role_group_code": "role_group"}},

@@ -143,6 +143,19 @@ test_that("brreg_entity: all field_dict types are correctly coerced", {
 # Section 2: Search — Expected vs Observed
 # ============================================================================
 
+test_that("brreg_entity: the deleted controls of the brreg-json-fetcher live smoke are deleted here too", {
+ skip_if_no_api()
+ for (org in c("931264338", "991128972")) {
+   e <- withCallingHandlers(brreg_entity(org),
+                            tidybrreg_warning_deleted = function(w) invokeRestart("muffleWarning"))
+   expect_true(isTRUE(e$deleted), info = org)
+   expect_false(is.na(e$deletion_date), info = org)
+   roles <- brreg_roles(org)
+   expect_equal(nrow(roles), 0L, info = org)
+   expect_true(attr(roles, "http_status") %in% c(404L, 410L), info = org)
+ }
+})
+
 test_that("brreg_search: name search finds Equinor", {
  skip_if_no_api()
  s <- safely(brreg_search(name = "Equinor", max_results = 5))
@@ -693,10 +706,6 @@ test_that("brreg_validate: invalid numbers fail", {
 
 test_that("brreg_download: validates type argument", {
  expect_error(brreg_download(type = "invalid"), "should be one of")
-})
-
-test_that("brreg_download: validates format argument", {
- expect_error(brreg_download(format = "invalid"), "should be one of")
 })
 
 test_that("brreg_download: validates type_output argument", {

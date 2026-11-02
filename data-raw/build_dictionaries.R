@@ -89,8 +89,6 @@ field_dict <- tribble(
   "registreringsdatoMerverdiavgiftsregisteretEnhetsregisteret", "vat_reg_date_er", "Date",
   "registreringsdatoAntallAnsatteEnhetsregisteret",  "employee_reg_date_er",      "Date",
   "registreringsdatoAntallAnsatteNavAaregisteret",   "employee_reg_date_nav",     "Date",
-  "registreringsdatoAntallAnsatteNAVAaregisteret",   "employee_reg_date_nav",     "Date",
-  "registreringsdatoIEnhetsregisteret",              "registration_date",         "Date",
   "oppstartsdato",                                   "start_date",               "Date",
   "registrertIPartiregisteret",                      "in_party_register",         "logical",
   "registreringsdatoPartiregisteret",                "party_register_date",       "Date",

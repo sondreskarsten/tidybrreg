@@ -22,6 +22,15 @@ organization number. Fields \code{org_nr}, \code{endpoint}, \code{status}.
 \item \code{tidybrreg_error_http}: any other HTTP status of 400 or above, or a
 failure on the first page of a paginated request. Fields \code{endpoint},
 \code{status}, \code{messages} (as extracted from the BRREG error body).
+429, 503, 500, 502 and 504 are retried up to three times first
+(except the Regnskapsregisteret 500 for an unsupported accounting
+plan, which is final).
+\item \code{tidybrreg_error_rate_limited}: the register answered its rate
+limit as HTTP 200 with the text \verb{Too many requests} on every retry.
+Fields \code{url}, \code{status} (200), \code{attempts}.
+\item \code{tidybrreg_error_connection}: the host could not be reached (DNS,
+TCP, TLS or a dropped connection) on every retry. Fields \code{url},
+\code{attempts}.
 \item \code{tidybrreg_error_result_window}: the query matches more entities than
 BRREG's search window can deliver and the request asked for more than
 the window. Fields \code{endpoint}, \code{total_matches}, \code{retrieval_limit},

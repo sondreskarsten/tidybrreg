@@ -39,7 +39,7 @@ library(tidybrreg)
 library(tidybrregpanel)
 
 brreg_snapshot("enheter")
-brreg_snapshot("enheter", format = "json")   # carries kapital.*, historiskeNavn
+brreg_snapshot("enheter")                    # JSON bulk: kapital.*, historiskeNavn, annotations
 brreg_snapshots()
 
 panel <- brreg_panel(frequency = "year", cols = c("employees", "nace_1", "legal_form"))

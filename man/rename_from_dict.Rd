@@ -13,12 +13,11 @@ rename_from_dict(flat, dict = field_dict)
 \code{regnskap_dict}.}
 }
 \description{
-Only observed fields are emitted. A dictionary target that two
-distinct observed paths map to (the dictionary carries both the JSON
-and CSV spellings of a few fields) is filled from the first path in
-dictionary order; the second path falls back to its auto-generated
-snake_case name, keeping its dictionary type, so no observed value is
-lost. Unmapped paths whose snake_case names collide are made unique
-with a numeric suffix.
+Only observed fields are emitted. Should two distinct observed paths
+map to one dictionary target, the first path in dictionary order
+fills it and the second falls back to its auto-generated snake_case
+name, keeping its dictionary type, so no observed value is lost.
+Unmapped paths whose snake_case names collide are made unique with a
+numeric suffix.
 }
 \keyword{internal}

@@ -4,7 +4,7 @@
 \alias{brreg_perform}
 \title{Perform a brreg request without raising on HTTP error status}
 \usage{
-brreg_perform(req)
+brreg_perform(req, call = rlang::caller_env())
 }
 \arguments{
 \item{req}{An httr2 request.}
@@ -13,6 +13,12 @@ brreg_perform(req)
 Every endpoint wrapper inspects the status itself so that 404, 410 and
 server errors can be mapped to the typed conditions documented in
 \link{tidybrreg_conditions}. The retry policy of \code{\link[=brreg_http_req]{brreg_http_req()}} still
-applies.
+applies to HTTP responses; a connection failure (\code{httr2_failure}:
+DNS, TCP, TLS or a dropped connection) is retried here with the same
+number of attempts and an exponential pause, then aborts with a
+\code{tidybrreg_error_connection}. The register's rate limit answered as
+HTTP 200 (\code{text/plain} \verb{Too many requests}), still present after the
+retries, aborts with a \code{tidybrreg_error_rate_limited} instead of
+failing later as an unreadable body.
 }
 \keyword{internal}

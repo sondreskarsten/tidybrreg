@@ -177,13 +177,10 @@ attributes; pass `cursor + 1` to resume.
 Three registries available:
 
 ```{r}
-# Main entities: ~152 MB CSV or ~196 MB JSON
+# Main entities: ~196 MB JSON
 entities <- brreg_download(type = "enheter")
 
-# JSON captures additional fields not in CSV
-entities_json <- brreg_download(type = "enheter", format = "json")
-
-# Sub-entities: ~59 MB
+# Sub-entities: ~75 MB JSON
 sub_entities <- brreg_download(type = "underenheter")
 
 # All roles for all entities: ~131 MB JSON
@@ -224,8 +221,8 @@ suppressWarnings(brreg_konsern("923609016"), classes = "tidybrreg_warning_delete
 | `brreg_roles_legal(org_nr)` | `/roller/enheter/{orgnr}/juridiskeroller` | N-row tibble |
 | `brreg_konsern(org_nr)` | `/konsernstruktur/{orgnr}` | N-row tibble |
 | `brreg_signatur(org_nr)`, `brreg_prokura(org_nr)` | `fullmakt/enheter/{orgnr}/signatur`, `.../prokura` | N-row tibble |
-| `brreg_download("enheter")` | `/enheter/lastned/csv` | Full register tibble |
-| `brreg_download("enheter", format = "json")` | `/enheter/lastned` | Full register tibble |
+| `brreg_download("enheter")` | `/enheter/lastned` | Full register tibble |
+| `brreg_download("underenheter")` | `/underenheter/lastned` | Full sub-entity tibble |
 | `brreg_download("roller")` | `/roller/totalbestand` | Full roles tibble |
 | `brreg_updates(type = "enheter")`, `brreg_update_fields()` | `/oppdateringer/enheter` | Change events tibble |
 | `brreg_updates(type = "roller")` | `/oppdateringer/roller` | Change events tibble |

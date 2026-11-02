@@ -460,24 +460,27 @@ test_that("HAL link paths are stripped at any depth on the bulk path", {
   expect_named(res, c("org_nr", "name"))
 })
 
-test_that("duplicate dictionary spellings and snake collisions lose nothing", {
-  flat <- list(organisasjonsnummer = "1",
-               registreringsdatoEnhetsregisteret = "2020-01-01",
-               registreringsdatoIEnhetsregisteret = "2021-01-01",
+test_that("duplicate dictionary targets and snake collisions lose nothing", {
+  dict <- tibble::tibble(api_path = c("organisasjonsnummer", "datoA", "datoB"),
+                         col_name = c("org_nr", "the_date", "the_date"),
+                         type = c("character", "Date", "Date"))
+  flat <- list(organisasjonsnummer = "1", datoA = "2020-01-01", datoB = "2021-01-01",
                fooBar = "a", foo.bar = "b")
-  res <- tidybrreg:::rename_from_dict(flat)
-  expect_equal(res$registration_date, "2020-01-01")
-  expect_equal(res$registreringsdato_ienhetsregisteret, "2021-01-01")
-  typed <- tidybrreg:::coerce_types(res)
-  expect_equal(typed$registreringsdato_ienhetsregisteret, as.Date("2021-01-01"))
+  res <- tidybrreg:::rename_from_dict(flat, dict = dict)
+  expect_equal(res$the_date, "2020-01-01")
+  expect_equal(res$dato_b, "2021-01-01")
+  typed <- tidybrreg:::coerce_types(res, dict = dict)
+  expect_equal(typed$the_date, as.Date("2020-01-01"))
+  expect_equal(typed$dato_b, as.Date("2021-01-01"))
   expect_null(attr(typed, "brreg_dict_types"))
   expect_true(all(c("foo_bar", "foo_bar_1") %in% names(res)))
+  expect_false(anyDuplicated(tidybrreg::field_dict$col_name) > 0)
   bulk <- tibble::tibble(organisasjonsnummer = "1",
                          registreringsdatoEnhetsregisteret = "2020-01-01",
-                         registreringsdatoIEnhetsregisteret = "2021-01-01")
+                         fooBar = "a", foo.bar = "b")
   res <- tidybrreg:::rename_and_coerce(bulk)
   expect_equal(res$registration_date, as.Date("2020-01-01"))
-  expect_equal(res$registreringsdato_ienhetsregisteret, as.Date("2021-01-01"))
+  expect_true(all(c("foo_bar", "foo_bar_1") %in% names(res)))
 })
 
 # ---------------------------------------------------------------------------

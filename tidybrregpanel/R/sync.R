@@ -32,13 +32,6 @@
 #'   roles per-org via the API for each CDC event — slower but
 #'   provides sub-daily attribution when syncing multiple times
 #'   per day.
-#' @param format Bulk download format used only when bootstrapping
-#'   missing state: `"csv"` (default) or `"json"`. The JSON bulk is
-#'   the only source carrying `historiskeNavn`; bootstrapping with
-#'   `format = "json"` backfills name history predating the first
-#'   sync into the `historiske_navn` state. With `"csv"` that state
-#'   starts empty and accrues from the CDC feed. Roller is always
-#'   JSON regardless.
 #' @param verbose Logical. Print progress messages.
 #'
 #' @returns A list with sync summary: events processed per type,
@@ -58,20 +51,17 @@
 brreg_sync <- function(types = c("enheter", "underenheter", "roller"),
                         size = 10000L,
                         roller_method = c("bulk", "cdc"),
-                        format = c("csv", "json"),
                         verbose = TRUE) {
   types <- match.arg(types, c("enheter", "underenheter", "roller"),
                       several.ok = TRUE)
   roller_method <- match.arg(roller_method)
-  format <- match.arg(format)
   check_parquet_available()
   t0 <- Sys.time()
 
   needs_bootstrap <- !all(vapply(types, has_state, logical(1)))
   if (needs_bootstrap) {
     if (verbose) cli::cli_h2("Bootstrapping state from bulk download")
-    bootstrap_state(types, roller_method = roller_method, format = format,
-                    verbose = verbose)
+    bootstrap_state(types, roller_method = roller_method, verbose = verbose)
   }
 
   cursor <- read_cursor()
@@ -136,14 +126,9 @@ brreg_sync <- function(types = c("enheter", "underenheter", "roller"),
 #'
 #' @param types Character vector of streams to bootstrap.
 #' @param roller_method Passed from [brreg_sync()].
-#' @param format Bulk download format passed to [tidybrreg::brreg_download()]
-#'   for enheter/underenheter. `"json"` additionally backfills the
-#'   `historiske_navn` state from the inline `historiskeNavn` arrays;
-#'   the CSV bulk carries no name history.
 #' @param verbose Logical.
 #' @keywords internal
-bootstrap_state <- function(types, roller_method = "bulk", format = "csv",
-                             verbose = TRUE) {
+bootstrap_state <- function(types, roller_method = "bulk", verbose = TRUE) {
   for (type in types) {
     if (has_state(type)) next
 
@@ -158,8 +143,7 @@ bootstrap_state <- function(types, roller_method = "bulk", format = "csv",
     }
 
     if (verbose) cli::cli_alert_info("Downloading {type} bulk data...")
-    df <- tidybrreg::brreg_download(type = type, format = format,
-                          type_output = "tibble")
+    df <- tidybrreg::brreg_download(type = type, type_output = "tibble")
 
     if (type == "enheter") {
       paat <- extract_paategninger(df)
@@ -1162,15 +1146,13 @@ extract_historiske_navn <- function(entities) {
 
 #' Extract påtegninger from bulk entity data into a separate table
 #'
-#' The CSV bulk exposes påtegninger only as a boolean presence flag
-#' (column `annotations` after [tidybrreg::field_dict] renaming); annotation
-#' content is then fetched per entity from the enheter endpoint for
-#' the entities whose flag is true. The JSON bulk carries the full
-#' påtegning array inline, which tidybrreg nests as a list-column of
-#' tibbles (older snapshots hold it as a JSON string, detected by a
-#' leading `[`); either is read directly with no per-entity fetches.
+#' The JSON bulk carries the full påtegning array inline, which
+#' tidybrreg nests as a list-column of tibbles (column `annotations`
+#' after [tidybrreg::field_dict] renaming; older snapshots hold it as a
+#' JSON string, detected by a leading `[`); either is read directly
+#' with no per-entity fetches.
 #' @param entities A tibble of bulk entity data with `org_nr` and the
-#'   `annotations` flag or serialized array.
+#'   `annotations` list-column or serialized array.
 #' @keywords internal
 extract_paategninger <- function(entities) {
   flag_col <- intersect(c("annotations", "paategninger"), names(entities))
@@ -1179,68 +1161,32 @@ extract_paategninger <- function(entities) {
   col <- entities[[flag_col[1]]]
   if (is.list(col)) {
     inline <- vapply(col, is.data.frame, logical(1))
-    vals <- rep(NA_character_, length(col))
   } else {
     vals <- as.character(col)
     inline <- !is.na(vals) & startsWith(trimws(vals), "[")
   }
-  if (any(inline)) {
-    orgs <- entities$org_nr[inline]
-    parsed <- if (is.list(col)) col[inline] else lapply(vals[inline], jsonlite::fromJSON)
-    n_each <- vapply(parsed, function(d) if (is.data.frame(d)) nrow(d) else 0L,
-                     integer(1))
-    field_chr <- function(nm, alt = nm) {
-      unlist(lapply(parsed, function(d) {
-        if (!is.data.frame(d)) return(character(0))
-        v <- d[[nm]] %||% d[[alt]]
-        if (is.null(v)) rep(NA_character_, nrow(d)) else as.character(v)
-      }), use.names = FALSE)
-    }
-    result <- tibble::tibble(
-      org_nr        = rep(orgs, n_each),
-      position      = unlist(lapply(n_each, function(n) seq_len(n) - 1L),
-                              use.names = FALSE),
-      infotype      = field_chr("infotype"),
-      tekst         = field_chr("tekst"),
-      innfoert_dato = field_chr("innfoert_dato", "innfoertDato")
-    )
-    if (nrow(result) == 0) return(empty_paategninger())
-    return(result)
+  if (!any(inline)) return(empty_paategninger())
+  orgs <- entities$org_nr[inline]
+  parsed <- if (is.list(col)) col[inline] else lapply(vals[inline], jsonlite::fromJSON)
+  n_each <- vapply(parsed, function(d) if (is.data.frame(d)) nrow(d) else 0L,
+                   integer(1))
+  field_chr <- function(nm, alt = nm) {
+    unlist(lapply(parsed, function(d) {
+      if (!is.data.frame(d)) return(character(0))
+      v <- d[[nm]] %||% d[[alt]]
+      if (is.null(v)) rep(NA_character_, nrow(d)) else as.character(v)
+    }), use.names = FALSE)
   }
-
-  flag <- tolower(trimws(vals))
-  has_paat <- !is.na(flag) & flag %in% c("true", "t", "1")
-  if (!any(has_paat)) return(empty_paategninger())
-
-  orgs <- unique(entities$org_nr[has_paat])
-  rows <- lapply(orgs, fetch_entity_paategninger)
-  result <- dplyr::bind_rows(rows)
+  result <- tibble::tibble(
+    org_nr        = rep(orgs, n_each),
+    position      = unlist(lapply(n_each, function(n) seq_len(n) - 1L),
+                            use.names = FALSE),
+    infotype      = field_chr("infotype"),
+    tekst         = field_chr("tekst"),
+    innfoert_dato = field_chr("innfoert_dato", "innfoertDato")
+  )
   if (nrow(result) == 0) return(empty_paategninger())
   result
-}
-
-#' Fetch påtegninger for a single entity from the enheter endpoint
-#' @param org_nr A 9-digit organization number.
-#' @returns A tibble of påtegning rows, or `NULL` if none.
-#' @keywords internal
-fetch_entity_paategninger <- function(org_nr) {
-  resp <- tidybrreg:::brreg_req(paste0("enheter/", org_nr)) |>
-    httr2::req_error(is_error = function(resp) FALSE) |>
-    httr2::req_perform()
-  if (httr2::resp_status(resp) != 200L) return(NULL)
-  paat <- httr2::resp_body_json(resp)$paategninger
-  if (is.null(paat) || length(paat) == 0L) return(NULL)
-  rows <- lapply(seq_along(paat), function(j) {
-    p <- paat[[j]]
-    tibble::tibble(
-      org_nr        = org_nr,
-      position      = j - 1L,
-      infotype      = p$infotype %||% NA_character_,
-      tekst         = p$tekst %||% NA_character_,
-      innfoert_dato = p$innfoertDato %||% NA_character_
-    )
-  })
-  dplyr::bind_rows(rows)
 }
 
 

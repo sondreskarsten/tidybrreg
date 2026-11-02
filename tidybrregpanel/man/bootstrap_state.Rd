@@ -4,17 +4,12 @@
 \alias{bootstrap_state}
 \title{Bootstrap state from bulk download}
 \usage{
-bootstrap_state(types, roller_method = "bulk", format = "csv", verbose = TRUE)
+bootstrap_state(types, roller_method = "bulk", verbose = TRUE)
 }
 \arguments{
 \item{types}{Character vector of streams to bootstrap.}
 
 \item{roller_method}{Passed from \code{\link[=brreg_sync]{brreg_sync()}}.}
-
-\item{format}{Bulk download format passed to \code{\link[tidybrreg:brreg_download]{tidybrreg::brreg_download()}}
-for enheter/underenheter. \code{"json"} additionally backfills the
-\code{historiske_navn} state from the inline \code{historiskeNavn} arrays;
-the CSV bulk carries no name history.}
 
 \item{verbose}{Logical.}
 }

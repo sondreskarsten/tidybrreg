@@ -50,8 +50,7 @@ has_bulk_data <- function(type) {
 
 has_cached_download <- function(type) {
   cache_dir <- tools::R_user_dir("tidybrreg", "cache")
-  ext <- if (type == "roller") "json" else "csv"
-  file.exists(file.path(cache_dir, paste0(type, "_bulk.", ext, ".gz")))
+  file.exists(file.path(cache_dir, paste0(type, "_bulk.json.gz")))
 }
 
 
@@ -121,7 +120,7 @@ resolve_bulk_data <- function(types = c("enheter", "underenheter", "roller")) {
 #' Resolution order:
 #' 1. Session cache in `.brregEnv` (keyed by type + snapshot date)
 #' 2. Parquet snapshot — Arrow Table if arrow installed, else tibble
-#' 3. Download cache — raw JSON/CSV parsed to tibble
+#' 3. Download cache — raw JSON parsed to tibble
 #'
 #' Arrow Tables are zero-copy memory maps (~0 bytes until filtered).
 #' Tibbles from nanoparquet or raw cache load the full dataset eagerly
@@ -158,13 +157,12 @@ resolve_bulk <- function(type) {
   }
 
   cache_dir <- tools::R_user_dir("tidybrreg", "cache")
-  ext <- if (type == "roller") "json" else "csv"
-  cache_file <- file.path(cache_dir, paste0(type, "_bulk.", ext, ".gz"))
+  cache_file <- file.path(cache_dir, paste0(type, "_bulk.json.gz"))
   if (file.exists(cache_file)) {
     result <- if (type == "roller") {
       tidybrreg:::parse_roles_bulk(cache_file)
     } else {
-      tidybrreg:::parse_bulk_csv(cache_file, type = type)
+      tidybrreg:::parse_bulk_json(cache_file, type = type)
     }
     assign(cache_key_dl, result, envir = .brregEnv)
     return(result)

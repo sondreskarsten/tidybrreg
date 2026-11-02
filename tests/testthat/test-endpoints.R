@@ -158,9 +158,11 @@ test_that("update feeds use the documented cursors", {
 test_that("bulk routes and dictionary routes match the spec", {
   d <- spec$functions$brreg_download
   for (r in d$routes) {
-    expect_equal(tidybrreg:::bulk_url(r$type, r$format),
+    expect_equal(r$format, "json")
+    expect_equal(tidybrreg:::bulk_url(r$type),
                  paste0(spec$services$enhetsregisteret, r$path))
   }
+  expect_false("format" %in% names(formals(brreg_download)))
   expect_equal(unlist(d$output_modes), eval(formals(brreg_download)$type_output))
   k <- spec$functions$get_brreg_dic
   for (r in k$routes) {
@@ -175,6 +177,10 @@ test_that("http policy and org number rule match the request layer", {
   expect_equal(req$options$useragent, spec$http$user_agent)
   expect_equal(req$headers$Accept, spec$http$accept)
   expect_equal(req$policies$retry_max_tries, spec$http$retry_max_tries)
+  expect_identical(req$policies$retry_is_transient, tidybrreg:::is_transient_response)
+  mk <- function(status) httr2::response(status_code = status, headers = list(`Content-Type` = "application/json"), body = charToRaw("{}"))
+  for (s in unlist(spec$http$retry_statuses)) expect_true(tidybrreg:::is_transient_response(mk(s)), info = s)
+  expect_true(isTRUE(spec$http$retry_on_connection_failure))
   expect_equal(req$policies$throttle_rate %||% 5, spec$http$throttle_per_second_per_host)
   expect_true(grepl(spec$org_nr$pattern, "923609016"))
   expect_false(grepl(spec$org_nr$pattern, "123456789"))

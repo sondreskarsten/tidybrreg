@@ -26,18 +26,16 @@ test_that("brreg_import writes a parquet partition", {
   tmp <- withr::local_tempdir()
   withr::local_options(brreg.data_dir = tmp)
 
-  csv_path <- withr::local_tempfile(fileext = ".csv")
-  df <- tibble::tibble(
-    organisasjonsnummer = "999999999",
-    navn = "Test",
-    `organisasjonsform.kode` = "AS",
-    antallAnsatte = "5",
-    stiftelsesdato = "2020-01-01",
-    konkurs = "FALSE"
-  )
-  readr::write_csv(df, csv_path)
+  json_path <- withr::local_tempfile(fileext = ".json.gz")
+  con <- gzfile(json_path, "w")
+  writeLines(jsonlite::toJSON(list(list(
+    organisasjonsnummer = "999999999", navn = "Test",
+    organisasjonsform = list(kode = "AS"), antallAnsatte = 5L,
+    stiftelsesdato = "2020-01-01", konkurs = FALSE
+  )), auto_unbox = TRUE), con)
+  close(con)
 
-  path <- brreg_import(csv_path, snapshot_date = "2023-12-31")
+  path <- brreg_import(json_path, snapshot_date = "2023-12-31")
   expect_true(file.exists(path))
 
   snaps <- brreg_snapshots("enheter")
@@ -50,13 +48,14 @@ test_that("brreg_import is idempotent", {
   tmp <- withr::local_tempdir()
   withr::local_options(brreg.data_dir = tmp)
 
-  csv_path <- withr::local_tempfile(fileext = ".csv")
-  df <- tibble::tibble(organisasjonsnummer = "999999999", navn = "Test")
-  readr::write_csv(df, csv_path)
+  json_path <- withr::local_tempfile(fileext = ".json.gz")
+  con <- gzfile(json_path, "w")
+  writeLines(jsonlite::toJSON(list(list(organisasjonsnummer = "999999999", navn = "Test")), auto_unbox = TRUE), con)
+  close(con)
 
-  brreg_import(csv_path, snapshot_date = "2023-12-31")
+  brreg_import(json_path, snapshot_date = "2023-12-31")
   # Second call should not error, just skip
-  path2 <- brreg_import(csv_path, snapshot_date = "2023-12-31")
+  path2 <- brreg_import(json_path, snapshot_date = "2023-12-31")
   expect_true(file.exists(path2))
 })
 

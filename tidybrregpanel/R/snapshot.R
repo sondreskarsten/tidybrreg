@@ -12,14 +12,6 @@
 #'   `"roller"` (all roles for all entities, via
 #'   `/roller/totalbestand`). Roller snapshots parse the nested
 #'   JSON into a flat tibble matching [tidybrreg::brreg_roles()] output.
-#' @param format Download format: `"csv"` (default for enheter/underenheter)
-#'   or `"json"`. `historiskeNavn` is absent from the CSV entirely and
-#'   only the JSON bulk carries it; `paategninger` is present in CSV
-#'   but degraded to a `true`/`false` presence flag, while JSON
-#'   carries the full annotation array inline. Array-valued text
-#'   fields (addresses, `vedtektsfestetFormaal`, `aktivitet`) differ
-#'   in join separator between the two formats.
-#'   Roller is always JSON regardless of this parameter.
 #' @param date Date for this snapshot (default: today). Used as the
 #'   partition key, not as an API parameter — the brreg bulk endpoint
 #'   always returns the current-day state.
@@ -31,7 +23,7 @@
 #' @returns The file path to the written Parquet partition (invisibly).
 #'
 #' @family tidybrreg snapshot functions
-#' @seealso [brreg_import()] to add historical snapshots from CSV files,
+#' @seealso [brreg_import()] to add historical snapshots from bulk JSON files,
 #'   [brreg_snapshots()] to list available snapshots,
 #'   [brreg_panel()] to construct panels from accumulated snapshots.
 #'
@@ -42,16 +34,12 @@
 #' brreg_snapshots()
 #' }
 brreg_snapshot <- function(type = c("enheter", "underenheter", "roller"),
-                            format = c("csv", "json"),
                             date = Sys.Date(),
                             force = FALSE,
                             ask = interactive()) {
   type <- match.arg(type)
-  format <- match.arg(format)
   check_parquet_available()
   date <- as.Date(date)
-
-  if (type == "roller") format <- "json"
 
   partition_dir <- file.path(brreg_data_dir(), type,
                               paste0("snapshot_date=", date))
@@ -62,15 +50,15 @@ brreg_snapshot <- function(type = c("enheter", "underenheter", "roller"),
     return(invisible(parquet_path))
   }
 
-  sizes <- c(enheter = "~152 MB", underenheter = "~59 MB", roller = "~131 MB")
+  sizes <- c(enheter = "~196 MB", underenheter = "~75 MB", roller = "~131 MB")
   if (ask && !isTRUE(getOption("brreg.allow_download"))) {
-    msg <- paste0("Download full ", type, " register (", sizes[type], ", ", format, ") and save snapshot for ", date, "?")
+    msg <- paste0("Download full ", type, " register (", sizes[type], ", JSON) and save snapshot for ", date, "?")
     if (!isTRUE(utils::askYesNo(msg))) {
       cli::cli_abort("Cancelled by user.")
     }
   }
 
-  raw_cache <- tidybrreg::brreg_download(type = type, format = format, type_output = "path", refresh = TRUE)
+  raw_cache <- tidybrreg::brreg_download(type = type, type_output = "path", refresh = TRUE)
 
   raw_dir <- file.path(partition_dir, "raw")
   dir.create(raw_dir, recursive = TRUE, showWarnings = FALSE)
@@ -79,10 +67,8 @@ brreg_snapshot <- function(type = c("enheter", "underenheter", "roller"),
 
   dat <- if (type == "roller") {
     tidybrreg:::parse_roles_bulk(raw_cache)
-  } else if (format == "json") {
-    tidybrreg:::parse_bulk_json(raw_cache, type = type)
   } else {
-    tidybrreg:::parse_bulk_csv(raw_cache, type = type)
+    tidybrreg:::parse_bulk_json(raw_cache, type = type)
   }
   write_parquet_safe(dat, parquet_path)
 
@@ -90,7 +76,7 @@ brreg_snapshot <- function(type = c("enheter", "underenheter", "roller"),
   url <- tryCatch(get("last_download_url", envir = tidybrreg:::.brregEnv), error = \(e) NA_character_)
   entry <- build_manifest_entry(
     type = type, snapshot_date = date,
-    endpoint = url, format = format,
+    endpoint = url, format = "json",
     resp = resp, raw_path = raw_dest,
     parquet_path = parquet_path, record_count = nrow(dat)
   )
@@ -103,16 +89,19 @@ brreg_snapshot <- function(type = c("enheter", "underenheter", "roller"),
 }
 
 
-#' Import a historical CSV as a snapshot partition
+#' Import a historical bulk JSON file as a snapshot partition
 #'
-#' Read a brreg bulk CSV file (as downloaded by [tidybrreg::brreg_download()] or
-#' from the brreg website), normalize column names via [tidybrreg::field_dict],
+#' Read a brreg bulk JSON file (as downloaded by
+#' [tidybrreg::brreg_download()] with `type_output = "path"`, or from the
+#' brreg website), normalize column names via [tidybrreg::field_dict],
 #' and save as a dated Parquet partition in the snapshot store.
 #'
-#' @param path Path to a brreg CSV file (gzipped or plain).
-#' @param snapshot_date The date this CSV represents. Required — the
-#'   CSV itself contains no date metadata.
-#' @param type One of `"enheter"` or `"underenheter"`.
+#' @param path Path to a brreg bulk JSON file (gzipped or plain): the
+#'   entity array of `/enheter/lastned` or `/underenheter/lastned`, or
+#'   the `/roller/totalbestand` array.
+#' @param snapshot_date The date this file represents. Required — the
+#'   file itself contains no date metadata.
+#' @param type One of `"enheter"`, `"underenheter"` or `"roller"`.
 #' @param force Logical. Overwrite existing partition.
 #'
 #' @returns The file path to the written Parquet partition (invisibly).
@@ -123,7 +112,7 @@ brreg_snapshot <- function(type = c("enheter", "underenheter", "roller"),
 #' @export
 #' @examplesIf FALSE
 #' # Import a historical download
-#' brreg_import("enheter_2024-12-31.csv.gz", snapshot_date = "2024-12-31")
+#' brreg_import("enheter_bulk_2024-12-31.json.gz", snapshot_date = "2024-12-31")
 brreg_import <- function(path, snapshot_date,
                           type = c("enheter", "underenheter", "roller"),
                           force = FALSE) {
@@ -140,7 +129,11 @@ brreg_import <- function(path, snapshot_date,
     return(invisible(parquet_path))
   }
 
-  dat <- tidybrreg:::parse_bulk_csv(path, type = type)
+  dat <- if (type == "roller") {
+    tidybrreg:::parse_roles_bulk(path)
+  } else {
+    tidybrreg:::parse_bulk_json(path, type = type)
+  }
   write_parquet_safe(dat, parquet_path)
 
   fsize <- file.size(parquet_path)
