@@ -107,7 +107,8 @@ held to the functions by `tests/testthat/test-endpoints.R`.
   minutes and 2.0 GB for 870,571 rows. The roller bulk
   (`/roller/totalbestand`) is streamed the same way: `parse_roles_bulk()`
   decodes and flattens one batch of entities at a time instead of
-  holding the decoded tree of the whole register, which exceeded 7 GB.
+  holding the decoded tree of the whole register, which exceeded 7 GB:
+  3,426,438 roles in 11.1 minutes at a 2.3 GB peak.
   `brreg_download()` documents the memory and time of the full parse.
   tidybrregpanel follows:
   `brreg_snapshot()` and `brreg_sync()` lose `format`, `brreg_import()`

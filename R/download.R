@@ -38,8 +38,10 @@
 #' on the live register on 2026-11-02 (2 cores): `enheter`, 1,179,853
 #' rows and 91 columns, 14.6 minutes, a 1.6 GB tibble, 4.0 GB peak
 #' resident memory; `underenheter`, 870,571 rows and 43 columns, 7.1
-#' minutes, 0.9 GB, 2.0 GB peak. A machine with 8 GB holds one full
-#' `enheter` parse and not two at once. `type_output = "path"` costs
+#' minutes, 0.9 GB, 2.0 GB peak; `roller`, 3,426,438 roles of 1,154,321
+#' entities, 11.1 minutes, 0.7 GB, 2.3 GB peak with jsonlite (yyjsonr,
+#' when installed, decodes each batch faster). A machine with 8 GB holds
+#' one full `enheter` parse and not two at once. `type_output = "path"` costs
 #' nothing beyond the download, and `parse_bulk_json(path, n_max = )`
 #' (internal) reads the head of the array without inflating the rest.
 #'
